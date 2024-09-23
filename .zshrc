@@ -60,8 +60,9 @@ zstyle ':fzf-tab:complete:cd' fzf-preview 'ls --color $realpath'
 zstyle ':fzf-tab:complete:__zoxide_z:*' fzf-preview 'ls --color $realpath'
 
 # --- eza and ls ----
-alias ls="eza --color=always --long --git --icons=always"
+alias eza="eza --color=always --long --git --icons=always"
 eval $(dircolors -b)
+alias ls="ls --color=auto"
 
 # --- Bat (better cat) ---
 alias bat=batcat
