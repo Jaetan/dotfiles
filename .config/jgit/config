@@ -1,0 +1,3 @@
+[filesystem "Debian|24-ea|/dev/sdc"]
+	timestampResolution = 3144 nanoseconds
+	minRacyThreshold = 17965 microseconds

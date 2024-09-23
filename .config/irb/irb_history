@@ -1,0 +1,44 @@
+def some_method\
+  puts\
+end
+some_method
+exit
+def some_method\
+  puts 'Hi'\
+end
+some_method
+exit
+def some_method\
+  puts 'Hi'\
+end
+some_method
+exit
+def some_method\
+  puts 'Hi'\
+end
+some_method
+end
+exit
+exit
+def some_method\
+  puts 'Hi'\
+end
+some_method
+exit
+[1, 2, 3].each { |i| puts i }
+x = 37
+case x of\
+when 0 => 2\
+when 37 => 3\
+else 4\
+end
+case x of\
+when 0 then 2\
+when 37 then 3\
+else 4\
+end
+case x\
+when 0 then 2\
+when 37 then 3\
+else 4\
+end

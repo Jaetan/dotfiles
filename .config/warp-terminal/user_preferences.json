@@ -1,0 +1,21 @@
+{
+  "prefs": {
+    "WelcomeTipsFeaturesUsed": "[{\"Hint\":\"BlockAction\"},{\"Action\":\"ThemePicker\"},{\"Action\":\"CommandPalette\"},{\"Hint\":\"BlockSelect\"},{\"Hint\":\"CreateBlock\"}]",
+    "InputAutodetectionBannerDismissed": "true",
+    "ReceivedReferralTheme": "\"Inactive\"",
+    "SavedPrompt": "\"Default\"",
+    "AIRequestLimitInfo": "{\"limit\":40,\"num_requests_used_since_refresh\":1,\"next_refresh_time\":\"2024-09-06T00:45:41.291095Z\"}",
+    "AutosuggestionAcceptedCount": "2",
+    "ChangelogVersions": "{\"v0.2024.07.30.08.02.stable_01\":true}",
+    "ExperimentId": "981cdf05-98e0-4989-abaa-7969d6b006e5",
+    "AgentModeOnboardingBlockShown": "true",
+    "AIAutoDetectionEnabled": "true",
+    "TelemetryEnabled": "true",
+    "AIAssistantRequestLimitInfo": "{\"limit\":40,\"num_requests_used_since_refresh\":0,\"next_refresh_time\":\"2024-09-06T00:45:41.291095Z\"}",
+    "HonorPS1": "false",
+    "HasAutoOpenedWelcomeFolder": "true",
+    "Theme": "\"Dracula\"",
+    "SameLinePromptBlockState": "\"DoNotShow\"",
+    "CrashReportingEnabled": "true"
+  }
+}
