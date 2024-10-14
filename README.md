@@ -24,7 +24,7 @@ First, check that the ssh-agent has your github identity loaded, and load it oth
 
 ```
 $ ps -ef | grep ssh-agent | grep -v grep
-$ eval "$(ssh-agent -s)         # if the process isn't running"
+$ eval "$(ssh-agent -s)"        # if the process isn't running"
 $ ssh-add -l
 $ ssh-add ~/.ssh/id_ed25519     # if the identity isn't there
 ```
