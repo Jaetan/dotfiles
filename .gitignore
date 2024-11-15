@@ -1,1 +1,2 @@
 *.pyc
+.config/nvim/lazy-lock.json

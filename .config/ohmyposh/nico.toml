@@ -1,39 +1,59 @@
-version = 2
-final_space = true
 console_title_template = '{{ .Shell }} in {{ .Folder }}'
+version = 3
+final_space = true
+
+[palette]
+  black = '#414868'
+  blue = '#7AA2F7'
+  cyan = '#7DCFFF'
+  green = '#73DACA'
+  magenta = '#BB9AF7'
+  red = '#F7768E'
+  white = '#C0CAF5'
+  yellow = '#E0AF68'
+
+[secondary_prompt]
+  template = '<p:yellow,transparent></><,p:yellow> > </><p:yellow,transparent></> '
+  foreground = 'p:black'
+  background = 'transparent'
+
+[transient_prompt]
+  template = ' '
+  foreground = 'p:blue'
+  background = 'transparent'
 
 [[blocks]]
   type = 'prompt'
   alignment = 'left'
 
   [[blocks.segments]]
-    type = 'os'
     style = 'diamond'
     leading_diamond = '╭─'
     template = ' {{ if .WSL }}WSL at {{ end }}{{.Icon}} '
-    background = 'p:white'
     foreground = 'p:black'
+    background = 'p:white'
+    type = 'os'
 
   [[blocks.segments]]
-    type = 'path'
     style = 'powerline'
-    powerline_symbol = ''
     template = '  {{ path .Path .Location }} '
-    background = 'p:green'
     foreground = 'p:black'
+    powerline_symbol = ''
+    background = 'p:green'
+    type = 'path'
 
     [blocks.segments.properties]
       home_icon = '~'
       style = 'full'
 
   [[blocks.segments]]
-    type = 'git'
     style = 'powerline'
-    powerline_symbol = ''
-    background_templates = ['{{ if or (.Working.Changed) (.Staging.Changed) }}#c4a000{{ end }}', '{{ if and (gt .Ahead 0) (gt .Behind 0) }}#f26d50{{ end }}', '{{ if gt .Ahead 0 }}#89d1dc{{ end }}', '{{ if gt .Behind 0 }}#4e9a06{{ end }}']
     template = ' {{ .UpstreamIcon }}{{ .HEAD }}{{if .BranchStatus }} {{ .BranchStatus }}{{ end }}{{ if .Working.Changed }}  {{ .Working.String }}{{ end }}{{ if and (.Working.Changed) (.Staging.Changed) }} |{{ end }}{{ if .Staging.Changed }}  {{ .Staging.String }}{{ end }}{{ if gt .StashCount 0 }}  {{ .StashCount }}{{ end }} '
-    background = 'p:green'
     foreground = 'p:black'
+    powerline_symbol = ''
+    background = 'p:green'
+    type = 'git'
+    background_templates = ['{{ if or (.Working.Changed) (.Staging.Changed) }}#c4a000{{ end }}', '{{ if and (gt .Ahead 0) (gt .Behind 0) }}#f26d50{{ end }}', '{{ if gt .Ahead 0 }}#89d1dc{{ end }}', '{{ if gt .Behind 0 }}#4e9a06{{ end }}']
 
     [blocks.segments.properties]
       branch_icon = ' '
@@ -47,131 +67,131 @@ console_title_template = '{{ .Shell }} in {{ .Folder }}'
   alignment = 'right'
 
   [[blocks.segments]]
-    type = 'node'
     style = 'powerline'
-    powerline_symbol = ''
-    invert_powerline = true
     template = ' {{ if .PackageManagerIcon }}{{ .PackageManagerIcon }} {{ end }}{{ .Full }}  '
-    background = 'p:yellow'
     foreground = 'p:white'
-
-    [blocks.segments.properties]
-      fetch_version = true
-
-  [[blocks.segments]]
-    type = 'go'
-    style = 'powerline'
     powerline_symbol = ''
-    invert_powerline = true
-    template = ' {{ if .Error }}{{ .Error }}{{ else }}{{ .Full }}{{ end }}  '
-    background = 'transparent'
-    foreground = 'p:blue'
-
-    [blocks.segments.properties]
-      fetch_version = true
-
-  [[blocks.segments]]
-    type = 'julia'
-    style = 'powerline'
-    powerline_symbol = ''
-    invert_powerline = true
-    template = ' {{ if .Error }}{{ .Error }}{{ else }}{{ .Full }}{{ end }}  '
-    background = 'p:blue'
-    foreground = 'p:black'
-
-    [blocks.segments.properties]
-      fetch_version = true
-
-  [[blocks.segments]]
-    type = 'python'
-    style = 'powerline'
-    powerline_symbol = ''
-    invert_powerline = true
-    template = ' {{ if .Error }}{{ .Error }}{{ else }}{{ .Full }}{{ end }}  '
     background = 'p:yellow'
+    type = 'node'
+    invert_powerline = true
+
+    [blocks.segments.properties]
+      fetch_version = true
+
+  [[blocks.segments]]
+    style = 'powerline'
+    template = ' {{ if .Error }}{{ .Error }}{{ else }}{{ .Full }}{{ end }}  '
+    foreground = 'p:blue'
+    powerline_symbol = ''
+    background = 'transparent'
+    type = 'go'
+    invert_powerline = true
+
+    [blocks.segments.properties]
+      fetch_version = true
+
+  [[blocks.segments]]
+    style = 'powerline'
+    template = ' {{ if .Error }}{{ .Error }}{{ else }}{{ .Full }}{{ end }}  '
     foreground = 'p:black'
+    powerline_symbol = ''
+    background = 'p:blue'
+    type = 'julia'
+    invert_powerline = true
+
+    [blocks.segments.properties]
+      fetch_version = true
+
+  [[blocks.segments]]
+    style = 'powerline'
+    template = ' {{ if .Error }}{{ .Error }}{{ else }}{{ .Full }}{{ end }}  '
+    foreground = 'p:black'
+    powerline_symbol = ''
+    background = 'p:yellow'
+    type = 'python'
+    invert_powerline = true
 
     [blocks.segments.properties]
       display_mode = 'files'
       fetch_virtual_env = true
 
   [[blocks.segments]]
-    type = 'ruby'
     style = 'powerline'
-    powerline_symbol = ''
-    invert_powerline = true
     template = ' {{ if .Error }}{{ .Error }}{{ else }}{{ .Full }}{{ end }}  '
-    background = 'p:red'
     foreground = 'p:black'
+    powerline_symbol = ''
+    background = 'p:red'
+    type = 'ruby'
+    invert_powerline = true
 
     [blocks.segments.properties]
       display_mode = 'files'
       fetch_version = true
 
   [[blocks.segments]]
-    type = 'azfunc'
     style = 'powerline'
-    powerline_symbol = ''
-    invert_powerline = true
     template = ' {{ if .Error }}{{ .Error }}{{ else }}{{ .Full }}{{ end }} '
-    background = 'p:yellow'
     foreground = 'p:black'
+    powerline_symbol = ''
+    background = 'p:yellow'
+    type = 'azfunc'
+    invert_powerline = true
 
     [blocks.segments.properties]
       display_mode = 'files'
       fetch_version = false
 
   [[blocks.segments]]
-    type = 'aws'
     style = 'powerline'
-    powerline_symbol = ''
-    invert_powerline = true
-    background_templates = ['{{if contains "default" .Profile}}#FFA400{{end}}', '{{if contains "jan" .Profile}}#f1184c{{end}}']
     template = ' {{ .Profile }}{{ if .Region }}@{{ .Region }}{{ end }}  '
     foreground = 'p:white'
+    powerline_symbol = ''
+    type = 'aws'
+    background_templates = ['{{if contains "default" .Profile}}#FFA400{{end}}', '{{if contains "jan" .Profile}}#f1184c{{end}}']
+    invert_powerline = true
 
     [blocks.segments.properties]
       display_default = false
 
   [[blocks.segments]]
-    type = 'root'
     style = 'powerline'
-    powerline_symbol = ''
-    invert_powerline = true
     template = '  '
-    background = 'p:yellow'
     foreground = 'p:black'
+    powerline_symbol = ''
+    background = 'p:yellow'
+    type = 'root'
+    invert_powerline = true
 
   [[blocks.segments]]
-    type = 'executiontime'
     style = 'powerline'
-    powerline_symbol = ''
-    invert_powerline = true
     template = ' {{ .FormattedMs }}  '
-    background = 'p:yellow'
     foreground = 'p:black'
+    powerline_symbol = ''
+    background = 'p:yellow'
+    type = 'executiontime'
+    invert_powerline = true
 
   [[blocks.segments]]
-    type = 'status'
     style = 'powerline'
-    powerline_symbol = ''
-    invert_powerline = true
-    background_templates = ['{{ if gt .Code 0 }}#cc2222{{ end }}']
     template = ' {{ if gt .Code 0 }}{{ reason .Code }}{{ else }}{{ end }} '
-    background = 'p:black'
     foreground = 'p:white'
+    powerline_symbol = ''
+    background = 'p:black'
+    type = 'status'
+    background_templates = ['{{ if gt .Code 0 }}#cc2222{{ end }}']
+    invert_powerline = true
 
     [blocks.segments.properties]
       always_enabled = true
 
   [[blocks.segments]]
-    type = 'time'
     style = 'diamond'
-    invert_powerline = true
     trailing_diamond = '─╮'
     template = ' {{ .CurrentDate | date .Format }}  '
-    background = 'p:white'
     foreground = 'p:black'
+    background = 'p:white'
+    type = 'time'
+    invert_powerline = true
 
 [[blocks]]
   type = 'prompt'
@@ -179,36 +199,16 @@ console_title_template = '{{ .Shell }} in {{ .Folder }}'
   newline = true
 
   [[blocks.segments]]
-    type = 'text'
     style = 'plain'
     template = '╰─'
     foreground = 'p:white'
+    type = 'text'
 
 [[blocks]]
   type = 'rprompt'
 
   [[blocks.segments]]
-    type = 'text'
     style = 'plain'
     template = '─╯'
     foreground = 'p:white'
-
-[transient_prompt]
-  template = ' '
-  background = 'transparent'
-  foreground = 'p:blue'
-
-[secondary_prompt]
-  template = '<p:yellow,transparent></><,p:yellow> > </><p:yellow,transparent></> '
-  background = 'transparent'
-  foreground = 'p:black'
-
-[palette]
-  black = '#414868'
-  red = '#F7768E'
-  green = '#73DACA'
-  yellow = '#E0AF68'
-  blue = '#7AA2F7'
-  magenta = '#BB9AF7'
-  cyan='#7DCFFF'
-  white = '#C0CAF5'
+    type = 'text'

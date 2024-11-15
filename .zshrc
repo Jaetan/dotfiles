@@ -7,6 +7,7 @@
 [[ -d "$HOME/.local/bin" && $PATH != *$HOME/.local/bin* ]] && PATH="$HOME/.local/bin${PATH:+:${PATH}}"
 [[ -d "$HOME/.rvm/bin" && $PATH != *$HOME/.rvm/bin* ]] && PATH="$HOME/.rvm/bin${PATH:+:${PATH}}"
 [[ -d "$HOME/.local/share/coursier/bin" && $PATH != *$HOME/.local/share/coursier/bin* ]] && PATH="$HOME/.local/share/coursier/bin${PATH:+:${PATH}}"
+[[ -d "$HOME/go/bin" && $PATH != *$HOME/fo/bin* ]] && PATH="$HOME/go/bin${PATH:+:${PATH}}"
 export PATH
 
 # --- zinit (zsh plugin manager) ---
@@ -99,12 +100,20 @@ esac
 # --- perl ---
 export PERL5LIB="$HOME/perl5/lib/perl5"
 
-# --- python venv ---
-source "$HOME/.venv/py/bin/activate"
-export PYTHONPATH='/home/nicolas/.venv/py/lib/python3.12/site-packages'
+# --- pyenv ---
+# source "$HOME/.venv/py/bin/activate"
+# export PYTHONPATH='/home/nicolas/.venv/py/lib/python3.12/site-packages'
+# Load pyenv automatically by appending
+export PYENV_ROOT="$HOME/.pyenv"
+[[ -d $PYENV_ROOT/bin ]] && export PATH="$PYENV_ROOT/bin:$PATH"
+eval "$(pyenv init -)"
+eval "$(pyenv virtualenv-init -)"
 
 # colored GCC warnings and errors
 export GCC_COLORS='error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quote=01'
 
 # Support for 16M colours
 export COLORTERM=truecolor
+
+# Generated for envman. Do not edit.
+[ -s "$HOME/.config/envman/load.sh" ] && source "$HOME/.config/envman/load.sh"
