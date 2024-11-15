@@ -1,2 +1,7 @@
 *.pyc
 .config/nvim/lazy-lock.json
+.config/gh/hosts.yml
+.config/go/
+.config/htop/
+.config/nvim/lazy-lock.json
+.config/pulse/
