@@ -13,6 +13,19 @@ return {
       python = { "pylint" },
     }
 
+    lint.linters.pylint.cmd = "uv"
+    lint.linters.pylint.args = {
+      "run",
+      "pylint",
+      "--verbose",
+      "-f",
+      "json",
+      "--from-stdin",
+      function()
+        return vim.api.nvim_buf_get_name(0)
+      end,
+    }
+
     local lint_augroup = vim.api.nvim_create_augroup("lint", { clear = true })
 
     vim.api.nvim_create_autocmd({ "BufEnter", "BufWritePost", "InsertLeave" }, {

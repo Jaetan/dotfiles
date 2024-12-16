@@ -138,8 +138,8 @@ return {
             extendedHover = true,
             codelens = true,
             inlayHints = true,
-            syntaxDocumentation = true
-          }
+            syntaxDocumentation = true,
+          },
         })
       end,
       ["clangd"] = function()
@@ -156,17 +156,33 @@ return {
           },
         })
       end,
-      ["null-ls"] = function()
-        lspconfig["null-ls"].setup({
-          sources = {
-            lspconfig.sources.formatting.rubocop,
-            lspconfig.sources.formatting.black,
-            lspconfig.sources.formatting.clang_format,
-            lspconfig.sources.formatting.isort,
-            lspconfig.sources.formatting.ocamlformat,
-            lspconfig.sources.formatting.prettier,
-            lspconfig.sources.formatting.stylua
-          }
+      ["basedpyright"] = function()
+        local get_pyright = function()
+          local bindir = vim.fn.trim(vim.fn.system({ "uv", "tool", "dir", "--bin" }))
+          return vim.fn.resolve(bindir .. "/basedpyright-langserver")
+        end
+        local get_extra_paths = function()
+          return "/home/nicolas/dev/Boot.dev/ssg/.venv/lib/python3.13"
+        end
+        local get_python_path = function()
+          return vim.fn.trim(vim.fn.system("uv python find"))
+        end
+        lspconfig["basedpyright"].setup({
+          cmd = {
+            get_pyright(),
+            "--stdio",
+            "--pythonPath " .. get_python_path(),
+            "--verbose",
+          },
+          settings = {
+            basedpyright = {
+              analysis = {
+                verboseOutput = true,
+                extraPaths = get_extra_paths(),
+                typeCheckingMode = "recommended",
+              },
+            },
+          },
         })
       end,
     })

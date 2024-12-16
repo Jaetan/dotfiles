@@ -1,7 +1,9 @@
 return {
   "zbirenbaum/copilot-cmp",
   event = "InsertEnter",
-  config = function () require("copilot_cmp").setup() end,
+  config = function()
+    require("copilot_cmp").setup()
+  end,
   dependencies = {
     "zbirenbaum/copilot.lua",
     cmd = "Copilot",
@@ -12,9 +14,11 @@ return {
         filetypes = {
           ruby = true,
           eruby = true,
-          html = true
-        }
+          html = true,
+          python = true,
+          cpp = true,
+        },
       })
-    end
-  }
+    end,
+  },
 }

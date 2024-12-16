@@ -98,7 +98,10 @@ esac
 [[ -s "$HOME/.rvm/scripts/rvm" ]] && source "$HOME/.rvm/scripts/rvm" # Load RVM into a shell session *as a function*
 
 # --- perl ---
-export PERL5LIB="$HOME/perl5/lib/perl5"
+# perl
+if (command -v perl && command -v cpanm) >/dev/null 2>&1; then
+  test -d "$HOME/perl5/lib/perl5" && eval $(perl -I "$HOME/perl5/lib/perl5" -Mlocal::lib)
+fi
 
 # --- pyenv ---
 # source "$HOME/.venv/py/bin/activate"
@@ -108,6 +111,17 @@ export PYENV_ROOT="$HOME/.pyenv"
 [[ -d $PYENV_ROOT/bin ]] && export PATH="$PYENV_ROOT/bin:$PATH"
 eval "$(pyenv init -)"
 eval "$(pyenv virtualenv-init -)"
+function nvimvenv {
+  if [[ -e "$VIRTUAL_ENV" && -f "$VIRTUAL_ENV/bin/activate" ]]; then
+    source "$VIRTUAL_ENV/bin/activate"
+    "$HOME"/nvim.appimage "$@"
+    deactivate
+  else
+    "$HOME"/nvim.appimage "$@"
+  fi
+}
+
+alias nvim=nvimvenv
 
 # colored GCC warnings and errors
 export GCC_COLORS='error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quote=01'

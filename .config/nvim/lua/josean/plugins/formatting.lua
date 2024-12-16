@@ -21,6 +21,25 @@ return {
         lua = { "stylua" },
         python = { "isort", "black" },
         ocaml = { "ocamlformat" },
+        cpp = { "clang-format" },
+      },
+      format_on_save = {
+        lsp_fallback = true,
+        async = false,
+        timeout_ms = 1000,
+      },
+      formatters = {
+        black = {
+          command = "uv",
+          prepend_args = { "tool", "run", "black" },
+        },
+        isort = {
+          command = "uv",
+          prepend_args = { "tool", "run", "isort" },
+        },
+        clang_format = {
+          prepend_args = { "--style=file" },
+        },
       },
     })
 

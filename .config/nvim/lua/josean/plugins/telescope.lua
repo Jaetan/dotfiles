@@ -7,7 +7,6 @@ return {
     "nvim-tree/nvim-web-devicons",
     "folke/todo-comments.nvim",
   },
-
   config = function()
     local telescope = require("telescope")
     local actions = require("telescope.actions")
@@ -18,7 +17,7 @@ return {
 
     -- or create your custom action
     local custom_actions = transform_mod({
-      open_trouble_qflist = function()
+      open_trouble_qflist = function(prompt_bufnr)
         trouble.toggle("quickfix")
       end,
     })

@@ -36,9 +36,10 @@ return {
         "graphql",
         "emmet_ls",
         "prismals",
-        "pyright",
         "rubocop",
-        "ocamllsp"
+        "ocamllsp",
+        "basedpyright",
+        "clangd",
       },
     })
 
@@ -50,7 +51,7 @@ return {
         "black", -- python formatter
         "pylint",
         "eslint_d",
-        "ocamlformat"
+        "ocamlformat",
       },
     })
   end,
