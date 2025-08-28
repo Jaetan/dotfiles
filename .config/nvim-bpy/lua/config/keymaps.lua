@@ -2,14 +2,27 @@ local map = function(mode, lhs, rhs, desc)
 	vim.keymap.set(mode, lhs, rhs, { desc = desc, silent = true })
 end
 
+-- Toggle indent guides per-buffer
+vim.keymap.set("n", "<leader>i", function()
+	local ibl = require("ibl")
+	local hidden = vim.b._ibl_hidden or false
+	if hidden then
+		ibl.setup_buffer(0, { enabled = true })
+	else
+		ibl.setup_buffer(0, { enabled = false })
+	end
+	vim.b._ibl_hidden = not hidden
+	vim.notify("Indent guides: " .. (vim.b._ibl_hidden and "OFF" or "ON"))
+end, { desc = "Toggle indent guides (buffer)" })
+
 -- diagnostics float & format
 map("n", "<leader>e", function()
 	vim.diagnostic.open_float(nil, { scope = "line", border = "rounded", source = "always", focus = false })
 end, "Line diagnostics (float)")
 
-map("n", "<leader>f", function()
+vim.keymap.set("n", "<leader>f=", function()
 	require("conform").format({ async = false, lsp_fallback = true, timeout_ms = 3000 })
-end, "Format buffer (Conform → LSP fallback)")
+end, { desc = "Format buffer (Conform → LSP fallback)" })
 
 -- toggle format-on-save (used by Conform setup)
 vim.g._format_on_save_disabled = false
@@ -89,3 +102,5 @@ end, "Move buffer to up split")
 map("n", "<leader>wml", function()
 	move_buf_to("l")
 end, "Move buffer to right split")
+
+vim.keymap.set("n", "<leader>f,", "<cmd>Telescope resume<CR>", { desc = "Resume last Telescope" })

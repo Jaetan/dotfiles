@@ -16,8 +16,53 @@ vim.opt.smartindent = true
 -- timings (for Emmet <C-y>, etc.)
 vim.opt.timeout = true
 vim.opt.ttimeout = true
-vim.opt.timeoutlen = 500
+vim.opt.timeoutlen = 700
 vim.opt.ttimeoutlen = 50
 
 -- completion behavior (also set in cmp, keeping here is fine)
 vim.opt.completeopt = { "menu", "menuone", "noselect" }
+
+-- Custom fold icon for the margin (no numeric levels)
+_G._fold_icon = function()
+	local lnum = vim.v.lnum
+	local lvl = vim.fn.foldlevel(lnum)
+	if lvl <= 0 then
+		return " " -- no fold here
+	end
+	if vim.fn.foldclosed(lnum) == -1 then
+		-- line is in an open fold; only mark the **header** so we don't spam icons
+		local prev = math.max(lnum - 1, 1)
+		if vim.fn.foldlevel(prev) < lvl then
+			return "" -- open fold head
+		else
+			return " " -- inside opened fold, show nothing
+		end
+	else
+		return "" -- closed fold head
+	end
+end
+
+-- Build a clean statuscolumn:
+--   %s  = signs (gitsigns, diagnostics)
+--   %{...} = our fold icon
+--   %=%{...} = right-aligned (relative/absolute) line number
+vim.o.statuscolumn = table.concat({
+	"%s", -- signs
+	"%{v:lua._fold_icon()} ", -- our fold icon (or space)
+	"%=%{&nu?(&rnu?v:relnum:v:lnum):''} ", -- numbers (respect number/relativenumber)
+})
+
+-- Keep fold UI consistent (one narrow column reserved; icons come from statuscolumn)
+vim.o.foldcolumn = "1" -- set to "0" if you want no dedicated fold margin at all
+vim.o.foldlevel = 99
+vim.o.foldlevelstart = 99
+vim.o.foldenable = true
+
+-- Make sure default fold fillers never render digits
+vim.opt.fillchars:append({
+	foldopen = "",
+	foldclose = "",
+	fold = " ",
+	foldsep = " ",
+	eob = " ",
+})

@@ -1,9 +1,56 @@
+-- lua/plugins/files.lua
 return {
 	{
 		"nvim-neo-tree/neo-tree.nvim",
 		branch = "v3.x",
-		dependencies = { "nvim-lua/plenary.nvim", "nvim-tree/nvim-web-devicons", "MunifTanjim/nui.nvim" },
+		dependencies = {
+			"nvim-lua/plenary.nvim",
+			"nvim-tree/nvim-web-devicons",
+			"MunifTanjim/nui.nvim",
+		},
+
+		-- Create mappings *before* the plugin loads so they trigger lazy-load.
+		keys = {
+			{
+				"<leader>ft",
+				function()
+					require("neo-tree.command").execute({ toggle = true, reveal = true, position = "left" })
+				end,
+				desc = "File tree (toggle)",
+			},
+			{
+				"<leader>fr",
+				function()
+					require("neo-tree.command").execute({ action = "reveal", position = "left" })
+				end,
+				desc = "Reveal current file in tree",
+			},
+			-- NOTE: We avoid <leader>fR here to prevent conflict with Telescope resume.
+			{
+				"<leader>fC",
+				function()
+					-- force root to cwd, then reveal
+					require("neo-tree.command").execute({
+						action = "reveal",
+						position = "left",
+						reveal_force_cwd = true,
+					})
+				end,
+				desc = "Reveal (root at CWD)",
+			},
+			{
+				"<leader>fD",
+				function()
+					-- open tree rooted at the file's directory
+					vim.cmd("Neotree left dir=%:p:h reveal")
+				end,
+				desc = "Open tree at file directory",
+			},
+		},
+
+		-- Lazy-load on command as well (optional).
 		cmd = { "Neotree" },
+
 		opts = {
 			close_if_last_window = true,
 			enable_git_status = true,
@@ -25,10 +72,9 @@ return {
 						if not mode or mode == "" then
 							return
 						end
-						local ok, res
+						local ok
 						if vim.system then
-							res = vim.system({ "chmod", mode, node.path }):wait()
-							ok = res and res.code == 0
+							ok = (vim.system({ "chmod", mode, node.path }):wait() or {}).code == 0
 						else
 							ok = os.execute(string.format("chmod %q %q", mode, node.path)) == 0
 						end
@@ -78,24 +124,10 @@ return {
 				},
 			},
 		},
+
 		config = function(_, opts)
 			require("neo-tree").setup(opts)
-			-- toggles and reveal helpers
-			vim.keymap.set(
-				"n",
-				"<leader>ft",
-				"<cmd>Neotree toggle reveal_force_cwd<CR>",
-				{ desc = "File tree (toggle)" }
-			)
-			vim.keymap.set("n", "<leader>fr", function()
-				vim.cmd("Neotree reveal left")
-			end, { desc = "Reveal current file in tree" })
-			vim.keymap.set("n", "<leader>fR", function()
-				vim.cmd("Neotree reveal_force_cwd left")
-			end, { desc = "Reveal (root at file dir)" })
-			vim.keymap.set("n", "<leader>fD", function()
-				vim.cmd("Neotree left dir=%:p:h reveal")
-			end, { desc = "Open tree at file directory" })
+			-- optional which-key group label
 			pcall(function()
 				require("which-key").add({ { "<leader>f", group = "+file/format" } })
 			end)
