@@ -69,3 +69,15 @@ vim.api.nvim_create_autocmd({ "VimEnter", "BufWinEnter", "WinNew", "TermOpen" },
 		vim.wo.statuscolumn = sc
 	end,
 })
+
+-- Auto-open quickfix after :grep / :vimgrep if there are results
+vim.api.nvim_create_autocmd("QuickFixCmdPost", {
+	pattern = { "grep", "vimgrep" },
+	callback = function()
+		if #vim.fn.getqflist() > 0 then
+			vim.cmd("cwindow") -- smart height
+		else
+			vim.notify("No matches (quickfix empty)", vim.log.levels.INFO)
+		end
+	end,
+})

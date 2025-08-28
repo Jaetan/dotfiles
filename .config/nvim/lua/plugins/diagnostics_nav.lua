@@ -80,13 +80,25 @@ return {
 		},
 	},
 
-	-- 4) Better Quickfix (preview, filtering)
+	-- 4) Better Quickfix UI (preview, filtering, auto height)
 	{
 		"kevinhwang91/nvim-bqf",
+		event = "VeryLazy",
 		ft = "qf",
 		opts = {
-			preview = { win_height = 15, win_vheight = 15, delay_syntax = 50 },
-			func_map = { open = "<CR>" },
+			auto_enable = true,
+			auto_resize_height = true,
+			preview = {
+				win_height = 15,
+				win_vheight = 15,
+				delay_syntax = 50,
+				border = "rounded",
+			},
+			filter = {
+				fzf = {
+					extra_opts = { "--bind", "ctrl-o:toggle-all" },
+				},
+			},
 		},
 	},
 

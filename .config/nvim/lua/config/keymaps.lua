@@ -342,3 +342,81 @@ pcall(function()
 		{ "<leader>m", group = "+harpoon" },
 	})
 end)
+
+----------------------------------------------------------------------
+-- Sessions (persistence.nvim) – quick toggles anywhere
+----------------------------------------------------------------------
+do
+	local function P()
+		local ok, p = pcall(require, "persistence")
+		return ok and p or nil
+	end
+
+	-- Toggle saving sessions globally (same flag your Alpha buttons use)
+	vim.keymap.set("n", "<leader>uS", function()
+		local p = P()
+		vim.g._session_disabled = not vim.g._session_disabled
+		if p and p.stop and vim.g._session_disabled then
+			p.stop()
+		end
+		if p and p.start and not vim.g._session_disabled then
+			p.start()
+		end
+		vim.notify("Session saving: " .. (vim.g._session_disabled and "OFF" or "ON"))
+	end, { desc = "Session: toggle save on exit" })
+
+	-- Restore last session
+	vim.keymap.set("n", "<leader>uR", function()
+		local p = P()
+		if p and p.load then
+			vim.g._session_disabled = false
+			p.load({ last = true })
+		else
+			vim.notify("persistence.nvim not available", vim.log.levels.WARN)
+		end
+	end, { desc = "Session: restore last" })
+
+	-- Restore session for current working directory
+	vim.keymap.set("n", "<leader>uL", function()
+		local p = P()
+		if p and p.load then
+			vim.g._session_disabled = false
+			p.load()
+		else
+			vim.notify("persistence.nvim not available", vim.log.levels.WARN)
+		end
+	end, { desc = "Session: restore for CWD" })
+
+	pcall(function()
+		require("which-key").add({ { "<leader>u", group = "+utils/session" } })
+	end)
+end
+
+-- Project-rooted :Grep {pattern} -> fills quickfix (uses rg via grepprg)
+vim.api.nvim_create_user_command("Grep", function(opts)
+	local pattern = opts.args ~= "" and opts.args or vim.fn.input("Grep pattern: ")
+	if pattern == "" then
+		return
+	end
+
+	local function project_root()
+		if vim.system then
+			local r = vim.system({ "git", "rev-parse", "--show-toplevel" }):wait()
+			if r and r.code == 0 and r.stdout and #r.stdout > 0 then
+				return (r.stdout:gsub("%s+$", ""))
+			end
+		end
+		return vim.loop.cwd()
+	end
+
+	local root = project_root()
+	local save = vim.loop.cwd()
+	vim.cmd("lcd " .. vim.fn.fnameescape(root))
+	vim.cmd("silent grep " .. vim.fn.shellescape(pattern))
+	vim.cmd("lcd " .. vim.fn.fnameescape(save))
+end, { nargs = "*", complete = "file" })
+
+-- Quick mapping to prompt & run :Grep (rooted)
+vim.keymap.set("n", "<leader>/", function()
+	vim.cmd("Grep")
+end, { desc = "Project grep → quickfix" })
