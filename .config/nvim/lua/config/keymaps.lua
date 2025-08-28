@@ -63,6 +63,12 @@ for i = 1, 9 do
 	map("n", "<leader>t" .. i, i .. "gt", "Go to tab " .. i)
 end
 
+-- Toggle relative line numbers (absolute stays on)
+vim.keymap.set("n", "<leader>n", function()
+	vim.wo.relativenumber = not vim.wo.relativenumber
+	vim.notify("Relative numbers: " .. (vim.wo.relativenumber and "ON" or "OFF"))
+end, { desc = "Toggle relative line numbers" })
+
 -- buffer move helpers (from snippet-89)
 local function move_buf_to(dir)
 	local cur_win = vim.api.nvim_get_current_win()
