@@ -22,6 +22,8 @@ vim.opt.ttimeoutlen = 50
 -- completion behavior (also set in cmp, keeping here is fine)
 vim.opt.completeopt = { "menu", "menuone", "noselect" }
 
+vim.g.python3_host_prog = vim.fn.expand("~/.local/share/nvim/py3/bin/python")
+
 -- Custom fold icon for the margin (no numeric levels)
 _G._fold_icon = function()
 	local lnum = vim.v.lnum
