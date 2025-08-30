@@ -1,17 +1,12 @@
+-- lua/plugins/telescope_extras.lua
 return {
-	-- Native fzf sorter for Telescope (needs build tools)
+	-- Native fzf sorter for Telescope (requires make or cmake)
 	{
 		"nvim-telescope/telescope-fzf-native.nvim",
-		build = "make", -- or "cmake -S. -Bbuild -DCMAKE_BUILD_TYPE=Release && cmake --build build --config Release && cmake --install build --prefix build"
+		build = "make",
 		cond = function()
 			return vim.fn.executable("make") == 1 or vim.fn.executable("cmake") == 1
 		end,
-		event = "VeryLazy",
-		config = function()
-			local ok, telescope = pcall(require, "telescope")
-			if ok then
-				pcall(telescope.load_extension, "fzf")
-			end
-		end,
+		-- no config needed; telescope.lua loads the extension
 	},
 }

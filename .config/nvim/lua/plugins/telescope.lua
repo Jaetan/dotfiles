@@ -51,11 +51,27 @@ return {
 				lsp_implementations = { show_line = false },
 				lsp_type_definitions = { show_line = false },
 			},
+			-- Make sure fzf is configured here so it overrides Telescope sorters
+			extensions = {
+				fzf = {
+					fuzzy = true, -- true: fuzzy match; false: exact
+					override_generic_sorter = true,
+					override_file_sorter = true,
+					case_mode = "smart_case", -- or "ignore_case" | "respect_case"
+				},
+			},
 			_helpers = { project_root = project_root },
 		}
 	end,
 	config = function(_, opts)
-		require("telescope").setup(opts)
+		local ok_tel, telescope = pcall(require, "telescope")
+		if not ok_tel then
+			return
+		end
+		telescope.setup(opts)
+
+		-- Ensure the extension is actually loaded here (safe even if also loaded elsewhere)
+		pcall(telescope.load_extension, "fzf")
 
 		-- Pickers / keymaps
 		local tb = require("telescope.builtin")
