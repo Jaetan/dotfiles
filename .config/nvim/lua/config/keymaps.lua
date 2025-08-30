@@ -248,12 +248,58 @@ map("n", "<leader>o", "<cmd>AerialToggle! right<CR>", "Symbols outline (Aerial)"
 map("n", "<leader>O", "<cmd>AerialNavToggle<CR>", "Aerial nav window")
 
 ----------------------------------------------------------------
+-- Folds (nvim-ufo): peek (without touching K) + open/close all
+----------------------------------------------------------------
+pcall(function()
+	require("which-key").add({ { "<leader>z", group = "+folds" } })
+end)
+
+-- Peek folded lines under cursor; if nothing to peek, fall back to LSP hover
+vim.keymap.set("n", "<leader>zp", function()
+	local ok, ufo = pcall(require, "ufo")
+	if ok then
+		local winid = ufo.peekFoldedLinesUnderCursor()
+		if winid then
+			return
+		end
+	end
+	-- No fold to peek → hover if available
+	local buf = vim.api.nvim_get_current_buf()
+	for _, client in ipairs(vim.lsp.get_clients({ bufnr = buf })) do
+		if client.server_capabilities and client.server_capabilities.hoverProvider then
+			vim.lsp.buf.hover()
+			return
+		end
+	end
+	vim.notify("No fold preview or hover here.", vim.log.levels.INFO)
+end, { desc = "Peek fold / Hover" })
+
+vim.keymap.set("n", "<leader>zR", function()
+	local ok, ufo = pcall(require, "ufo")
+	if ok then
+		ufo.openAllFolds()
+	else
+		vim.cmd("normal! zR")
+	end
+end, { desc = "Open all folds" })
+
+vim.keymap.set("n", "<leader>zM", function()
+	local ok, ufo = pcall(require, "ufo")
+	if ok then
+		ufo.closeAllFolds()
+	else
+		vim.cmd("normal! zM")
+	end
+end, { desc = "Close all folds" })
+
+----------------------------------------------------------------
 -- which-key labels
 ----------------------------------------------------------------
 pcall(function()
 	require("which-key").add({
 		{ "<leader>x", group = "+trouble/diagnostics" },
 		{ "<leader>t", group = "+tabs/todo" },
+		{ "<leader>z", group = "+folds" },
 		{ "<leader>o", desc = "Symbols outline (Aerial)" },
 	})
 end)
