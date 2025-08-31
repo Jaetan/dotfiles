@@ -43,17 +43,6 @@ map("n", "<leader>n", function()
 	vim.notify("Relative numbers: " .. (vim.wo.relativenumber and "ON" or "OFF"))
 end, "Toggle relative line numbers")
 
--- Toggle virtual cursor (allow past-EOL movement to keep column)
-map("n", "<leader>uV", function()
-	local cur = vim.o.virtualedit
-	if cur == "all" then
-		vim.o.virtualedit = ""
-	else
-		vim.o.virtualedit = "all"
-	end
-	vim.notify("Virtual cursor: " .. (vim.o.virtualedit == "all" and "ON" or "OFF"))
-end, "Toggle virtual cursor (past-EOL)")
-
 ----------------------------------------------------------------
 -- Windows / tabs / resize
 ----------------------------------------------------------------
@@ -167,7 +156,7 @@ vim.keymap.set(
 vim.keymap.set("n", "<leader>xq", trouble_cmd("qflist toggle"), { desc = "Trouble: quickfix list" })
 vim.keymap.set("n", "<leader>xl", trouble_cmd("loclist toggle"), { desc = "Trouble: location list" })
 
--- TODO comments (project-rooted)
+-- TODO comments (project-rooted + buffer)
 do
 	local function project_root()
 		if vim.system then
@@ -197,7 +186,7 @@ do
 		end
 	end
 
-	-- Trouble list of TODOs (from project root)
+	-- Trouble list of TODOs
 	vim.keymap.set("n", "<leader>td", function()
 		with_lcd_root(function()
 			pcall(require, "todo-comments")
@@ -211,7 +200,7 @@ do
 		end)
 	end, { desc = "TODOs (Trouble @ project root)" })
 
-	-- Telescope list of TODOs (from project root)
+	-- Telescope TODOs
 	vim.keymap.set("n", "<leader>tD", function()
 		with_lcd_root(function()
 			local ok_t, telescope = pcall(require, "telescope")
@@ -227,7 +216,7 @@ do
 		end)
 	end, { desc = "TODOs (Telescope @ project root)" })
 
-	-- Quickfix route stays global; keep as-is if you like:
+	-- Quickfix
 	vim.keymap.set("n", "<leader>tq", function()
 		vim.cmd.TodoQuickFix()
 		vim.cmd.copen()
@@ -251,7 +240,7 @@ map("n", "<leader>o", "<cmd>AerialToggle! right<CR>", "Symbols outline (Aerial)"
 map("n", "<leader>O", "<cmd>AerialNavToggle<CR>", "Aerial nav window")
 
 ----------------------------------------------------------------
--- Folds (nvim-ufo): peek (without touching K) + open/close all
+-- Folds (nvim-ufo): peek + open/close all
 ----------------------------------------------------------------
 pcall(function()
 	require("which-key").add({ { "<leader>z", group = "+folds" } })
@@ -302,8 +291,6 @@ pcall(function()
 		{ "<leader>t", group = "+tabs/todo" },
 		{ "<leader>z", group = "+folds" },
 		{ "<leader>o", desc = "Symbols outline (Aerial)" },
-		{ "<leader>u", group = "+utils/session" },
-		{ "<leader>uV", desc = "Toggle virtual cursor" },
 	})
 end)
 
@@ -377,6 +364,7 @@ do
 	end
 end
 
+-- which-key labels
 pcall(function()
 	require("which-key").add({
 		{ "<leader>s", group = "+search/replace" },
@@ -454,6 +442,101 @@ vim.api.nvim_create_user_command("Grep", function(opts)
 	vim.cmd("lcd " .. vim.fn.fnameescape(save))
 end, { nargs = "*", complete = "file" })
 
+-- Quick mapping to prompt & run :Grep (rooted)
 vim.keymap.set("n", "<leader>/", function()
 	vim.cmd("Grep")
 end, { desc = "Project grep → quickfix" })
+
+----------------------------------------------------------------------
+-- OCaml / Dune helpers (lightweight task runner)  -------------------
+----------------------------------------------------------------------
+do
+	local function project_root()
+		if vim.system then
+			local r = vim.system({ "git", "rev-parse", "--show-toplevel" }):wait()
+			if r and r.code == 0 and r.stdout and #r.stdout > 0 then
+				return (r.stdout:gsub("%s+$", ""))
+			end
+		end
+		return vim.loop.cwd()
+	end
+
+	local function open_term(cmd_argv, title)
+		local root = project_root()
+		vim.cmd("botright 15split")
+		local buf = vim.api.nvim_create_buf(true, false)
+		vim.api.nvim_win_set_buf(0, buf)
+
+		-- mark as terminal buffer; wipe on hide
+		vim.bo[buf].buftype = "terminal"
+		vim.bo[buf].bufhidden = "wipe"
+
+		vim.fn.termopen(cmd_argv, { cwd = root })
+		vim.cmd("startinsert")
+		-- quick close
+		vim.keymap.set("n", "q", "<cmd>close<CR>", { buffer = buf, nowait = true, silent = true })
+		if title and title ~= "" then
+			vim.b[buf].term_title = title
+		end
+	end
+
+	-- Dune commands
+	vim.keymap.set("n", "<leader>db", function()
+		open_term({ "dune", "build" }, "dune build")
+	end, { desc = "Dune: build" })
+
+	vim.keymap.set("n", "<leader>dt", function()
+		open_term({ "dune", "runtest" }, "dune runtest")
+	end, { desc = "Dune: runtest" })
+
+	vim.keymap.set("n", "<leader>dc", function()
+		open_term({ "dune", "clean" }, "dune clean")
+	end, { desc = "Dune: clean" })
+
+	vim.keymap.set("n", "<leader>de", function()
+		local default = vim.g._dune_last_exec or ""
+		local exe = vim.fn.input("dune exec -- ", default)
+		if exe == nil or exe == "" then
+			return
+		end
+		vim.g._dune_last_exec = exe
+		open_term({ "dune", "exec", "--", exe }, "dune exec -- " .. exe)
+	end, { desc = "Dune: exec <program>" })
+
+	vim.keymap.set("n", "<leader>dE", function()
+		local exe = vim.g._dune_last_exec
+		if not exe or exe == "" then
+			vim.notify("No previous dune exec command.", vim.log.levels.WARN)
+			return
+		end
+		open_term({ "dune", "exec", "--", exe }, "dune exec -- " .. exe .. " (repeat)")
+	end, { desc = "Dune: exec last" })
+
+	-- which-key group
+	pcall(function()
+		require("which-key").add({
+			{ "<leader>d", group = "+dune" },
+			{ "<leader>db", desc = "build" },
+			{ "<leader>dt", desc = "runtest" },
+			{ "<leader>dc", desc = "clean" },
+			{ "<leader>de", desc = "exec <program>" },
+			{ "<leader>dE", desc = "exec last" },
+		})
+	end)
+
+	-- OCaml: alternate file (.ml <-> .mli)
+	vim.api.nvim_create_user_command("OCamlAlternate", function()
+		local ext = vim.fn.expand("%:e") -- ml | mli | something else
+		if ext ~= "ml" and ext ~= "mli" then
+			vim.notify("Not an OCaml source/interface file.", vim.log.levels.WARN)
+			return
+		end
+		local cur = vim.fn.expand("%:p")
+		local target = (ext == "ml") and (cur:gsub("%.ml$", ".mli")) or (cur:gsub("%.mli$", ".ml"))
+		if vim.loop.fs_stat(target) then
+			vim.cmd.edit(vim.fn.fnameescape(target))
+		else
+			vim.notify("Alternate not found: " .. target, vim.log.levels.INFO)
+		end
+	end, {})
+end
