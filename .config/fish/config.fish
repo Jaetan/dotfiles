@@ -3,6 +3,11 @@
 # PATH
 fish_add_path $HOME/.local/bin $HOME/bin
 
+# Atuin sh-installer PATH (if present)
+if test -d $HOME/.atuin/bin
+    fish_add_path $HOME/.atuin/bin
+end
+
 # ssh-agent via keychain (interactive shells only)
 if status is-interactive
     if type -q keychain
@@ -21,6 +26,12 @@ set -gx LESS "-R --mouse -F -X -M"
 set -gx GREP_COLORS "ms=01;36"
 set -gx BAT_THEME "tokyonight_night"
 set -gx MANPAGER "sh -c 'col -bx | bat -l man -p'"
+
+# Use lesspipe if available (better 'less' for many formats)
+if test -x /usr/bin/lesspipe
+    set -gx LESSOPEN "|/usr/bin/lesspipe %s"
+    set -gx LESSCLOSE "/usr/bin/lesspipe %s %s"
+end
 
 # Fallback LS_COLORS (eza already colors nicely)
 set -q LS_COLORS; or set -gx LS_COLORS "di=01;34:ln=01;36:so=33:pi=33:ex=01;32:bd=01;33:cd=01;33:or=01;31:mi=01;31"
@@ -62,6 +73,10 @@ alias gs="git status -sb"
 alias gd="git diff"
 alias gl="git log --oneline --graph --decorate"
 
+# quick up-directory abbreviations (bash '..'/'...' aliases)
+abbr -a .. 'cd ..'
+abbr -a ... 'cd ../..'
+
 # direnv
 if type -q direnv
     direnv hook fish | source
@@ -72,6 +87,14 @@ if type -q zoxide
     zoxide init fish | source
     abbr -a z z
     abbr -a zz "z -"
+end
+
+# fzf: fish keybindings/completions (system examples if present)
+if test -f /usr/share/doc/fzf/examples/key-bindings.fish
+    source /usr/share/doc/fzf/examples/key-bindings.fish
+end
+if test -f /usr/share/doc/fzf/examples/completion.fish
+    source /usr/share/doc/fzf/examples/completion.fish
 end
 
 # fzf + preview with bat (Tokyo Night Night)
@@ -117,6 +140,28 @@ alias cp='cp -i'
 function mcd; mkdir -p -- $argv[1]; and cd -- $argv[1]; end
 function mkcdtmp; set d (mktemp -d); cd $d; pwd; end
 function mkvenv; python3 -m venv .venv; and source .venv/bin/activate.fish; and pip -q install -U pip wheel; end
+function extract
+    switch $argv[1]
+        case '*.tar.bz2' '*.tbz2'
+            tar xjf $argv[1]
+        case '*.tar.gz' '*.tgz'
+            tar xzf $argv[1]
+        case '*.tar'
+            tar xf $argv[1]
+        case '*.bz2'
+            bunzip2 $argv[1]
+        case '*.gz'
+            gunzip $argv[1]
+        case '*.zip'
+            unzip $argv[1]
+        case '*.rar'
+            unrar x $argv[1]
+        case '*.7z'
+            7z x $argv[1]
+        case '*'
+            echo "don't know how to extract '$argv[1]'"
+    end
+end
 
 # "please": rerun last command with sudo (fish uses $history with newest first)
 function please
@@ -132,6 +177,9 @@ if test -n "$WSL_DISTRO_NAME"
     function pbcopy; clip.exe < /dev/stdin; end
     function pbpaste; powershell.exe -NoProfile -Command Get-Clipboard | tr -d '\r'; end
 end
+
+# WSL niceties (like bash's WSLSYS probe)
+set -gx WSLSYS (test -r /proc/sys/fs/binfmt_misc/WSLInterop; and echo 1; or echo 0)
 
 # mise (version manager) — correct fish activation
 if type -q mise
