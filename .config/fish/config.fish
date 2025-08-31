@@ -85,9 +85,27 @@ if type -q atuin
     atuin init fish --disable-up-arrow | source
 end
 
+# --- Starship transient prompt separator line -------------------------
+# Draw a dim rule where the old prompt was, to separate outputs.
+function starship_transient_prompt_func
+    set -l cols $COLUMNS
+    if test -z "$cols"
+        set cols (tput cols ^/dev/null)
+    end
+    set_color 565f89
+    echo (string repeat -n $cols '─')
+    set_color normal
+end
+
+# Right-side bit on that transient line (time, matching your theme)
+function starship_transient_rprompt_func
+    starship module time
+end
+
 # starship prompt
 if type -q starship
     starship init fish | source
+    enable_transience
 end
 
 # safer coreutils
