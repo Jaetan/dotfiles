@@ -7,3 +7,5 @@
 *.pyc
 
 .config/go/telemetry/
+
+.config/git/gitk
