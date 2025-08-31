@@ -198,6 +198,26 @@ function gdel
     git ls-files -d -z | git update-index --remove -z --stdin
 end
 
+# gmod: add only modified (tracked) files to the index
+function gmod
+    set -l files (git -c core.quotepath=off ls-files -m -z | string split0)
+    if test (count $files) -gt 0
+        git add -- $files
+    else
+        echo "No modified files."
+    end
+end
+
+# gnew: add only new (untracked) files to the index
+function gnew
+    set -l files (git -c core.quotepath=off ls-files --others --exclude-standard -z | string split0)
+    if test (count $files) -gt 0
+        git add -- $files
+    else
+        echo "No new untracked files."
+    end
+end
+
 # "please": rerun last command with sudo (fish uses $history with newest first)
 function please
     if test (count $history) -gt 0
