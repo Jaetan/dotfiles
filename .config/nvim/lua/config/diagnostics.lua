@@ -10,7 +10,11 @@ vim.api.nvim_set_hl(0, "DiagnosticUnderlineHint", { undercurl = true, sp = "#10B
 vim.diagnostic.config({
 	virtual_text = false,
 	severity_sort = true,
-	float = { border = "rounded", source = "always", focusable = false },
+	float = {
+		border = "rounded",
+		source = true, -- was "always"; valid values: true|false|"if_many"
+		focusable = false,
+	},
 	signs = {
 		priority = 10,
 		text = {

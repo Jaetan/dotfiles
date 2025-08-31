@@ -54,7 +54,9 @@ return {
 		hooks = {
 			-- auto-focus the diff on open; you can comment this out if you prefer the files panel
 			diff_buf_win_enter = function()
-				pcall(vim.cmd, "wincmd l")
+				pcall(function()
+					vim.cmd("wincmd l")
+				end)
 			end,
 		},
 	},

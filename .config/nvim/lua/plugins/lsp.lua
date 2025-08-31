@@ -20,9 +20,7 @@ return {
 			local ok_nd, neodev = pcall(require, "neodev")
 			if ok_nd then
 				neodev.setup({
-					-- Load type information for installed plugins too
 					library = { plugins = true, types = true },
-					-- Don’t auto-enable for random folders; still global enough for your dotfiles
 					pathStrict = true,
 				})
 			end
@@ -32,7 +30,7 @@ return {
 				settings = {
 					Lua = {
 						runtime = { version = "LuaJIT" },
-						diagnostics = { globals = { "vim" } }, -- harmless if Neodev already provides it
+						diagnostics = { globals = { "vim" } },
 						workspace = { checkThirdParty = false },
 						telemetry = { enable = false },
 					},
@@ -119,11 +117,8 @@ return {
 				callback = function(ev)
 					local c = vim.lsp.get_client_by_id(ev.data.client_id)
 					if c and c.name == "basedpyright" then
-						local p = (
-							c.config.settings
-							and c.config.settings.python
-							and c.config.settings.python.pythonPath
-						) or "<none>"
+						-- avoid undefined-field warning by using a safe lookup
+						local p = vim.tbl_get(c, "config", "settings", "python", "pythonPath") or "<none>"
 						vim.notify("basedpyright pythonPath=" .. p)
 					end
 				end,

@@ -170,17 +170,21 @@ do
 
 	-- Run a thunk with local cwd temporarily set to root
 	local function with_lcd_root(fn)
-		local old = vim.fn.getcwd(-1, -1) -- current window’s local dir (if any)
-		local root = project_root()
+		local old = vim.fn.getcwd(-1, -1) or "" ---@type string
+		local root = project_root() or vim.loop.cwd() or "." ---@type string
 		local had_lcd = (old ~= "")
 
-		vim.cmd("silent! lcd " .. vim.fn.fnameescape(root))
+		-- window-local cwd; typed form avoids luals string|nil warnings
+		vim.cmd.lcd({ args = { root } })
+
 		local ok, err = pcall(fn)
+
 		if had_lcd then
-			vim.cmd("silent! lcd " .. vim.fn.fnameescape(old))
+			vim.cmd.lcd({ args = { old } })
 		else
-			vim.cmd("silent! lcd .")
+			vim.cmd.lcd({ args = { "." } })
 		end
+
 		if not ok then
 			vim.notify(("TODO mapping error: %s"):format(err), vim.log.levels.ERROR)
 		end
@@ -435,11 +439,11 @@ vim.api.nvim_create_user_command("Grep", function(opts)
 		return vim.loop.cwd()
 	end
 
-	local root = project_root()
-	local save = vim.loop.cwd()
-	vim.cmd("lcd " .. vim.fn.fnameescape(root))
+	local root = project_root() or vim.loop.cwd() or "." ---@type string
+	local save = vim.loop.cwd() or "." ---@type string
+	vim.cmd.lcd({ args = { root } })
 	vim.cmd("silent grep " .. vim.fn.shellescape(pattern))
-	vim.cmd("lcd " .. vim.fn.fnameescape(save))
+	vim.cmd.lcd({ args = { save } })
 end, { nargs = "*", complete = "file" })
 
 -- Quick mapping to prompt & run :Grep (rooted)

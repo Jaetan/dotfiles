@@ -1,5 +1,3 @@
--- config/autocmds.lua — corrected
-
 -- retab on write (but not for Makefiles which need real tabs)
 vim.api.nvim_create_autocmd("BufWritePre", {
 	pattern = "*",
@@ -43,30 +41,32 @@ vim.api.nvim_create_autocmd("ColorScheme", {
 	end,
 })
 
--- Ensure no plugin/custom statuscolumn draws fold levels as digits
-vim.api.nvim_create_autocmd({ "VimEnter", "BufWinEnter", "WinNew" }, {
-	callback = function(ev)
-		-- window-local setting
-		pcall(function()
-			vim.wo[ev.win] = vim.wo[ev.win]
-		end) -- noop guard for older APIs
-		vim.wo.statuscolumn = "" -- default rendering
-		vim.wo.foldcolumn = "1" -- or "0" to hide completely
-	end,
-})
+-- -------------------------------------------------------------------
+-- Force our statuscolumn everywhere and keep the fold column hidden.
+-- -------------------------------------------------------------------
 
 -- Custom, no-numbers statuscolumn (signs | fold icon | numbers)
--- relies on _G._fold_icon from options.lua (snippet-162)
+-- relies on _G._fold_icon from options.lua
 local sc = table.concat({
 	"%s", -- signs (gitsigns/diagnostics)
 	"%{v:lua._fold_icon()} ", -- our fold icon only on headers
 	"%=%{&nu?(&rnu?v:relnum:v:lnum):''} ", -- (relative) line numbers
 })
 
-vim.api.nvim_create_autocmd({ "VimEnter", "BufWinEnter", "WinNew", "TermOpen" }, {
-	group = vim.api.nvim_create_augroup("StatusColApply", { clear = true }),
-	callback = function()
-		vim.wo.statuscolumn = sc
+local function apply_statuscol(win)
+	win = win or 0
+	vim.schedule(function()
+		pcall(function()
+			vim.wo[win].foldcolumn = "0" -- never show dedicated fold column
+			vim.wo[win].statuscolumn = sc -- always use our custom statuscolumn
+		end)
+	end)
+end
+
+vim.api.nvim_create_autocmd({ "VimEnter", "BufWinEnter", "WinNew", "TermOpen", "BufEnter", "TabEnter", "FileType" }, {
+	group = vim.api.nvim_create_augroup("StatusColForce", { clear = true }),
+	callback = function(args)
+		apply_statuscol(args.win)
 	end,
 })
 

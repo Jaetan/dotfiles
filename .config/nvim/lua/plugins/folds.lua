@@ -45,7 +45,8 @@ return {
 		return {
 			open_fold_hl_timeout = 0,
 			-- IMPORTANT: return only { main, fallback }
-			provider_selector = function(bufnr, _filetype, _buftype)
+			-- (take just the bufnr to avoid unused-parameter warnings)
+			provider_selector = function(bufnr)
 				if has_ts(bufnr) then
 					return { "treesitter", "indent" }
 				else
@@ -74,12 +75,7 @@ return {
 		map("zR", ufo.openAllFolds, "Open all folds")
 		map("zM", ufo.closeAllFolds, "Close all folds")
 
-		-- Peek folded lines with K; fall back to LSP hover when nothing folded.
-		map("K", function()
-			local winid = ufo.peekFoldedLinesUnderCursor()
-			if not winid then
-				vim.lsp.buf.hover()
-			end
-		end, "Peek fold / Hover")
+		-- NOTE: We intentionally do NOT bind `K` here to avoid clashing with
+		-- language-specific hovers (e.g. OCaml type-on-hover). Use <leader>zp from keymaps.lua.
 	end,
 }
