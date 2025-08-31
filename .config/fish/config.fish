@@ -198,23 +198,68 @@ function gdel
     git ls-files -d -z | git update-index --remove -z --stdin
 end
 
-# gmod: add only modified (tracked) files to the index
+# gmod: stage only modified files; interactive picker if fzf is available
 function gmod
     set -l files (git -c core.quotepath=off ls-files -m -z | string split0)
-    if test (count $files) -gt 0
-        git add -- $files
-    else
+    if test (count $files) -eq 0
         echo "No modified files."
+        return 0
+    end
+    if type -q fzf
+        set -l preview 'if [ -d {} ]; then eza --tree --color=always {} | head -200; else bat -n --color=always --line-range :500 {}; fi'
+        set -l pick (printf '%s\n' $files | fzf --multi --preview "$preview")
+        if test -n "$pick"
+            git add -- $pick
+        else
+            echo "No selection."
+        end
+    else
+        git add -- $files
     end
 end
 
-# gnew: add only new (untracked) files to the index
+# gnew: stage only new/untracked files; interactive picker if fzf is available
 function gnew
     set -l files (git -c core.quotepath=off ls-files --others --exclude-standard -z | string split0)
-    if test (count $files) -gt 0
-        git add -- $files
-    else
+    if test (count $files) -eq 0
         echo "No new untracked files."
+        return 0
+    end
+    if type -q fzf
+        set -l preview 'if [ -d {} ]; then eza --tree --color=always {} | head -200; else bat -n --color=always --line-range :500 {}; fi'
+        set -l pick (printf '%s\n' $files | fzf --multi --preview "$preview")
+        if test -n "$pick"
+            git add -- $pick
+        else
+            echo "No selection."
+        end
+    else
+        git add -- $files
+    end
+end
+
+# gunstage: unstage files; interactive picker if fzf is available; --all to unstage everything
+function gunstage
+    argparse 'a/all' -- $argv
+    if set -q _flag_all
+        git restore --staged :/
+        return
+    end
+    set -l files (git -c core.quotepath=off diff --name-only --cached -z | string split0)
+    if test (count $files) -eq 0
+        echo "Nothing is staged."
+        return 0
+    end
+    if type -q fzf
+        set -l preview 'if [ -d {} ]; then eza --tree --color=always {} | head -200; else git --no-pager diff --staged --color=always -- {} | delta || git --no-pager diff --staged --color=always -- {}; fi'
+        set -l pick (printf '%s\n' $files | fzf --multi --preview "$preview")
+        if test -n "$pick"
+            git restore --staged -- $pick
+        else
+            echo "No selection."
+        end
+    else
+        git restore --staged -- $files
     end
 end
 
