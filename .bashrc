@@ -144,3 +144,9 @@ export WSLSYS="$([ -r /proc/sys/fs/binfmt_misc/WSLInterop ] && echo 1 || echo 0)
 
 # --- End ------------------------------------------------------
 
+export PATH="$HOME/.local/bin:$PATH"
+
+. "$HOME/.atuin/bin/env"
+
+[[ -f ~/.bash-preexec.sh ]] && source ~/.bash-preexec.sh
+eval "$(atuin init bash)"

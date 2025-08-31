@@ -1,0 +1,5 @@
+# .envrc (per project)
+layout python3
+# (optionally) export PYTHONPATH=$PWD/src:$PYTHONPATH
+# (optionally) export PIP_FIND_LINKS=/path/to/wheels
+

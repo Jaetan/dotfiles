@@ -1,0 +1,50 @@
+# Starship — Tokyo Night Night
+add_newline = true
+format = """
+[\\[$time\\]](fg:#565f89) [$status](fg:#9ece6a bg:transparent) $git_branch$git_status \
+[\\($directory\\)](fg:#7dcfff) $python $cmd_duration
+$character
+"""
+
+[time]
+disabled = false
+format = "[$time]($style)"
+time_format = "%H:%M:%S"
+style = "fg:#565f89"
+
+[status]
+disabled = false
+symbol = "• "
+success_symbol = "• "
+format = "[$symbol]($style)"
+style = "fg:#9ece6a"
+map_symbol = true
+
+[directory]
+truncate_to_repo = true
+truncation_length = 3
+style = "fg:#7dcfff"
+
+[git_branch]
+format = "[ $branch]($style)"
+style = "fg:#bb9af7"
+
+[git_status]
+format = "([$all_status$ahead_behind]($style))"
+style = "fg:#bb9af7"
+
+[python]
+# Show active venv name (direnv/pyenv), not version
+format = "[($virtualenv )]($style)"
+style = "fg:#9ece6a"
+pyenv_version_name = false
+
+[cmd_duration]
+min_time = 2000
+format = "[ ⏱ $duration]($style)"
+style = "fg:#e0af68"
+
+[character]
+success_symbol = "[❯](fg:#c0caf5)"
+error_symbol = "[❯](fg:#f7768e)"
+vicmd_symbol = "[❮](fg:#7aa2f7)"
