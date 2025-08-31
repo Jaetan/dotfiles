@@ -2,6 +2,7 @@ return {
 	"nvim-treesitter/nvim-treesitter-textobjects",
 	event = { "BufReadPre", "BufNewFile" },
 	dependencies = { "nvim-treesitter/nvim-treesitter" },
+
 	opts = {
 		select = {
 			enable = true,
@@ -27,6 +28,7 @@ return {
 				["@class.outer"] = "V",
 			},
 		},
+
 		move = {
 			enable = true,
 			set_jumps = true,
@@ -47,6 +49,7 @@ return {
 				["[C"] = "@class.outer",
 			},
 		},
+
 		swap = {
 			enable = true,
 			swap_next = {
@@ -57,7 +60,13 @@ return {
 			},
 		},
 	},
+
 	config = function(_, opts)
+		-- Treesitter’s setup accepts partial tables at any time and merges them.
+		-- Adding the top-level TSConfig fields here would risk overriding your main
+		-- nvim-treesitter config, so we keep this narrowly scoped and silence the
+		-- typechecker for missing top-level fields.
+		---@diagnostic disable-next-line: missing-fields
 		require("nvim-treesitter.configs").setup({
 			textobjects = opts,
 		})

@@ -65,8 +65,9 @@ end
 
 vim.api.nvim_create_autocmd({ "VimEnter", "BufWinEnter", "WinNew", "TermOpen", "BufEnter", "TabEnter", "FileType" }, {
 	group = vim.api.nvim_create_augroup("StatusColForce", { clear = true }),
-	callback = function(args)
-		apply_statuscol(args.win)
+	callback = function()
+		-- Use current window (0); avoids relying on non-standard args.win
+		apply_statuscol(0)
 	end,
 })
 

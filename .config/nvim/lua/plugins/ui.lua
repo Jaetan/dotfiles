@@ -3,7 +3,6 @@ return {
 	dependencies = { "nvim-tree/nvim-web-devicons" },
 	event = "VimEnter",
 	opts = function()
-		local alpha = require("alpha")
 		local dashboard = require("alpha.themes.dashboard")
 
 		--------------------------------------------------------------------
@@ -248,7 +247,8 @@ return {
 			if not h then
 				return nil
 			end
-			local newest = 0
+
+			local newest = 0 ---@type integer
 			while true do
 				local name, typ = vim.loop.fs_scandir_next(h)
 				if not name then
@@ -257,8 +257,14 @@ return {
 				if typ == "file" or typ == nil then
 					local st = vim.loop.fs_stat(dir .. "/" .. name)
 					if st and st.mtime then
-						local mt = (type(st.mtime) == "table") and st.mtime.sec or st.mtime
-						if mt and mt > newest then
+						-- Narrow st.mtime → integer
+						local mt = st.mtime ---@type integer|{ sec: integer, nsec: integer }
+						if type(mt) == "table" then
+							---@cast mt { sec: integer, nsec: integer }
+							mt = mt.sec
+						end
+						---@cast mt integer
+						if mt > newest then
 							newest = mt
 						end
 					end
@@ -267,6 +273,7 @@ return {
 			if newest == 0 then
 				return nil
 			end
+			---@cast newest integer
 			return os.date("%Y-%m-%d %H:%M", newest)
 		end
 
