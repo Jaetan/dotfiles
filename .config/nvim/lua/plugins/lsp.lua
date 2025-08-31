@@ -5,9 +5,24 @@ return {
 	-- base LSP plugin
 	{ "neovim/nvim-lspconfig" },
 
-	-- mason (optional install helper)
+	-- mason core
 	{ "williamboman/mason.nvim", config = true },
-	{ "williamboman/mason-lspconfig.nvim" },
+
+	-- mason-lspconfig: ensure LSP servers are installed (including ocamllsp)
+	{
+		"williamboman/mason-lspconfig.nvim",
+		opts = {
+			ensure_installed = {
+				"lua_ls",
+				"basedpyright",
+				"html",
+				"cssls",
+				"emmet_language_server",
+				"clangd",
+				"ocamllsp", -- NEW
+			},
+		},
+	},
 
 	-- configure servers
 	{
@@ -98,6 +113,23 @@ return {
 					"--header-insertion=iwyu",
 				},
 				capabilities = { offsetEncoding = { "utf-16" } },
+				single_file_support = true,
+			})
+
+			-- OCaml: ocamllsp
+			setup_once("ocamllsp", {
+				cmd = { "ocamllsp" },
+				filetypes = {
+					"ocaml",
+					"ocaml.menhir",
+					"ocaml.interface",
+					"ocaml.ocamllex",
+				},
+				root_dir = function(fname)
+					local util = require("lspconfig.util")
+					return util.root_pattern("dune-project", "dune-workspace", ".git")(fname)
+						or util.path.dirname(fname)
+				end,
 				single_file_support = true,
 			})
 

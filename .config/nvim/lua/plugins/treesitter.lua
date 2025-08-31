@@ -4,31 +4,27 @@ return {
 		build = ":TSUpdate",
 		event = { "BufReadPre", "BufNewFile" },
 		opts = {
+			-- Only install what your AppImage does NOT already ship
 			ensure_installed = {
-				"lua",
 				"python",
 				"html",
 				"css",
 				"javascript",
 				"json",
 				"regex",
-				"vim",
-				"vimdoc",
-				"markdown",
-				"markdown_inline",
+				-- If/when you want OCaml highlighting (and ABI settles), add:
+				-- "ocaml", "ocaml_interface",
 			},
 			highlight = { enable = true, additional_vim_regex_highlighting = false },
 			indent = { enable = false },
 			auto_install = true,
 		},
 		config = function(_, opts)
-			require("nvim-treesitter.install").prefer_git = true
-			require("nvim-treesitter.install").compilers = { "clang", "gcc" }
-			require("nvim-treesitter.install").parser_install_dir = vim.fn.stdpath("data") .. "/site/parser"
-			vim.opt.runtimepath:append(vim.fn.stdpath("data") .. "/site")
+			-- Let TS use its defaults; don't override install dir or rtp
 			require("nvim-treesitter.configs").setup(opts)
 		end,
 	},
+
 	{
 		"nvim-treesitter/nvim-treesitter-context",
 		event = { "BufReadPre", "BufNewFile" },

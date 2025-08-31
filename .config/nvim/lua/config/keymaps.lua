@@ -43,6 +43,17 @@ map("n", "<leader>n", function()
 	vim.notify("Relative numbers: " .. (vim.wo.relativenumber and "ON" or "OFF"))
 end, "Toggle relative line numbers")
 
+-- Toggle virtual cursor (allow past-EOL movement to keep column)
+map("n", "<leader>uV", function()
+	local cur = vim.o.virtualedit
+	if cur == "all" then
+		vim.o.virtualedit = ""
+	else
+		vim.o.virtualedit = "all"
+	end
+	vim.notify("Virtual cursor: " .. (vim.o.virtualedit == "all" and "ON" or "OFF"))
+end, "Toggle virtual cursor (past-EOL)")
+
 ----------------------------------------------------------------
 -- Windows / tabs / resize
 ----------------------------------------------------------------
@@ -156,9 +167,7 @@ vim.keymap.set(
 vim.keymap.set("n", "<leader>xq", trouble_cmd("qflist toggle"), { desc = "Trouble: quickfix list" })
 vim.keymap.set("n", "<leader>xl", trouble_cmd("loclist toggle"), { desc = "Trouble: location list" })
 
--- TODO comments
--- quick jumps still happen with ]t / [t (if you had those elsewhere, keep them)
--- Rewire TODO mappings to search from the project root (git root if present)
+-- TODO comments (project-rooted)
 do
 	local function project_root()
 		if vim.system then
@@ -176,10 +185,8 @@ do
 		local root = project_root()
 		local had_lcd = (old ~= "")
 
-		-- use lcd to limit scope to current window
 		vim.cmd("silent! lcd " .. vim.fn.fnameescape(root))
 		local ok, err = pcall(fn)
-		-- restore
 		if had_lcd then
 			vim.cmd("silent! lcd " .. vim.fn.fnameescape(old))
 		else
@@ -193,13 +200,11 @@ do
 	-- Trouble list of TODOs (from project root)
 	vim.keymap.set("n", "<leader>td", function()
 		with_lcd_root(function()
-			-- ensure both plugins are loaded even from the dashboard
 			pcall(require, "todo-comments")
 			pcall(require, "trouble")
 			if vim.fn.exists(":TodoTrouble") == 2 then
 				vim.cmd.TodoTrouble()
 			else
-				-- fallback: quickfix
 				vim.cmd.TodoQuickFix()
 				vim.cmd.copen()
 			end
@@ -233,13 +238,11 @@ end
 vim.keymap.set("n", "<leader>tb", function()
 	local ok, tc = pcall(require, "todo-comments")
 	if ok and tc and type(tc.loclist) == "function" then
-		-- Ask the plugin to populate & open the location list just for this buffer
 		local ok_call = pcall(tc.loclist, { buffer = 0, open = true })
 		if ok_call then
 			return
 		end
 	end
-	-- Fallback to the command (it opens the list by itself)
 	vim.cmd("TodoLocList")
 end, { desc = "TODOs (this buffer)" })
 
@@ -254,7 +257,6 @@ pcall(function()
 	require("which-key").add({ { "<leader>z", group = "+folds" } })
 end)
 
--- Peek folded lines under cursor; if nothing to peek, fall back to LSP hover
 vim.keymap.set("n", "<leader>zp", function()
 	local ok, ufo = pcall(require, "ufo")
 	if ok then
@@ -263,7 +265,6 @@ vim.keymap.set("n", "<leader>zp", function()
 			return
 		end
 	end
-	-- No fold to peek → hover if available
 	local buf = vim.api.nvim_get_current_buf()
 	for _, client in ipairs(vim.lsp.get_clients({ bufnr = buf })) do
 		if client.server_capabilities and client.server_capabilities.hoverProvider then
@@ -301,6 +302,8 @@ pcall(function()
 		{ "<leader>t", group = "+tabs/todo" },
 		{ "<leader>z", group = "+folds" },
 		{ "<leader>o", desc = "Symbols outline (Aerial)" },
+		{ "<leader>u", group = "+utils/session" },
+		{ "<leader>uV", desc = "Toggle virtual cursor" },
 	})
 end)
 
@@ -316,21 +319,18 @@ do
 		return ok
 	end
 
-	-- Project search/replace UI
 	vim.keymap.set("n", "<leader>sr", function()
 		if spectre_ok() then
 			require("spectre").toggle()
 		end
 	end, { desc = "Spectre: search & replace (project)" })
 
-	-- Current file search/replace
 	vim.keymap.set("n", "<leader>ss", function()
 		if spectre_ok() then
 			require("spectre").open_file_search()
 		end
 	end, { desc = "Spectre: search & replace (this file)" })
 
-	-- Selection or word under cursor
 	vim.keymap.set("v", "<leader>sw", function()
 		if spectre_ok() then
 			require("spectre").open_visual({ select_word = false })
@@ -354,18 +354,15 @@ do
 		return H():list()
 	end
 
-	-- Add current file
 	vim.keymap.set("n", "<leader>ma", function()
 		L():add()
 		vim.notify("Harpoon: added file")
 	end, { desc = "Harpoon: add file" })
 
-	-- Menu toggle
 	vim.keymap.set("n", "<leader>mm", function()
 		H().ui:toggle_quick_menu(L())
 	end, { desc = "Harpoon: menu" })
 
-	-- Next / Prev
 	vim.keymap.set("n", "<leader>mn", function()
 		L():next()
 	end, { desc = "Harpoon: next" })
@@ -373,7 +370,6 @@ do
 		L():prev()
 	end, { desc = "Harpoon: prev" })
 
-	-- Direct jumps (slots 1..4)
 	for i = 1, 4 do
 		vim.keymap.set("n", "<leader>m" .. i, function()
 			L():select(i)
@@ -381,7 +377,6 @@ do
 	end
 end
 
--- which-key labels
 pcall(function()
 	require("which-key").add({
 		{ "<leader>s", group = "+search/replace" },
@@ -398,7 +393,6 @@ do
 		return ok and p or nil
 	end
 
-	-- Toggle saving sessions globally (same flag your Alpha buttons use)
 	vim.keymap.set("n", "<leader>uS", function()
 		local p = P()
 		vim.g._session_disabled = not vim.g._session_disabled
@@ -411,7 +405,6 @@ do
 		vim.notify("Session saving: " .. (vim.g._session_disabled and "OFF" or "ON"))
 	end, { desc = "Session: toggle save on exit" })
 
-	-- Restore last session
 	vim.keymap.set("n", "<leader>uR", function()
 		local p = P()
 		if p and p.load then
@@ -422,7 +415,6 @@ do
 		end
 	end, { desc = "Session: restore last" })
 
-	-- Restore session for current working directory
 	vim.keymap.set("n", "<leader>uL", function()
 		local p = P()
 		if p and p.load then
@@ -462,7 +454,6 @@ vim.api.nvim_create_user_command("Grep", function(opts)
 	vim.cmd("lcd " .. vim.fn.fnameescape(save))
 end, { nargs = "*", complete = "file" })
 
--- Quick mapping to prompt & run :Grep (rooted)
 vim.keymap.set("n", "<leader>/", function()
 	vim.cmd("Grep")
 end, { desc = "Project grep → quickfix" })

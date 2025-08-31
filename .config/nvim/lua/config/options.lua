@@ -6,6 +6,9 @@ vim.opt.relativenumber = true
 vim.opt.numberwidth = 4
 vim.opt.signcolumn = "yes" -- keep diagnostic icons aligned
 
+-- Allow the cursor to move past EOL (keeps the same visual column on ragged lines)
+vim.opt.virtualedit = "all"
+
 -- tabs/spaces
 vim.opt.expandtab = true
 vim.opt.shiftwidth = 2
@@ -45,9 +48,6 @@ _G._fold_icon = function()
 end
 
 -- Build a clean statuscolumn:
---   %s  = signs (gitsigns, diagnostics)
---   %{...} = our fold icon
---   %=%{...} = right-aligned (relative/absolute) line number
 vim.o.statuscolumn = table.concat({
 	"%s", -- signs
 	"%{v:lua._fold_icon()} ", -- our fold icon (or space)
@@ -55,7 +55,7 @@ vim.o.statuscolumn = table.concat({
 })
 
 -- Keep fold UI consistent (one narrow column reserved; icons come from statuscolumn)
-vim.o.foldcolumn = "1" -- set to "0" if you want no dedicated fold margin at all
+vim.o.foldcolumn = "1"
 vim.o.foldlevel = 99
 vim.o.foldlevelstart = 99
 vim.o.foldenable = true

@@ -18,6 +18,7 @@ return {
 			markdown = { "prettier" },
 			c = { "clang_format" },
 			cpp = { "clang_format" },
+			ocaml = { "ocamlformat" }, -- ← add this
 		},
 	},
 	config = function(_, opts)
@@ -40,9 +41,9 @@ return {
 			typescript = true,
 			c = true,
 			cpp = true,
+			ocaml = true,
 		}
 
-		-- honor the toggle
 		conform.setup({
 			format_on_save = function(bufnr)
 				if vim.g._format_on_save_disabled then
