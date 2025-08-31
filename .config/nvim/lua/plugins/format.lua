@@ -18,14 +18,20 @@ return {
 			markdown = { "prettier" },
 			c = { "clang_format" },
 			cpp = { "clang_format" },
-			ocaml = { "ocamlformat" }, -- ← add this
+			ocaml = { "ocamlformat" }, -- OCaml support
 		},
 	},
 	config = function(_, opts)
 		local conform = require("conform")
 		conform.setup(opts)
 
+		-- Prefer project-local prettier if available
 		conform.formatters.prettier = { prepend_args = {}, prefer_local = "node_modules/.bin" }
+
+		-- Make ocamlformat work outside detected projects too
+		conform.formatters.ocamlformat = {
+			prepend_args = { "--enable-outside-detected-project" },
+		}
 
 		local allow = {
 			python = true,
@@ -44,6 +50,7 @@ return {
 			ocaml = true,
 		}
 
+		-- honor the toggle
 		conform.setup({
 			format_on_save = function(bufnr)
 				if vim.g._format_on_save_disabled then

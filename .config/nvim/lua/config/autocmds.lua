@@ -82,3 +82,33 @@ vim.api.nvim_create_autocmd("QuickFixCmdPost", {
 		end
 	end,
 })
+
+-- -------------------------------------------------------------------
+-- QoL autocmds (no last-cursor-position)
+-- -------------------------------------------------------------------
+local qol = vim.api.nvim_create_augroup("QolExtras", { clear = true })
+
+-- Briefly highlight yanked text
+vim.api.nvim_create_autocmd("TextYankPost", {
+	group = qol,
+	callback = function()
+		pcall(vim.highlight.on_yank, { higroup = "IncSearch", timeout = 120, on_visual = true })
+	end,
+})
+
+-- Equalize splits when terminal window size changes
+vim.api.nvim_create_autocmd("VimResized", {
+	group = qol,
+	callback = function()
+		vim.cmd("tabdo wincmd =")
+	end,
+})
+
+-- Don’t auto-continue comments on new lines
+vim.api.nvim_create_autocmd("FileType", {
+	group = qol,
+	pattern = "*",
+	callback = function()
+		vim.opt_local.formatoptions:remove({ "o", "r" })
+	end,
+})

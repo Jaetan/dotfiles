@@ -7,6 +7,11 @@ return {
 		cond = function()
 			return vim.fn.executable("make") == 1 or vim.fn.executable("cmake") == 1
 		end,
-		-- no config needed; telescope.lua loads the extension
+		config = function()
+			local ok, telescope = pcall(require, "telescope")
+			if ok then
+				pcall(telescope.load_extension, "fzf")
+			end
+		end,
 	},
 }

@@ -2,7 +2,7 @@ return {
 	"JoosepAlviste/nvim-ts-context-commentstring",
 	event = "VeryLazy",
 	opts = {
-		-- we’ll drive it from Comment.nvim’s pre_hook instead of the autocmd
+		-- We drive commentstring updates via Comment.nvim’s pre_hook
 		enable_autocmd = false,
 	},
 	config = function(_, opts)

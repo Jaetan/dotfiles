@@ -62,6 +62,22 @@ return {
 				end,
 			})
 
+			------------------------------------------------------------------
+			-- Python: Ruff LSP (linting, quick fixes, organize imports)
+			--   - Keep hover from BasedPyright to avoid duplicate providers.
+			--   - Works alongside Conform (isort/black) just fine.
+			------------------------------------------------------------------
+			setup_once("ruff", {
+				filetypes = { "python" },
+				single_file_support = true,
+				on_attach = function(client, _)
+					-- Prefer BasedPyright's hover; Ruff still does diagnostics & code actions.
+					if client and client.server_capabilities then
+						client.server_capabilities.hoverProvider = false
+					end
+				end,
+			})
+
 			-- HTML
 			setup_once("html", {
 				filetypes = { "html" },
