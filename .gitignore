@@ -1,7 +1,9 @@
-*.pyc
-.config/nvim/lazy-lock.json
+# fish shell runtime state (auto-generated)
+.config/fish/fish_variables
+.config/fish/fishd.*
+
 .config/gh/hosts.yml
-.config/go/
-.config/htop/
-.config/nvim/lazy-lock.json
-.config/pulse/
+
+*.pyc
+
+.config/go/telemetry/

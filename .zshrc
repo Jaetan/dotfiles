@@ -197,3 +197,7 @@ alias wezterm='cd dev/wezterm && cargo run --release --bin wezterm -- start'
 setopt interactivecomments
 alias emacs-tag='~/.emacs.d/scripts/tag-current.sh'
 gdel() { git ls-files -d -z | git update-index --remove -z --stdin; }
+
+. "$HOME/.atuin/bin/env"
+
+eval "$(atuin init zsh)"
