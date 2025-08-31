@@ -3,6 +3,18 @@
 # PATH
 fish_add_path $HOME/.local/bin $HOME/bin
 
+# ssh-agent via keychain (interactive shells only)
+if status is-interactive
+    if type -q keychain
+        if test -f ~/.ssh/id_ed25519
+            keychain --eval --quiet --agents ssh --inherit any ~/.ssh/id_ed25519 | source
+        else
+            # start/reuse agent without loading a specific key if it doesn't exist
+            keychain --eval --quiet --agents ssh --inherit any | source
+        end
+    end
+end
+
 # Editor & pager / colors
 set -gx EDITOR nvim
 set -gx LESS "-R --mouse -F -X -M"
