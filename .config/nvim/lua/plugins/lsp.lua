@@ -5,36 +5,34 @@ return {
 	-- base LSP plugin
 	{ "neovim/nvim-lspconfig" },
 
-	-- mason core
+	-- mason (optional install helper)
 	{ "williamboman/mason.nvim", config = true },
-
-	-- mason-lspconfig: ensure LSP servers are installed (including ocamllsp)
-	{
-		"williamboman/mason-lspconfig.nvim",
-		opts = {
-			ensure_installed = {
-				"lua_ls",
-				"basedpyright",
-				"html",
-				"cssls",
-				"emmet_language_server",
-				"clangd",
-				"ocamllsp", -- NEW
-			},
-		},
-	},
+	{ "williamboman/mason-lspconfig.nvim" },
 
 	-- configure servers
 	{
 		"neovim/nvim-lspconfig",
 		event = { "BufReadPre", "BufNewFile" },
 		config = function()
+			------------------------------------------------------------------
+			-- Neodev: enrich lua_ls with Neovim runtime & plugin typings
+			------------------------------------------------------------------
+			local ok_nd, neodev = pcall(require, "neodev")
+			if ok_nd then
+				neodev.setup({
+					-- Load type information for installed plugins too
+					library = { plugins = true, types = true },
+					-- Don’t auto-enable for random folders; still global enough for your dotfiles
+					pathStrict = true,
+				})
+			end
+
 			-- Lua
 			setup_once("lua_ls", {
 				settings = {
 					Lua = {
 						runtime = { version = "LuaJIT" },
-						diagnostics = { globals = { "vim" } },
+						diagnostics = { globals = { "vim" } }, -- harmless if Neodev already provides it
 						workspace = { checkThirdParty = false },
 						telemetry = { enable = false },
 					},
@@ -113,23 +111,6 @@ return {
 					"--header-insertion=iwyu",
 				},
 				capabilities = { offsetEncoding = { "utf-16" } },
-				single_file_support = true,
-			})
-
-			-- OCaml: ocamllsp
-			setup_once("ocamllsp", {
-				cmd = { "ocamllsp" },
-				filetypes = {
-					"ocaml",
-					"ocaml.menhir",
-					"ocaml.interface",
-					"ocaml.ocamllex",
-				},
-				root_dir = function(fname)
-					local util = require("lspconfig.util")
-					return util.root_pattern("dune-project", "dune-workspace", ".git")(fname)
-						or util.path.dirname(fname)
-				end,
 				single_file_support = true,
 			})
 
