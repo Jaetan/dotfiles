@@ -1,4 +1,4 @@
--- config/lsp_setup.lua — shared LSP helpers
+-- config/lsp_setup.lua — shared LSP helpers (0.11+ native API)
 local M = {}
 local configured = {}
 
@@ -16,7 +16,8 @@ function M.setup_once(name, opts)
 	end
 	opts.capabilities = vim.tbl_deep_extend("force", opts.capabilities or {}, capabilities)
 
-	require("lspconfig")[name].setup(opts)
+	vim.lsp.config(name, opts)
+	vim.lsp.enable(name)
 end
 
 return M

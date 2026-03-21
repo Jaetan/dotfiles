@@ -83,7 +83,6 @@ return {
 	-- 4) Better Quickfix UI (preview, filtering, auto height)
 	{
 		"kevinhwang91/nvim-bqf",
-		event = "VeryLazy",
 		ft = "qf",
 		opts = {
 			auto_enable = true,
@@ -99,18 +98,6 @@ return {
 					extra_opts = { "--bind", "ctrl-o:toggle-all" },
 				},
 			},
-		},
-	},
-
-	-- Project-wide search/replace UI
-	{
-		"nvim-pack/nvim-spectre",
-		dependencies = { "nvim-lua/plenary.nvim" },
-		event = "VeryLazy",
-		opts = {
-			live_update = true,
-			is_block_ui_break = true,
-			open_cmd = "vnew", -- open results in a vertical split
 		},
 	},
 }

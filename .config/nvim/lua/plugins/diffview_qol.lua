@@ -62,17 +62,5 @@ return {
 	},
 	config = function(_, opts)
 		require("diffview").setup(opts)
-		-- which-key niceties
-		pcall(function()
-			require("which-key").add({
-				{ "<leader>g", group = "+git" },
-				{ "<leader>gv", desc = "Diffview: toggle (open/close)" },
-				{ "<leader>gV", desc = "Diffview: close" },
-				{ "<leader>gf", desc = "Diffview: file history (current)" },
-				{ "<leader>gH", desc = "Diffview: repo history" },
-				{ "<leader>gF", desc = "Diffview: toggle files panel" },
-				{ "<leader>g>", desc = "Diffview: focus files panel" },
-			})
-		end)
 	end,
 }

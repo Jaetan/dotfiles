@@ -12,14 +12,14 @@ return {
 		{
 			"<leader>\\",
 			function()
-				require("toggleterm").toggle(1, 12, vim.loop.cwd(), "horizontal")
+				require("toggleterm").toggle(1, 12, vim.uv.cwd(), "horizontal")
 			end,
 			desc = "Terminal (horizontal)",
 		},
 		{
 			"<leader>|",
 			function()
-				require("toggleterm").toggle(2, 0, vim.loop.cwd(), "vertical")
+				require("toggleterm").toggle(2, 0, vim.uv.cwd(), "vertical")
 			end,
 			desc = "Terminal (vertical)",
 		},

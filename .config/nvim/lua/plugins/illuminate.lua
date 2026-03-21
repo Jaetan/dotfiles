@@ -53,12 +53,11 @@ return {
 			vim.notify("Symbol highlight: " .. (paused and "OFF" or "ON"))
 		end, { desc = "Toggle symbol highlight" })
 
-		-- which-key label (non-fatal)
+		-- which-key labels (non-fatal)
 		pcall(function()
 			require("which-key").add({
 				{ "]r", desc = "Next reference" },
 				{ "[r", desc = "Prev reference" },
-				{ "<leader>u", group = "+utils/session" }, -- keep existing group
 				{ "<leader>uI", desc = "Toggle symbol highlight" },
 			})
 		end)

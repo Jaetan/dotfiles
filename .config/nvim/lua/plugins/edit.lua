@@ -17,19 +17,6 @@ return {
 		end,
 	},
 
-	-- Comment.nvim (gc/gcc/gb)
-	{
-		"numToStr/Comment.nvim",
-		event = { "BufReadPre", "BufNewFile" },
-		opts = { mappings = { basic = true, extra = true } },
-		config = function(_, opts)
-			require("Comment").setup(opts)
-			pcall(function()
-				require("which-key").add({ { "gc", group = "+comment" }, { "gb", group = "+block comment" } })
-			end)
-		end,
-	},
-
 	-- Autopairs (with refined quotes) + toggle
 	{
 		"windwp/nvim-autopairs",

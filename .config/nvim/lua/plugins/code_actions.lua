@@ -39,9 +39,6 @@ return {
 		end,
 		config = function(_, opts)
 			require("actions-preview").setup(opts)
-			pcall(function()
-				require("which-key").add({ { "<leader>c", group = "+code" } })
-			end)
 		end,
 	},
 }

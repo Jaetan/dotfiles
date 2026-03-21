@@ -61,9 +61,6 @@ return {
 			map("<leader>gD", ":Gvdiffsplit!<CR>", "Diff vs HEAD (vertical)")
 			map("<leader>gl", ":Git log --oneline --graph<CR>", "Repo log")
 			map("<leader>gL", ":0Gclog<CR>", "File log (quickfix)")
-			pcall(function()
-				require("which-key").add({ { "<leader>g", group = "+git (fugitive)" } })
-			end)
 		end,
 	},
 }

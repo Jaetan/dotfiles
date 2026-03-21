@@ -2,29 +2,29 @@ local setup_once = require("config.lsp_setup").setup_once
 local py = require("util.python")
 
 return {
-	-- base LSP plugin
-	{ "neovim/nvim-lspconfig" },
-
 	-- mason (optional install helper)
-	{ "williamboman/mason.nvim", config = true },
-	{ "williamboman/mason-lspconfig.nvim" },
-
-	-- configure servers
 	{
-		"neovim/nvim-lspconfig",
+		"williamboman/mason.nvim",
+		cmd = { "Mason", "MasonInstall", "MasonUpdate" },
+		config = true,
+	},
+
+	-- lazydev: Neovim Lua API completions for lua_ls (replaces neodev)
+	{
+		"folke/lazydev.nvim",
+		ft = "lua",
+		opts = {
+			library = {
+				{ path = "${3rd}/luv/library", words = { "vim%.uv" } },
+			},
+		},
+	},
+
+	-- configure servers (native vim.lsp.config / vim.lsp.enable)
+	{
+		"williamboman/mason.nvim", -- merge into mason spec to trigger on file open
 		event = { "BufReadPre", "BufNewFile" },
 		config = function()
-			------------------------------------------------------------------
-			-- Neodev: enrich lua_ls with Neovim runtime & plugin typings
-			------------------------------------------------------------------
-			local ok_nd, neodev = pcall(require, "neodev")
-			if ok_nd then
-				neodev.setup({
-					library = { plugins = true, types = true },
-					pathStrict = true,
-				})
-			end
-
 			-- Lua
 			setup_once("lua_ls", {
 				settings = {
@@ -62,16 +62,11 @@ return {
 				end,
 			})
 
-			------------------------------------------------------------------
 			-- Python: Ruff LSP (linting, quick fixes, organize imports)
-			--   - Keep hover from BasedPyright to avoid duplicate providers.
-			--   - Works alongside Conform (isort/black) just fine.
-			------------------------------------------------------------------
 			setup_once("ruff", {
 				filetypes = { "python" },
 				single_file_support = true,
 				on_attach = function(client, _)
-					-- Prefer BasedPyright's hover; Ruff still does diagnostics & code actions.
 					if client and client.server_capabilities then
 						client.server_capabilities.hoverProvider = false
 					end
@@ -117,23 +112,17 @@ return {
 
 			-- C/C++: clangd
 			setup_once("clangd", {
-				cmd = {
-					"clangd",
-					"--background-index",
-					"--clang-tidy",
-					"--completion-style=detailed",
-					"--header-insertion=iwyu",
-				},
+				cmd = { "./tools/clangd-from-bazel.sh" },
 				capabilities = { offsetEncoding = { "utf-16" } },
 				single_file_support = true,
 			})
 
-			-- tiny sanity UI for basedpyright
+			-- sanity notification for basedpyright
 			vim.api.nvim_create_autocmd("LspAttach", {
 				callback = function(ev)
-					local c = vim.lsp.get_client_by_id(ev.data.client_id)
+					local clients = vim.lsp.get_clients({ id = ev.data.client_id })
+					local c = clients[1]
 					if c and c.name == "basedpyright" then
-						-- avoid undefined-field warning by using a safe lookup
 						local p = vim.tbl_get(c, "config", "settings", "python", "pythonPath") or "<none>"
 						vim.notify("basedpyright pythonPath=" .. p)
 					end

@@ -1,6 +1,6 @@
 return {
 	"lambdalisue/suda.vim",
-	event = "VeryLazy",
+	cmd = { "SudaRead", "SudaWrite" },
 	init = function()
 		-- Enable smart edit: transparently read/write root-only files via sudo
 		vim.g.suda_smart_edit = 1

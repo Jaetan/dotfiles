@@ -1,12 +1,12 @@
 return {
 	"nvim-lualine/lualine.nvim",
-	dependencies = { "nvim-tree/nvim-web-devicons" },
+	dependencies = { "echasnovski/mini.icons" },
 	event = "VeryLazy",
 	opts = function()
 		local function lsp_names()
 			local buf = vim.api.nvim_get_current_buf()
 			local clients = vim.lsp.get_clients({ bufnr = buf }) or {}
-			if vim.tbl_isempty(clients) then
+			if #clients == 0 then
 				return ""
 			end
 			local uniq, names = {}, {}
@@ -23,7 +23,7 @@ return {
 		end
 		return {
 			options = {
-				theme = "tokyonight",
+				theme = "nightfly",
 				icons_enabled = true,
 				globalstatus = true,
 				component_separators = { left = "", right = "" },

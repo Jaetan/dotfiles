@@ -5,7 +5,7 @@ return {
 		branch = "v3.x",
 		dependencies = {
 			"nvim-lua/plenary.nvim",
-			"nvim-tree/nvim-web-devicons",
+			"echasnovski/mini.icons",
 			"MunifTanjim/nui.nvim",
 		},
 
@@ -127,10 +127,6 @@ return {
 
 		config = function(_, opts)
 			require("neo-tree").setup(opts)
-			-- optional which-key group label
-			pcall(function()
-				require("which-key").add({ { "<leader>f", group = "+file/format" } })
-			end)
 		end,
 	},
 }

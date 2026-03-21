@@ -31,16 +31,6 @@ vim.api.nvim_create_autocmd("BufWritePost", {
 	end,
 })
 
--- Reapply IBL highlight colors on colorscheme change
-vim.api.nvim_create_autocmd("ColorScheme", {
-	callback = function()
-		vim.schedule(function()
-			pcall(vim.api.nvim_set_hl, 0, "IblIndent", { fg = "#3b4261", nocombine = true })
-			pcall(vim.api.nvim_set_hl, 0, "IblScope", { fg = "#7aa2f7", nocombine = true })
-		end)
-	end,
-})
-
 -- -------------------------------------------------------------------
 -- Force our statuscolumn everywhere and keep the fold column hidden.
 -- -------------------------------------------------------------------

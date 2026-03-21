@@ -4,25 +4,7 @@ return {
 	dependencies = { "nvim-lua/plenary.nvim" },
 	cmd = "Telescope",
 	opts = function()
-		local function project_root()
-			if vim.system then
-				local res = vim.system({ "git", "rev-parse", "--show-toplevel" }):wait()
-				if res and res.code == 0 and res.stdout and #res.stdout > 0 then
-					return (res.stdout:gsub("%s+$", ""))
-				end
-			else
-				local ok, pipe = pcall(io.popen, "git rev-parse --show-toplevel 2>/dev/null")
-				if ok and pipe then
-					local out = pipe:read("*a") or ""
-					pipe:close()
-					out = out:gsub("%s+$", "")
-					if #out > 0 then
-						return out
-					end
-				end
-			end
-			return vim.loop.cwd()
-		end
+		local root = require("util.root")
 
 		local vimgrep = { "rg", "--vimgrep", "--no-heading", "--smart-case", "--hidden", "--glob", "!.git" }
 
@@ -60,7 +42,7 @@ return {
 					case_mode = "smart_case", -- or "ignore_case" | "respect_case"
 				},
 			},
-			_helpers = { project_root = project_root },
+			_helpers = { project_root = root.get },
 		}
 	end,
 	config = function(_, opts)
@@ -75,7 +57,7 @@ return {
 
 		-- Pickers / keymaps
 		local tb = require("telescope.builtin")
-		local root = (opts and opts._helpers and opts._helpers.project_root) or vim.loop.cwd
+		local root = (opts and opts._helpers and opts._helpers.project_root) or require("util.root").get
 
 		-- Files
 		vim.keymap.set("n", "<leader>ff", function()

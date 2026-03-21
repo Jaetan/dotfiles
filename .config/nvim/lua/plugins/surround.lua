@@ -44,12 +44,5 @@ return {
 	end,
 	config = function(_, opts)
 		require("mini.surround").setup(opts)
-
-		-- which-key group only (don’t spam individual entries)
-		pcall(function()
-			require("which-key").add({
-				{ "gs", group = "+surround", mode = { "n", "v" } },
-			})
-		end)
 	end,
 }

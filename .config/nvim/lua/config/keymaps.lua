@@ -125,11 +125,6 @@ map("n", "<leader>wml", function()
 end, "Move buffer to right split")
 
 ----------------------------------------------------------------
--- Telescope convenience
-----------------------------------------------------------------
-map("n", "<leader>f,", "<cmd>Telescope resume<CR>", "Resume last Telescope")
-
-----------------------------------------------------------------
 -- Trouble / TODO / Aerial
 ----------------------------------------------------------------
 
@@ -158,20 +153,10 @@ vim.keymap.set("n", "<leader>xl", trouble_cmd("loclist toggle"), { desc = "Troub
 
 -- TODO comments (project-rooted + buffer)
 do
-	local function project_root()
-		if vim.system then
-			local r = vim.system({ "git", "rev-parse", "--show-toplevel" }):wait()
-			if r and r.code == 0 and r.stdout and #r.stdout > 0 then
-				return (r.stdout:gsub("%s+$", ""))
-			end
-		end
-		return vim.loop.cwd()
-	end
-
 	-- Run a thunk with local cwd temporarily set to root
 	local function with_lcd_root(fn)
 		local old = vim.fn.getcwd(-1, -1) or "" ---@type string
-		local root = project_root() or vim.loop.cwd() or "." ---@type string
+		local root = require("util.root").get() ---@type string
 		local had_lcd = (old ~= "")
 
 		-- window-local cwd; typed form avoids luals string|nil warnings
@@ -213,7 +198,7 @@ do
 			end
 			local ok_ext = ok_t and telescope.extensions and telescope.extensions["todo-comments"]
 			if ok_ext and telescope.extensions["todo-comments"].todo then
-				telescope.extensions["todo-comments"].todo({ cwd = vim.loop.cwd() })
+				telescope.extensions["todo-comments"].todo({ cwd = vim.uv.cwd() })
 			else
 				vim.cmd.TodoTelescope()
 			end
@@ -221,7 +206,7 @@ do
 	end, { desc = "TODOs (Telescope @ project root)" })
 
 	-- Quickfix
-	vim.keymap.set("n", "<leader>tq", function()
+	vim.keymap.set("n", "<leader>tQ", function()
 		vim.cmd.TodoQuickFix()
 		vim.cmd.copen()
 	end, { desc = "TODOs (quickfix)" })
@@ -246,10 +231,6 @@ map("n", "<leader>O", "<cmd>AerialNavToggle<CR>", "Aerial nav window")
 ----------------------------------------------------------------
 -- Folds (nvim-ufo): peek + open/close all
 ----------------------------------------------------------------
-pcall(function()
-	require("which-key").add({ { "<leader>z", group = "+folds" } })
-end)
-
 vim.keymap.set("n", "<leader>zp", function()
 	local ok, ufo = pcall(require, "ufo")
 	if ok then
@@ -285,18 +266,6 @@ vim.keymap.set("n", "<leader>zM", function()
 		vim.cmd("normal! zM")
 	end
 end, { desc = "Close all folds" })
-
-----------------------------------------------------------------
--- which-key labels
-----------------------------------------------------------------
-pcall(function()
-	require("which-key").add({
-		{ "<leader>x", group = "+trouble/diagnostics" },
-		{ "<leader>t", group = "+tabs/todo" },
-		{ "<leader>z", group = "+folds" },
-		{ "<leader>o", desc = "Symbols outline (Aerial)" },
-	})
-end)
 
 ----------------------------------------------------------------------
 -- Spectre: project/file/selection search & replace
@@ -335,48 +304,6 @@ do
 end
 
 ----------------------------------------------------------------------
--- Harpoon 2: quick file marks & jump
-----------------------------------------------------------------------
-do
-	local function H()
-		return require("harpoon")
-	end
-	local function L()
-		return H():list()
-	end
-
-	vim.keymap.set("n", "<leader>ma", function()
-		L():add()
-		vim.notify("Harpoon: added file")
-	end, { desc = "Harpoon: add file" })
-
-	vim.keymap.set("n", "<leader>mm", function()
-		H().ui:toggle_quick_menu(L())
-	end, { desc = "Harpoon: menu" })
-
-	vim.keymap.set("n", "<leader>mn", function()
-		L():next()
-	end, { desc = "Harpoon: next" })
-	vim.keymap.set("n", "<leader>mp", function()
-		L():prev()
-	end, { desc = "Harpoon: prev" })
-
-	for i = 1, 4 do
-		vim.keymap.set("n", "<leader>m" .. i, function()
-			L():select(i)
-		end, { desc = ("Harpoon: go to %d"):format(i) })
-	end
-end
-
--- which-key labels
-pcall(function()
-	require("which-key").add({
-		{ "<leader>s", group = "+search/replace" },
-		{ "<leader>m", group = "+harpoon" },
-	})
-end)
-
-----------------------------------------------------------------------
 -- Sessions (persistence.nvim) – quick toggles anywhere
 ----------------------------------------------------------------------
 do
@@ -407,7 +334,7 @@ do
 		end
 	end, { desc = "Session: restore last" })
 
-	vim.keymap.set("n", "<leader>uL", function()
+	vim.keymap.set("n", "<leader>ul", function()
 		local p = P()
 		if p and p.load then
 			vim.g._session_disabled = false
@@ -417,9 +344,6 @@ do
 		end
 	end, { desc = "Session: restore for CWD" })
 
-	pcall(function()
-		require("which-key").add({ { "<leader>u", group = "+utils/session" } })
-	end)
 end
 
 -- Project-rooted :Grep {pattern} -> fills quickfix (uses rg via grepprg)
@@ -429,18 +353,8 @@ vim.api.nvim_create_user_command("Grep", function(opts)
 		return
 	end
 
-	local function project_root()
-		if vim.system then
-			local r = vim.system({ "git", "rev-parse", "--show-toplevel" }):wait()
-			if r and r.code == 0 and r.stdout and #r.stdout > 0 then
-				return (r.stdout:gsub("%s+$", ""))
-			end
-		end
-		return vim.loop.cwd()
-	end
-
-	local root = project_root() or vim.loop.cwd() or "." ---@type string
-	local save = vim.loop.cwd() or "." ---@type string
+	local root = require("util.root").get() ---@type string
+	local save = vim.uv.cwd() or "." ---@type string
 	vim.cmd.lcd({ args = { root } })
 	vim.cmd("silent grep " .. vim.fn.shellescape(pattern))
 	vim.cmd.lcd({ args = { save } })
@@ -455,18 +369,8 @@ end, { desc = "Project grep → quickfix" })
 -- OCaml / Dune helpers (lightweight task runner)  -------------------
 ----------------------------------------------------------------------
 do
-	local function project_root()
-		if vim.system then
-			local r = vim.system({ "git", "rev-parse", "--show-toplevel" }):wait()
-			if r and r.code == 0 and r.stdout and #r.stdout > 0 then
-				return (r.stdout:gsub("%s+$", ""))
-			end
-		end
-		return vim.loop.cwd()
-	end
-
 	local function open_term(cmd_argv, title)
-		local root = project_root()
+		local root = require("util.root").get()
 		vim.cmd("botright 15split")
 		local buf = vim.api.nvim_create_buf(true, false)
 		vim.api.nvim_win_set_buf(0, buf)
@@ -516,18 +420,6 @@ do
 		open_term({ "dune", "exec", "--", exe }, "dune exec -- " .. exe .. " (repeat)")
 	end, { desc = "Dune: exec last" })
 
-	-- which-key group
-	pcall(function()
-		require("which-key").add({
-			{ "<leader>d", group = "+dune" },
-			{ "<leader>db", desc = "build" },
-			{ "<leader>dt", desc = "runtest" },
-			{ "<leader>dc", desc = "clean" },
-			{ "<leader>de", desc = "exec <program>" },
-			{ "<leader>dE", desc = "exec last" },
-		})
-	end)
-
 	-- OCaml: alternate file (.ml <-> .mli)
 	vim.api.nvim_create_user_command("OCamlAlternate", function()
 		local ext = vim.fn.expand("%:e") -- ml | mli | something else
@@ -537,7 +429,7 @@ do
 		end
 		local cur = vim.fn.expand("%:p")
 		local target = (ext == "ml") and (cur:gsub("%.ml$", ".mli")) or (cur:gsub("%.mli$", ".ml"))
-		if vim.loop.fs_stat(target) then
+		if vim.uv.fs_stat(target) then
 			vim.cmd.edit(vim.fn.fnameescape(target))
 		else
 			vim.notify("Alternate not found: " .. target, vim.log.levels.INFO)

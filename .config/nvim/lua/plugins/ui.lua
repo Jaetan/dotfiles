@@ -1,6 +1,6 @@
 return {
 	"goolord/alpha-nvim",
-	dependencies = { "nvim-tree/nvim-web-devicons" },
+	dependencies = { "echasnovski/mini.icons" },
 	event = "VimEnter",
 	opts = function()
 		local dashboard = require("alpha.themes.dashboard")
@@ -67,15 +67,7 @@ return {
 			return trunc_left(p, w)
 		end
 
-		local function project_root()
-			if vim.system then
-				local r = vim.system({ "git", "rev-parse", "--show-toplevel" }):wait()
-				if r and r.code == 0 and r.stdout and #r.stdout > 0 then
-					return (r.stdout:gsub("%s+$", ""))
-				end
-			end
-			return vim.loop.cwd()
-		end
+		local project_root = require("util.root").get
 
 		local function recent_projects(max_items)
 			max_items = max_items or 8
@@ -83,7 +75,7 @@ return {
 			for _, f in ipairs(vim.v.oldfiles or {}) do
 				local dir = vim.fn.fnamemodify(f, ":p:h")
 				if dir and #dir > 0 and not seen[dir] then
-					if vim.loop.fs_stat(dir .. "/.git") then
+					if vim.uv.fs_stat(dir .. "/.git") then
 						seen[dir] = true
 						table.insert(items, dir)
 						if #items >= max_items then
@@ -100,7 +92,7 @@ return {
 			local files, seen = {}, {}
 			local root = project_root()
 			for _, f in ipairs(vim.v.oldfiles or {}) do
-				if type(f) == "string" and #f > 0 and vim.loop.fs_stat(f) and not seen[f] then
+				if type(f) == "string" and #f > 0 and vim.uv.fs_stat(f) and not seen[f] then
 					if (not only_project) or f:sub(1, #root) == root then
 						table.insert(files, f)
 						seen[f] = true
@@ -243,19 +235,19 @@ return {
 					)
 				) or (vim.fn.stdpath("state") .. "/sessions")
 			end
-			local h = vim.loop.fs_scandir(dir)
+			local h = vim.uv.fs_scandir(dir)
 			if not h then
 				return nil
 			end
 
 			local newest = 0 ---@type integer
 			while true do
-				local name, typ = vim.loop.fs_scandir_next(h)
+				local name, typ = vim.uv.fs_scandir_next(h)
 				if not name then
 					break
 				end
 				if typ == "file" or typ == nil then
-					local st = vim.loop.fs_stat(dir .. "/" .. name)
+					local st = vim.uv.fs_stat(dir .. "/" .. name)
 					if st and st.mtime then
 						-- Narrow st.mtime → integer
 						local mt = st.mtime ---@type integer|{ sec: integer, nsec: integer }

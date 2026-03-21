@@ -48,12 +48,5 @@ return {
 			desc = "Buffer: close others",
 		},
 	},
-	config = function(_, _)
-		-- Defaults are fine; functions are available as:
-		--   require('mini.bufremove').delete(buf, force?)
-		--   require('mini.bufremove').wipeout(buf, force?)
-		pcall(function()
-			require("which-key").add({ { "<leader>b", group = "+buffers" } })
-		end)
-	end,
+	opts = {},
 }

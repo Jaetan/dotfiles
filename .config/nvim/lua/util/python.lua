@@ -5,17 +5,17 @@ function M.current_venv_python()
 	local v = vim.env.VIRTUAL_ENV
 	if v and #v > 0 then
 		local p = v .. "/bin/python"
-		if vim.loop.fs_stat(p) then
+		if vim.uv.fs_stat(p) then
 			return p
 		end
 		local p2 = v .. "/Scripts/python.exe"
-		if vim.loop.fs_stat(p2) then
+		if vim.uv.fs_stat(p2) then
 			return p2
 		end
 	end
-	local cwd = vim.loop.cwd()
+	local cwd = vim.uv.cwd()
 	for _, p in ipairs({ cwd .. "/.venv/bin/python", cwd .. "/.venv/Scripts/python.exe" }) do
-		if vim.loop.fs_stat(p) then
+		if vim.uv.fs_stat(p) then
 			return p
 		end
 	end
