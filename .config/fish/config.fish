@@ -28,7 +28,7 @@ if status is-interactive
 end
 
 # Editor & pager / colors
-set -gx EDITOR nvim
+set -gx EDITOR /home/nicolas/nvim
 set -gx LESS "-R --mouse -F -X -M"
 set -gx GREP_COLORS "ms=01;36"
 set -gx BAT_THEME "tokyonight_night"
@@ -79,6 +79,8 @@ alias rg="rg --hidden --smart-case"
 alias gs="git status -sb"
 alias gd="git diff"
 alias gl="git log --oneline --graph --decorate"
+
+alias shake='cabal run shake --'
 
 # quick up-directory abbreviations (bash/zsh '..'/'...' aliases)
 abbr -a .. 'cd ..'
@@ -310,5 +312,8 @@ alias wezterm='cd dev/wezterm; and cargo run --release --bin wezterm -- start'
 if type -q mise
     mise activate fish | source
 end
+
+# Allow plan agents to consume more tokens
+set -gx CLAUDE_CODE_MAX_OUTPUT_TOKENS 100000
 
 # ----------------------------------------------------------------------
