@@ -1,4 +1,4 @@
-# ~/.bashrc — Tokyo Night Night edition (WSL)
+# ~/.bashrc — nightfly edition (WSL)
 # ------------------------------------------------------------
 # Interactive guard
 [[ $- != *i* ]] && return
@@ -6,19 +6,42 @@
 # --- PATHs ---------------------------------------------------
 export PATH="$HOME/.local/bin:$HOME/bin:$PATH"
 
-# --- Colors & pager -----------------------------------------
-export CLICOLOR=1
-export LESS='-R --mouse -F -X -M'        # color, smart paging, verbose prompt
-export GREP_COLORS='ms=01;36'            # cyan matches on dark bg
-export LS_COLORS="di=01;34:ln=01;36:so=33:pi=33:ex=01;32:bd=01;33:cd=01;33:or=01;31:mi=01;31"
+# Language toolchain PATHs (mirrors fish config)
+for p in \
+  "$HOME/.cargo/bin" \
+  "$HOME/.npm-global/bin" \
+  "$HOME/.rvm/bin" \
+  "$HOME/.local/share/coursier/bin" \
+  "$HOME/go/bin" \
+  "$HOME/.juliaup/bin" \
+  "$HOME/.ghcup/bin" \
+  "$HOME/.cabal/bin" \
+  "$HOME/.atuin/bin"; do
+  [ -d "$p" ] && [[ ":$PATH:" != *":$p:"* ]] && export PATH="$p:$PATH"
+done
 
-# --- bat (syntax highlighting) -------------------------------
-# After you install the tokyonight theme (via .tmTheme + `bat cache --build`)
-# this env var makes it the default everywhere (manpager, fzf previews, aliases).
-export BAT_THEME="tokyonight_night"
+# --- ssh-agent via keychain ----------------------------------
+if command -v keychain >/dev/null 2>&1; then
+  if [ -f ~/.ssh/id_ed25519 ]; then
+    eval "$(keychain --eval --quiet --agents ssh --inherit any ~/.ssh/id_ed25519)"
+  else
+    eval "$(keychain --eval --quiet --agents ssh --inherit any)"
+  fi
+fi
+
+# --- Editor & pager / colors ---------------------------------
+export EDITOR=/home/nicolas/nvim
+export CLICOLOR=1
+export LESS='-R --mouse -F -X -M'
+export GREP_COLORS='ms=01;36'
+export LS_COLORS="di=01;34:ln=01;36:so=33:pi=33:ex=01;32:bd=01;33:cd=01;33:or=01;31:mi=01;31"
+export BAT_THEME="nightfly"
 export MANPAGER="sh -c 'col -bx | bat -l man -p'"
 
-# --- History: big, deduped, timestamped, shared --------------
+# --- lesspipe (better 'less') --------------------------------
+[ -x /usr/bin/lesspipe ] && eval "$(SHELL=/bin/sh lesspipe)"
+
+# --- History: big, deduped, timestamped, shared ---------------
 export HISTCONTROL=ignoredups:erasedups
 export HISTSIZE=200000
 export HISTFILESIZE=200000
@@ -34,6 +57,14 @@ if [ -f /usr/share/bash-completion/bash_completion ]; then
   . /usr/share/bash-completion/bash_completion
 fi
 
+# --- Tool fallbacks for Debian/Ubuntu naming quirks -----------
+if ! command -v bat >/dev/null 2>&1 && command -v batcat >/dev/null 2>&1; then
+  alias bat='batcat'
+fi
+if ! command -v fd >/dev/null 2>&1 && command -v fdfind >/dev/null 2>&1; then
+  alias fd='fdfind'
+fi
+
 # --- fzf (bindings + completion) ------------------------------
 if [ -f /usr/share/doc/fzf/examples/key-bindings.bash ]; then
   . /usr/share/doc/fzf/examples/key-bindings.bash
@@ -42,7 +73,7 @@ if [ -f /usr/share/doc/fzf/examples/completion.bash ]; then
   . /usr/share/doc/fzf/examples/completion.bash
 fi
 
-# Tokyo Night Night colors for fzf UI + bat preview
+# fzf + preview with bat (nightfly palette)
 export FZF_DEFAULT_COMMAND='fd --type f --hidden --follow --exclude .git 2>/dev/null || find . -type f'
 export FZF_DEFAULT_OPTS="
   --height=80%
@@ -52,8 +83,9 @@ export FZF_DEFAULT_OPTS="
   --color=fg+:#c0caf5,bg+:#292e42,hl+:#bb9af7
   --color=info:#7aa2f7,prompt:#7dcfff,pointer:#f7768e,marker:#e0af68,spinner:#bb9af7,header:#565f89
 "
-# Ctrl-T preview via bat in tokyonight_night
 export FZF_CTRL_T_OPTS="--preview 'bat --style=plain --color=always --line-range :200 {}'"
+export FZF_ALT_C_COMMAND='fd --type d --hidden --follow --exclude .git 2>/dev/null || find . -type d'
+export FZF_ALT_C_OPTS="--preview 'eza --tree --color=always {} | head -200'"
 
 # --- direnv (project env auto-load) --------------------------
 if command -v direnv >/dev/null 2>&1; then
@@ -63,6 +95,53 @@ fi
 # --- zoxide (smarter cd) -------------------------------------
 if command -v zoxide >/dev/null 2>&1; then
   eval "$(zoxide init bash)"
+  alias cd='z'
+  alias zz='z -'
+fi
+
+# --- atuin (history: searchable, deduped) ---------------------
+if [ -f "$HOME/.atuin/bin/env" ]; then
+  . "$HOME/.atuin/bin/env"
+fi
+if [[ -f ~/.bash-preexec.sh ]]; then
+  . ~/.bash-preexec.sh
+fi
+if command -v atuin >/dev/null 2>&1; then
+  eval "$(atuin init bash)"
+fi
+
+# --- thefuck (command-line correction) ------------------------
+if command -v thefuck >/dev/null 2>&1; then
+  eval "$(thefuck --alias)"
+  eval "$(thefuck --alias fk)"
+  eval "$(thefuck --alias dwim)"
+fi
+
+# --- uv completions ------------------------------------------
+if command -v uv >/dev/null 2>&1; then
+  eval "$(uv generate-shell-completion bash)"
+fi
+if command -v uvx >/dev/null 2>&1; then
+  eval "$(uvx --generate-shell-completion bash)"
+fi
+
+# --- nvm ------------------------------------------------------
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+
+# --- OCaml (opam) --------------------------------------------
+if [ -r "$HOME/.opam/opam-init/init.sh" ]; then
+  . "$HOME/.opam/opam-init/init.sh" >/dev/null 2>&1
+fi
+
+# --- mise (version manager) ----------------------------------
+if command -v mise >/dev/null 2>&1; then
+  eval "$(mise activate bash)"
+fi
+
+# --- envman ---------------------------------------------------
+if [ -f "$HOME/.config/envman/load.sh" ]; then
+  . "$HOME/.config/envman/load.sh"
 fi
 
 # --- Aliases --------------------------------------------------
@@ -83,13 +162,15 @@ alias ...='cd ../..'
 alias gs='git status -sb'
 alias gd='git diff'
 alias gl='git log --oneline --graph --decorate'
+alias shake='cabal run shake --'
+alias emacs-tag='~/.emacs.d/scripts/tag-current.sh'
 alias please='sudo $(fc -ln -1)'
 # safer coreutils
 alias rm='rm -I --preserve-root'
 alias mv='mv -i'
 alias cp='cp -i'
 
-# --- Helper functions ----------------------------------------
+# --- Helper functions -----------------------------------------
 mcd(){ mkdir -p -- "$1" && cd -- "$1"; }
 mkvenv(){ python3 -m venv .venv && . .venv/bin/activate && pip -q install -U pip wheel; }
 extract(){
@@ -102,55 +183,96 @@ extract(){
 }
 mkcdtmp(){ local d; d=$(mktemp -d) && cd "$d" && pwd; }
 
-# --- lesspipe (better 'less') --------------------------------
-[ -x /usr/bin/lesspipe ] && eval "$(SHELL=/bin/sh lesspipe)"
+# gdel: remove deleted files from git index
+gdel(){ git ls-files -d -z | git update-index --remove -z --stdin; }
 
-# --- Prompt: Tokyo Night Night harmonized --------------------
-# Palette mapping: timestamp=gray(60), cwd=cyan(117), git=magenta(141),
-# success/fail bullet=green(114)/red(204), timer=yellow(179).
-__pr_exit_color() { [[ $1 -eq 0 ]] && echo 38\;5\;114 || echo 38\;5\;204; }
-__pr_git() {
-  command -v git >/dev/null || return
-  local b dirty
-  b=$(git rev-parse --abbrev-ref HEAD 2>/dev/null) || return
-  git diff --quiet --ignore-submodules HEAD 2>/dev/null; dirty=$?
-  if [[ $dirty -ne 0 ]]; then
-    printf ' \e[38;5;141m %s*\e[0m' "$b"
+# gmod: stage only modified files; interactive picker if fzf is available
+gmod(){
+  local files
+  mapfile -d '' files < <(git -c core.quotepath=off ls-files -m -z)
+  if [ ${#files[@]} -eq 0 ]; then
+    echo "No modified files."
+    return 0
+  fi
+  if command -v fzf >/dev/null 2>&1; then
+    local preview='if [ -d {} ]; then eza --tree --color=always {} | head -200; else bat -n --color=always --line-range :500 {}; fi'
+    local pick
+    pick=$(printf '%s\n' "${files[@]}" | fzf --multi --preview "$preview")
+    if [ -n "$pick" ]; then
+      echo "$pick" | xargs git add --
+    else
+      echo "No selection."
+    fi
   else
-    printf ' \e[38;5;141m %s\e[0m' "$b"
+    git add -- "${files[@]}"
   fi
 }
-__TIMER_START=0
-__prompt_update() {
-  # history: append, then reload for shared history across terminals
-  builtin history -a
-  builtin history -c
-  builtin history -r
-  # elapsed timer
-  local elapsed=""
-  local end=$SECONDS
-  if (( __TIMER_START )); then
-    local dt=$(( end - __TIMER_START ))
-    (( dt > 2 )) && elapsed="\[\e[38;5;179m\] ⏱ ${dt}s\[\e[0m\]"
-  fi
-  __TIMER_START=$SECONDS
-  PS1="\[\e[38;5;60m\][\t]\[\e[0m\] \[\e[$(__pr_exit_color $?)m\]•\[\e[0m\]$(__pr_git) \[\e[38;5;117m\]\w\[\e[0m\]${elapsed}\n\$ "
-}
-PROMPT_COMMAND="__prompt_update"
 
-# --- WSL niceties --------------------------------------------
-# speed up interop lookups a bit; harmless outside WSL
+# gnew: stage only new/untracked files; interactive picker if fzf is available
+gnew(){
+  local files
+  mapfile -d '' files < <(git -c core.quotepath=off ls-files --others --exclude-standard -z)
+  if [ ${#files[@]} -eq 0 ]; then
+    echo "No new untracked files."
+    return 0
+  fi
+  if command -v fzf >/dev/null 2>&1; then
+    local preview='if [ -d {} ]; then eza --tree --color=always {} | head -200; else bat -n --color=always --line-range :500 {}; fi'
+    local pick
+    pick=$(printf '%s\n' "${files[@]}" | fzf --multi --preview "$preview")
+    if [ -n "$pick" ]; then
+      echo "$pick" | xargs git add --
+    else
+      echo "No selection."
+    fi
+  else
+    git add -- "${files[@]}"
+  fi
+}
+
+# gunstage: unstage files; interactive picker if fzf is available; --all to unstage everything
+gunstage(){
+  if [ "$1" = "--all" ] || [ "$1" = "-a" ]; then
+    git restore --staged :/
+    return
+  fi
+  local files
+  mapfile -d '' files < <(git -c core.quotepath=off diff --name-only --cached -z)
+  if [ ${#files[@]} -eq 0 ]; then
+    echo "Nothing is staged."
+    return 0
+  fi
+  if command -v fzf >/dev/null 2>&1; then
+    local preview='if [ -d {} ]; then eza --tree --color=always {} | head -200; else git --no-pager diff --staged --color=always -- {} | delta || git --no-pager diff --staged --color=always -- {}; fi'
+    local pick
+    pick=$(printf '%s\n' "${files[@]}" | fzf --multi --preview "$preview")
+    if [ -n "$pick" ]; then
+      echo "$pick" | xargs git restore --staged --
+    else
+      echo "No selection."
+    fi
+  else
+    git restore --staged -- "${files[@]}"
+  fi
+}
+
+# --- WSL clipboard helpers -----------------------------------
+if [ -n "$WSL_DISTRO_NAME" ]; then
+  pbcopy(){ clip.exe < /dev/stdin; }
+  pbpaste(){ powershell.exe -NoProfile -Command Get-Clipboard | tr -d '\r'; }
+fi
 export WSLSYS="$([ -r /proc/sys/fs/binfmt_misc/WSLInterop ] && echo 1 || echo 0)"
 
-# --- End ------------------------------------------------------
+# --- Readline keybindings (Ctrl-P/N prefix search) -----------
+bind '"\C-p": history-search-backward' 2>/dev/null
+bind '"\C-n": history-search-forward' 2>/dev/null
 
-export PATH="$HOME/.local/bin:$PATH"
+# --- Starship prompt ------------------------------------------
+if command -v starship >/dev/null 2>&1; then
+  eval "$(starship init bash)"
+fi
 
-. "$HOME/.atuin/bin/env"
+# --- Claude Code ----------------------------------------------
+export CLAUDE_CODE_MAX_OUTPUT_TOKENS=100000
 
-[[ -f ~/.bash-preexec.sh ]] && source ~/.bash-preexec.sh
-eval "$(atuin init bash)"
-
-# nvm
-export NVM_DIR="$HOME/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+# ------------------------------------------------------------

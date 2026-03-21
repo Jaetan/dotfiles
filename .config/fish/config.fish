@@ -31,7 +31,7 @@ end
 set -gx EDITOR /home/nicolas/nvim
 set -gx LESS "-R --mouse -F -X -M"
 set -gx GREP_COLORS "ms=01;36"
-set -gx BAT_THEME "tokyonight_night"
+set -gx BAT_THEME "nightfly"
 set -gx MANPAGER "sh -c 'col -bx | bat -l man -p'"
 
 # Use lesspipe if available (better 'less' for many formats)
