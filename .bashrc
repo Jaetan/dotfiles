@@ -1,4 +1,4 @@
-# ~/.bashrc — nightfly edition (WSL)
+# ~/.bashrc — Catppuccin Mocha edition (WSL)
 # ------------------------------------------------------------
 # Interactive guard
 [[ $- != *i* ]] && return
@@ -35,7 +35,7 @@ export CLICOLOR=1
 export LESS='-R --mouse -F -X -M'
 export GREP_COLORS='ms=01;36'
 export LS_COLORS="di=01;34:ln=01;36:so=33:pi=33:ex=01;32:bd=01;33:cd=01;33:or=01;31:mi=01;31"
-export BAT_THEME="nightfly"
+export BAT_THEME="catppuccin-mocha"
 export MANPAGER="sh -c 'col -bx | bat -l man -p'"
 
 # --- lesspipe (better 'less') --------------------------------
@@ -73,15 +73,16 @@ if [ -f /usr/share/doc/fzf/examples/completion.bash ]; then
   . /usr/share/doc/fzf/examples/completion.bash
 fi
 
-# fzf + preview with bat (nightfly palette)
+# fzf + preview with bat (Catppuccin Mocha)
 export FZF_DEFAULT_COMMAND='fd --type f --hidden --follow --exclude .git 2>/dev/null || find . -type f'
 export FZF_DEFAULT_OPTS="
   --height=80%
   --border
   --preview-window=right,60%,border
-  --color=fg:#c0caf5,bg:#1a1b26,hl:#7dcfff
-  --color=fg+:#c0caf5,bg+:#292e42,hl+:#bb9af7
-  --color=info:#7aa2f7,prompt:#7dcfff,pointer:#f7768e,marker:#e0af68,spinner:#bb9af7,header:#565f89
+  --color=bg+:#313244,bg:#1E1E2E,spinner:#F5E0DC,hl:#F38BA8
+  --color=fg:#CDD6F4,header:#F38BA8,info:#CBA6F7,pointer:#F5E0DC
+  --color=marker:#B4BEFE,fg+:#CDD6F4,prompt:#CBA6F7,hl+:#F38BA8
+  --color=selected-bg:#45475A,border:#6C7086,label:#CDD6F4
 "
 export FZF_CTRL_T_OPTS="--preview 'bat --style=plain --color=always --line-range :200 {}'"
 export FZF_ALT_C_COMMAND='fd --type d --hidden --follow --exclude .git 2>/dev/null || find . -type d'

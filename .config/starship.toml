@@ -1,8 +1,9 @@
-# Starship — Tokyo Night Night
+# Starship — Catppuccin Mocha
 add_newline = true
+palette = "catppuccin_mocha"
 format = """
-[\\[$time\\]](fg:#565f89) [$status](fg:#9ece6a bg:transparent) $git_branch$git_status \
-[\\($directory\\)](fg:#7dcfff) $python $cmd_duration
+[\\[$time\\]](fg:overlay0) [$status](fg:green bg:transparent) $git_branch$git_status \
+[\\($directory\\)](fg:sapphire) $python $cmd_duration
 $character
 """
 
@@ -10,41 +11,69 @@ $character
 disabled = false
 format = "[$time]($style)"
 time_format = "%H:%M:%S"
-style = "fg:#565f89"
+style = "fg:overlay0"
 
 [status]
 disabled = false
 symbol = "• "
 success_symbol = "• "
 format = "[$symbol]($style)"
-style = "fg:#9ece6a"
+style = "fg:green"
 map_symbol = true
 
 [directory]
 truncate_to_repo = true
 truncation_length = 3
-style = "fg:#7dcfff"
+style = "fg:sapphire"
 
 [git_branch]
-format = "[ $branch]($style)"
-style = "fg:#bb9af7"
+format = "[ $branch]($style)"
+style = "fg:mauve"
 
 [git_status]
 format = "([$all_status$ahead_behind]($style))"
-style = "fg:#bb9af7"
+style = "fg:mauve"
 
 [python]
 # Show active venv name (direnv/pyenv), not version
 format = "[($virtualenv )]($style)"
-style = "fg:#9ece6a"
+style = "fg:green"
 pyenv_version_name = false
 
 [cmd_duration]
 min_time = 2000
 format = "[ ⏱ $duration]($style)"
-style = "fg:#e0af68"
+style = "fg:yellow"
 
 [character]
-success_symbol = "[❯](fg:#c0caf5)"
-error_symbol = "[❯](fg:#f7768e)"
-vicmd_symbol = "[❮](fg:#7aa2f7)"
+success_symbol = "[❯](fg:text)"
+error_symbol = "[❯](fg:red)"
+vicmd_symbol = "[❮](fg:blue)"
+
+[palettes.catppuccin_mocha]
+rosewater = "#f5e0dc"
+flamingo = "#f2cdcd"
+pink = "#f5c2e7"
+mauve = "#cba6f7"
+red = "#f38ba8"
+maroon = "#eba0ac"
+peach = "#fab387"
+yellow = "#f9e2af"
+green = "#a6e3a1"
+teal = "#94e2d5"
+sky = "#89dceb"
+sapphire = "#74c7ec"
+blue = "#89b4fa"
+lavender = "#b4befe"
+text = "#cdd6f4"
+subtext1 = "#bac2de"
+subtext0 = "#a6adc8"
+overlay2 = "#9399b2"
+overlay1 = "#7f849c"
+overlay0 = "#6c7086"
+surface2 = "#585b70"
+surface1 = "#45475a"
+surface0 = "#313244"
+base = "#1e1e2e"
+mantle = "#181825"
+crust = "#11111b"

@@ -47,5 +47,5 @@ isort, black, prettier, stylua, clang_format, ocamlformat
 - Indentation: 2 spaces (expandtab), except Makefiles
 - Autocmd retabs files on write (except Makefiles)
 - Python 3 host prog: `~/.venvs/nvim/bin/python`
-- Theme: tokyonight
+- Theme: catppuccin (mocha)
 - Session management: persistence.nvim (keymaps available, dashboard shows MRU)

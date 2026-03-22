@@ -29,7 +29,7 @@ Stow will error if a real file (not a symlink) already exists at the target path
 ## Key Conventions
 
 - **Shell**: Fish is the primary shell. Bash config exists as a fallback with mirrored aliases/env.
-- **Theme**: Tokyo Night (Night variant) everywhere — Neovim, bat, fzf, starship, WezTerm.
+- **Theme**: Catppuccin Mocha everywhere — Neovim, bat, fzf, starship, WezTerm, lazygit.
 - **Font**: VictorMono Nerd Font (set in WezTerm).
 - **Tool replacements**: `eza` for `ls`, `bat` for `cat`, `fd` for `find`, `rg` for `grep`, `zoxide` for `cd`. Aliases handle Debian naming quirks (`batcat`→`bat`, `fdfind`→`fd`).
 - **Environment**: WSL2 on Linux. Clipboard helpers (`pbcopy`/`pbpaste`) bridge to Windows.
@@ -38,6 +38,6 @@ Stow will error if a real file (not a symlink) already exists at the target path
 ## When Editing
 
 - Keep fish and bash configs in sync when changing aliases, env vars, or PATH entries.
-- Respect the Tokyo Night Night color palette when adding fzf/prompt/UI colors.
+- Respect the Catppuccin Mocha color palette when adding fzf/prompt/UI colors.
 - The nvim config has its own CLAUDE.md at `.config/nvim/CLAUDE.md` — refer to it for Neovim-specific guidance.
 - Files in `.config/git/ignore` affect all repos on the system — be conservative adding patterns there.

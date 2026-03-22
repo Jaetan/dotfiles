@@ -31,7 +31,7 @@ end
 set -gx EDITOR /home/nicolas/nvim
 set -gx LESS "-R --mouse -F -X -M"
 set -gx GREP_COLORS "ms=01;36"
-set -gx BAT_THEME "nightfly"
+set -gx BAT_THEME "catppuccin-mocha"
 set -gx MANPAGER "sh -c 'col -bx | bat -l man -p'"
 
 # Use lesspipe if available (better 'less' for many formats)
@@ -111,10 +111,13 @@ if test -f /usr/share/doc/fzf/examples/completion.fish
     source /usr/share/doc/fzf/examples/completion.fish
 end
 
-# fzf + preview with bat (Tokyo Night Night)
+# fzf + preview with bat (Catppuccin Mocha)
 set -gx FZF_DEFAULT_COMMAND 'fd --type f --hidden --follow --exclude .git 2>/dev/null || find . -type f'
 set -gx FZF_DEFAULT_OPTS '--height=80% --border --preview-window=right,60%,border \
- --color=fg:#c0caf5,bg:#1a1b26,hl:#7dcfff,fg+:#c0caf5,bg+:#292e42,hl+:#bb9af7,info:#7aa2f7,prompt:#7dcfff,pointer:#f7768e,marker:#e0af68,spinner:#bb9af7,header:#565f89'
+ --color=bg+:#313244,bg:#1E1E2E,spinner:#F5E0DC,hl:#F38BA8 \
+ --color=fg:#CDD6F4,header:#F38BA8,info:#CBA6F7,pointer:#F5E0DC \
+ --color=marker:#B4BEFE,fg+:#CDD6F4,prompt:#CBA6F7,hl+:#F38BA8 \
+ --color=selected-bg:#45475A,border:#6C7086,label:#CDD6F4'
 set -gx FZF_CTRL_T_OPTS "--preview 'bat --style=plain --color=always --line-range :200 {}'"
 # zsh's ALT-C customizations -> fish
 set -gx FZF_ALT_C_COMMAND 'fd --type d --hidden --follow --exclude .git 2>/dev/null || find . -type d'
@@ -147,7 +150,7 @@ function starship_transient_prompt_func
     if test -z "$cols"
         set cols (tput cols ^/dev/null)
     end
-    set_color 565f89
+    set_color 6c7086
     echo (string repeat -n $cols '─')
     set_color normal
 end
