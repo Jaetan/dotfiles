@@ -76,7 +76,6 @@ eval "$(thefuck --alias dwim)"
 
 # Shell integrations
 eval "$(fzf --zsh)"
-eval "$(zoxide init --cmd cd zsh)"
 
 # --- setup fzf theme ---
 fg="#CBE0F0"
@@ -142,11 +141,6 @@ alias ls="eza --icons=always"
 eval $(thefuck --alias)
 eval $(thefuck --alias fk)
 
-# ---- Zoxide (better cd) ----
-eval "$(zoxide init zsh)"
-
-alias cd="z"
-
 # OCaml
 test -r '/home/nicolas/.opam/opam-init/init.sh' && . '/home/nicolas/.opam/opam-init/init.sh' > /dev/null 2> /dev/null || true
 
@@ -168,8 +162,6 @@ esac
 
 # <<< juliaup initialize <<<
 
-# Add RVM to PATH for scripting. Make sure this is the last PATH variable change.
-
 # --- perl ---
 # perl
 if (command -v perl && command -v cpanm) >/dev/null 2>&1; then
@@ -185,10 +177,6 @@ export COLORTERM=truecolor
 # Generated for envman. Do not edit.
 [ -s "$HOME/.config/envman/load.sh" ] && source "$HOME/.config/envman/load.sh"
 
-# Add RVM to PATH for scripting. Make sure this is the last PATH variable change.
-export PATH="$PATH:$HOME/.rvm/bin"
-[[ -d "$HOME/.rvm/bin" && $PATH != *$HOME/.rvm/bin* ]] && PATH="$HOME/.rvm/bin${PATH:+:${PATH}}"
-
 eval "$(uv generate-shell-completion zsh)"
 eval "$(uvx --generate-shell-completion zsh)"
 
@@ -201,3 +189,7 @@ gdel() { git ls-files -d -z | git update-index --remove -z --stdin; }
 . "$HOME/.atuin/bin/env"
 
 eval "$(atuin init zsh)"
+
+# ---- Zoxide (better cd) ----
+# Must be last: installs precmd/chpwd hooks that break if overwritten.
+eval "$(zoxide init --cmd cd zsh)"
