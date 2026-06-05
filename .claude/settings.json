@@ -9,6 +9,20 @@
       "Bash(git show:*)",
       "Bash(git remote:*)",
       "Bash(git stash list:*)"
-    ]
-  }
+    ],
+    "defaultMode": "default"
+  },
+  "worktree": {
+    "baseRef": "fresh"
+  },
+  "enabledPlugins": {
+    "typescript-lsp@claude-plugins-official": true
+  },
+  "alwaysThinkingEnabled": true,
+  "effortLevel": "xhigh",
+  "advisorModel": "opus",
+  "tui": "fullscreen",
+  "editorMode": "normal",
+  "autoScrollEnabled": true,
+  "skipAutoPermissionPrompt": true
 }
