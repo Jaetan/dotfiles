@@ -316,12 +316,6 @@ if type -q mise
     mise activate fish | source
 end
 
-# Allow plan agents to consume more tokens
-set -gx CLAUDE_CODE_MAX_OUTPUT_TOKENS 100000
-
-# Claude Code: always use max effort (Opus only)
-set -gx CLAUDE_CODE_EFFORT_LEVEL ultracode
-
 # Claude Code: more terminal colors
 set -gx COLORTERM truecolor
 
