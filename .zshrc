@@ -69,7 +69,7 @@ alias ll='eza'
 
 # --- Bat (better cat) ---
 alias bat=batcat
-export BAT_THEME=tokyonight_night
+export BAT_THEME="Catppuccin Mocha"
 
 # --- thefuck (command-line correction) ---
 eval "$(thefuck --alias dwim)"
@@ -129,7 +129,7 @@ _fzf_comprun() {
 
 # ----- Bat (better cat) -----
 
-export BAT_THEME=tokyonight_night
+export BAT_THEME="Catppuccin Mocha"
 
 # ---- Eza (better ls) -----
 

@@ -35,7 +35,7 @@ export CLICOLOR=1
 export LESS='-R --mouse -F -X -M'
 export GREP_COLORS='ms=01;36'
 export LS_COLORS="di=01;34:ln=01;36:so=33:pi=33:ex=01;32:bd=01;33:cd=01;33:or=01;31:mi=01;31"
-export BAT_THEME="catppuccin-mocha"
+export BAT_THEME="Catppuccin Mocha"
 export MANPAGER="sh -c 'col -bx | bat -l man -p'"
 
 # --- lesspipe (better 'less') --------------------------------

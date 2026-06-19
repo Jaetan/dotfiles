@@ -31,7 +31,7 @@ end
 set -gx EDITOR /home/nicolas/nvim
 set -gx LESS "-R --mouse -F -X -M"
 set -gx GREP_COLORS "ms=01;36"
-set -gx BAT_THEME "catppuccin-mocha"
+set -gx BAT_THEME "Catppuccin Mocha"
 set -gx MANPAGER "sh -c 'col -bx | bat -l man -p'"
 
 # Use lesspipe if available (better 'less' for many formats)
@@ -318,5 +318,11 @@ end
 
 # Allow plan agents to consume more tokens
 set -gx CLAUDE_CODE_MAX_OUTPUT_TOKENS 100000
+
+# Claude Code: always use max effort (Opus only)
+set -gx CLAUDE_CODE_EFFORT_LEVEL ultracode
+
+# Claude Code: more terminal colors
+set -gx COLORTERM truecolor
 
 # ----------------------------------------------------------------------
