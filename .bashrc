@@ -21,11 +21,13 @@ for p in \
 done
 
 # --- ssh-agent via keychain ----------------------------------
+# --nogui keeps the passphrase prompt in the terminal instead of the
+# (off-screen, under WSLg) ksshaskpass GUI dialog. See config.fish.
 if command -v keychain >/dev/null 2>&1; then
   if [ -f ~/.ssh/id_ed25519 ]; then
-    eval "$(keychain --eval --quiet --agents ssh --inherit any ~/.ssh/id_ed25519)"
+    eval "$(keychain --eval --quiet --nogui --agents ssh --inherit any ~/.ssh/id_ed25519)"
   else
-    eval "$(keychain --eval --quiet --agents ssh --inherit any)"
+    eval "$(keychain --eval --quiet --nogui --agents ssh --inherit any)"
   fi
 fi
 

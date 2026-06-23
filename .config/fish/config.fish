@@ -16,13 +16,17 @@ for p in $HOME/.cargo/bin $HOME/.npm-global/bin $HOME/.rvm/bin $HOME/.local/shar
 end
 
 # ssh-agent via keychain (interactive shells only)
+# --nogui: prompt for the key passphrase in THIS terminal, not via a GUI
+# askpass (ksshaskpass). Under WSLg, DISPLAY is set and ksshaskpass exists,
+# so without --nogui keychain runs `ssh-add </dev/null`, which forces the
+# GUI dialog -- and WSLg routinely places that dialog off-screen.
 if status is-interactive
     if type -q keychain
         if test -f ~/.ssh/id_ed25519
-            keychain --eval --quiet --agents ssh --inherit any ~/.ssh/id_ed25519 | source
+            keychain --eval --quiet --nogui --agents ssh --inherit any ~/.ssh/id_ed25519 | source
         else
             # start/reuse agent without loading a specific key if it doesn't exist
-            keychain --eval --quiet --agents ssh --inherit any | source
+            keychain --eval --quiet --nogui --agents ssh --inherit any | source
         end
     end
 end
