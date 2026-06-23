@@ -1,0 +1,215 @@
+#!/usr/bin/env python3
+"""Unlock the default GNOME keyring from the terminal, not the WSLg GUI prompt.
+
+Under WSLg the gnome-keyring GUI unlock dialog ("Default keyring") is drawn
+off-screen and can't be reached. This keeps the keyring *encrypted* (the
+password is unchanged) but moves the unlock to an in-terminal hidden prompt,
+using gnome-keyring's UnlockWithMasterPassword D-Bus method (no GUI prompter).
+
+Run it at interactive shell startup. It is a safe no-op when:
+  - stdin is not a TTY (no way to prompt),
+  - there is no D-Bus session / Secret Service,
+  - the default keyring is already unlocked.
+
+A wrong passphrase leaves the keyring locked (no harm); just rerun.
+
+  wsl-keyring-unlock              unlock the default keyring if locked
+  wsl-keyring-unlock --status     report locked/unlocked, never prompt
+  wsl-keyring-unlock --lock       lock the default keyring (for testing)
+  wsl-keyring-unlock --selftest   prove the unlock path on a throwaway keyring
+"""
+import os
+import sys
+import getpass
+
+SECRETS = "org.freedesktop.secrets"
+ROOT = "/org/freedesktop/secrets"
+SVC_IFACE = "org.freedesktop.Secret.Service"
+COLL_IFACE = "org.freedesktop.Secret.Collection"
+PROP_IFACE = "org.freedesktop.DBus.Properties"
+INTERNAL_IFACE = "org.gnome.keyring.InternalUnsupportedGuiltRiddenInterface"
+
+
+def _connect():
+    import dbus  # imported lazily so a missing module is a clean no-op
+    bus = dbus.SessionBus()
+    root = bus.get_object(SECRETS, ROOT)
+    svc = dbus.Interface(root, SVC_IFACE)
+    internal = dbus.Interface(root, INTERNAL_IFACE)
+    return dbus, bus, svc, internal
+
+
+def _open_plain_session(dbus, svc):
+    # "plain" => the passphrase travels as raw bytes (local session bus only).
+    _output, session = svc.OpenSession("plain", dbus.String("", variant_level=1))
+    return session
+
+
+def _make_secret(dbus, session, passphrase):
+    # org.freedesktop.Secret.Secret == (o session, ay parameters, ay value, s content_type)
+    return dbus.Struct(
+        (
+            dbus.ObjectPath(session),
+            dbus.ByteArray(b""),
+            dbus.ByteArray(passphrase.encode("utf-8")),
+            dbus.String("text/plain"),
+        ),
+        signature="oayays",
+    )
+
+
+def _is_locked(bus, coll_path):
+    import dbus
+    obj = bus.get_object(SECRETS, coll_path)
+    p = dbus.Interface(obj, PROP_IFACE)
+    return bool(p.Get(COLL_IFACE, "Locked"))
+
+
+def _default_collection(svc):
+    coll = svc.ReadAlias("default")
+    return None if str(coll) == "/" else str(coll)
+
+
+def cmd_lock():
+    """Lock the default keyring (handy for testing the unlock path)."""
+    try:
+        dbus, bus, svc, _ = _connect()
+    except Exception as e:
+        print(f"keyring: Secret Service unavailable ({e})")
+        return 0
+    coll = _default_collection(svc)
+    if not coll:
+        print("keyring: no default keyring")
+        return 0
+    svc.Lock([dbus.ObjectPath(coll)])
+    print(f"keyring: locked {coll} -> locked={_is_locked(bus, coll)}")
+    return 0
+
+
+def cmd_status():
+    try:
+        dbus, bus, svc, _ = _connect()
+    except Exception as e:
+        print(f"keyring: Secret Service unavailable ({e})")
+        return 0
+    coll = _default_collection(svc)
+    if not coll:
+        print("keyring: no default keyring")
+        return 0
+    print(f"keyring: default={coll} locked={_is_locked(bus, coll)}")
+    return 0
+
+
+def _is_bad_password(exc):
+    msg = str(exc).lower()
+    return "invalid" in msg or "denied" in msg
+
+
+def cmd_unlock(attempts=3):
+    if not sys.stdin.isatty():
+        return 0
+    if not os.environ.get("DBUS_SESSION_BUS_ADDRESS") and not os.path.exists(
+        f"/run/user/{os.getuid()}/bus"
+    ):
+        return 0
+    try:
+        dbus, bus, svc, internal = _connect()
+        coll = _default_collection(svc)
+        if not coll or not _is_locked(bus, coll):
+            return 0  # no Secret Service / no default keyring / already unlocked
+        session = _open_plain_session(dbus, svc)
+    except Exception:
+        return 0  # never break shell startup
+    for i in range(attempts):
+        left = attempts - i - 1
+        try:
+            pw = getpass.getpass("Unlock GNOME default keyring (passphrase): ")
+        except (KeyboardInterrupt, EOFError):
+            print("\nkeyring: unlock skipped", file=sys.stderr)
+            return 0
+        try:
+            internal.UnlockWithMasterPassword(
+                dbus.ObjectPath(coll), _make_secret(dbus, session, pw)
+            )
+        except dbus.DBusException as e:
+            if not _is_bad_password(e):
+                print(f"keyring: unlock unavailable ({e})", file=sys.stderr)
+                return 0
+        # Either no exception, or a rejected password: confirm via Locked.
+        try:
+            if not _is_locked(bus, coll):
+                return 0
+        except Exception:
+            return 0
+        print(
+            "keyring: wrong passphrase"
+            + (f" ({left} {'try' if left == 1 else 'tries'} left)" if left else ""),
+            file=sys.stderr,
+        )
+    return 1
+
+
+def cmd_selftest():
+    """Create a throwaway keyring, lock it, unlock it with its password, delete it.
+
+    Exercises the exact OpenSession + Secret-struct + UnlockWithMasterPassword
+    path used by cmd_unlock(), without touching the real default keyring.
+    """
+    import dbus
+
+    label = "wsl-keyring-unlock-selftest"
+    secret_pw = "selftest-passphrase"
+    dbus_mod, bus, svc, internal = _connect()
+    session = _open_plain_session(dbus_mod, svc)
+    attrs = dbus.Dictionary(
+        {COLL_IFACE + ".Label": dbus.String(label, variant_level=1)},
+        signature="sv",
+    )
+    probe = str(internal.CreateWithMasterPassword(attrs, _make_secret(dbus_mod, session, secret_pw)))
+    print(f"  created probe keyring: {probe}")
+    try:
+        svc.Lock([dbus.ObjectPath(probe)])
+        if not _is_locked(bus, probe):
+            print("  FAIL: probe did not lock"); return 1
+        print("  locked OK")
+        internal.UnlockWithMasterPassword(
+            dbus.ObjectPath(probe), _make_secret(dbus_mod, session, secret_pw)
+        )
+        if _is_locked(bus, probe):
+            print("  FAIL: UnlockWithMasterPassword did not unlock"); return 1
+        print("  UnlockWithMasterPassword OK  <-- this is the real-keyring code path")
+        # Negative check: a wrong passphrase must NOT unlock it.
+        svc.Lock([dbus.ObjectPath(probe)])
+        try:
+            internal.UnlockWithMasterPassword(
+                dbus.ObjectPath(probe), _make_secret(dbus_mod, session, "wrong")
+            )
+        except dbus.DBusException as e:
+            if not _is_bad_password(e):
+                raise
+        if not _is_locked(bus, probe):
+            print("  FAIL: wrong passphrase unlocked the keyring"); return 1
+        print("  wrong-passphrase correctly rejected")
+        return 0
+    finally:
+        obj = bus.get_object(SECRETS, probe)
+        prompt = dbus.Interface(obj, COLL_IFACE).Delete()
+        print(f"  deleted probe keyring (prompt={prompt})")
+
+
+def main(argv):
+    arg = argv[1] if len(argv) > 1 else ""
+    if arg == "--status":
+        return cmd_status()
+    if arg == "--lock":
+        return cmd_lock()
+    if arg == "--selftest":
+        return cmd_selftest()
+    if arg in ("-h", "--help"):
+        print(__doc__)
+        return 0
+    return cmd_unlock()
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv))

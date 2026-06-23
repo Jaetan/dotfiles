@@ -31,6 +31,16 @@ if status is-interactive
     end
 end
 
+# Unlock the GNOME keyring in THIS terminal, not the off-screen WSLg GUI
+# prompter. Keeps the keyring encrypted (UnlockWithMasterPassword over D-Bus);
+# prompts (hidden) only on the first shell after a boot, while it's still
+# locked. Must stay un-piped so the passphrase prompt keeps the terminal.
+if status is-interactive
+    if type -q wsl-keyring-unlock
+        wsl-keyring-unlock
+    end
+end
+
 # Editor & pager / colors
 set -gx EDITOR /home/nicolas/nvim
 set -gx LESS "-R --mouse -F -X -M"

@@ -31,6 +31,13 @@ if command -v keychain >/dev/null 2>&1; then
   fi
 fi
 
+# --- Unlock the GNOME keyring in the terminal ----------------
+# Not the off-screen WSLg GUI prompt. Keeps the keyring encrypted; prompts
+# (hidden) only on the first shell after a boot, while it's still locked.
+if command -v wsl-keyring-unlock >/dev/null 2>&1; then
+  wsl-keyring-unlock
+fi
+
 # --- Editor & pager / colors ---------------------------------
 export EDITOR=/home/nicolas/nvim
 export CLICOLOR=1
