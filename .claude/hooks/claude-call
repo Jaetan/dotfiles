@@ -1,0 +1,461 @@
+#!/home/nicolas/.local/bin/python3.14 -IS
+"""claude-call: run one Claude Code Bash call in a systemd scope, a log, and a view of its repository.
+
+    claude-call LINE      LINE is the tool's own `zsh -c` string, exec'd here from ~/.zshenv
+
+The Bash tool runs `zsh -c '<snapshot> ... && eval <call> < /dev/null && pwd -P >| <cwd file>'`. Every call:
+
+  scope  a transient systemd user scope under claude.slice (the slice holds CPUs 0-19 and the memory cap), with
+         OOMPolicy=continue; stopped when the call's shell exits, so a job the call left running is killed
+         (SIGTERM, then SIGKILL after TimeoutStopSec).
+  log    the call's whole output, both streams, to LOGS/<time>-<session>-<pid>.log, as well as to the tool.
+         Logs older than KEEP_DAYS go, then the oldest until at most KEEP_LOGS logs and KEEP_BYTES remain.
+  view   inside a git repository, the call runs in a bubblewrap mount namespace where the repository's path shows
+         a snapshot of its sources, taken when the call starts, so an edit made meanwhile cannot reach it:
+           - tracked files and untracked files not ignored, as the working tree has them, copied (posix tar keeps
+             each mtime to the nanosecond, which a build comparing mtimes needs);
+           - bound live from the real tree: each directory ignored whole (build output, caches), each directory
+             whose only tracked file is its .gitignore or .gitkeep (an output directory), each submodule and
+             each untracked repository nested in the tree;
+           - a scattered ignored file bound live when it is a lock (`*.lock`, which has to be shared to lock
+             anything) or at least BIND_BYTES (a binary, which a linker rewrites in place), copied otherwise;
+           - .git bound live, so a commit made in the call lands in the repository.
+         A directory bound live is a mount point, which the kernel will not remove once empty (EBUSY) and which
+         mkdir finds there (EEXIST); claude-call-rmdir.so, built beside VIEWS from claude-call-rmdir.c and
+         preloaded in the view, makes both read as success on an empty mount point, so `rm -rf build && mkdir
+         build`, Python's rmtree and GHC's removePathForcibly run on as in the real tree. ASAN_OPTIONS gains
+         verify_asan_link_order=0 there, since gcc's shared ASan runtime refuses to start behind any preload.
+  sync   when the call ends, what it changed in its snapshot is carried to the real tree, per file, under a lock
+         per repository: applied where the real file is as it was at the snapshot, and otherwise a conflict, the
+         call's version kept under CONFLICTS and named on stderr. A call ended by a signal is not synced back;
+         the files it had changed are named in its log.
+
+Fail open: when a log, a view or a sync cannot be made, the call still runs, and stderr says what was skipped. When
+the scope or the view does not start, the call has not run (a marker it writes just before starting is still empty)
+and runs unwrapped, exactly once; a call that did start is never run again.
+Environment: CLAUDE_CALL=1 inside (the ~/.zshenv line does not wrap again); CLAUDE_CALL_ROOT moves LOGS, VIEWS and
+CONFLICTS (the tests use it); CLAUDE_CALL_SLICE names the slice.
+"""
+import contextlib
+import fcntl
+import hashlib
+import os
+import shlex
+import shutil
+import signal
+import stat
+import subprocess
+import sys
+import threading
+import time
+from pathlib import Path
+from typing import BinaryIO
+
+ROOT = Path(os.environ.get("CLAUDE_CALL_ROOT", Path.home() / "dev" / "logs"))
+LOGS, VIEWS, CONFLICTS = ROOT / "claude-calls", ROOT / "claude-views", ROOT / "claude-conflicts"
+SLICE = os.environ.get("CLAUDE_CALL_SLICE", "claude.slice")
+KEEP_DAYS, KEEP_LOGS, KEEP_BYTES = 5, 50, 100 << 20
+BIND_BYTES = 1 << 20
+ZSH = shutil.which("zsh") or "/usr/bin/zsh"
+GIT_ENV = {k: v for k, v in os.environ.items() if not k.startswith("GIT_")}
+STARTED = False  # set once the call is launched: from then on it may run a second time only if MARKER says it never ran
+MARKER: Path | None = None
+RUNTIME = Path(os.environ.get("XDG_RUNTIME_DIR", f"/run/user/{os.getuid()}"))
+T0 = time.monotonic()
+MARKS: list[str] = []
+
+
+def mark(what: str) -> None:
+    MARKS.append(f"{what} {1000 * (time.monotonic() - T0):.0f}")
+
+
+Key = tuple[int, int, int, int, int]
+INTERPOSER = Path(__file__).resolve().with_name("claude-call-rmdir.c")
+
+
+def warn(msg: str) -> None:
+    with contextlib.suppress(OSError):
+        os.write(2, f"claude-call: {msg}\n".encode())
+
+
+def git(top: str | os.PathLike[str], *args: str) -> str:
+    return subprocess.run(["git", "-C", str(top), *args], env=GIT_ENV, capture_output=True, text=True,
+                          check=True).stdout
+
+
+def prune() -> None:
+    """At most KEEP_LOGS - 1 logs remain before this call's, none older than KEEP_DAYS, KEEP_BYTES in all."""
+    LOGS.mkdir(parents=True, exist_ok=True)
+    logs = sorted((p.stat().st_mtime, p.stat().st_size, p) for p in LOGS.glob("*.log"))
+    now = time.time()
+    total = sum(size for _, size, _ in logs)
+    for i, (mtime, size, path) in enumerate(logs):
+        if now - mtime > KEEP_DAYS * 86400 or len(logs) - i > KEEP_LOGS - 1 or total > KEEP_BYTES:
+            path.unlink(missing_ok=True)
+            total -= size
+    for d in CONFLICTS.glob("*") if CONFLICTS.exists() else ():
+        if now - d.stat().st_mtime > KEEP_DAYS * 86400:
+            shutil.rmtree(d, ignore_errors=True)
+
+
+def call_text(line: str) -> str:
+    """The call itself, the argument of the line's `eval`, for the log's header."""
+    with contextlib.suppress(ValueError):
+        words = shlex.split(line)
+        if "eval" in words[:-1]:
+            return words[words.index("eval") + 1]
+    return line
+
+
+def start_time(pid: int) -> str | None:
+    with contextlib.suppress(OSError, IndexError):
+        return Path(f"/proc/{pid}/stat").read_text().rsplit(")", 1)[1].split()[19]
+    return None
+
+
+def remove_tree(path: Path) -> None:
+    shutil.rmtree(path, ignore_errors=True)
+    if path.exists():  # a directory left unwritable by the call
+        subprocess.run(["chmod", "-R", "u+rwx", str(path)], capture_output=True, check=False)
+        shutil.rmtree(path, ignore_errors=True)
+
+
+def reap_stale_views() -> None:
+    """A view whose wrapper died without cleaning up (SIGKILL): its scope stopped, its directory removed."""
+    for owner in VIEWS.glob("*/owner") if VIEWS.exists() else ():
+        with contextlib.suppress(OSError, ValueError):
+            pid, started, unit = owner.read_text().split()
+            if start_time(int(pid)) != started:
+                subprocess.run(["systemctl", "--user", "stop", unit], capture_output=True, check=False)
+                remove_tree(owner.parent)
+
+
+def lstat_key(path: Path) -> Key | None:
+    try:
+        st = os.lstat(path)
+    except FileNotFoundError:
+        return None
+    return st.st_ino, st.st_size, st.st_mtime_ns, st.st_ctime_ns, st.st_mode
+
+
+def copy_entry(src: Path, dst: Path) -> None:
+    if src.is_symlink():
+        with contextlib.suppress(FileNotFoundError):
+            os.unlink(dst)
+        os.symlink(os.readlink(src), dst)
+    else:
+        shutil.copy2(src, dst)
+
+
+def preload() -> list[str]:
+    """bwrap arguments preloading claude-call-rmdir.so in the view, built when missing or older than its source."""
+    built = VIEWS / ".bin" / "claude-call-rmdir.so"
+    try:
+        if not built.exists() or built.stat().st_mtime_ns < INTERPOSER.stat().st_mtime_ns:
+            built.parent.mkdir(parents=True, exist_ok=True)
+            tmp = built.with_name(f".{built.name}.{os.getpid()}")
+            subprocess.run(["cc", "-shared", "-fPIC", "-O2", "-o", str(tmp), str(INTERPOSER), "-ldl"],
+                           capture_output=True, check=True)
+            os.replace(tmp, built)
+    except (OSError, subprocess.CalledProcessError) as e:
+        warn(f"no rmdir interposer ({type(e).__name__}); removing a directory bound live fails in this call")
+        return []
+    # A call started inside another call's view inherits both; each is added once, however deep the nesting.
+    others = [p for p in os.environ.get("LD_PRELOAD", "").replace(" ", ":").split(":") if p and p != str(built)]
+    options = [o for o in os.environ.get("ASAN_OPTIONS", "").split(":") if o and o != "verify_asan_link_order=0"]
+    return ["--setenv", "LD_PRELOAD", ":".join([str(built), *others]),
+            "--setenv", "ASAN_OPTIONS", ":".join([*options, "verify_asan_link_order=0"])]
+
+
+class View:
+    """The snapshot of one repository for one call, the bwrap arguments that show it, and its sync-back."""
+
+    def __init__(self, top: Path, cwd: str, ident: str, unit: str) -> None:
+        self.top, self.cwd, self.ident = top, cwd, ident
+        self.dir = VIEWS / ident
+        self.snap = self.dir / "snap"
+        self.snap.mkdir(parents=True)
+        (self.dir / "owner").write_text(f"{os.getpid()} {start_time(os.getpid())} {unit}\n")
+        queries = [subprocess.Popen(["git", "-C", str(top), *args], env=GIT_ENV, stdout=subprocess.PIPE, text=True)
+                   for args in (["ls-files", "-z", "--cached", "--others", "--exclude-standard"],
+                                ["ls-files", "-z", "--others", "--ignored", "--exclude-standard", "--directory"],
+                                ["ls-files", "-s"])]
+        answers = [q.communicate()[0] for q in queries]
+        if any(q.returncode for q in queries):
+            raise RuntimeError("git ls-files failed")
+        listed = answers[0].split("\0")
+        ignored = [p for p in answers[1].split("\0") if p]
+        gitlinks = {line.split("\t", 1)[1] for line in answers[2].splitlines() if line.startswith("160000 ")}
+        # An untracked repository nested in the tree is listed as one `dir/` entry: bound live, as a submodule is.
+        nested = {p.rstrip("/") for p in listed if p.endswith("/")}
+        listed = [p for p in dict.fromkeys(listed) if p and not p.endswith("/") and p not in gitlinks]
+        live = {p.rstrip("/") for p in ignored if p.endswith("/")} | gitlinks | nested
+        # An output directory, whose only tracked file is its .gitignore or .gitkeep: git lists its ignored files
+        # one by one (tools/ci-output: 1359 logs), so it is bound live whole, from its highest such ancestor.
+        content = {str(q) for p in listed if Path(p).name not in (".gitignore", ".gitkeep") for q in Path(p).parents}
+        for p in (p for p in ignored if not p.endswith("/")):
+            outputs = [str(q) for q in Path(p).parents if str(q) != "." and str(q) not in content]
+            if outputs:
+                live.add(outputs[-1])
+        self.live_dirs = sorted(live)
+        inside_live = tuple(d + "/" for d in self.live_dirs)
+        copied = [p for p in listed if not p.startswith(inside_live) and os.path.lexists(top / p)]
+        self.live_files: list[str] = []
+        for p in (p for p in ignored if not p.endswith("/") and not p.startswith(inside_live)):
+            st = os.lstat(top / p)
+            if stat.S_ISREG(st.st_mode) and (p.endswith(".lock") or st.st_size >= BIND_BYTES):
+                self.live_files.append(p)
+            else:
+                copied.append(p)
+        mark("listed")
+        self.real: dict[str, Key | None] = {p: lstat_key(top / p) for p in copied}
+        pack = subprocess.Popen(["tar", "--format=posix", "--no-recursion", "--null", "-T", "-", "-cf", "-"],
+                                cwd=top, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+        unpack = subprocess.Popen(["tar", "-xf", "-", "-C", str(self.snap)], stdin=pack.stdout)
+        assert pack.stdin is not None and pack.stdout is not None
+        pack.stdout.close()
+        pack.stdin.write("\0".join(copied).encode())
+        pack.stdin.close()
+        if pack.wait() != 0 or unpack.wait() != 0:
+            raise RuntimeError(f"snapshot tar exited {pack.returncode} and {unpack.returncode}")
+        mark("copied")
+        self.copied: dict[str, Key | None] = {p: lstat_key(self.snap / p) for p in copied}
+        for d in self.live_dirs:
+            (self.snap / d).mkdir(parents=True, exist_ok=True)
+        for f in self.live_files:
+            (self.snap / f).parent.mkdir(parents=True, exist_ok=True)
+            (self.snap / f).touch()
+        git_entry = top / ".git"
+        if git_entry.is_dir():
+            (self.snap / ".git").mkdir(exist_ok=True)
+        elif git_entry.exists():
+            (self.snap / ".git").touch()
+        rel = os.path.relpath(cwd, top)
+        if not rel.startswith(".."):
+            (self.snap / rel).mkdir(parents=True, exist_ok=True)
+        self.mounts = set(self.live_dirs) | set(self.live_files) | {".git"}
+        self.dirs = set(self.walk()[0])
+        mark("recorded")
+
+    def argv(self) -> list[str]:
+        top = str(self.top)
+        argv = ["bwrap", "--dev-bind", "/", "/", "--bind", str(self.snap), top]
+        for p in [*self.live_dirs, *self.live_files]:
+            argv += ["--bind", f"{top}/{p}", f"{top}/{p}"]
+        if (self.top / ".git").exists():
+            argv += ["--bind", f"{top}/.git", f"{top}/.git"]
+        return [*argv, *preload(), "--chdir", self.cwd]
+
+    def walk(self) -> tuple[list[str], list[str]]:
+        """The snapshot's directories and files (a symlink counting as a file, whatever it points at), not
+        descending into what is bound live."""
+        dirs_seen, files_seen = [], []
+        for base, dirs, files in os.walk(self.snap):
+            rel = os.path.relpath(base, self.snap)
+            rel = "" if rel == "." else rel + "/"
+            links = [d for d in dirs if os.path.islink(os.path.join(base, d))]
+            dirs[:] = [d for d in dirs if rel + d not in self.mounts and d not in links]
+            dirs_seen += [rel + d for d in dirs]
+            files_seen += [rel + f for f in [*files, *links] if rel + f not in self.mounts]
+        return dirs_seen, files_seen
+
+    def changes(self) -> tuple[list[str], list[str], list[str], list[str]]:
+        """What the call did to its snapshot: files changed, files new, files deleted, directories new."""
+        dirs, files = self.walk()
+        changed = [p for p, key in self.copied.items() if lstat_key(self.snap / p) not in (key, None)]
+        deleted = [p for p in self.copied if lstat_key(self.snap / p) is None]
+        new = [p for p in files if p not in self.copied]
+        return changed, new, deleted, [d for d in dirs if d not in self.dirs]
+
+    def sync_back(self, log: BinaryIO) -> None:
+        changed, new, deleted, new_dirs = self.changes()
+        if not (changed or new or deleted or new_dirs):
+            return
+        conflicts: list[str] = []
+        lock = VIEWS / f".lock-{hashlib.sha1(str(self.top).encode()).hexdigest()[:16]}"
+        with open(lock, "w") as held:
+            fcntl.flock(held, fcntl.LOCK_EX)
+            for d in sorted(new_dirs):
+                (self.top / d).mkdir(parents=True, exist_ok=True)
+            for p in sorted(changed + new):
+                if lstat_key(self.top / p) != self.real.get(p):
+                    conflicts.append(p)
+                    keep = CONFLICTS / self.ident / p
+                    keep.parent.mkdir(parents=True, exist_ok=True)
+                    copy_entry(self.snap / p, keep)
+                    continue
+                (self.top / p).parent.mkdir(parents=True, exist_ok=True)
+                tmp = (self.top / p).with_name(f".{Path(p).name}.claude-call-{os.getpid()}")
+                copy_entry(self.snap / p, tmp)
+                os.replace(tmp, self.top / p)
+            for p in sorted(deleted):
+                if lstat_key(self.top / p) != self.real.get(p):
+                    conflicts.append(p)
+                    continue
+                with contextlib.suppress(FileNotFoundError):
+                    os.unlink(self.top / p)
+            for d in sorted({str(Path(p).parent) for p in deleted} - {"."}, key=len, reverse=True):
+                if not (self.snap / d).exists():
+                    with contextlib.suppress(OSError):
+                        os.removedirs(self.top / d)
+        log.write((f"# synced back: {len(changed)} changed, {len(new)} new, {len(deleted)} deleted, "
+                   f"{len(new_dirs)} new directories\n").encode())
+        if conflicts:
+            msg = (f"{len(conflicts)} file(s) this call changed were also changed in the tree meanwhile and were not "
+                   f"applied; this call's versions are under {CONFLICTS / self.ident}: " + ", ".join(conflicts))
+            log.write(f"# {msg}\n".encode())
+            warn(msg)
+
+    def record_unsynced(self, log: BinaryIO) -> None:
+        changed, new, deleted, _ = self.changes()
+        if changed or new or deleted:
+            log.write(("# ended by a signal, not synced back; it had changed: "
+                       + ", ".join(sorted(changed + new + deleted)) + "\n").encode())
+
+
+def make_marker(ident: str) -> Path | None:
+    """An empty file the call writes to just before it starts, inside its scope and view (see never_started)."""
+    for old in RUNTIME.glob("claude-call-*.started"):
+        with contextlib.suppress(OSError):
+            if time.time() - old.stat().st_mtime > 86400:
+                old.unlink()
+    with contextlib.suppress(OSError):
+        marker = RUNTIME / f"claude-call-{ident}.started"
+        marker.write_bytes(b"")
+        return marker
+    return None
+
+
+def never_started(marker: Path | None) -> bool:
+    """The marker is still empty: the scope or the view failed before the call ran, so it may run unwrapped once.
+    Without a marker the call is taken to have run, and is never run again."""
+    try:
+        return marker is not None and marker.stat().st_size == 0
+    except OSError:
+        return False
+
+
+class NeverStarted(Exception):
+    """The call was launched but provably did not run: it runs unwrapped, once."""
+
+
+def scope_argv(unit: str) -> list[str]:
+    if not Path(RUNTIME, "systemd", "private").exists():
+        warn("no systemd user manager: no scope, so no memory cap and no cleanup of leftover jobs")
+        return ["taskset", "-c", "0-19"]
+    # --expand-environment=no: by default systemd-run reads its command line as ExecStart= does, expanding ${VAR}
+    # from its own environment and turning $$ into $, even inside the call's single quotes.
+    return ["systemd-run", "--user", "--scope", "--quiet", "--collect", "--expand-environment=no", f"--slice={SLICE}",
+            f"--unit={unit}", "-p", "OOMPolicy=continue", "-p", "TimeoutStopSec=2s", "--"]
+
+
+def main(line: str) -> int:
+    global STARTED, MARKER
+    os.environ["CLAUDE_CALL"] = "1"
+    session = os.environ.get("CLAUDE_CODE_SESSION_ID", "nosession")[:8]
+    ident = f"{time.strftime('%Y%m%d-%H%M%S')}-{session}-{os.getpid()}"
+    unit = f"claude-call-{ident}.scope"
+    cwd = os.getcwd()
+    try:
+        prune()
+        log: BinaryIO = open(LOGS / f"{ident}.log", "ab", buffering=0)
+    except OSError as e:
+        warn(f"no log ({e})")
+        log = open(os.devnull, "wb", buffering=0)
+    log.write(f"# {time.strftime('%Y-%m-%d %H:%M:%S')} cwd {cwd}\n# {call_text(line)}\n".encode())
+    view = None
+    mark("logged")
+    try:
+        reap_stale_views()
+        top = Path(git(cwd, "rev-parse", "--show-toplevel").strip())
+        if not str(top).startswith(str(ROOT) + "/"):
+            view = View(top, cwd, ident, unit)
+    except subprocess.CalledProcessError:
+        pass  # not in a repository: a scope and a log, no view
+    except Exception as e:  # fail open: a call must run even when its view cannot be made
+        warn(f"no view ({type(e).__name__}: {e}); the call runs on the real tree")
+        log.write(f"# no view: {type(e).__name__}: {e}\n".encode())
+        view = None
+    mark("view")
+    scope = scope_argv(unit)
+    MARKER = make_marker(ident)
+    started = ["/bin/sh", "-c", 'printf 1 > "$0" && exec "$@"', str(MARKER)] if MARKER else []
+    argv = [*scope, *(view.argv() if view else []), *started, ZSH, "-c", line]
+
+    def stop() -> None:
+        if scope[0] == "systemd-run":
+            subprocess.run(["systemctl", "--user", "stop", unit], capture_output=True, check=False)
+
+    def on_signal(signum: int, _frame: object) -> None:
+        stop()
+        if view:
+            with contextlib.suppress(Exception):
+                view.record_unsynced(log)
+            remove_tree(view.dir)
+        log.write(f"# ended by signal {signum}\n".encode())
+        if MARKER:
+            MARKER.unlink(missing_ok=True)
+        os._exit(128 + signum)
+
+    for s in (signal.SIGTERM, signal.SIGHUP, signal.SIGINT):
+        signal.signal(s, on_signal)
+    STARTED = True
+    proc = subprocess.Popen(argv, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+    def pump(src: BinaryIO, fd: int) -> None:
+        while chunk := os.read(src.fileno(), 65536):
+            log.write(chunk)
+            with contextlib.suppress(OSError):
+                os.write(fd, chunk)
+
+    assert proc.stdout is not None and proc.stderr is not None
+    pumps = [threading.Thread(target=pump, args=(proc.stdout, 1)), threading.Thread(target=pump, args=(proc.stderr, 2))]
+    for t in pumps:
+        t.start()
+    rc = proc.wait()
+    mark("ran")
+    stop()  # the call's leftovers hold its pipes: stopping them ends the pumps
+    for t in pumps:
+        t.join()
+    mark("stopped")
+    if never_started(MARKER):
+        log.write(f"# the scope or the view did not start (exit {rc}); the call runs unwrapped\n".encode())
+        warn(f"the scope or the view did not start (exit {rc}); the call runs unwrapped")
+        if view:
+            remove_tree(view.dir)
+        raise NeverStarted
+    if MARKER:
+        MARKER.unlink(missing_ok=True)
+    for s in (signal.SIGTERM, signal.SIGHUP, signal.SIGINT):
+        signal.signal(s, signal.SIG_IGN)  # the call is over; a signal now must not cut a sync-back in half
+    if view:
+        try:
+            view.sync_back(log)
+            mark("synced")
+            remove_tree(view.dir)
+            mark("removed")
+        except Exception as e:
+            warn(f"sync-back failed ({type(e).__name__}: {e}); the call's snapshot is kept at {view.snap}")
+            log.write(f"# sync-back failed: {type(e).__name__}: {e}; snapshot kept at {view.snap}\n".encode())
+    log.write(f"# exit {rc}; ms: {', '.join(MARKS)}\n".encode())
+    return rc if rc >= 0 else 128 - rc
+
+
+if __name__ == "__main__":
+    if len(sys.argv) != 2:
+        print("usage: claude-call LINE", file=sys.stderr)
+        sys.exit(2)
+    try:
+        sys.exit(main(sys.argv[1]))
+    except SystemExit:
+        raise
+    except BaseException as e:
+        if STARTED and not never_started(MARKER):
+            warn(f"wrapper failed after the call started ({type(e).__name__}: {e})")
+            sys.exit(1)
+        if not isinstance(e, NeverStarted):
+            warn(f"wrapper failed ({type(e).__name__}: {e}); the call runs unwrapped")
+        if MARKER:
+            MARKER.unlink(missing_ok=True)
+        os.environ["CLAUDE_CALL"] = "1"
+        os.execv(ZSH, [ZSH, "-c", sys.argv[1]])

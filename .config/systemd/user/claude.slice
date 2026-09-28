@@ -1,0 +1,12 @@
+[Unit]
+Description=Claude Code: its sessions and every call they run, on CPUs 0-19 with a memory cap
+Documentation=file://%h/.local/bin/session-limits
+
+# One budget for a session and its calls: session-limits starts Claude Code in a scope here, and each call's
+# scope is placed here too. A scope is a leaf, so a call's own scope under another slice would escape these caps.
+# CPUs 20-23 belong to the user; the kernel holds every process here to 0-19 (the user manager is delegated cpuset).
+# Of the VM's 31 GiB and 8 GiB swap: room for the system beside the session, and a runaway killed rather than thrashing.
+[Slice]
+AllowedCPUs=0-19
+MemoryMax=24G
+MemorySwapMax=2G

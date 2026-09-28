@@ -1,0 +1,43 @@
+--- inventory (no wrapper): rc 0, results [
+ "(Bash completed with no output)",
+ "/tmp/zshenv-exec-79cl33mr/repo/sub",
+ "(Bash completed with no output)",
+ "Command running in background with ID: bncs3g0y2. Output is being written to: /tmp/claude-1000/-tmp-zshenv-exec-79cl33mr-repo/91f6419b-f0b3-45af-a854-6561def8cc73/tasks/bncs3g0y2.output. You will be n",
+ "[{\"type\": \"tool_reference\", \"tool_name\": \"Monitor\"}]",
+ "Monitor started (task b8bt2ec0m, expires in 5s unless the source ends first; you get one notice at expiry \u2014 re-arm if you still need the watch). You will be notified on each event. Keep working \u2014 do n"
+]
+     inventory: 7 zsh starts with CLAUDECODE set
+       1790585140.0685815811 wrapped=0 parent=claude args= exec=env
+       1790585140.0694236755 wrapped=0 parent=claude args= exec=SNAPSHOT_FILE=/home/nicolas/.claude/shell-snapshots/snapshot-zsh-1790585140067-r0tov8.sh$'\n'\ \ \ \ \ \ source\ \"/home/nicolas/.zshrc\"\ \<\ /dev/null$'\n'$'\n'\ \ \ \ \ \
+       1790585140.8565025330 wrapped=0 parent=claude args= exec=source\ /home/nicolas/.claude/shell-snapshots/snapshot-zsh-1790585140067-r0tov8.sh\ 2\>/dev/null\ \|\|\ true\ \&\&\ setopt\ NO_EXTENDED_GLOB\ NO_BARE_GLOB_QUAL\ 2\>/dev/null
+       1790585142.1978399754 wrapped=0 parent=claude args= exec=source\ /home/nicolas/.claude/shell-snapshots/snapshot-zsh-1790585140067-r0tov8.sh\ 2\>/dev/null\ \|\|\ true\ \&\&\ setopt\ NO_EXTENDED_GLOB\ NO_BARE_GLOB_QUAL\ 2\>/dev/null
+       1790585143.4449579716 wrapped=0 parent=claude args= exec=source\ /home/nicolas/.claude/shell-snapshots/snapshot-zsh-1790585140067-r0tov8.sh\ 2\>/dev/null\ \|\|\ true\ \&\&\ setopt\ NO_EXTENDED_GLOB\ NO_BARE_GLOB_QUAL\ 2\>/dev/null
+       1790585144.7684919834 wrapped=0 parent=claude args= exec=source\ /home/nicolas/.claude/shell-snapshots/snapshot-zsh-1790585140067-r0tov8.sh\ 2\>/dev/null\ \|\|\ true\ \&\&\ setopt\ NO_EXTENDED_GLOB\ NO_BARE_GLOB_QUAL\ 2\>/dev/null
+       1790585148.5578811169 wrapped=0 parent=claude args= exec=source\ /home/nicolas/.claude/shell-snapshots/snapshot-zsh-1790585140067-r0tov8.sh\ 2\>/dev/null\ \|\|\ true\ \&\&\ setopt\ NO_EXTENDED_GLOB\ NO_BARE_GLOB_QUAL\ 2\>/dev/null
+     of which in the harness shape: 5
+--- exec (stub wrapper): rc 0, results [
+ "(Bash completed with no output)",
+ "/tmp/zshenv-exec-79cl33mr/repo/sub",
+ "(Bash completed with no output)",
+ "Command running in background with ID: bm7qm9iae. Output is being written to: /tmp/claude-1000/-tmp-zshenv-exec-79cl33mr-repo/8f8ffb6f-d4eb-42bf-bcd9-97eb361ebe27/tasks/bm7qm9iae.output. You will be n",
+ "[{\"type\": \"tool_reference\", \"tool_name\": \"Monitor\"}]",
+ "Monitor started (task bx53raiir, expires in 5s unless the source ends first; you get one notice at expiry \u2014 re-arm if you still need the watch). You will be notified on each event. Keep working \u2014 do n"
+]
+ok   the harness lines went through the wrapper: 5 wrapped starts
+ok   a cd persists to the next call through the real harness
+ok   `Bash(touch ORIGINAL.txt)` allows the wrapped call (it ran, in a snapshot): 5 snapshots
+ok   the real tree is untouched without sync-back
+ok   a background call runs through the wrapper
+--- leftover: rc 0, results [
+ "started 1056886"
+]
+ok   a job the call left running is stopped: 1056886
+ok   a Monitor call runs through the wrapper
+ok   each wrapped call has a log: 6 logs
+--- kill: rc 0, results [
+ "Command did not complete within its 3s timeout and was moved to the background (ID: bvkahoxhp). Output is being written to: /tmp/claude-1000/-tmp-zshenv-exec-79cl33mr-repo/29f3bd55-58c3-4929-be7f-5ca8"
+]
+     kill: the session took 19.0 s
+     kill: signals the wrappers caught ['probe-call-1790585201536276242-1057045', '15']
+     kill: scopes left (none); snapshots left ['1790585201536276242-1057045']
+0 failing

@@ -1,0 +1,25 @@
+--- rc 0, results [
+ "[{\"type\": \"tool_reference\", \"tool_name\": \"Monitor\"}]",
+ "(Bash completed with no output)",
+ "/tmp/claude-call-harness-mc8nm2jn/repo/sub",
+ "(Bash completed with no output)",
+ "Command running in background with ID: b889ivrgh. Output is being written to: /tmp/claude-1000/-tmp-claude-call-harness-mc8nm2jn-repo/a4b8221d-3f6d-4e1d-a4c2-9b",
+ "Monitor started (task bh73jojcq, expires in 1s unless the source ends first; you get one notice at expiry \u2014 re-arm if you still need the watch). You will be not"
+]
+ok   every tool call is logged: 5 logs
+ok   a cd persists to the next call
+ok   an allow rule matches the call's own text, and its write reaches the real tree
+ok   a background call runs wrapped
+ok   a Monitor call runs wrapped
+ok   no call fell open
+--- rc 0, results [
+ "started 1131057"
+]
+ok   a job a call left is stopped: 1131057
+--- rc 0, results [
+ "Command did not complete within its 3s timeout and was moved to the background (ID: btt8pu3nr). Output is being written to: /tmp/claude-1000/-tmp-claude-call-ha"
+]
+ok   at session end nothing is left: no view: []
+     claude-call scopes now: 1 (this session's own calls among them: 0)
+0 failing
+EXIT=0

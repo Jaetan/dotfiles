@@ -1,0 +1,141 @@
+{
+ "label": "rewrite",
+ "rc": 0,
+ "took_s": 9.0,
+ "pre_inputs": [
+  {
+   "command": "echo ORIGINAL"
+  }
+ ],
+ "post": [
+  [
+   "PostToolUse",
+   {
+    "command": "echo REWRITTEN"
+   }
+  ]
+ ],
+ "results": [
+  "REWRITTEN"
+ ],
+ "stderr": "Warning: no stdin data received in 3s, proceeding without it. If piping from a slow command, redirect stdin explicitly: < /dev/null to skip, or wait longer.",
+ "files": [],
+ "pre_to_post_s": 0.67
+}
+ANSWER rewrite: applied without permissionDecision = True
+ANSWER post: PostToolUse input = [('PostToolUse', {'command': 'echo REWRITTEN'})]
+{
+ "label": "rules-orig",
+ "rc": 0,
+ "took_s": 9.1,
+ "pre_inputs": [
+  {
+   "command": "touch ORIGINAL.txt",
+   "description": "Create a file named ORIGINAL.txt"
+  }
+ ],
+ "post": [],
+ "results": [
+  "Permission to use Bash has been denied because Claude Code is running in don't ask mode. IMPORTANT: You *may* attempt to accomplish this action using other tool"
+ ],
+ "stderr": "Warning: no stdin data received in 3s, proceeding without it. If piping from a slow command, redirect stdin explicitly: < /dev/null to skip, or wait longer.",
+ "files": []
+}
+ANSWER rules-orig: files = []
+{
+ "label": "rules-new",
+ "rc": 0,
+ "took_s": 9.0,
+ "pre_inputs": [
+  {
+   "command": "touch ORIGINAL.txt"
+  }
+ ],
+ "post": [
+  [
+   "PostToolUse",
+   {
+    "command": "touch REWRITTEN.txt"
+   }
+  ]
+ ],
+ "results": [
+  "(Bash completed with no output)"
+ ],
+ "stderr": "Warning: no stdin data received in 3s, proceeding without it. If piping from a slow command, redirect stdin explicitly: < /dev/null to skip, or wait longer.",
+ "files": [
+  "REWRITTEN.txt"
+ ],
+ "pre_to_post_s": 0.58
+}
+ANSWER rules-new: files = ['REWRITTEN.txt']
+{
+ "label": "no-grant",
+ "rc": 0,
+ "took_s": 8.7,
+ "pre_inputs": [
+  {
+   "command": "touch ORIGINAL.txt"
+  }
+ ],
+ "post": [],
+ "results": [
+  "Permission to use Bash has been denied because Claude Code is running in don't ask mode. IMPORTANT: You *may* attempt to accomplish this action using other tool"
+ ],
+ "stderr": "Warning: no stdin data received in 3s, proceeding without it. If piping from a slow command, redirect stdin explicitly: < /dev/null to skip, or wait longer.",
+ "files": []
+}
+ANSWER no-grant: files = []
+{
+ "label": "background",
+ "rc": 0,
+ "took_s": 11.8,
+ "pre_inputs": [
+  {
+   "command": "echo ORIGINAL",
+   "run_in_background": true
+  }
+ ],
+ "post": [
+  [
+   "PostToolUse",
+   {
+    "command": "echo REWRITTEN",
+    "run_in_background": true
+   }
+  ]
+ ],
+ "results": [
+  "Command running in background with ID: bc7h2iyd6. Output is being written to: /tmp/claude-1000/-tmp-hook-contract-o38bf8xp-cwd/6c6f030a-0a11-4eb7-9274-9b8b360d5",
+  "1\tREWRITTEN\n2\t\n3\t[exited with code 0]\n4\t"
+ ],
+ "stderr": "Warning: no stdin data received in 3s, proceeding without it. If piping from a slow command, redirect stdin explicitly: < /dev/null to skip, or wait longer.",
+ "files": [],
+ "pre_to_post_s": 1.04
+}
+ANSWER background: pre inputs = [{'command': 'echo ORIGINAL', 'run_in_background': True}]
+{
+ "label": "eof",
+ "rc": 0,
+ "took_s": 9.9,
+ "pre_inputs": [
+  {
+   "command": "(sleep 6 &); echo ORIGINAL-eof"
+  }
+ ],
+ "post": [
+  [
+   "PostToolUse",
+   {
+    "command": "(sleep 6 &); echo REWRITTEN-eof"
+   }
+  ]
+ ],
+ "results": [
+  "REWRITTEN-eof"
+ ],
+ "stderr": "Warning: no stdin data received in 3s, proceeding without it. If piping from a slow command, redirect stdin explicitly: < /dev/null to skip, or wait longer.",
+ "files": [],
+ "pre_to_post_s": 0.57
+}
+ANSWER eof: PreToolUse to PostToolUse 0.57 s (about 6 s: the call waits for the job's EOF)

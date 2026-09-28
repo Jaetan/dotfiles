@@ -1,0 +1,48 @@
+ok   stacked overlay mounts
+ok   stacked: a source edited in the real tree after the snapshot is not seen
+     stacked: a source created in the real tree after the snapshot is seen: True
+ok   stacked: the real tree's ignored artifact is read
+ok   stacked: rm -rf of an ignored directory, then its rebuild, succeed
+ok   stacked: a scattered ignored file is replaced by rename
+ok   stacked: the real tree is untouched
+     stacked: upper layer after the call: {'notes.txt': 'file', 'build': 'dir', 'build/out.o': 'file'}
+     stacked: the rebuilt directory's opaque mark: # file: /tmp/isolation-probe-cx23afqs/stack-upper/build user.overlay.opaque="y"
+     stacked: an upper inside the repository mounts: True ''
+     stacked on aletheia, mount and true: view 3 ms (rc 0), real tree 0 ms
+     stacked on aletheia, git status: view 54 ms (rc 0), real tree 33 ms
+     stacked on aletheia, walk of every file: view 230 ms (rc 0), real tree 144 ms, 126923 vs 126923 files
+ok   /tmp/isolation-probe-k_85imhr removed
+     rm -rf of a bind-mounted ignored directory: rc=1, "rm: cannot remove 'build': Device or resource busy"; real artifact left: False
+     rm -rf of a overlay-mounted ignored directory: rc=1, "rm: cannot remove 'build': Device or resource busy"; real artifact left: True
+ok   snapshot of the sources: 0.04s
+ok   the snapshot keeps each mtime to the nanosecond
+ok   bwrap with the ignored directories bound live: 70 binds, 9 ms 
+ok   the ignored directory .agda-reference in the view is the real one: 2096:1031817
+ok   a source write lands in the snapshot only
+     ignored files, not visible in the view unless bound one by one: 1386 ['.agda-reference/Parser.y', '.agda-tree.lock', '.commands-to-run.sh', '.hypothesis/.gitignore', '.install-receipt', '.r17-plan.md']
+     ignored whole: 70 directories; output directories: {'tools/ci-output': 1359}
+     scattered ignored files: 27, 104.6 MiB: tools/agda-iwyu-reader/agda-iwyu-reader 102387K, go/benchmarks/benchmark 4347K, python/.coverage 252K, .agda-reference/Parser.y 77K, .r17-plan.md 17K, .commands-to-run.sh 11K, benchmarks/results/rust_scaling.json 2K, benchmarks/results/cpp_scaling.json 2K
+ok   a file bound live cannot be replaced by rename (why scattered ignored files are copied, not bound): mv: cannot move '.bound-file.tmp' to '.bound-file': Device or resource busy
+     git status in the real tree: 10 ms, rc 0, 16 lines
+     git status in the snapshot view: 44 ms, rc 0, 19 lines
+ok   bwrap with each ignored directory an overlay, upper on the repository's filesystem: 70 overlays, 90 ms 
+ok   a build write lands in the upper layer, not the real directory
+ok   /home/nicolas/dev/agda/aletheia/.claude/isolation-probe-3sj54vk3 removed
+ok   a tracked file deleted from the working tree is absent from the snapshot, not an error
+ok   git add and commit inside the snapshot: D src/gone.txt | committed
+ok   the commit is in the real repository: inside
+ok   before sync-back the real tree lags its own HEAD: [' D src/gone.txt', ' M src/a.txt']
+ok   after sync-back the real tree matches HEAD but for its own deletion: [' D src/gone.txt']
+ok   the call ran: in-src | started 1021765
+ok   a cd inside the call persists to the tool's shell: /tmp/isolation-probe-cx23afqs/wraprepo/src
+ok   the log holds the call's whole output: 'in-src\nstarted 1021765\n'
+ok   a job the call left running is stopped
+ok   `cd src && false`: the wrapper keeps the bare call's exit status and cwd: bare 1 (none), wrapped 1 (none)
+ok   `cd src; exit 3`: the wrapper keeps the bare call's exit status and cwd: bare 3 (none), wrapped 3 (none)
+ok   `cd src; true`: the wrapper keeps the bare call's exit status and cwd: bare 0 /tmp/isolation-probe-cx23afqs/wraprepo/src, wrapped 0 /tmp/isolation-probe-cx23afqs/wraprepo/src
+ok   the leftover really ignores SIGTERM: SigIgn 0x4006 
+ok   a leftover ignoring SIGTERM is killed at the scope's stop timeout (2 s): 2.38 s
+     cost: bare ls, median of 5: 14 ms
+     cost: wrapped ls, median of 5: 61 ms
+ok   /tmp/isolation-probe-cx23afqs removed
+0 failing
