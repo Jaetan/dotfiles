@@ -9,6 +9,16 @@
 [[ -d "$HOME/.local/share/coursier/bin" && $PATH != *$HOME/.local/share/coursier/bin* ]] && PATH="$HOME/.local/share/coursier/bin${PATH:+:${PATH}}"
 [[ -d "$HOME/go/bin" && $PATH != *$HOME/go/bin* ]] && PATH="$HOME/go/bin${PATH:+:${PATH}}"
 
+# --- ssh-agent: fixed socket from the systemd --user service -----
+# Mirrors config.fish / .bashrc: one agent (ssh-agent.service) at a stable
+# socket for the whole session; export the constant path for every shell. The
+# key is loaded once per session at the first interactive shell (prompts on TTY).
+#   systemctl --user enable --now ssh-agent
+export SSH_AUTH_SOCK="/run/user/$(id -u)/ssh-agent.socket"
+if [[ $- == *i* && -f ~/.ssh/id_ed25519 ]]; then
+  ssh-add -l >/dev/null 2>&1 || ssh-add ~/.ssh/id_ed25519
+fi
+
 # --- zinit (zsh plugin manager) ---
 ZINIT_HOME="${XDG_DATA_HOME:-${HOME}/.local/share}/zinit/zinit.git"
 if [ ! -d "$ZINIT_HOME" ] ; then

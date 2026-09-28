@@ -20,15 +20,14 @@ for p in \
   [ -d "$p" ] && [[ ":$PATH:" != *":$p:"* ]] && export PATH="$p:$PATH"
 done
 
-# --- ssh-agent via keychain ----------------------------------
-# --nogui keeps the passphrase prompt in the terminal instead of the
-# (off-screen, under WSLg) ksshaskpass GUI dialog. See config.fish.
-if command -v keychain >/dev/null 2>&1; then
-  if [ -f ~/.ssh/id_ed25519 ]; then
-    eval "$(keychain --eval --quiet --nogui --agents ssh --inherit any ~/.ssh/id_ed25519)"
-  else
-    eval "$(keychain --eval --quiet --nogui --agents ssh --inherit any)"
-  fi
+# --- ssh-agent: fixed socket from the systemd --user service -----
+# Mirrors config.fish: one agent (ssh-agent.service) at a stable socket for the
+# whole session; export the constant path for every shell. The key is loaded
+# once per session at the first interactive shell (prompts on the TTY).
+#   systemctl --user enable --now ssh-agent
+export SSH_AUTH_SOCK="/run/user/$(id -u)/ssh-agent.socket"
+if [[ $- == *i* ]] && [ -f ~/.ssh/id_ed25519 ]; then
+  ssh-add -l >/dev/null 2>&1 || ssh-add ~/.ssh/id_ed25519
 fi
 
 # --- Unlock the GNOME keyring in the terminal ----------------

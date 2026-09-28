@@ -15,20 +15,22 @@ for p in $HOME/.cargo/bin $HOME/.npm-global/bin $HOME/.rvm/bin $HOME/.local/shar
     end
 end
 
-# ssh-agent via keychain (interactive shells only)
-# --nogui: prompt for the key passphrase in THIS terminal, not via a GUI
-# askpass (ksshaskpass). Under WSLg, DISPLAY is set and ksshaskpass exists,
-# so without --nogui keychain runs `ssh-add </dev/null`, which forces the
-# GUI dialog -- and WSLg routinely places that dialog off-screen.
-if status is-interactive
-    if type -q keychain
-        if test -f ~/.ssh/id_ed25519
-            keychain --eval --quiet --nogui --agents ssh --inherit any ~/.ssh/id_ed25519 | source
-        else
-            # start/reuse agent without loading a specific key if it doesn't exist
-            keychain --eval --quiet --nogui --agents ssh --inherit any | source
-        end
-    end
+# ssh-agent: a systemd --user service (ssh-agent.service) runs one agent at a
+# fixed socket for the whole WSL session, so SSH_AUTH_SOCK is a stable constant
+# instead of a rotating, per-shell value. Set it globally (-gx, NOT -U) for
+# EVERY shell -- including non-interactive ones (scripts, `fish -c`, editors'
+# integrated terminals) -- so they share the live agent. Load the key once per
+# session with `ssh-add ~/.ssh/id_ed25519` (or set `AddKeysToAgent yes` in
+# ~/.ssh/config to load it on first use).
+#   systemctl --user enable --now ssh-agent
+set -gx SSH_AUTH_SOCK /run/user/(id -u)/ssh-agent.socket
+
+# Load the key once at the first interactive shell of the session, restoring
+# keychain's old "prompt in the terminal at login" behaviour. ssh-add prompts
+# on the TTY (not the off-screen WSLg GUI) when a terminal is present, and only
+# runs when the agent has no identity yet, so later shells don't re-prompt.
+if status is-interactive; and test -f ~/.ssh/id_ed25519
+    ssh-add -l >/dev/null 2>&1; or ssh-add ~/.ssh/id_ed25519
 end
 
 # Unlock the GNOME keyring in THIS terminal, not the off-screen WSLg GUI

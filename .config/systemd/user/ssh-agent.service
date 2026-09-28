@@ -1,0 +1,16 @@
+[Unit]
+Description=SSH authentication agent
+Documentation=man:ssh-agent(1)
+
+[Service]
+Type=simple
+# %t is the user runtime dir (XDG_RUNTIME_DIR, e.g. /run/user/1000), so the
+# socket path is fixed and stable for the whole session. Remove a stale socket
+# left behind by an unclean exit before binding (ssh-agent -a refuses to start
+# if the path already exists).
+Environment=SSH_AUTH_SOCK=%t/ssh-agent.socket
+ExecStartPre=-/usr/bin/rm -f %t/ssh-agent.socket
+ExecStart=/usr/bin/ssh-agent -D -a $SSH_AUTH_SOCK
+
+[Install]
+WantedBy=default.target
