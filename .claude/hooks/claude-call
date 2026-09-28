@@ -25,6 +25,8 @@ The Bash tool runs `zsh -c '<snapshot> ... && eval <call> < /dev/null && pwd -P 
          preloaded in the view, makes both read as success on an empty mount point, so `rm -rf build && mkdir
          build`, Python's rmtree and GHC's removePathForcibly run on as in the real tree. ASAN_OPTIONS gains
          verify_asan_link_order=0 there, since gcc's shared ASan runtime refuses to start behind any preload.
+  record every fall-through below (a warning on stderr, a call ended by a signal) is also one line in EVENTS,
+         which the logs' pruning does not touch: the tally of what escapes the wrap.
   sync   when the call ends, what it changed in its snapshot is carried to the real tree, per file, under a lock
          per repository: applied where the real file is as it was at the snapshot, and otherwise a conflict, the
          call's version kept under CONFLICTS and named on stderr. A call ended by a signal is not synced back;
@@ -53,6 +55,7 @@ from typing import BinaryIO
 
 ROOT = Path(os.environ.get("CLAUDE_CALL_ROOT", Path.home() / "dev" / "logs"))
 LOGS, VIEWS, CONFLICTS = ROOT / "claude-calls", ROOT / "claude-views", ROOT / "claude-conflicts"
+EVENTS, EVENTS_BYTES = ROOT / "claude-call-events.log", 1 << 20  # its newest half is kept past the cap
 SLICE = os.environ.get("CLAUDE_CALL_SLICE", "claude.slice")
 KEEP_DAYS, KEEP_LOGS, KEEP_BYTES = 5, 50, 100 << 20
 BIND_BYTES = 1 << 20
@@ -73,9 +76,26 @@ Key = tuple[int, int, int, int, int]
 INTERPOSER = Path(__file__).resolve().with_name("claude-call-rmdir.c")
 
 
-def warn(msg: str) -> None:
+def warn(kind: str, msg: str) -> None:
+    """A fall-through: to the call's stderr, and one line to EVENTS, which outlives the logs' pruning and is what
+    the tally of what escapes the wrap reads."""
     with contextlib.suppress(OSError):
         os.write(2, f"claude-call: {msg}\n".encode())
+    event(kind, msg)
+
+
+def event(kind: str, msg: str) -> None:
+    with contextlib.suppress(OSError):
+        ROOT.mkdir(parents=True, exist_ok=True)
+        session = os.environ.get("CLAUDE_CODE_SESSION_ID", "nosession")[:8]
+        where = os.environ.get("PWD", "?")
+        with open(EVENTS, "a", encoding="utf-8") as f:
+            f.write(f"{time.strftime('%Y-%m-%dT%H:%M:%S')} {session} {kind} {where}: {msg}\n")
+        if EVENTS.stat().st_size > EVENTS_BYTES:
+            kept = EVENTS.read_text(encoding="utf-8").splitlines(keepends=True)
+            tmp = EVENTS.with_name(f".{EVENTS.name}.{os.getpid()}")
+            tmp.write_text("".join(kept[len(kept) // 2:]), encoding="utf-8")
+            os.replace(tmp, EVENTS)
 
 
 def git(top: str | os.PathLike[str], *args: str) -> str:
@@ -158,7 +178,8 @@ def preload() -> list[str]:
                            capture_output=True, check=True)
             os.replace(tmp, built)
     except (OSError, subprocess.CalledProcessError) as e:
-        warn(f"no rmdir interposer ({type(e).__name__}); removing a directory bound live fails in this call")
+        warn("no-preload",
+             f"no rmdir interposer ({type(e).__name__}); removing a directory bound live fails in this call")
         return []
     # A call started inside another call's view inherits both; each is added once, however deep the nesting.
     others = [p for p in os.environ.get("LD_PRELOAD", "").replace(" ", ":").split(":") if p and p != str(built)]
@@ -304,7 +325,7 @@ class View:
             msg = (f"{len(conflicts)} file(s) this call changed were also changed in the tree meanwhile and were not "
                    f"applied; this call's versions are under {CONFLICTS / self.ident}: " + ", ".join(conflicts))
             log.write(f"# {msg}\n".encode())
-            warn(msg)
+            warn("conflict", msg)
 
     def record_unsynced(self, log: BinaryIO) -> None:
         changed, new, deleted, _ = self.changes()
@@ -341,7 +362,7 @@ class NeverStarted(Exception):
 
 def scope_argv(unit: str) -> list[str]:
     if not Path(RUNTIME, "systemd", "private").exists():
-        warn("no systemd user manager: no scope, so no memory cap and no cleanup of leftover jobs")
+        warn("no-scope", "no systemd user manager: no scope, so no memory cap and no cleanup of leftover jobs")
         return ["taskset", "-c", "0-19"]
     # --expand-environment=no: by default systemd-run reads its command line as ExecStart= does, expanding ${VAR}
     # from its own environment and turning $$ into $, even inside the call's single quotes.
@@ -360,7 +381,7 @@ def main(line: str) -> int:
         prune()
         log: BinaryIO = open(LOGS / f"{ident}.log", "ab", buffering=0)
     except OSError as e:
-        warn(f"no log ({e})")
+        warn("no-log", f"no log ({e})")
         log = open(os.devnull, "wb", buffering=0)
     log.write(f"# {time.strftime('%Y-%m-%d %H:%M:%S')} cwd {cwd}\n# {call_text(line)}\n".encode())
     view = None
@@ -373,7 +394,7 @@ def main(line: str) -> int:
     except subprocess.CalledProcessError:
         pass  # not in a repository: a scope and a log, no view
     except Exception as e:  # fail open: a call must run even when its view cannot be made
-        warn(f"no view ({type(e).__name__}: {e}); the call runs on the real tree")
+        warn("no-view", f"no view ({type(e).__name__}: {e}); the call runs on the real tree")
         log.write(f"# no view: {type(e).__name__}: {e}\n".encode())
         view = None
     mark("view")
@@ -393,6 +414,7 @@ def main(line: str) -> int:
                 view.record_unsynced(log)
             remove_tree(view.dir)
         log.write(f"# ended by signal {signum}\n".encode())
+        event("signal", f"ended by signal {signum}, not synced back")
         if MARKER:
             MARKER.unlink(missing_ok=True)
         os._exit(128 + signum)
@@ -420,7 +442,7 @@ def main(line: str) -> int:
     mark("stopped")
     if never_started(MARKER):
         log.write(f"# the scope or the view did not start (exit {rc}); the call runs unwrapped\n".encode())
-        warn(f"the scope or the view did not start (exit {rc}); the call runs unwrapped")
+        warn("never-started", f"the scope or the view did not start (exit {rc}); the call runs unwrapped")
         if view:
             remove_tree(view.dir)
         raise NeverStarted
@@ -435,7 +457,8 @@ def main(line: str) -> int:
             remove_tree(view.dir)
             mark("removed")
         except Exception as e:
-            warn(f"sync-back failed ({type(e).__name__}: {e}); the call's snapshot is kept at {view.snap}")
+            warn("sync-failed",
+                 f"sync-back failed ({type(e).__name__}: {e}); the call's snapshot is kept at {view.snap}")
             log.write(f"# sync-back failed: {type(e).__name__}: {e}; snapshot kept at {view.snap}\n".encode())
     log.write(f"# exit {rc}; ms: {', '.join(MARKS)}\n".encode())
     return rc if rc >= 0 else 128 - rc
@@ -451,10 +474,10 @@ if __name__ == "__main__":
         raise
     except BaseException as e:
         if STARTED and not never_started(MARKER):
-            warn(f"wrapper failed after the call started ({type(e).__name__}: {e})")
+            warn("wrapper-failed", f"wrapper failed after the call started ({type(e).__name__}: {e})")
             sys.exit(1)
         if not isinstance(e, NeverStarted):
-            warn(f"wrapper failed ({type(e).__name__}: {e}); the call runs unwrapped")
+            warn("wrapper-failed", f"wrapper failed ({type(e).__name__}: {e}); the call runs unwrapped")
         if MARKER:
             MARKER.unlink(missing_ok=True)
         os.environ["CLAUDE_CALL"] = "1"

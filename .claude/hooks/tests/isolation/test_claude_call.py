@@ -58,11 +58,14 @@ def run(call: str, cwd: Path, timeout: float = 60, lift: bool = False, warns: bo
     that cannot be made falls open to the real tree, where most properties hold as well, and would hide the defect."""
     cwdfile = WORK / "cwd"
     cwdfile.unlink(missing_ok=True)
+    before = len(events())
     p = subprocess.run(["/usr/bin/zsh", "-c", line(call, cwdfile)], cwd=cwd, env=env(**extra),
                        capture_output=True, text=True, timeout=timeout, check=False,
                        preexec_fn=lift_address_space_cap if lift else None)
     if not warns and "claude-call:" in p.stderr:
         check(f"no wrapper warning for `{call[:50]}`", False, p.stderr.strip()[-300:])
+    if not warns and len(events()) != before:
+        check(f"no event recorded for `{call[:50]}`", False, events()[-1])
     return p, cwdfile.read_text().strip() if cwdfile.exists() else ""
 
 
@@ -91,6 +94,13 @@ def repo(name: str) -> Path:
                                                   "commit.gpgsign=false", "commit", "-qm", "base"]):
         subprocess.run(["git", "-C", str(r), *args], check=True, capture_output=True, env=env())
     return r
+
+
+def events(kind: str = "") -> list[str]:
+    """The fall-through record's lines, those of one kind when given."""
+    f = ROOT / "claude-call-events.log"
+    lines = f.read_text().splitlines() if f.exists() else []
+    return [ln for ln in lines if not kind or ln.split()[2:3] == [kind]]
 
 
 def logs() -> list[Path]:
@@ -191,6 +201,7 @@ def case_conflict() -> None:
     kept = list((ROOT / "claude-conflicts").glob("*/sub/a.txt"))
     check("conflict: the call's version is kept", len(kept) == 1 and kept[0].read_text() == "from-call\n", str(kept))
     check("conflict: stderr names it", "sub/a.txt" in err and "claude-conflicts" in err, repr(err))
+    check("conflict: recorded as an event", any("sub/a.txt" in e for e in events("conflict")), str(events()[-2:]))
 
 
 def case_live_dir_and_rm() -> None:
@@ -354,6 +365,7 @@ def case_shape() -> None:
 
 def case_signal() -> None:
     r = repo("signal")
+    signals_before = len(events("signal"))
     proc = start("echo changed >> sub/a.txt; tail -f /dev/null", r)
     time.sleep(1.5)
     proc.send_signal(signal.SIGTERM)
@@ -368,6 +380,7 @@ def case_signal() -> None:
     check("signal: not synced back", (r / "sub" / "a.txt").read_text() == "one\n")
     text = logs()[-1].read_text()
     check("signal: the log names what it had changed", "not synced back" in text and "sub/a.txt" in text, text[-300:])
+    check("signal: recorded as an event", len(events("signal")) == signals_before + 1, str(events()[-2:]))
 
 
 def case_stale_view() -> None:
@@ -394,10 +407,14 @@ def case_fail_open() -> None:
                CLAUDE_CALL_ROOT="/proc/claude-call-cannot-exist")
     check("fail_open: without a log or a view the call runs, once", p.stdout == "still-runs\n" and ran() == 1,
           repr(p.stdout + p.stderr))
+    started_before = len(events("never-started"))
     p, _ = run(f"echo once >> {count}; echo still-runs", r, warns=True,
                CLAUDE_CALL_SLICE="init.scope")  # not a slice: refused
     check("fail_open: when its scope cannot start the call runs unwrapped, once",
           "still-runs" in p.stdout and ran() == 1 and "runs unwrapped" in p.stderr, repr(p.stdout + p.stderr))
+    check("fail_open: a call that never started is recorded as an event",
+          len(events("never-started")) == started_before + 1, str(events()[-2:]))
+    failed_before = len(events("wrapper-failed"))
     gone = r / "gone"
     gone.mkdir()
     p = subprocess.run(["/bin/sh", "-c", 'cd "$1" && rmdir "$1" && exec /usr/bin/zsh -c "$2"', "sh", str(gone),
@@ -405,6 +422,20 @@ def case_fail_open() -> None:
                        env=env(), capture_output=True, text=True, timeout=60, check=False)
     check("fail_open: when the wrapper itself fails (its cwd is gone) the call runs unwrapped, once",
           "still-runs" in p.stdout and ran() == 1 and "runs unwrapped" in p.stderr, repr(p.stdout + p.stderr))
+    check("fail_open: a wrapper failure is recorded as an event",
+          len(events("wrapper-failed")) == failed_before + 1, str(events()[-2:]))
+
+
+def case_events_cap() -> None:
+    r = repo("eventscap")
+    f = ROOT / "claude-call-events.log"
+    f.parent.mkdir(parents=True, exist_ok=True)
+    f.write_text("".join(f"2026-01-01T00:00:00 filler0 filler /x: line {i:07}\n" for i in range(30000)))
+    run("true", r, warns=True, CLAUDE_CALL_SLICE="init.scope")
+    lines = f.read_text().splitlines()
+    check("events_cap: the record stays within 1 MiB, its newest lines kept",
+          f.stat().st_size <= 1 << 20 and lines[-1].split()[2] == "never-started" and "line 0029999" in lines[-2],
+          f"{f.stat().st_size} bytes, last {lines[-1][:60]!r}")
 
 
 def case_prune() -> None:
