@@ -23,7 +23,7 @@ return {
 		end
 		return {
 			options = {
-				theme = "nightfly",
+				theme = "catppuccin-mocha",
 				icons_enabled = true,
 				globalstatus = true,
 				component_separators = { left = "", right = "" },

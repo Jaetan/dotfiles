@@ -25,6 +25,8 @@ return {
 		"williamboman/mason.nvim", -- merge into mason spec to trigger on file open
 		event = { "BufReadPre", "BufNewFile" },
 		config = function()
+			require("mason").setup()
+
 			-- Lua
 			setup_once("lua_ls", {
 				settings = {
