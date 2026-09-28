@@ -336,3 +336,38 @@ end
 set -gx COLORTERM truecolor
 
 # ----------------------------------------------------------------------
+
+# ----------------------------------------------------------------------
+# PATH hygiene, last thing so it sees every earlier addition.
+#
+# Two ways a duplicate gets in. Some tools prepend unconditionally rather
+# than checking first (opam's init.fish is one), so starting fish from a
+# shell that already ran them lists the directory twice. And a tool that
+# injects its own directories into the environment can leave entries for
+# directories that no longer exist, which every command lookup then stats
+# for nothing.
+#
+# Keep the first occurrence of each directory, drop the rest, and drop
+# what is not there. Symlinks are resolved for the comparison only, so
+# /bin and /usr/bin are recognised as one directory. Of two spellings
+# for the same directory the real one is kept, in the position the first
+# one held: a spelling is never invented, only chosen from the entries
+# already present, so a version manager's own path is passed through
+# untouched rather than pinned to whatever it points at today.
+set -l seen
+set -l kept
+for p in $PATH
+    test -d $p; or continue
+    set -l real (realpath $p 2>/dev/null; or echo $p)
+    if set -l at (contains -i -- $real $seen)
+        # Already have this directory. Upgrade the spelling if the one
+        # kept is a symlink and this one is the directory itself.
+        if test -L $kept[$at]; and not test -L $p
+            set kept[$at] $p
+        end
+        continue
+    end
+    set -a seen $real
+    set -a kept $p
+end
+set -gx PATH $kept

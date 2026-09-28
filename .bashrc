@@ -285,3 +285,4 @@ fi
 export CLAUDE_CODE_MAX_OUTPUT_TOKENS=100000
 
 # ------------------------------------------------------------
+. "$HOME/.cargo/env"
