@@ -283,6 +283,8 @@ fi
 
 # --- Claude Code ----------------------------------------------
 export CLAUDE_CODE_MAX_OUTPUT_TOKENS=100000
+# Claude Code runs in a session scope: CPUs 0-19, memory capped (see session-limits). Mirrors config.fish.
+claude() { session-limits "$(type -P claude)" "$@"; }
 
 # ------------------------------------------------------------
 . "$HOME/.cargo/env"

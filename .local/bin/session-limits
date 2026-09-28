@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+# Run a command, and everything it starts, inside a transient systemd user scope that holds it to CPUs 0-19
+# and caps its memory, so a runaway process is killed inside the session instead of taking the WSL VM down.
+#
+#   session-limits COMMAND [ARGS...]      e.g. session-limits claude --resume
+#
+# CPUs 20-23 belong to the user. The scope's AllowedCPUs is enforced by the kernel for every process in it only
+# when the user manager is delegated the cpuset controller (a drop-in for user@.service adding `cpuset` to
+# Delegate=); without it the command is still started under `taskset -c`, an affinity a child can widen, and
+# this script says so. OOMPolicy=continue kills only the process that exceeds the cap, not the whole session.
+# Override with SESSION_CPUS, SESSION_MEM_MAX, SESSION_SWAP_MAX.
+set -euo pipefail
+
+cpus="${SESSION_CPUS:-0-19}"
+mem_max="${SESSION_MEM_MAX:-24G}"    # of the VM's 31 GiB: room for the system and what runs beside the session
+swap_max="${SESSION_SWAP_MAX:-2G}"   # of its 8 GiB swap: past this a runaway is killed rather than thrashing
+
+if [ "$#" -eq 0 ]; then
+    echo "usage: session-limits COMMAND [ARGS...]" >&2
+    exit 2
+fi
+
+delegated="/sys/fs/cgroup/user.slice/user-$(id -u).slice/user@$(id -u).service/cgroup.controllers"
+if ! grep -qw cpuset "$delegated" 2>/dev/null; then
+    echo "session-limits: the user manager has no cpuset controller: CPUs held by affinity only (a child can widen it)." >&2
+fi
+
+if ! systemctl --user is-system-running >/dev/null 2>&1 && [ "$(systemctl --user is-system-running 2>/dev/null)" != "degraded" ]; then
+    echo "session-limits: no systemd user manager: no memory cap; CPUs held by affinity only." >&2
+    exec taskset -c "$cpus" "$@"
+fi
+
+exec systemd-run --user --scope --quiet --collect \
+    -p AllowedCPUs="$cpus" -p MemoryMax="$mem_max" -p MemorySwapMax="$swap_max" -p OOMPolicy=continue \
+    -- taskset -c "$cpus" "$@"

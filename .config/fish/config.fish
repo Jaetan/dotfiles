@@ -335,6 +335,12 @@ end
 # Claude Code: more terminal colors
 set -gx COLORTERM truecolor
 
+# Claude Code runs in a session scope: every process it starts is held to CPUs 0-19 and the session's memory
+# is capped, so a runaway is killed inside the session instead of the WSL VM (see session-limits).
+function claude --wraps claude --description 'Claude Code held to CPUs 0-19 with its memory capped'
+    session-limits (command -s claude) $argv
+end
+
 # ----------------------------------------------------------------------
 
 # ----------------------------------------------------------------------
