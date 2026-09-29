@@ -44,6 +44,15 @@
             "command": "/home/nicolas/.claude/hooks/heavy-run-guard.py"
           }
         ]
+      },
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/home/nicolas/.claude/hooks/precise-hints-guard.py"
+          }
+        ]
       }
     ],
     "PostToolUse": [
@@ -53,6 +62,15 @@
           {
             "type": "command",
             "command": "/home/nicolas/.claude/hooks/heavy-run-guard.py"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/home/nicolas/.claude/hooks/precise-hints-guard.py"
           }
         ]
       }

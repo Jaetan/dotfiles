@@ -1,0 +1,420 @@
+# Every imprecise Python type hint the Claude Code hook kit holds, and the ratchet
+# that keeps the list from growing. A hint is universally quantified, so `str`,
+# `list[float]` or `dict[str, X]` claims the code handles any string, any list of
+# floats, any key, which it does not. The one checker is aletheia's
+# tools/check_precise_hints.py, run over this directory with --root and --record
+# by tests/check_hints.sh before every commit, and on every edit by
+# precise-hints-guard.py; it refuses an imprecise hint this file does not name,
+# and a row naming more hints than its file holds.
+#
+# A hint is imprecise when it holds `Any` or `object`, or a generic given no
+# parameters; `str`, `int`, `float` or `bytes` anywhere; three or more nested
+# subscripts; or when it is an alias, a NewType over a shape, or the type a cast
+# names, holding any of these. A row leaves this file by the change that types its
+# hints. Adding a row needs the user's approval, and a row a foreign interface
+# forces carries a `reason:`. Rows are keyed by file, relative to this directory,
+# and by the hint's own text; `count` is how many hints in that file share it.
+
+hints:
+  - file: _commands.py
+    text: "dict[str, str | None]"
+    count: 11
+  - file: _commands.py
+    text: "dict[str, str | None] | None"
+    count: 3
+  - file: _commands.py
+    text: "dict[str, str]"
+    count: 1
+  - file: _commands.py
+    text: "frozenset[int] | None"
+    count: 5
+  - file: _commands.py
+    text: "int"
+    count: 7
+  - file: _commands.py
+    text: "list[list[str]]"
+    count: 1
+  - file: _commands.py
+    text: "list[str]"
+    count: 18
+  - file: _commands.py
+    text: "list[str] | None"
+    count: 5
+  - file: _commands.py
+    text: "list[tuple[frozenset[int] | None, str]]"
+    count: 3
+  - file: _commands.py
+    text: "list[tuple[str, bool]]"
+    count: 1
+  - file: _commands.py
+    text: "object"
+    count: 1
+  - file: _commands.py
+    text: "re.Match[str]"
+    count: 2
+  - file: _commands.py
+    text: "set[int]"
+    count: 3
+  - file: _commands.py
+    text: "set[str]"
+    count: 1
+  - file: _commands.py
+    text: "set[str] | frozenset[str]"
+    count: 1
+  - file: _commands.py
+    text: "set[tuple[object, ...]]"
+    count: 1
+  - file: _commands.py
+    text: "str"
+    count: 42
+  - file: _commands.py
+    text: "str | None"
+    count: 44
+  - file: _commands.py
+    text: "tuple[frozenset[int] | None, int, str | None]"
+    count: 1
+  - file: _commands.py
+    text: "tuple[str | None, str | None]"
+    count: 1
+  - file: _commands.py
+    text: "tuple[str, ...]"
+    count: 1
+  - file: _commands.py
+    text: "tuple[str, int] | None"
+    count: 1
+  - file: _commands.py
+    text: "tuple[str, str] | None"
+    count: 1
+  - file: _commands.py
+    text: "tuple[tuple[str, str] | None, list[str], str | None, str | None]"
+    count: 1
+  - file: _python.py
+    text: "dict[str, ast.AST]"
+    count: 1
+  - file: _python.py
+    text: "dict[str, list[ast.AST]]"
+    count: 1
+  - file: _python.py
+    text: "dict[str, list[list[ast.AST]]]"
+    count: 1
+  - file: _python.py
+    text: "dict[str, list[str] | None]"
+    count: 2
+  - file: _python.py
+    text: "dict[str, str]"
+    count: 1
+  - file: _python.py
+    text: "int"
+    count: 1
+  - file: _python.py
+    text: "list[list[str] | None]"
+    count: 1
+  - file: _python.py
+    text: "list[str | None]"
+    count: 1
+  - file: _python.py
+    text: "list[str | None] | None"
+    count: 1
+  - file: _python.py
+    text: "list[str]"
+    count: 2
+  - file: _python.py
+    text: "list[str] | None"
+    count: 5
+  - file: _python.py
+    text: "list[tuple[str | None, list[str | None] | None]]"
+    count: 1
+  - file: _python.py
+    text: "set[str]"
+    count: 3
+  - file: _python.py
+    text: "str"
+    count: 3
+  - file: _python.py
+    text: "str | None"
+    count: 4
+  - file: _shell.py
+    text: "Callable[[str], str | None] | None"
+    count: 2
+  - file: _shell.py
+    text: "dict[str, _List]"
+    count: 1
+  - file: _shell.py
+    text: "dict[str, object]"
+    count: 1
+  - file: _shell.py
+    text: "dict[str, str | None]"
+    count: 7
+  - file: _shell.py
+    text: "dict[str, str | None] | None"
+    count: 1
+  - file: _shell.py
+    text: "dict[str, str]"
+    count: 2
+  - file: _shell.py
+    text: "dict[tuple[str, int, str], int | ParseError]"
+    count: 1
+  - file: _shell.py
+    text: "frozenset[str]"
+    count: 1
+  - file: _shell.py
+    text: "int"
+    count: 38
+  - file: _shell.py
+    text: "int | None"
+    count: 4
+  - file: _shell.py
+    text: "list[object]"
+    count: 2
+  - file: _shell.py
+    text: "list[str | None]"
+    count: 1
+  - file: _shell.py
+    text: "list[str | None] | None"
+    count: 2
+  - file: _shell.py
+    text: "list[str]"
+    count: 13
+  - file: _shell.py
+    text: "list[str] | None"
+    count: 2
+  - file: _shell.py
+    text: "list[tuple[_AndOr, str]]"
+    count: 2
+  - file: _shell.py
+    text: "list[tuple[_Tok, str, bool]]"
+    count: 1
+  - file: _shell.py
+    text: "list[tuple[str, _Ctx]]"
+    count: 1
+  - file: _shell.py
+    text: "list[tuple[str, str]]"
+    count: 1
+  - file: _shell.py
+    text: "object"
+    count: 5
+  - file: _shell.py
+    text: "set[str]"
+    count: 1
+  - file: _shell.py
+    text: "str"
+    count: 49
+  - file: _shell.py
+    text: "str | None"
+    count: 26
+  - file: _shell.py
+    text: "tuple[str, ...]"
+    count: 1
+  - file: heavy-run-guard.py
+    text: "dict"
+    count: 8
+  - file: heavy-run-guard.py
+    text: "dict | None"
+    count: 1
+  - file: heavy-run-guard.py
+    text: "dict[int, str]"
+    count: 1
+  - file: heavy-run-guard.py
+    text: "dict[str, list[Target]]"
+    count: 1
+  - file: heavy-run-guard.py
+    text: "dict[str, list[int]]"
+    count: 1
+  - file: heavy-run-guard.py
+    text: "int"
+    count: 5
+  - file: heavy-run-guard.py
+    text: "list[dict]"
+    count: 1
+  - file: heavy-run-guard.py
+    text: "list[str | None]"
+    count: 2
+  - file: heavy-run-guard.py
+    text: "list[str]"
+    count: 14
+  - file: heavy-run-guard.py
+    text: "set[str]"
+    count: 3
+  - file: heavy-run-guard.py
+    text: "str"
+    count: 38
+  - file: heavy-run-guard.py
+    text: "str | None"
+    count: 10
+  - file: no-polling-loops.py
+    text: "dict[int, list['C.Inv']]"
+    count: 1
+  - file: no-polling-loops.py
+    text: "dict[int, list[int]]"
+    count: 1
+  - file: no-polling-loops.py
+    text: "dict[int, list[tuple[int, int]]]"
+    count: 1
+  - file: no-polling-loops.py
+    text: "dict[int, str]"
+    count: 1
+  - file: no-polling-loops.py
+    text: "int"
+    count: 7
+  - file: no-polling-loops.py
+    text: "list[str]"
+    count: 5
+  - file: no-polling-loops.py
+    text: "str"
+    count: 19
+  - file: no-polling-loops.py
+    text: "str | None"
+    count: 1
+  - file: no-polling-loops.py
+    text: "tuple[str, str] | None"
+    count: 2
+  - file: tests/cost4.py
+    text: "str"
+    count: 3
+  - file: tests/cost4.py
+    text: "tuple[str, float]"
+    count: 1
+  - file: tests/isolation/probe_claude_call_harness.py
+    text: "dict[str, str]"
+    count: 1
+  - file: tests/isolation/probe_claude_call_harness.py
+    text: "list[str]"
+    count: 3
+  - file: tests/isolation/probe_claude_call_harness.py
+    text: "str"
+    count: 3
+  - file: tests/isolation/probe_hook_contract.py
+    text: "dict"
+    count: 1
+  - file: tests/isolation/probe_hook_contract.py
+    text: "str"
+    count: 2
+  - file: tests/isolation/probe_hook_contract.py
+    text: "str | None"
+    count: 1
+  - file: tests/isolation/probe_isolation.py
+    text: "dict[str, int]"
+    count: 1
+  - file: tests/isolation/probe_isolation.py
+    text: "float"
+    count: 1
+  - file: tests/isolation/probe_isolation.py
+    text: "list[str]"
+    count: 5
+  - file: tests/isolation/probe_isolation.py
+    text: "list[tuple[str, int]]"
+    count: 1
+  - file: tests/isolation/probe_isolation.py
+    text: "str"
+    count: 11
+  - file: tests/isolation/probe_zshenv_exec.py
+    text: "list[str]"
+    count: 3
+  - file: tests/isolation/probe_zshenv_exec.py
+    text: "str"
+    count: 4
+  - file: tests/isolation/tally_claude_call.py
+    text: "Counter[str]"
+    count: 3
+  - file: tests/isolation/tally_claude_call.py
+    text: "dict[str, set[str]]"
+    count: 1
+  - file: tests/isolation/tally_claude_call.py
+    text: "dict[str, str]"
+    count: 3
+  - file: tests/isolation/tally_claude_call.py
+    text: "str"
+    count: 1
+  - file: tests/isolation/tally_claude_call.py
+    text: "tuple[Counter[str], Counter[str], dict[str, str], int]"
+    count: 1
+  - file: tests/isolation/tally_claude_call.py
+    text: "tuple[Counter[str], dict[str, str], dict[str, set[str]]]"
+    count: 1
+  - file: tests/isolation/test_claude_call.py
+    text: "dict[str, list[float]]"
+    count: 1
+  - file: tests/isolation/test_claude_call.py
+    text: "dict[str, str]"
+    count: 1
+  - file: tests/isolation/test_claude_call.py
+    text: "float"
+    count: 1
+  - file: tests/isolation/test_claude_call.py
+    text: "int"
+    count: 1
+  - file: tests/isolation/test_claude_call.py
+    text: "list[str]"
+    count: 1
+  - file: tests/isolation/test_claude_call.py
+    text: "list[tuple[str, bool, str]]"
+    count: 1
+  - file: tests/isolation/test_claude_call.py
+    text: "str"
+    count: 12
+  - file: tests/isolation/test_claude_call.py
+    text: "tuple[subprocess.CompletedProcess, str]"
+    count: 1
+  - file: tests/mut/run_muts.py
+    text: "int"
+    count: 1
+  - file: tests/mut/run_muts.py
+    text: "tuple[int, str, str, list[str]]"
+    count: 1
+  - file: tests/replay_corpus.py
+    text: "dict"
+    count: 2
+  - file: tests/replay_corpus.py
+    text: "dict[str, str]"
+    count: 1
+  - file: tests/replay_corpus.py
+    text: "int"
+    count: 2
+  - file: tests/replay_corpus.py
+    text: "str"
+    count: 5
+  - file: tests/test_guards.py
+    text: "dict"
+    count: 5
+  - file: tests/test_guards.py
+    text: "dict | str"
+    count: 1
+  - file: tests/test_guards.py
+    text: "int"
+    count: 2
+  - file: tests/test_guards.py
+    text: "list[str]"
+    count: 1
+  - file: tests/test_guards.py
+    text: "list[tuple[str, int, int, str, str]]"
+    count: 26
+  - file: tests/test_guards.py
+    text: "object"
+    count: 1
+  - file: tests/test_guards.py
+    text: "set[str]"
+    count: 1
+  - file: tests/test_guards.py
+    text: "str"
+    count: 13
+  - file: tests/test_guards.py
+    text: "tuple[int, str, str]"
+    count: 2
+  - file: tests/test_guards.py
+    text: "tuple[int, str]"
+    count: 1
+  - file: tests/test_guards.py
+    text: "tuple[str, int, int, str, str]"
+    count: 1
+  - file: tests/test_memory_bound.py
+    text: "list[str]"
+    count: 1
+  - file: tests/test_memory_bound.py
+    text: "str"
+    count: 10
+  - file: tests/test_memory_bound.py
+    text: "str | None"
+    count: 1
+  - file: tests/test_memory_bound.py
+    text: "tuple[int | None, str, float, int]"
+    count: 1
