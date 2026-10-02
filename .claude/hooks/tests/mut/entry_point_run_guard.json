@@ -1,0 +1,87 @@
+[
+ [
+  "entry-point-run-guard.py",
+  "    raw_cwd = event.get(\"cwd\")\n    cwd = Path(raw_cwd)",
+  "    return ALLOW\n    raw_cwd = event.get(\"cwd\")\n    cwd = Path(raw_cwd)"
+ ],
+ [
+  "entry-point-run-guard.py",
+  "    return any(runs_entry(run, need, repo) for probe in candidates for run in probe_runs(repo, probe))",
+  "    return any(probe.name.startswith(need.rel.replace(\"/\", \"_\") + \"--\") for probe in candidates)"
+ ],
+ [
+  "entry-point-run-guard.py",
+  "return same and (run.kind == \"script\" or os.access(need.path, os.X_OK))",
+  "return same"
+ ],
+ [
+  "entry-point-run-guard.py",
+  "    tokens = words(without_heredocs(text))",
+  "    tokens = words(text)"
+ ],
+ [
+  "entry-point-run-guard.py",
+  "    pending = committed is None or dribble.stat().st_mtime > committed",
+  "    pending = True"
+ ],
+ [
+  "entry-point-run-guard.py",
+  "    if \"tests\" in Path(rel).parts or not path.is_file():",
+  "    if not path.is_file():"
+ ],
+ [
+  "entry-point-run-guard.py",
+  "    if repeated:\n        return ALLOW",
+  "    if False:\n        return ALLOW"
+ ],
+ [
+  "entry-point-run-guard.py",
+  "    return bool(arguments) and all(argument in HELP for argument in arguments)",
+  "    return False"
+ ],
+ [
+  "entry-point-run-guard.py",
+  "    return here == root or root in here.parents",
+  "    return True"
+ ],
+ [
+  "entry-point-run-guard.py",
+  "    rest = list(command)\n    while rest:",
+  "    return list(command)\n    while rest:"
+ ],
+ [
+  "entry-point-run-guard.py",
+  "    after = [each.run for each in issued if each.at > edited]",
+  "    after = [each.run for each in issued if each.at >= edited]"
+ ],
+ [
+  "entry-point-run-guard.py",
+  "                here = resolve(here, target)",
+  "                pass"
+ ],
+ [
+  "entry-point-run-guard.py",
+  "                    variables[VarName(match.group(1))] = value",
+  "                    pass"
+ ],
+ [
+  "entry-point-run-guard.py",
+  "commit(?:-tree)?\\b\",",
+  "commitX(?:-tree)?\\b\","
+ ],
+ [
+  "entry-point-run-guard.py",
+  "    if probes / PROBE_RUNNER in probed:",
+  "    if False:"
+ ],
+ [
+  "entry-point-run-guard.py",
+  "\"--untracked-files=all\"",
+  "\"--untracked-files=no\""
+ ],
+ [
+  "entry-point-run-guard.py",
+  "                if handle.read(2) != b\"#!\" or not os.access(path, os.X_OK):",
+  "                if handle.read(2) != b\"#!\":"
+ ]
+]

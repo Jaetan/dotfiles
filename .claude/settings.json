@@ -82,6 +82,15 @@
             "command": "/home/nicolas/.claude/hooks/test-determinism-guard.py"
           }
         ]
+      },
+      {
+        "matcher": "Bash|Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/home/nicolas/.claude/hooks/entry-point-run-guard.py"
+          }
+        ]
       }
     ],
     "PostToolUseFailure": [
