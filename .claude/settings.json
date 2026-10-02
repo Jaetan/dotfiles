@@ -73,6 +73,15 @@
             "command": "/home/nicolas/.claude/hooks/precise-hints-guard.py"
           }
         ]
+      },
+      {
+        "matcher": "Read|Edit|Write|MultiEdit|Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/home/nicolas/.claude/hooks/test-determinism-guard.py"
+          }
+        ]
       }
     ],
     "PostToolUseFailure": [
