@@ -53,6 +53,15 @@
             "command": "/home/nicolas/.claude/hooks/precise-hints-guard.py"
           }
         ]
+      },
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/home/nicolas/.claude/hooks/workflow-watch-guard.py"
+          }
+        ]
       }
     ],
     "PostToolUse": [
@@ -91,6 +100,15 @@
             "command": "/home/nicolas/.claude/hooks/entry-point-run-guard.py"
           }
         ]
+      },
+      {
+        "matcher": "Workflow|Monitor|TaskStop",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/home/nicolas/.claude/hooks/workflow-watch-guard.py"
+          }
+        ]
       }
     ],
     "PostToolUseFailure": [
@@ -100,6 +118,26 @@
           {
             "type": "command",
             "command": "/home/nicolas/.claude/hooks/heavy-run-guard.py"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/home/nicolas/.claude/hooks/workflow-watch-guard.py"
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/home/nicolas/.claude/hooks/workflow-watch-guard.py"
           }
         ]
       }

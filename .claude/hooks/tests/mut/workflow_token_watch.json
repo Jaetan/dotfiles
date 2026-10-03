@@ -1,0 +1,217 @@
+[
+ [
+  "workflow-token-watch",
+  "COUNTED = (\"input_tokens\", \"cache_creation_input_tokens\", \"output_tokens\")",
+  "COUNTED = (\"input_tokens\", \"output_tokens\")"
+ ],
+ [
+  "workflow-token-watch",
+  "COUNTED = (\"input_tokens\", \"cache_creation_input_tokens\", \"output_tokens\")",
+  "COUNTED = (\"input_tokens\", \"cache_creation_input_tokens\", \"cache_read_input_tokens\", \"output_tokens\")"
+ ],
+ [
+  "workflow-token-watch",
+  "COUNTED = (\"input_tokens\", \"cache_creation_input_tokens\", \"output_tokens\")",
+  "COUNTED = (\"cache_creation_input_tokens\", \"output_tokens\")"
+ ],
+ [
+  "workflow-token-watch",
+  "    if isinstance(parts, list) and parts:\n",
+  "    if False:\n"
+ ],
+ [
+  "workflow-token-watch",
+  "        return Tokens(sum(counted(part) for part in parts if isinstance(part, dict)))",
+  "        return Tokens(sum(counted(part) for part in parts if isinstance(part, dict) and part.get(\"type\") != \"advisor_message\"))"
+ ],
+ [
+  "workflow-token-watch",
+  "        return Tokens(sum(counted(part) for part in parts if isinstance(part, dict)))",
+  "        return Tokens(sum(counted(part) for part in parts))"
+ ],
+ [
+  "workflow-token-watch",
+  "return Tokens(sum(count for count in counts if type(count) is int and count >= 0))",
+  "return Tokens(sum(count for count in counts if type(count) is int))"
+ ],
+ [
+  "workflow-token-watch",
+  "return Tokens(sum(count for count in counts if type(count) is int and count >= 0))",
+  "return Tokens(sum(count for count in counts if isinstance(count, int) and count >= 0))"
+ ],
+ [
+  "workflow-token-watch",
+  "return Tokens(sum(count for count in counts if type(count) is int and count >= 0))",
+  "return Tokens(sum(count or 0 for count in counts))"
+ ],
+ [
+  "workflow-token-watch",
+  "self.usage[CallKey(f\"{transcript.name}:{message['id']}\")] = tokens_of(usage)",
+  "self.usage[CallKey(message[\"id\"])] = tokens_of(usage)"
+ ],
+ [
+  "workflow-token-watch",
+  "self.usage[CallKey(f\"{transcript.name}:{message['id']}\")] = tokens_of(usage)",
+  "self.usage[CallKey(str(len(self.usage)))] = tokens_of(usage)"
+ ],
+ [
+  "workflow-token-watch",
+  "complete = chunk.rfind(b\"\\n\") + 1",
+  "complete = len(chunk)"
+ ],
+ [
+  "workflow-token-watch",
+  "self.offsets[transcript] = Offset(start + complete)",
+  "self.offsets[transcript] = Offset(0)"
+ ],
+ [
+  "workflow-token-watch",
+  "self.offsets[transcript] = Offset(start + complete)",
+  "self.offsets[transcript] = Offset(complete)"
+ ],
+ [
+  "workflow-token-watch",
+  "                if transcript.stat().st_size < start:\n                    start = Offset(0)",
+  "                if False:\n                    start = Offset(0)"
+ ],
+ [
+  "workflow-token-watch",
+  "            except OSError:\n                continue",
+  "            except FileNotFoundError:\n                continue"
+ ],
+ [
+  "workflow-token-watch",
+  "for transcript in sorted(directory.glob(\"agent-*.jsonl\")):",
+  "for transcript in sorted(directory.glob(\"*.jsonl\")):"
+ ],
+ [
+  "workflow-token-watch",
+  "if isinstance(usage, dict) and message.get(\"role\") == \"assistant\" and message.get(\"id\"):",
+  "if isinstance(usage, dict) and message.get(\"id\"):"
+ ],
+ [
+  "workflow-token-watch",
+  "if isinstance(usage, dict) and message.get(\"role\") == \"assistant\" and message.get(\"id\"):",
+  "if isinstance(usage, dict) and message.get(\"role\") == \"assistant\":"
+ ],
+ [
+  "workflow-token-watch",
+  "if isinstance(usage, dict) and message.get(\"role\") == \"assistant\" and message.get(\"id\"):",
+  "if usage and message.get(\"role\") == \"assistant\" and message.get(\"id\"):"
+ ],
+ [
+  "workflow-token-watch",
+  "                except (ValueError, RecursionError):",
+  "                except ValueError:"
+ ],
+ [
+  "workflow-token-watch",
+  "                except (ValueError, RecursionError):",
+  "                except (json.JSONDecodeError, RecursionError):"
+ ],
+ [
+  "workflow-token-watch",
+  "message = entry.get(\"message\") if isinstance(entry, dict) else None",
+  "message = entry.get(\"message\")"
+ ],
+ [
+  "workflow-token-watch",
+  "usage = message.get(\"usage\") if isinstance(message, dict) else None",
+  "usage = message.get(\"usage\")"
+ ],
+ [
+  "workflow-token-watch",
+  "        if total > limit:\n            return Line(",
+  "        if total >= limit:\n            return Line("
+ ],
+ [
+  "workflow-token-watch",
+  "        if quarter <= self.quarter:",
+  "        if quarter < self.quarter:"
+ ],
+ [
+  "workflow-token-watch",
+  "        self.quarter = quarter\n",
+  ""
+ ],
+ [
+  "workflow-token-watch",
+  "CEILING = Tokens(2_000_000)",
+  "CEILING = Tokens(2_500_000)"
+ ],
+ [
+  "workflow-token-watch",
+  "INTERVAL = Seconds(5.0)",
+  "INTERVAL = Seconds(60.0)"
+ ],
+ [
+  "workflow-token-watch",
+  "    limit = Tokens(int(sys.argv[2])) if len(sys.argv) > 2 else CEILING",
+  "    limit = CEILING"
+ ],
+ [
+  "workflow-token-watch",
+  "    interval = Seconds(float(sys.argv[3])) if len(sys.argv) > 3 else INTERVAL",
+  "    interval = INTERVAL"
+ ],
+ [
+  "workflow-token-watch",
+  "        if total > limit:\n            return ExitStatus(0)",
+  "        if total >= limit:\n            return ExitStatus(0)"
+ ],
+ [
+  "workflow-token-watch",
+  "        if total > limit:\n            return ExitStatus(0)",
+  "        if False:\n            return ExitStatus(0)"
+ ],
+ [
+  "workflow-token-watch",
+  "        time.sleep(interval)",
+  "        pass"
+ ],
+ [
+  "workflow-token-watch",
+  "                print(line, flush=True)",
+  "                print(line)"
+ ],
+ [
+  "workflow-token-watch",
+  "        return ExitStatus(2)",
+  "        return ExitStatus(0)"
+ ],
+ [
+  "workflow-token-watch",
+  "        if directory.is_dir() or self.missing_said:",
+  "        if directory.is_dir():"
+ ],
+ [
+  "workflow-token-watch",
+  "        if directory.is_dir() or self.missing_said:",
+  "        if self.missing_said:"
+ ],
+ [
+  "workflow-token-watch",
+  "#!/home/nicolas/.local/bin/python3.14",
+  "#!/usr/bin/env python3"
+ ],
+ [
+  "workflow-token-watch",
+  "                continue  # gone or not a file",
+  "                break  # gone or not a file"
+ ],
+ [
+  "workflow-token-watch",
+  "                continue  # gone or not a file",
+  "                self.offsets[transcript] = Offset(-1)\n                continue  # gone or not a file"
+ ],
+ [
+  "workflow-token-watch",
+  "    if isinstance(parts, list) and parts:\n",
+  "    if isinstance(parts, list):\n"
+ ],
+ [
+  "workflow-token-watch",
+  "    if isinstance(parts, list) and parts:\n",
+  "    if parts:\n"
+ ]
+]

@@ -1,0 +1,141 @@
+#!/home/nicolas/.local/bin/python3.14
+"""Watch a running workflow's token use and say when it passes a ceiling.
+
+Usage: workflow-token-watch TRANSCRIPT_DIR [LIMIT] [SECONDS]
+
+TRANSCRIPT_DIR is the workflow's transcript directory, which the Workflow tool
+names when it launches (it holds one agent-*.jsonl per agent). LIMIT defaults to
+2,000,000 tokens and SECONDS, the interval between reads, to 5.
+
+What is counted: new tokens, the input, cache-write and output tokens of every
+model call any agent of the workflow made, each call counted once at its last
+recorded usage. A call that consulted the advisor lists its parts under
+usage.iterations, the advisor's own call among them, and is counted over every
+part; the top-level counts leave the advisor's out. Cache reads, the context
+re-sent on each call, are not counted. A count that is not a whole number of 0 or
+more, a line that cannot be read and a file that cannot be opened are skipped.
+
+Meant to run under the Monitor tool: each line it prints is an event. After a
+read that reaches a new quarter of the ceiling it prints the total (one line
+however many quarters the read crossed), then OVER LIMIT once the total exceeds
+the ceiling, and exits. It says once that the directory does not
+exist yet, and keeps reading it. The caller stops the workflow with TaskStop on
+OVER LIMIT; this script stops nothing itself. workflow-watch-guard.py, in the
+Claude Code hook kit, holds every run the main thread launches to such a watch.
+"""
+
+import json
+import sys
+import time
+from pathlib import Path
+from typing import NewType, TypedDict
+
+# A token count; a model call's identity (its agent transcript and message id); a
+# byte offset into a transcript; seconds between reads; a line to print; the exit status.
+Tokens = NewType("Tokens", int)
+CallKey = NewType("CallKey", str)
+Offset = NewType("Offset", int)
+Seconds = NewType("Seconds", float)
+Line = NewType("Line", str)
+ExitStatus = NewType("ExitStatus", int)
+
+COUNTED = ("input_tokens", "cache_creation_input_tokens", "output_tokens")
+CEILING = Tokens(2_000_000)
+INTERVAL = Seconds(5.0)
+
+
+class Usage(TypedDict, total=False):
+    """A call's usage, or one part of it, as far as the watcher reads it."""
+
+    input_tokens: Tokens
+    cache_creation_input_tokens: Tokens
+    output_tokens: Tokens
+    iterations: list["Usage"]
+
+
+def counted(usage: Usage) -> Tokens:
+    """The new tokens a usage or a part of one records at its top level."""
+    counts = [usage.get(name) for name in COUNTED]
+    return Tokens(sum(count for count in counts if type(count) is int and count >= 0))
+
+
+def tokens_of(usage: Usage) -> Tokens:
+    """New tokens of one call: over its parts when it lists them, else its top-level counts."""
+    parts = usage.get("iterations")
+    if isinstance(parts, list) and parts:
+        return Tokens(sum(counted(part) for part in parts if isinstance(part, dict)))
+    return counted(usage)
+
+
+class Tally:
+    """The calls read so far, each at its last recorded usage, and the last quarter reported."""
+
+    def __init__(self) -> None:
+        self.offsets: dict[Path, Offset] = {}
+        self.usage: dict[CallKey, Tokens] = {}
+        self.quarter = 0
+        self.missing_said = False
+
+    def read(self, directory: Path) -> Tokens:
+        """Read the whole lines each agent transcript gained since the last read; return the total."""
+        for transcript in sorted(directory.glob("agent-*.jsonl")):
+            start = self.offsets.get(transcript, Offset(0))
+            try:
+                if transcript.stat().st_size < start:
+                    start = Offset(0)  # the transcript was replaced: read it again
+                with transcript.open("rb") as handle:
+                    handle.seek(start)
+                    chunk = handle.read()
+            except OSError:
+                continue  # gone or not a file: read it next time, if it is there
+            complete = chunk.rfind(b"\n") + 1  # a line still being written is read next time
+            self.offsets[transcript] = Offset(start + complete)
+            for line in chunk[:complete].splitlines():
+                try:
+                    entry = json.loads(line)
+                except (ValueError, RecursionError):
+                    continue
+                message = entry.get("message") if isinstance(entry, dict) else None
+                usage = message.get("usage") if isinstance(message, dict) else None
+                if isinstance(usage, dict) and message.get("role") == "assistant" and message.get("id"):
+                    self.usage[CallKey(f"{transcript.name}:{message['id']}")] = tokens_of(usage)
+        return Tokens(sum(self.usage.values()))
+
+    def missing(self, directory: Path) -> Line | None:
+        """The line that says, once, that the directory does not exist."""
+        if directory.is_dir() or self.missing_said:
+            return None
+        self.missing_said = True
+        return Line(f"{directory} does not exist yet; reading it until it does")
+
+    def report(self, total: Tokens, limit: Tokens) -> Line | None:
+        """The line to print for this total: OVER LIMIT past the ceiling, else the total at a new quarter."""
+        if total > limit:
+            return Line(f"OVER LIMIT: {total:,} new tokens, ceiling {limit:,}; stop the workflow")
+        quarter = 4 * total // limit
+        if quarter <= self.quarter:
+            return None
+        self.quarter = quarter
+        return Line(f"{total:,} new tokens of {limit:,}")
+
+
+def main() -> ExitStatus:
+    if len(sys.argv) < 2:
+        print(__doc__, file=sys.stderr)
+        return ExitStatus(2)
+    directory = Path(sys.argv[1])
+    limit = Tokens(int(sys.argv[2])) if len(sys.argv) > 2 else CEILING
+    interval = Seconds(float(sys.argv[3])) if len(sys.argv) > 3 else INTERVAL
+    tally = Tally()
+    while True:
+        total = tally.read(directory)
+        for line in (tally.missing(directory), tally.report(total, limit)):
+            if line is not None:
+                print(line, flush=True)
+        if total > limit:
+            return ExitStatus(0)
+        time.sleep(interval)
+
+
+if __name__ == "__main__":
+    sys.exit(main())

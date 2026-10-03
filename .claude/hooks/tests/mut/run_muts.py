@@ -6,7 +6,8 @@ MUT_SUITE names the suite each copy runs (default: test_guards.py, followed by t
 suite); a suite is run as `SUITE COPY_DIR` and prints a MISS line per case that dies and a
 closing "... disagree" line.
 A mutant is [file, old, new] with `old` unique in the file, or [file, old, new, nth] replacing the nth
-(0-based) of several occurrences. Each copy lives in a temporary directory; each suite runs under
+(0-based) of several occurrences. Each copy holds HOOKS_DIR's *.py and the mutated file, which need not
+end in .py (the token watcher does not). Each copy lives in a temporary directory; each suite runs under
 RLIMIT_AS = CAP, so a mutant that makes a hook's reading grow without bound fails its own suite, not the host.
 The memory suite's unbounded mutants reach about 2.6 GB each: keep WORKERS x 2.6 GB well inside the host's RAM.
 """
@@ -39,6 +40,8 @@ def one(k: int) -> tuple[int, str, str, list[str]]:
     d.mkdir()
     for p in HOOKS.glob("*.py"):
         shutil.copy2(p, d / p.name)
+    if not (d / f).exists():  # a script without the .py suffix, such as the token watcher
+        shutil.copy2(HOOKS / f, d / f)
     s = (d / f).read_text()
     n = s.count(old)
     if (not nth and n != 1) or (nth and n <= nth[0]):

@@ -1,0 +1,797 @@
+[
+ [
+  "workflow-watch-guard.py",
+  "    if event.get(\"agent_id\"):\n        return Decision(ALLOW)",
+  "    if False:\n        return Decision(ALLOW)"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "            if owing(state) and not KILL_SWITCH.exists():",
+  "            if owing(state):"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "            if owing(state) and not KILL_SWITCH.exists():",
+  "            if not KILL_SWITCH.exists():"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "ALWAYS_ALLOWED = frozenset({\"Monitor\", \"TaskStop\", \"ToolSearch\"})",
+  "ALWAYS_ALLOWED = frozenset({\"Monitor\", \"TaskStop\"})"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "ALWAYS_ALLOWED = frozenset({\"Monitor\", \"TaskStop\", \"ToolSearch\"})",
+  "ALWAYS_ALLOWED = frozenset({\"TaskStop\", \"ToolSearch\"})"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "ALWAYS_ALLOWED = frozenset({\"Monitor\", \"TaskStop\", \"ToolSearch\"})",
+  "ALWAYS_ALLOWED = frozenset({\"Monitor\", \"ToolSearch\"})"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "return isinstance(target, str) and os.path.realpath(target) == os.path.realpath(KILL_SWITCH)",
+  "return isinstance(target, str)"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "os.path.realpath(target) == os.path.realpath(KILL_SWITCH)",
+  "target == str(KILL_SWITCH)"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "if event.get(\"tool_name\") not in (\"Write\", \"Edit\"):\n        return False",
+  "if False:\n        return False"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "                        run[\"over\"] = True",
+  "                        pass"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "                    if run[\"directory\"] == directory:\n                        run[\"over\"] = True",
+  "                    if True:\n                        run[\"over\"] = True"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "                if directory not in state[\"over_dirs\"]:\n                    state[\"over_dirs\"].append(directory)",
+  "                pass"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "            if ends or any(line.startswith(EXPIRED) for line in notice.lines):\n                del state[\"watches\"]",
+  "            if ends:\n                del state[\"watches\"]"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "            if ends or any(line.startswith(EXPIRED) for line in notice.lines):\n                del state[\"watches\"]",
+  "            if any(line.startswith(EXPIRED) for line in notice.lines):\n                del state[\"watches\"]"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "            if ends or any(line.startswith(EXPIRED) for line in notice.lines):\n                del state[\"watches\"]",
+  "            if ends or any(EXPIRED in line for line in notice.lines):\n                del state[\"watches\"]"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "            if any(line.startswith(OVER_LIMIT) for line in notice.lines):",
+  "            if any(OVER_LIMIT in line for line in notice.lines):"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "        elif notice.task in state[\"runs\"]:\n            if ends:",
+  "        elif notice.task in state[\"runs\"]:\n            if True:"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "            state[\"ended\"] = [*state[\"ended\"], notice.task][-ENDED_KEPT:]",
+  "            pass"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "            state[\"ended\"] = [*state[\"ended\"], notice.task][-ENDED_KEPT:]",
+  "            state[\"ended\"] = [*state[\"ended\"], notice.task][-1:]"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "        elif ends or any(line.startswith(EXPIRED) for line in notice.lines):\n            state[\"ended\"]",
+  "        elif ends:\n            state[\"ended\"]"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "TERMINAL = frozenset({\"completed\", \"failed\", \"killed\", \"stopped\"})",
+  "TERMINAL = frozenset({\"completed\", \"failed\", \"stopped\"})"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "TERMINAL = frozenset({\"completed\", \"failed\", \"killed\", \"stopped\"})",
+  "TERMINAL = frozenset({\"completed\", \"failed\", \"killed\", \"stopped\", \"running\"})"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "    task, status = TASK.search(head), STATUS.search(head)",
+  "    task, status = TASK.search(head), STATUS.search(content)"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "    task, status = TASK.search(head), STATUS.search(head)",
+  "    task, status = TASK.search(content), STATUS.search(head)"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "    if not content.startswith(NOTICE_START):\n        return None",
+  "    if False:\n        return None"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "if queued.get(\"type\") == \"queue-operation\" and queued.get(\"operation\") == \"enqueue\" \\",
+  "if queued.get(\"type\") == \"queue-operation\" \\"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "if queued.get(\"type\") == \"queue-operation\" and queued.get(\"operation\") == \"enqueue\" \\",
+  "if queued.get(\"operation\") == \"enqueue\" \\"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "            if not raw.endswith(b\"\\n\"):\n                break",
+  "            if False:\n                break"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "    if path.stat().st_size < offset:\n        offset = Offset(0)",
+  "    if False:\n        offset = Offset(0)"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "    if transcript and transcript != state[\"transcript\"]:",
+  "    if False:"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "    if path is not None and path.is_file():",
+  "    if path is not None:"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "            launched(state, event.get(\"tool_response\"))\n            catch_up(state, transcript)",
+  "            launched(state, event.get(\"tool_response\"))"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "            catch_up(state, transcript)  # first: a stopped watch",
+  "            pass  # first: a stopped watch"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "        catch_up(state, transcript)  # first: a watch's last notice may mark its runs over\n",
+  ""
+ ],
+ [
+  "workflow-watch-guard.py",
+  "        state[\"runs\"].pop(task, None)\n",
+  "        pass\n"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "        state[\"watches\"].pop(task, None)\n",
+  "        pass\n"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "    task = (cast(\"StopResponse\", response).get(\"task_id\") if isinstance(response, dict) else None) \\\n        or request.get(\"task_id\") or request.get(\"shell_id\")",
+  "    task = cast(\"StopResponse\", response).get(\"task_id\") if isinstance(response, dict) else None"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "        or request.get(\"task_id\") or request.get(\"shell_id\")",
+  "        or request.get(\"task_id\")"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "    elif tool == \"TaskStop\" and state_path(session).exists():",
+  "    elif tool == \"Monitor-never\" and state_path(session).exists():"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "return directory in state[\"watches\"].values()",
+  "return bool(state[\"watches\"])"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "    elif not task:\n",
+  "    elif False:\n"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "    elif task in state[\"ended\"]:\n",
+  "    elif False:\n"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "        if not isinstance(command, str) or not mentions_watcher(command):\n            return Decision(ALLOW)",
+  "        if not isinstance(command, str):\n            return Decision(ALLOW)"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "        if watch.directory is None and not state_path(session).exists():\n            return Decision(ALLOW)",
+  "        if False:\n            return Decision(ALLOW)"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "    if task not in state[\"ended\"]:\n        state[\"runs\"][task]",
+  "    if True:\n        state[\"runs\"][task]"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "                run[\"armed\"] = True",
+  "                pass"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "why = \"its watch ended\" if run[\"armed\"] else \"it has no watch\"",
+  "why = \"it has no watch\""
+ ],
+ [
+  "workflow-watch-guard.py",
+  "    if not isinstance(task, str) or not task or not isinstance(given, str) or not given:",
+  "    if not task or not given:"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "    if not isinstance(task, str) or not task or not isinstance(given, str) or not given:",
+  "    if not isinstance(task, str) or not isinstance(given, str) or not given:"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "    if not isinstance(task, str) or not task or not isinstance(given, str) or not given:",
+  "    if not isinstance(task, str) or not task or not isinstance(given, str):"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "    if named is None:\n        raise RuntimeError(",
+  "    if named is None:\n        named = Word(given)\n    if False:\n        raise RuntimeError("
+ ],
+ [
+  "workflow-watch-guard.py",
+  "    live = {each.get(\"id\") for each in tasks if isinstance(each, dict) and each.get(\"status\") not in TERMINAL}",
+  "    live = {each.get(\"id\") for each in tasks if isinstance(each, dict)}"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "    state[\"watches\"] = {task: directory for task, directory in state[\"watches\"].items() if task in live}",
+  "    pass"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "    state[\"runs\"] = {task: run for task, run in state[\"runs\"].items() if task in live}",
+  "    pass"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "        if event.get(\"hook_event_name\") == \"Stop\" and isinstance(tasks, list):\n            reconciled(state, tasks)",
+  "        if False:\n            reconciled(state, tasks)"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "STOPS_REFUSED = {False: Count(1), True: Count(3)}",
+  "STOPS_REFUSED = {False: Count(1), True: Count(4)}"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "STOPS_REFUSED = {False: Count(1), True: Count(3)}",
+  "STOPS_REFUSED = {False: Count(2), True: Count(3)}"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "        if event.get(\"source\") in NEW_PROCESS:",
+  "        if True:"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "NEW_PROCESS = frozenset({\"startup\", \"resume\"})",
+  "NEW_PROCESS = frozenset({\"startup\"})"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "NEW_PROCESS = frozenset({\"startup\", \"resume\"})",
+  "NEW_PROCESS = frozenset({\"resume\"})"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "            if run[\"over\"] or not watched(state, run[\"directory\"])]",
+  "            if not watched(state, run[\"directory\"])]"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "    if note:\n        context(\"PostToolUse\", note)",
+  "    if False:\n        context(\"PostToolUse\", note)"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "note = f\"\\nThe last Monitor that named the watcher did not count: {state['note']}.\" if state[\"note\"] else \"\"",
+  "note = \"\""
+ ],
+ [
+  "workflow-watch-guard.py",
+  "print(json.dumps({\"hookSpecificOutput\": {\"hookEventName\": event_name, \"additionalContext\": text}}))",
+  "print(text)"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "print(json.dumps({\"hookSpecificOutput\": {\"hookEventName\": event_name, \"additionalContext\": text}}))",
+  "print(json.dumps({\"hookSpecificOutput\": {\"hookEventName\": event_name, \"additionalContext\": text}}), file=sys.stderr)"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "print(json.dumps({\"hookSpecificOutput\": {\"hookEventName\": event_name, \"additionalContext\": text}}))",
+  "print(json.dumps({\"hookSpecificOutput\": {\"hookEventName\": \"PreToolUse\", \"additionalContext\": text}}))"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "MONITOR_TIMEOUT_MS = 1_800_000",
+  "MONITOR_TIMEOUT_MS = 60_000"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "f\"    timeout_ms: {MONITOR_TIMEOUT_MS}, re-armed on each expiry while the run lasts\"",
+  "f\"    timeout_ms: {MONITOR_TIMEOUT_MS}\""
+ ],
+ [
+  "workflow-watch-guard.py",
+  "    if OPERATORS & set(text):",
+  "    if False:"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "OPERATORS = frozenset(\";&|()<>\\n\")",
+  "OPERATORS = frozenset(\";|()<>\\n\")"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "OPERATORS = frozenset(\";&|()<>\\n\")",
+  "OPERATORS = frozenset(\";&|()>\\n\")"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "    if QUOTES & set(text):",
+  "    if False:"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "    text = command.strip(\" \\t\")",
+  "    text = command"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "if any(\"$\" in HOME_PREFIX.sub(\"\", word) or \"`\" in word for word in words):",
+  "if any(\"`\" in word for word in words):"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "if any(\"$\" in HOME_PREFIX.sub(\"\", word) or \"`\" in word for word in words):",
+  "if any(\"$\" in HOME_PREFIX.sub(\"\", word) for word in words):"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "    if not 2 <= len(words) <= 4:",
+  "    if not 2 <= len(words):"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "    if not 2 <= len(words) <= 4:",
+  "    if not len(words) <= 4:"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "    if not (plain_path(program) and plain_path(directory)):",
+  "    if not plain_path(directory):"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "    if not (plain_path(program) and plain_path(directory)):",
+  "    if not plain_path(program):"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "PLAIN = re.compile(r\"[A-Za-z0-9_./+,@%:-]+\")",
+  "PLAIN = re.compile(r\"[A-Za-z0-9_./+,@%:#*{}~\\r -]+\")"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "return bool(PLAIN.fullmatch(path)) and path.startswith(\"/\") and not {\".\", \"..\"} & set(path.split(\"/\"))",
+  "return bool(PLAIN.fullmatch(path)) and not {\".\", \"..\"} & set(path.split(\"/\"))"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "return bool(PLAIN.fullmatch(path)) and path.startswith(\"/\") and not {\".\", \"..\"} & set(path.split(\"/\"))",
+  "return bool(PLAIN.fullmatch(path)) and path.startswith(\"/\")"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "return bool(PLAIN.fullmatch(path)) and path.startswith(\"/\") and not {\".\", \"..\"} & set(path.split(\"/\"))",
+  "return path.startswith(\"/\") and not {\".\", \"..\"} & set(path.split(\"/\"))"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "    if resolved(program) != resolved(Word(str(WATCHER))):",
+  "    if Path(program).name != WATCHER.name:"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "        if not 0 < ceiling <= CEILING:",
+  "        if not 0 < ceiling:"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "        if not 0 < ceiling <= CEILING:",
+  "        if not ceiling <= CEILING:"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "        if not 0 < interval <= LONGEST_INTERVAL:",
+  "        if not 0 < interval:"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "        if not 0 < interval <= LONGEST_INTERVAL:",
+  "        if not interval <= LONGEST_INTERVAL:"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "    return DirPath(os.path.realpath(path))",
+  "    return DirPath(os.path.abspath(path))"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "HOME_PREFIX = re.compile(r\"^(?:~|\\$HOME|\\$\\{HOME\\})(?=/)\")",
+  "HOME_PREFIX = re.compile(r\"^(?:~|\\$HOME|\\$\\{HOME\\})(?=/|$)\")"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "HOME_PREFIX = re.compile(r\"^(?:~|\\$HOME|\\$\\{HOME\\})(?=/)\")",
+  "HOME_PREFIX = re.compile(r\"^(?:~|\\$HOME|\\$\\{HOME\\})\")"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "    return Word(HOME_PREFIX.sub(lambda _: str(Path.home()), word))",
+  "    return word"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "    return Watch(resolved(directory), Prose(\"\"))",
+  "    return Watch(DirPath(directory), Prose(\"\"))"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "            temporary.replace(path)",
+  "            pass"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "        fcntl.flock(lock, fcntl.LOCK_EX)\n",
+  "        pass\n"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "    with locked():\n        state_path(session).unlink(missing_ok=True)",
+  "    state_path(session).unlink(missing_ok=True)"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "    if not state_path(session).exists():\n        return Decision(ALLOW)\n    with held",
+  "    with held"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "    elif tool == \"TaskStop\" and state_path(session).exists():",
+  "    elif tool == \"TaskStop\":"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "    return STATE_DIR / (\"session-\" + re.sub(r\"[^\\w-]\", \"_\", session)[:160] + \".json\")",
+  "    return STATE_DIR / (\"session-\" + session + \".json\")"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "or event.get(\"hook_event_name\") not in (\"PreToolUse\", \"PostToolUse\", \"Stop\",\n                                                                            \"SessionStart\"):",
+  ":"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "    return type(value) is int and value >= 0",
+  "    return type(value) is int"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "    return type(value) is int and value >= 0",
+  "    return value is not None"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "isinstance(data.get(\"transcript\"), str) and counted(data.get(\"offset\"))",
+  "counted(data.get(\"offset\"))"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "isinstance(data.get(\"transcript\"), str) and counted(data.get(\"offset\"))",
+  "isinstance(data.get(\"transcript\"), str)"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "            and isinstance(data.get(\"runs\"), dict) and isinstance(data.get(\"watches\"), dict)",
+  "            and isinstance(data.get(\"watches\"), dict)"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "            and isinstance(data.get(\"runs\"), dict) and isinstance(data.get(\"watches\"), dict)",
+  "            and isinstance(data.get(\"runs\"), dict)"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "            and isinstance(data.get(\"over_dirs\"), list) and isinstance(data.get(\"ended\"), list)",
+  "            and isinstance(data.get(\"ended\"), list)"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "            and isinstance(data.get(\"over_dirs\"), list) and isinstance(data.get(\"ended\"), list)",
+  "            and isinstance(data.get(\"over_dirs\"), list)"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "            and all(isinstance(run, dict) and isinstance(run.get(\"directory\"), str)",
+  "            and all(isinstance(run.get(\"directory\"), str)"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "            and all(isinstance(run, dict) and isinstance(run.get(\"directory\"), str)",
+  "            and all(isinstance(run, dict)"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "                    and type(run.get(\"armed\")) is bool and type(run.get(\"over\")) is bool",
+  "                    and type(run.get(\"over\")) is bool"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "                    and type(run.get(\"armed\")) is bool and type(run.get(\"over\")) is bool",
+  "                    and type(run.get(\"armed\")) is bool"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "            and all(isinstance(directory, str) for directory in [*data[\"watches\"].values(), *data[\"over_dirs\"]])",
+  "            and all(isinstance(directory, str) for directory in data[\"over_dirs\"])"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "            and all(isinstance(directory, str) for directory in [*data[\"watches\"].values(), *data[\"over_dirs\"]])",
+  "            and all(isinstance(directory, str) for directory in data[\"watches\"].values())"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "            and all(isinstance(task, str) for task in data[\"ended\"]))",
+  ")"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "#!/home/nicolas/.local/bin/python3.14\n\"\"\"Hold",
+  "#!/nonexistent/python3.14\n\"\"\"Hold"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "    if not os.access(os.path.realpath(WATCHER), os.X_OK):\n        return Demand(None",
+  "    if False:\n        return Demand(None"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "    if spelling is None:\n        return Demand(None",
+  "    if False:\n        return Demand(None"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "    owed = owing(state)\n    if KILL_SWITCH.exists():\n        return Decision(ALLOW)",
+  "    owed = owing(state)\n    if False:\n        return Decision(ALLOW)"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "    if not is_stop and (event.get(\"tool_name\") in ALWAYS_ALLOWED or kill_switch_write(event)):",
+  "    if not is_stop and event.get(\"tool_name\") in ALWAYS_ALLOWED:"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "    return [(task, run) for task, run in owing(state) if run[\"over\"] or demanded.watcher is not None]",
+  "    return [(task, run) for task, run in owing(state) if demanded.watcher is not None]"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "    return [(task, run) for task, run in owing(state) if run[\"over\"] or demanded.watcher is not None]",
+  "    return owing(state)"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "    idle = Decision(REPORTED, standing_down(demanded)) if len(payable_now) < len(owed) else Decision(ALLOW)",
+  "    idle = Decision(ALLOW)"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "        due = [run for _, run in payable_now if run[\"refused\"] < STOPS_REFUSED[run[\"over\"]]]",
+  "        due = [run for _, run in payable_now if run[\"refused\"] < STOPS_REFUSED[False]]"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "        due = [run for _, run in payable_now if run[\"refused\"] < STOPS_REFUSED[run[\"over\"]]]",
+  "        due = [run for _, run in payable_now if run[\"refused\"] < STOPS_REFUSED[True]]"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "        due = [run for _, run in payable_now if run[\"refused\"] < STOPS_REFUSED[run[\"over\"]]]",
+  "        due = [run for _, run in payable_now]"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "        due = [run for _, run in payable_now if run[\"refused\"] < STOPS_REFUSED[run[\"over\"]]]",
+  "        due = [run for _, run in owed if run[\"refused\"] < STOPS_REFUSED[run[\"over\"]]]"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "            run[\"refused\"] = Count(run[\"refused\"] + 1)",
+  "            pass"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "    if not payable_now:\n        return idle",
+  "    if False:\n        return idle"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "        for task, run in state[\"runs\"].items():\n            if task not in owed:\n                run[\"refused\"] = Count(0)",
+  "        pass"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "    rest = f\"\\n{standing_down(demanded)}\" if len(lines) < len(owing(state)) else \"\"",
+  "    rest = \"\""
+ ],
+ [
+  "workflow-watch-guard.py",
+  "                if payable(state, demanded):\n                    note = finding",
+  "                if True:\n                    note = finding"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "            if owing(state) and not KILL_SWITCH.exists():\n                demanded",
+  "            if not KILL_SWITCH.exists():\n                demanded"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "        if state[\"runs\"] or state[\"watches\"] or state[\"over_dirs\"]:",
+  "        if state[\"runs\"] or state[\"watches\"]:"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "        if state[\"runs\"] or state[\"watches\"] or state[\"over_dirs\"]:",
+  "        if state[\"runs\"] or state[\"over_dirs\"]:"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "        if state[\"runs\"] or state[\"watches\"] or state[\"over_dirs\"]:",
+  "        if state[\"watches\"] or state[\"over_dirs\"]:"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "            and isinstance(data.get(\"note\"), str)\n",
+  "\n"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "                    and isinstance(run.get(\"named\"), str) and counted(run.get(\"refused\"))",
+  "                    and counted(run.get(\"refused\"))"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "                    and isinstance(run.get(\"named\"), str) and counted(run.get(\"refused\"))",
+  "                    and isinstance(run.get(\"named\"), str)"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "            except (ValueError, RecursionError):\n                continue",
+  "            except ValueError:\n                continue"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "    return [EventText(line) for part in text.split(\"</event>\")[:-1] if \"<event>\" in part",
+  "    return [EventText(line) for part in text.split(\"</event>\") if \"<event>\" in part"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "            for line in part.rpartition(\"<event>\")[2].splitlines()]",
+  "            for line in part.partition(\"<event>\")[2].splitlines()]"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "    return Notice(TaskId(task.group(1)), Status(status.group(1)) if status else None, event_lines(Prose(rest)))",
+  "    return Notice(TaskId(task.group(1)), Status(status.group(1)) if status else None, [])"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "        if watched(state, directory):\n            state[\"note\"] = Prose(\"\")",
+  "        pass"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "    state[\"note\"] = note if state[\"runs\"] else Prose(\"\")",
+  "    state[\"note\"] = note"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "            if run[\"directory\"] == watch.directory:\n                run[\"armed\"] = True",
+  "            if True:\n                run[\"armed\"] = True"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "                                  over=directory in state[\"over_dirs\"], refused=Count(0))",
+  "                                  over=DirPath(given) in state[\"over_dirs\"], refused=Count(0))"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "            state[\"ended\"] = [*state[\"ended\"], notice.task][-ENDED_KEPT:]",
+  "            state[\"ended\"] = [*state[\"ended\"], notice.task]"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "            state[\"ended\"] = [*state[\"ended\"], notice.task][-ENDED_KEPT:]",
+  "            state[\"ended\"] = [*state[\"ended\"], notice.task][:ENDED_KEPT]"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "    return next((spelling for spelling in (Word(str(WATCHER)), Word(os.path.realpath(WATCHER)))",
+  "    return next((spelling for spelling in (Word(os.path.realpath(WATCHER)), Word(str(WATCHER)))"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "    return next((spelling for spelling in (Word(str(WATCHER)), Word(os.path.realpath(WATCHER)))",
+  "    return next((spelling for spelling in (Word(str(WATCHER)),)"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "    named = next((spelling for spelling in (Word(given), Word(directory)) if plain_path(spelling)), None)",
+  "    named = next((spelling for spelling in (Word(directory), Word(given)) if plain_path(spelling)), None)"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "    named = next((spelling for spelling in (Word(given), Word(directory)) if plain_path(spelling)), None)",
+  "    named = next((spelling for spelling in (Word(directory),) if plain_path(spelling)), None)"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "    named = next((spelling for spelling in (Word(given), Word(directory)) if plain_path(spelling)), None)",
+  "    named = next((spelling for spelling in (Word(given),) if plain_path(spelling)), None)"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "    except Exception as exc:  # noqa: BLE001 - an unguarded call is reported, never silent",
+  "    except (OSError, RuntimeError) as exc:"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "        return REPORTED\n    if decision.message",
+  "        return ALLOW\n    if decision.message"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "    if decision.message is not None:\n        print(decision.message, file=sys.stderr)",
+  "    if decision.message is not None:\n        print(decision.message)"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "    return Decision(REPORTED, told) if told else Decision(ALLOW)",
+  "    return Decision(ALLOW)"
+ ],
+ [
+  "workflow-watch-guard.py",
+  "    with locked():\n        try:\n            data = json.loads(path.read_text(encoding=\"utf-8\"))\n        except (OSError, ValueError):\n            data = None\n",
+  "    try:\n        data = json.loads(path.read_text(encoding=\"utf-8\"))\n    except (OSError, ValueError):\n        data = None\n    with locked():\n"
+ ]
+]
