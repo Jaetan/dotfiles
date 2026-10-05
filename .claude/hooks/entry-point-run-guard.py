@@ -504,11 +504,18 @@ def runs_entry(run: Run, need: Needed, repo: Path) -> bool:
     if run.kind != "module":
         same = os.path.realpath(run.target) == os.path.realpath(need.path)
         return same and (run.kind == "script" or os.access(need.path, os.X_OK))
-    if ModuleName(run.target) not in need.modules:
-        return False
     here = Path(os.path.realpath(run.cwd))
     root = Path(os.path.realpath(repo))
-    return here == root or root in here.parents
+    if not (here == root or root in here.parents):
+        return False
+    if ModuleName(run.target) in need.modules:
+        return True
+    # A directory without __init__.py is a namespace package, so the name a module
+    # runs by depends on where the run starts: python -m benchmarks.scaling from
+    # python/ runs python/benchmarks/scaling.py, a name its package chain does not give.
+    spelled = here.joinpath(*run.target.split("."))
+    return os.path.realpath(need.path) in {
+        os.path.realpath(spelled.with_suffix(".py")), os.path.realpath(spelled / "__main__.py")}
 
 
 def probe_runs(repo: Path, probe: Path) -> list[Run]:

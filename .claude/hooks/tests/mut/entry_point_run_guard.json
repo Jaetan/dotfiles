@@ -41,8 +41,8 @@
  ],
  [
   "entry-point-run-guard.py",
-  "    return here == root or root in here.parents",
-  "    return True"
+  "    if not (here == root or root in here.parents):",
+  "    if not (here == root):"
  ],
  [
   "entry-point-run-guard.py",
@@ -83,5 +83,30 @@
   "entry-point-run-guard.py",
   "                if handle.read(2) != b\"#!\" or not os.access(path, os.X_OK):",
   "                if handle.read(2) != b\"#!\":"
+ ],
+ [
+  "entry-point-run-guard.py",
+  "        os.path.realpath(spelled.with_suffix(\".py\")), os.path.realpath(spelled / \"__main__.py\")}",
+  "        os.path.realpath(spelled / \"__main__.py\")}"
+ ],
+ [
+  "entry-point-run-guard.py",
+  "        os.path.realpath(spelled.with_suffix(\".py\")), os.path.realpath(spelled / \"__main__.py\")}",
+  "        os.path.realpath(spelled.with_suffix(\".py\"))}"
+ ],
+ [
+  "entry-point-run-guard.py",
+  "    spelled = here.joinpath(*run.target.split(\".\"))",
+  "    spelled = root.joinpath(*run.target.split(\".\"))"
+ ],
+ [
+  "entry-point-run-guard.py",
+  "    if not (here == root or root in here.parents):\n        return False\n    if ModuleName",
+  "    if ModuleName"
+ ],
+ [
+  "entry-point-run-guard.py",
+  "    if ModuleName(run.target) in need.modules:\n        return True\n",
+  ""
  ]
 ]

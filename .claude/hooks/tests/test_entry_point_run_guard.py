@@ -275,6 +275,14 @@ def cases() -> list[Case]:
              tool="Write"),
         Case(c("E29"), p("a run issued in the same second as the edit does not count"), REFUSE,
              p("tools/x.py"), changed(x, run(sh("python3 -m tools.x"), EDITED))),
+        Case(c("E30"), p("a namespace package's module run from the directory that names it"), ALLOW, p(""),
+             changed(r("python/benchmarks/y.py"), run(sh("cd {repo}/python && python3 -m benchmarks.y"),
+                                                     cwd=Path("/")))),
+        Case(c("E31"), p("a namespace package's module run where its name resolves to nothing"), REFUSE,
+             p("python/benchmarks/y.py"), changed(r("python/benchmarks/y.py"), run(sh("python3 -m benchmarks.y")))),
+        Case(c("E32"), p("a namespace package's __main__ run by the package's name"), ALLOW, p(""),
+             changed(r("python/benchmarks/__main__.py"), run(sh("cd {repo}/python && python3 -m benchmarks"),
+                                                            cwd=Path("/")))),
     ]
 
 
