@@ -15,6 +15,12 @@ for p in $HOME/.cargo/bin $HOME/.npm-global/bin $HOME/.rvm/bin $HOME/.local/shar
     end
 end
 
+# Logtalk, installed under ~/.local with its scripts (swilgt, logtalk_tester, ...) in
+# ~/.local/bin. Its user directory is kept under ~/.local too, instead of the default
+# ~/logtalk. Set for every shell, as the scripts refuse to run without LOGTALKHOME.
+set -gx LOGTALKHOME $HOME/.local/share/logtalk
+set -gx LOGTALKUSER $HOME/.local/share/logtalk-user
+
 # ssh-agent: a systemd --user service (ssh-agent.service) runs one agent at a
 # fixed socket for the whole WSL session, so SSH_AUTH_SOCK is a stable constant
 # instead of a rotating, per-shell value. Set it globally (-gx, NOT -U) for

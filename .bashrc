@@ -20,6 +20,11 @@ for p in \
   [ -d "$p" ] && [[ ":$PATH:" != *":$p:"* ]] && export PATH="$p:$PATH"
 done
 
+# --- Logtalk (mirrors config.fish) ----------------------------
+# Installed under ~/.local, user directory under ~/.local too instead of ~/logtalk.
+export LOGTALKHOME="$HOME/.local/share/logtalk"
+export LOGTALKUSER="$HOME/.local/share/logtalk-user"
+
 # --- ssh-agent: fixed socket from the systemd --user service -----
 # Mirrors config.fish: one agent (ssh-agent.service) at a stable socket for the
 # whole session; export the constant path for every shell. The key is loaded
