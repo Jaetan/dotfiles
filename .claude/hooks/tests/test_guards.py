@@ -1825,6 +1825,18 @@ R6_QUIET = [
     ("RP2", bash("taskset -c 0-19 bash probes/heavy_probe.sh > /tmp/x.log 2>&1", Q), 0,
      "a repository probe running a heavy command, blessed"),
     ("RP3", bash("bash probes/light_probe.sh", Q), 0, "a repository probe running nothing heavy"),
+    ("RP4", bash("taskset -c 0-19 bash probes/capturing_probe.sh > /tmp/x.log 2>&1", Q), 0,
+     "a repository probe capturing a heavy command's output, blessed"),
+    ("RP5", bash(f"taskset -c 0-19 bash {S}/wrap5.sh > /tmp/x.log 2>&1", Q), 0,
+     "a script copying that probe and running the copy: the copy runs what the repository's probe runs"),
+    ("RP6", bash(f"taskset -c 0-19 bash {S}/wrap6.sh > /tmp/x.log 2>&1", Q), 2,
+     "a script running a filtered copy: the copy is its own text, its capture held to rule 1"),
+    ("RP7", bash(f"taskset -c 0-19 bash {S}/wrap7.sh > /tmp/x.log 2>&1", Q), 2,
+     "a script running a copy it appended to: its own text"),
+    ("RP8", bash(f"taskset -c 0-19 bash {S}/wrap8.sh > /tmp/x.log 2>&1", Q), 2,
+     "a script running a copy of a script outside every tree: no repository's text"),
+    ("RP9", bash(f"taskset -c 0-19 bash {S}/wrap9.sh > /tmp/x.log 2>&1", Q), 2,
+     "a script running a copy of a probe it edited first: its own text"),
     ("PS1", bash("taskset -c 0-19 python3 -c \"import subprocess; subprocess.run(['taskset', '-c', '0-23', 'cargo', "
                  "'test'])\" > /tmp/x.log 2>&1", Q), 2, "Python starting a heavy run on 0-23"),
     ("PS2", bash("taskset -c 0-19 python3 -c \"import os; os.system('cargo test > /tmp/y.log 2>&1 &')\" > /tmp/x.log "
@@ -1916,6 +1928,14 @@ def round6_cases() -> list[tuple[str, int, int, str, str]]:
     (RT / "probes" / "run_all.sh").write_text((Q / "probes" / "run_all.sh").read_text())
     (RT / "probes" / "light_probe.sh").write_text("echo ok\n")
     (Q / "probes" / "heavy_probe.sh").write_text("cargo build\n")
+    (Q / "probes" / "capturing_probe.sh").write_text('out=$(cargo build)\necho "$out" | tail -1\n')
+    (S / "capturing.sh").write_text((Q / "probes" / "capturing_probe.sh").read_text())
+    for n, make in ((5, 'cp probes/capturing_probe.sh "$d/p.sh"'),
+                    (6, "sed 's/-1/-2/' probes/capturing_probe.sh > \"$d/p.sh\""),
+                    (7, 'cp probes/capturing_probe.sh "$d/p.sh"; echo "echo more" >> "$d/p.sh"'),
+                    (8, f'cp {S}/capturing.sh "$d/p.sh"'),
+                    (9, "sed -i 's/-1/-2/' probes/capturing_probe.sh; cp probes/capturing_probe.sh \"$d/p.sh\"")):
+        (S / f"wrap{n}.sh").write_text(f'd=$(mktemp -d)\n{make}\nbash "$d/p.sh" > "$d/out.log" 2>&1\nrm -rf "$d"\n')
     (Q / "probes" / "light_probe.sh").write_text("echo ok\n")
     (S / "a7.sh").write_text(f"echo x > {T}/CHANGELOG.md\n")
     (S / "b7.sh").write_text("echo b\n")

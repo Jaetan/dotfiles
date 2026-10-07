@@ -631,6 +631,24 @@ def _heavy_script(path: str, cwd: str | None = None) -> bool:
     return False
 
 
+def _script_origin(path: str | None, written: bool, files: dict[str, str | None]) -> str:
+    """Whose script a run reads: the repository's when it lies in a tree and the call did not write it, or when
+    the call wrote it with the exact text of one that does (a copy runs what its source runs); otherwise the
+    call's own, whose every command is held to the rules as if typed."""
+    if not path:
+        return "script"
+    if not written:
+        return "repo-script" if _shell.tree_of(path) else "script"
+    src = path
+    for _ in range(8):  # a copy of a copy is still its first source
+        if src not in _ORIGIN:
+            break
+        src = _ORIGIN[src]
+    body = files.get(path)
+    same = type(body) is str and _shell.tree_of(src) is not None and body == read_regular(src)
+    return "repo-script" if same else "script"
+
+
 def _full(path: str, cwd: str | None) -> str:
     """A script path as it resolves from `cwd`, for matching by its repository-relative tail."""
     r = resolve(path, cwd)
@@ -1209,7 +1227,7 @@ def _expand(out: list[Inv], text: str, cwd: str | None, *, cpus: frozenset[int] 
             if unread:
                 inv.unreadable = unread
             if source is not None:
-                inv.code_origin = "script" if source in files or not _shell.tree_of(source) else "repo-script"
+                inv.code_origin = _script_origin(source, source in files, files)
                 if isinstance(inv.code[1], Approx):  # read for what it starts; what it writes is out of sight
                     inv.unreadable = inv.unreadable or f"{source}, which the call rewrote first"
             if inv.code and inv.code[0] == "python" and inv.heavy is None:
@@ -1268,12 +1286,12 @@ def _expand(out: list[Inv], text: str, cwd: str | None, *, cpus: frozenset[int] 
         if file_lang not in ("sh", "fish"):
             if inv.code is None:
                 inv.code, inv.code_args = (file_lang, body), _operands(core.argv[1:])
-                inv.code_origin = "script" if written or not _shell.tree_of(path or script_file) else "repo-script"
+                inv.code_origin = _script_origin(path or script_file, written, files)
                 if file_lang == "python" and inv.heavy is None:
                     inv.heavy = heavy_in_code(body, cmd.cwd, depth)
             continue
         inv.carrier = True
-        child_origin = "script" if written or not _shell.tree_of(path or script_file) else "repo-script"
+        child_origin = _script_origin(path or script_file, written, files)
         if origin == "repo-script":
             child_origin = "repo-script"
         sourced = prog(core.argv[0]) in ("source", ".")

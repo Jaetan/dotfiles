@@ -1,0 +1,37 @@
+[
+ [
+  "_commands.py",
+  "    return \"repo-script\" if same else \"script\"\n",
+  "    return \"repo-script\"\n"
+ ],
+ [
+  "_commands.py",
+  " and body == read_regular(src)\n",
+  "\n"
+ ],
+ [
+  "_commands.py",
+  "    same = type(body) is str and _shell.tree_of(src)",
+  "    same = _shell.tree_of(src)"
+ ],
+ [
+  "_commands.py",
+  "and _shell.tree_of(src) is not None and body",
+  "and body"
+ ],
+ [
+  "_commands.py",
+  "        return \"repo-script\" if _shell.tree_of(path) else \"script\"\n",
+  "        return \"script\"\n"
+ ],
+ [
+  "_commands.py",
+  "        src = _ORIGIN[src]\n    body = files.get(path)",
+  "        break\n    body = files.get(path)"
+ ],
+ [
+  "_commands.py",
+  "    if not written:\n        return \"repo-script\" if",
+  "    if written:\n        return \"repo-script\" if"
+ ]
+]
