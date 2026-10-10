@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+# Start Claude Code inside claude.slice, once the user's systemd manager has finished starting.
+#
+#   claude-safe [CLAUDE ARGS...]      e.g. claude-safe --resume
+#
+# Right after a WSL restart the user manager takes a minute or more to start. session-limits started meanwhile
+# finds it "starting" and falls back to taskset alone: CPUs 0-19, but outside claude.slice, so no memory cap and
+# no oomd preference. This waits for the manager (up to five minutes), refuses to go on unless it is running, then
+# starts Claude through session-limits, which places it in the slice and refuses if the slice's cap is not loaded.
+set -euo pipefail
+state=$(timeout 300 systemctl --user is-system-running --wait 2> /dev/null || true)
+case "$state" in
+    running | degraded) ;;
+    *)
+        echo "claude-safe: the user systemd manager is '${state:-unreachable}', not running; Claude would run" \
+            "outside claude.slice. Try again once 'systemctl --user is-system-running' says running." >&2
+        exit 1
+        ;;
+esac
+claude=$(type -P claude) || { echo "claude-safe: no claude on PATH" >&2; exit 1; }
+echo "claude-safe: user manager $state; starting Claude in claude.slice" >&2
+exec session-limits "$claude" "$@"
