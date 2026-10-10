@@ -23,6 +23,7 @@ import sys
 import tempfile
 import time
 from pathlib import Path
+from typing import NamedTuple, NewType
 
 HOOKS = Path(sys.argv[1] if len(sys.argv) > 1 else Path(__file__).resolve().parent.parent)
 GUARD = HOOKS / "heavy-run-guard.py"
@@ -1958,10 +1959,30 @@ LIMITS = [
     ("LIM45", "systemd-run --user --scope --property=Slice=claude.slice true", 0, "--property=Slice=claude.slice"),
     ("LIM46", "systemd-run --user --scope -pSlice=claude.slice true", 0, "-pSlice=claude.slice"),
     ("LIM47", "systemd-run --scope --user --slice=claude.slice true", 0, "a flag before --user takes no value"),
+    ("LIM48", "systemd-run --user --scope --slice-inherit --slice=bar true", 0,
+     "--slice-inherit places --slice=bar beneath the caller's slice (systemd-run(1))"),
+    ("LIM49", "systemd-run --user --scope --slice=bar --slice-inherit true", 0, "the same, the options the other way"),
 ]
 
 
-def limits_cases() -> list[tuple[str, int, int, str, str]]:
+# A case's id; prose a case names itself by, and what the hook printed; a hook's exit status as a case reads it
+# (2 a rule 5-6 refusal, 3 any other refusal), a process's status being any small integer.
+CaseId = NewType("CaseId", str)
+Prose = NewType("Prose", str)
+ExitStatus = NewType("ExitStatus", int)
+
+
+class LimitRow(NamedTuple):
+    """One limits case's result: its id, the status wanted and given, what it checks, and the hook's stderr."""
+
+    id: CaseId
+    want: ExitStatus
+    got: ExitStatus
+    what: Prose
+    err: Prose
+
+
+def limits_cases() -> list[LimitRow]:
     """Rules 5-6: the job count a self-sizing tool runs with, and the slice a systemd-run unit lands in.
 
     A refusal counts as 2 only when it is rule 5-6's; any other refusal reads as 3, so a case refused for
@@ -1969,16 +1990,18 @@ def limits_cases() -> list[tuple[str, int, int, str, str]]:
     """
     (S / "tidy.sh").write_text("run-clang-tidy-23 -quiet -p build src\n")
     (S / "tidy_bound.sh").write_text("run-clang-tidy-23 -j 4 -quiet -p build src\n")
-    rows = []
+    rows: list[LimitRow] = []
     for cid, cmd, want, what in LIMITS:
         rc, err = hook(GUARD, bash(cmd, Q))
-        rows.append((cid, want, 2 if rc == 2 and "rules 5-6" in err else 3 if rc == 2 else rc, what, err))
+        got = 2 if rc == 2 and "rules 5-6" in err else 3 if rc == 2 else rc
+        rows.append(LimitRow(CaseId(cid), ExitStatus(want), ExitStatus(got), Prose(what), Prose(err)))
     HOOK_ENV["PYTHON_CPU_COUNT"] = "5"  # the session's own environment, which every call inherits
     try:
         rc, err = hook(GUARD, bash("run-clang-tidy-23 -p build src", Q))
     finally:
         del HOOK_ENV["PYTHON_CPU_COUNT"]
-    rows.append(("LIM26", 0, rc, "PYTHON_CPU_COUNT=5 in the session's environment", err))
+    rows.append(LimitRow(CaseId("LIM26"), ExitStatus(0), ExitStatus(rc), Prose("PYTHON_CPU_COUNT=5 in the session's environment"),
+                         Prose(err)))
     return rows
 
 

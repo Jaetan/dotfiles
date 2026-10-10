@@ -42,6 +42,7 @@ import shlex
 import stat
 from pathlib import Path
 from dataclasses import dataclass, field
+from typing import Literal, NamedTuple, NewType
 
 import _python
 import _shell
@@ -102,6 +103,26 @@ def resolve(path: str | None, cwd: str | None) -> str | None:
 # ─── wrappers ─────────────────────────────────────────────────────────────────
 
 
+# Whose a script is: the call's own, whose every command is held to the rules as if typed, or the
+# repository's, read for its writes.
+type ScriptOrigin = Literal["script", "repo-script"]
+# A script's path and its text as the reader meets them: any path and any text, so the names say what a value is
+# without narrowing it.
+ScriptPath = NewType("ScriptPath", str)
+ScriptText = NewType("ScriptText", str)
+# Where a systemd-run starts its unit, as its own options say: claude.slice or one beneath it, the caller's slice
+# (--slice-inherit), none (so app.slice), or any other slice.
+type SliceKind = Literal["claude", "inherit", "none", "other"]
+_CLAUDE_SLICE = re.compile(r"claude(?:-[A-Za-z0-9_.:-]+)?\.slice")
+
+
+class UnitPlacement(NamedTuple):
+    """A unit systemd-run starts: in the user manager or the system's, and in which slice."""
+
+    user: bool
+    slice: SliceKind
+
+
 @dataclass
 class Core:
     """A command with its wrappers peeled off."""
@@ -119,7 +140,7 @@ class Core:
     no_exec: bool = False  # bash -n: reads, runs nothing
     params: list[str] | None = None  # $0, $1 ... of the text or script it runs, where it names them
     cpu_sets: list[tuple[frozenset[int] | None, str]] = field(default_factory=list)  # taskset/numactl it runs under
-    units: list[list[str]] = field(default_factory=list)  # each systemd-run's own options, outermost first
+    units: list[UnitPlacement] = field(default_factory=list)  # each systemd-run's unit, outermost first
 
 
 _CPU_CAP = 64  # CPUs past this are recorded as one: they are outside 0-19 either way
@@ -375,7 +396,28 @@ def unwrap(argv: list[str], cpus: frozenset[int] | None = None) -> Core:
             return core
         if name == "systemd-run":
             j = _skip_options(argv, i + 1, _WRAPPER_VALUES["systemd-run"])
-            core.units.append(argv[i + 1 : j])
+            # Where the unit lands, from its own options, each value read as its option's own.
+            user, inherit, placed, k = False, False, None, i + 1
+            while k < j:
+                o = argv[k]
+                value = argv[k + 1] if o in _WRAPPER_VALUES["systemd-run"] and k + 1 < j else None
+                if o == "--user":
+                    user = True
+                elif o == "--slice-inherit":
+                    inherit = True
+                elif o == "--slice" and value is not None:
+                    placed = value
+                elif o.startswith("--slice="):
+                    placed = o.split("=", 1)[1]
+                elif o in ("-p", "--property") and value is not None and value.startswith("Slice="):
+                    placed = value.split("=", 1)[1]
+                elif o.startswith(("--property=Slice=", "-pSlice=")):
+                    placed = o.split("Slice=", 1)[1]
+                k += 2 if value is not None else 1
+            # --slice-inherit puts the unit beneath the caller's slice, with or without --slice (systemd-run(1)).
+            kind: SliceKind = ("inherit" if inherit else "none" if placed is None
+                               else "claude" if _CLAUDE_SLICE.fullmatch(placed) else "other")
+            core.units.append(UnitPlacement(user, kind))
             if "--scope" not in argv[i + 1 : j]:
                 core.detached = "systemd-run"
             i = j
@@ -633,10 +675,10 @@ def _heavy_script(path: str, cwd: str | None = None) -> bool:
     return False
 
 
-def _script_origin(path: str | None, written: bool, files: dict[str, str | None]) -> str:
+def _script_origin(path: ScriptPath | None, written: bool, body: ScriptText | None) -> ScriptOrigin:
     """Whose script a run reads: the repository's when it lies in a tree and the call did not write it, or when
-    the call wrote it with the exact text of one that does (a copy runs what its source runs); otherwise the
-    call's own, whose every command is held to the rules as if typed."""
+    the call wrote it, as ``body``, with the exact text of one that does (a copy runs what its source runs);
+    otherwise the call's own, whose every command is held to the rules as if typed."""
     if not path:
         return "script"
     if not written:
@@ -645,9 +687,8 @@ def _script_origin(path: str | None, written: bool, files: dict[str, str | None]
     for _ in range(8):  # a copy of a copy is still its first source
         if src not in _ORIGIN:
             break
-        src = _ORIGIN[src]
-    body = files.get(path)
-    same = type(body) is str and _shell.tree_of(src) is not None and body == read_regular(src)
+        src = ScriptPath(_ORIGIN[src])
+    same = body is not None and _shell.tree_of(src) is not None and body == read_regular(src)
     return "repo-script" if same else "script"
 
 
@@ -1229,7 +1270,9 @@ def _expand(out: list[Inv], text: str, cwd: str | None, *, cpus: frozenset[int] 
             if unread:
                 inv.unreadable = unread
             if source is not None:
-                inv.code_origin = _script_origin(source, source in files, files)
+                wrote = files.get(source)
+                inv.code_origin = _script_origin(ScriptPath(source), source in files,
+                                                 ScriptText(wrote) if type(wrote) is str else None)
                 if isinstance(inv.code[1], Approx):  # read for what it starts; what it writes is out of sight
                     inv.unreadable = inv.unreadable or f"{source}, which the call rewrote first"
             if inv.code and inv.code[0] == "python" and inv.heavy is None:
@@ -1288,12 +1331,18 @@ def _expand(out: list[Inv], text: str, cwd: str | None, *, cpus: frozenset[int] 
         if file_lang not in ("sh", "fish"):
             if inv.code is None:
                 inv.code, inv.code_args = (file_lang, body), _operands(core.argv[1:])
-                inv.code_origin = _script_origin(path or script_file, written, files)
+                spot = path or script_file
+                wrote = files.get(spot) if spot else None
+                inv.code_origin = _script_origin(ScriptPath(spot) if spot else None, written,
+                                                 ScriptText(wrote) if type(wrote) is str else None)
                 if file_lang == "python" and inv.heavy is None:
                     inv.heavy = heavy_in_code(body, cmd.cwd, depth)
             continue
         inv.carrier = True
-        child_origin = _script_origin(path or script_file, written, files)
+        spot = path or script_file
+        wrote = files.get(spot) if spot else None
+        child_origin = _script_origin(ScriptPath(spot) if spot else None, written,
+                                      ScriptText(wrote) if type(wrote) is str else None)
         if origin == "repo-script":
             child_origin = "repo-script"
         sourced = prog(core.argv[0]) in ("source", ".")
