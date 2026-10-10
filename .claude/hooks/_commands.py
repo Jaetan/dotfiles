@@ -119,6 +119,7 @@ class Core:
     no_exec: bool = False  # bash -n: reads, runs nothing
     params: list[str] | None = None  # $0, $1 ... of the text or script it runs, where it names them
     cpu_sets: list[tuple[frozenset[int] | None, str]] = field(default_factory=list)  # taskset/numactl it runs under
+    units: list[list[str]] = field(default_factory=list)  # each systemd-run's own options, outermost first
 
 
 _CPU_CAP = 64  # CPUs past this are recorded as one: they are outside 0-19 either way
@@ -374,6 +375,7 @@ def unwrap(argv: list[str], cpus: frozenset[int] | None = None) -> Core:
             return core
         if name == "systemd-run":
             j = _skip_options(argv, i + 1, _WRAPPER_VALUES["systemd-run"])
+            core.units.append(argv[i + 1 : j])
             if "--scope" not in argv[i + 1 : j]:
                 core.detached = "systemd-run"
             i = j

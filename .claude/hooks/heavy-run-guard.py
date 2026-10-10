@@ -10,6 +10,11 @@ THE RULES (user, 2026-09-25):
   4. No file in a tree is edited while a heavy run reads that tree. Safe beats
      fast. The dribble, `.commands-to-run.sh`, is the one file the user said
      may be written meanwhile.
+  5. A tool that sizes its job count from the machine's CPUs runs with a
+     bound named within 1-20 (user, 2026-10-10): `taskset` sets where threads
+     run, not how many a tool starts.
+  6. A unit systemd-run starts stays in the session's claude.slice, under its
+     memory and CPU caps (user, 2026-10-10).
 
 WHY A HOOK AND NOT A NOTE. Rules 1 and 2 were a memory and were broken anyway:
 the probe store was appended to a batch of quick lint commands, so the call
@@ -60,6 +65,20 @@ own, where it can be read. The foreground passes as well as
 run_in_background: the harness moves a call that outlives its timeout to the
 background and notifies at its end, and kills nothing. Monitor watches work;
 it is refused a heavy command.
+
+RULES 5-6, for every command, heavy or not, in the call, in any script it
+runs and in any command its Python starts. Rule 5: run-clang-tidy (any
+version, by name or through a Python interpreter) sizes itself from
+multiprocessing.cpu_count(), which ignores affinity (24 under `taskset -c
+0-19`); it needs `-j N` (`-j N`, `-jN` or `-j=N`, the last one counting) or,
+with no `-j` or `-j 0`, `PYTHON_CPU_COUNT=N` in the environment the call gives
+it, N a literal within 1-20. On 2026-10-10 four of them at 24 jobs each held
+claude.slice at its memory cap in reclaim for 70 minutes, with nothing
+killed. Rule 6: each systemd-run a command runs under names the user manager
+(`--user`) and a slice: `--slice`, `-p`/`--property Slice=`, or
+`--slice-inherit`, which from a call's scope is claude.slice. The slice is
+claude.slice or one beneath it (`claude-<name>.slice`); an option's value is
+read as that option's own. A bare one lands in app.slice, outside every cap.
 
 RULE 4. Every path a call would write is resolved from the command's own
 words (redirections; cp, mv (both ends), install, ln, rsync; rm, touch,
@@ -910,6 +929,106 @@ CPU_ADVICE = """BLOCKED (rule 3): a CPU set that reaches the user's CPUs.
 CPUs 20-23 stay free for the user. Name CPUs within 0-19 (`taskset -c 0-19`)."""
 
 
+CLAUDE_SLICE = re.compile(r"claude(?:-[A-Za-z0-9_.:-]+)?\.slice")
+SELF_SIZING = re.compile(r"run-clang-tidy(?:\.py)?")  # C.prog has taken off a version: run-clang-tidy-23
+JOB_BOUND = re.compile(r"[1-9]|1\d|20")  # a job count within the session's 20 CPUs
+
+
+def _unit_placement(opts: list[str]) -> tuple[bool, str | None]:
+    """Whether a systemd-run's own options name the user manager, and the slice they put its unit in.
+
+    The slice is `--slice` (or `-p`/`--property Slice=`), "inherit" for `--slice-inherit`, None for none; an
+    option's value is read as that option's, never as an option of its own.
+    """
+    user, placed = False, None
+    with_value = C._WRAPPER_VALUES["systemd-run"]
+    k = 0
+    while k < len(opts):
+        o = opts[k]
+        value = opts[k + 1] if o in with_value and k + 1 < len(opts) else None
+        if o == "--user":
+            user = True
+        elif o == "--slice-inherit":
+            placed = "inherit"
+        elif o == "--slice" and value is not None:
+            placed = value
+        elif o.startswith("--slice="):
+            placed = o.split("=", 1)[1]
+        elif o in ("-p", "--property") and value is not None and value.startswith("Slice="):
+            placed = value.split("=", 1)[1]
+        elif o.startswith(("--property=Slice=", "-pSlice=")):
+            placed = o.split("Slice=", 1)[1]
+        k += 2 if value is not None else 1
+    return user, placed
+
+
+def _job_count(args: list[str]) -> str | None:
+    """The value of the last `-j` among a self-sizing tool's arguments (`-j N`, `-jN`, `-j=N`), None for none."""
+    count = None
+    for k, a in enumerate(args):
+        if a == "-j":
+            count = args[k + 1] if k + 1 < len(args) else ""
+        elif a.startswith("-j="):
+            count = a[3:]
+        elif a.startswith("-j"):
+            count = a[2:]
+    return count
+
+
+def _env_value(inv: C.Inv, name: str) -> str | None:
+    """The value `name` has in the environment of the command `inv` starts, as far as the call shows it."""
+    env = {**inv.cmd.env, **inv.cmd.assigns}
+    for w in inv.cmd.argv[: max(0, len(inv.cmd.argv) - len(inv.core.argv))]:  # env NAME=VALUE among its wrappers
+        if w.startswith(name + "="):
+            env[name] = w.split("=", 1)[1]
+    value = env.get(name, os.environ.get(name))
+    return value if isinstance(value, str) else None
+
+
+def limit_problems(invs: list[C.Inv]) -> list[str]:
+    """Rules 5 and 6 over every command the call runs, heavy or not, in any script it reads or Python it starts.
+
+    Rule 5: a tool that sizes its job count from the machine's CPUs runs with a bound named within 1-20.
+    Rule 6: a unit systemd-run starts is placed in the user manager's claude.slice, the session's own.
+    """
+    problems = []
+    for inv in invs:
+        where = "" if inv.origin in ("call", "script") else " (in a repository script this call runs)"
+        argv = inv.core.argv
+        tool = ((C.prog(argv[0]), argv[1:]) if argv and SELF_SIZING.fullmatch(C.prog(argv[0])) else
+                (C.prog(argv[1]), argv[2:]) if len(argv) > 1 and C.is_python(argv[0])
+                and SELF_SIZING.fullmatch(C.prog(argv[1])) else None)  # the script through an interpreter
+        if tool is not None:
+            name, tool_args = tool
+            count = _job_count(tool_args)
+            bound = _env_value(inv, "PYTHON_CPU_COUNT")
+            # `-j 0` asks for cpu_count(), which PYTHON_CPU_COUNT sets, as it does for no -j at all.
+            if not (count is not None and JOB_BOUND.fullmatch(count)
+                    or count in (None, "0") and bound is not None and JOB_BOUND.fullmatch(bound)):
+                said = (f"`-j {count}`" if count is not None else
+                        f"`PYTHON_CPU_COUNT={bound}`" if bound is not None else "no job count")
+                problems.append(f"`{name}` runs with {said}{where}: name `-j N` or `PYTHON_CPU_COUNT=N`, "
+                                "N within 1-20")
+        for opts in inv.core.units:
+            user, placed = _unit_placement(opts)
+            if not user or placed is None or placed != "inherit" and not CLAUDE_SLICE.fullmatch(placed):
+                problems.append(f"`systemd-run {' '.join(opts)[:60]}`{where} starts a unit "
+                                + ("in the system manager" if not user else
+                                   "with no slice, so in app.slice" if placed is None else
+                                   f"in `{placed[:40]}`") + ", outside claude.slice and its caps")
+    return problems
+
+
+LIMIT_ADVICE = """BLOCKED (rules 5-6): a job count or a unit the session's limits do not hold.
+
+{problems}
+
+`taskset` and claude.slice's AllowedCPUs bound where threads run, not how many a tool starts: run-clang-tidy
+sizes itself from multiprocessing.cpu_count(), 24 whatever the affinity. Give it `-j N` or `PYTHON_CPU_COUNT=N`,
+N within 1-20 and shared with what runs beside it. A unit systemd-run starts stays in the session's slice:
+`systemd-run --user --slice=claude.slice ...` (or `--slice-inherit`); a bare one lands outside every cap."""
+
+
 SHAPE_ADVICE = """BLOCKED: a heavy command in a shape the user's rules refuse.
 
 {problems}
@@ -1231,6 +1350,10 @@ def before(event: dict) -> int:
     problems = cpu_problems(invs + started)
     if problems:
         print(CPU_ADVICE.format(problems=_lines(problems, "  * ")), file=sys.stderr)
+        return 2
+    problems = limit_problems(invs + started)
+    if problems:
+        print(LIMIT_ADVICE.format(problems=_lines(problems, "  * ")), file=sys.stderr)
         return 2
     problems = shape_problems(invs, tool) + started_problems(started)
     if problems:

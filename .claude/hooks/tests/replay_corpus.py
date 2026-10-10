@@ -11,6 +11,7 @@ the order of the calls. The corpus (every distinct Bash call in ~/.claude/projec
 `extract`; run `run` before and after a change to the hooks, then `diff`.
 """
 import concurrent.futures as cf
+from collections import Counter
 import glob
 import json
 import os
@@ -84,7 +85,7 @@ def run(corpus_path: Path, label: str, hooks: str) -> None:
     mem = [r for r in results if "MemoryError" in r["err"]]
     tout = [r for r in results if r["rc"] is None]
     print(f"{len(results)} answers; MemoryError {len(mem)}; timeout {len(tout)}; "
-          f"rc counts {dict(sorted({str(r['rc']): sum(1 for q in results if q['rc'] == r['rc']) for r in results}.items()))}")
+          f"rc counts {dict(sorted(Counter(str(r['rc']) for r in results).items()))}")
     for r in mem + tout:
         print(f"  {r['hook']} #{r['i']}: {corpus[r['i']]['command'][:150]!r}")
 

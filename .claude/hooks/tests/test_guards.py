@@ -1906,6 +1906,82 @@ R6_LOOPS = [
 ]
 
 
+LIMITS = [
+    ("LIM1", "run-clang-tidy-23 -quiet -p build cpp/src/", 2, "run-clang-tidy with no job count"),
+    ("LIM2", "run-clang-tidy-23 -j 5 -quiet -p build cpp/src/", 0, "run-clang-tidy with -j 5"),
+    ("LIM3", "run-clang-tidy-23 -j5 -p build src", 0, "run-clang-tidy with -j5"),
+    ("LIM4", "run-clang-tidy-23 -j=5 -p build src", 0, "run-clang-tidy with -j=5"),
+    ("LIM5", "run-clang-tidy-23 -j 0 -p build src", 2, "run-clang-tidy with -j 0, which is every CPU"),
+    ("LIM6", "run-clang-tidy-23 -j 24 -p build src", 2, "run-clang-tidy with -j 24, past 20"),
+    ("LIM7", "PYTHON_CPU_COUNT=5 run-clang-tidy-23 -p build src", 0, "run-clang-tidy under PYTHON_CPU_COUNT=5"),
+    ("LIM8", "env PYTHON_CPU_COUNT=5 run-clang-tidy-23 -p build src", 0, "PYTHON_CPU_COUNT=5 through env"),
+    ("LIM9", "export PYTHON_CPU_COUNT=5; run-clang-tidy-23 -p build src", 0, "PYTHON_CPU_COUNT=5 exported first"),
+    ("LIM10", "PYTHON_CPU_COUNT=5 run-clang-tidy-23 -j 0 -p build src", 0,
+     "-j 0 reads cpu_count, which PYTHON_CPU_COUNT=5 bounds"),
+    ("LIM11", "PYTHON_CPU_COUNT=0 run-clang-tidy-23 -p build src", 2, "PYTHON_CPU_COUNT=0 bounds nothing"),
+    ("LIM12", "python3 /usr/lib/llvm-23/bin/run-clang-tidy -p build src", 2, "run-clang-tidy through python3"),
+    ("LIM13", "out=$(cd cpp && run-clang-tidy-23 -quiet -p build src 2>&1); echo \"$out\" | tail -1", 2,
+     "run-clang-tidy in a command substitution"),
+    ("LIM14", "bash -c 'run-clang-tidy-23 -p build src'", 2, "run-clang-tidy in bash -c text"),
+    ("LIM15", f"bash {S}/tidy.sh", 2, "run-clang-tidy in a script the call runs"),
+    ("LIM16", f"bash {S}/tidy_bound.sh", 0, "run-clang-tidy -j 4 in a script the call runs"),
+    ("LIM17", "N=$(nproc); run-clang-tidy-23 -j $N -p build src", 2, "a job count read only when it runs"),
+    ("LIM18", "clang-tidy-23 -p build src/a.cpp", 0, "clang-tidy on one file sizes nothing"),
+    ("LIM19", "git grep -n run-clang-tidy -- tools", 0, "a search naming run-clang-tidy runs nothing"),
+    ("LIM20", "python3 -c \"import subprocess; subprocess.run(['run-clang-tidy-23', '-p', 'build', 'src'])\"", 2,
+     "run-clang-tidy started from Python"),
+    ("LIM21", "python3 /opt/llvm/share/clang/run-clang-tidy.py -p build src", 2, "run-clang-tidy.py through python3"),
+    ("LIM22", "run-clang-tidy-23 -j 20 -p build src", 0, "-j 20, the session's whole share"),
+    ("LIM23", "run-clang-tidy-23 -j 21 -p build src", 2, "-j 21, one past it"),
+    ("LIM24", "run-clang-tidy-23 -j 15 -p build src", 0, "-j 15"),
+    ("LIM25", "PYTHON_CPU_COUNT=5 run-clang-tidy-23 -jx -p build src", 2, "-jx names no count, whatever the bound"),
+    ("LIM27", "PYTHON_CPU_COUNT=5 run-clang-tidy-23 -j 24 -p build src", 2, "-j 24 wins over PYTHON_CPU_COUNT=5"),
+    ("LIM28", "python3 -c 'print(1)'", 0, "a Python call that is not run-clang-tidy"),
+    ("LIM30", "systemd-run --user --scope -p MemoryMax=1G true", 2, "a user scope with no slice: app.slice"),
+    ("LIM31", "systemd-run --user --scope --slice=claude.slice -p MemoryMax=1G true", 0, "--slice=claude.slice"),
+    ("LIM32", "systemd-run --user --scope --slice claude.slice true", 0, "--slice claude.slice"),
+    ("LIM33", "systemd-run --user --scope -p Slice=claude.slice true", 0, "-p Slice=claude.slice"),
+    ("LIM34", "systemd-run --user --scope --slice-inherit true", 0, "--slice-inherit from a call's scope"),
+    ("LIM35", "systemd-run --scope --slice=claude.slice true", 2, "the system manager has no claude.slice"),
+    ("LIM36", "systemd-run --user --slice=app.slice true", 2, "a service placed in app.slice"),
+    ("LIM37", "systemd-run --user --scope --slice=claude-tests.slice true", 0, "a slice beneath claude.slice"),
+    ("LIM38", "systemd-run --user --scope --slice=claudette.slice true", 2, "a slice merely named like it"),
+    ("LIM39", "systemd-run --user --scope --description --slice=claude.slice true", 2,
+     "--slice=claude.slice as --description's value places nothing"),
+    ("LIM40", "taskset -c 0-19 systemd-run --user --scope true", 2, "systemd-run under another wrapper"),
+    ("LIM41", "SL=claude.slice; systemd-run --user --scope --slice=$SL true", 0, "a slice the call assigns first"),
+    ("LIM42", f"PYTHON_CPU_COUNT=5 systemd-run --user --scope -q -p MemoryMax=24G -p MemorySwapMax=0 taskset -c 0-19 "
+     f"./probes/run_all.sh > {S}/store.log 2>&1", 2, "the store in a scope of its own, outside claude.slice"),
+    ("LIM43", f"PYTHON_CPU_COUNT=5 systemd-run --user --scope --slice=claude.slice -q taskset -c 0-19 "
+     f"./probes/run_all.sh > {S}/store.log 2>&1", 0, "the store in a scope under claude.slice"),
+    ("LIM44", "systemd-run --user --scope --slice=claude.slicex true", 2, "a name that only begins as claude.slice"),
+    ("LIM45", "systemd-run --user --scope --property=Slice=claude.slice true", 0, "--property=Slice=claude.slice"),
+    ("LIM46", "systemd-run --user --scope -pSlice=claude.slice true", 0, "-pSlice=claude.slice"),
+    ("LIM47", "systemd-run --scope --user --slice=claude.slice true", 0, "a flag before --user takes no value"),
+]
+
+
+def limits_cases() -> list[tuple[str, int, int, str, str]]:
+    """Rules 5-6: the job count a self-sizing tool runs with, and the slice a systemd-run unit lands in.
+
+    A refusal counts as 2 only when it is rule 5-6's; any other refusal reads as 3, so a case refused for
+    its shape cannot pass for the limit's.
+    """
+    (S / "tidy.sh").write_text("run-clang-tidy-23 -quiet -p build src\n")
+    (S / "tidy_bound.sh").write_text("run-clang-tidy-23 -j 4 -quiet -p build src\n")
+    rows = []
+    for cid, cmd, want, what in LIMITS:
+        rc, err = hook(GUARD, bash(cmd, Q))
+        rows.append((cid, want, 2 if rc == 2 and "rules 5-6" in err else 3 if rc == 2 else rc, what, err))
+    HOOK_ENV["PYTHON_CPU_COUNT"] = "5"  # the session's own environment, which every call inherits
+    try:
+        rc, err = hook(GUARD, bash("run-clang-tidy-23 -p build src", Q))
+    finally:
+        del HOOK_ENV["PYTHON_CPU_COUNT"]
+    rows.append(("LIM26", 0, rc, "PYTHON_CPU_COUNT=5 in the session's environment", err))
+    return rows
+
+
 def sw_case() -> tuple[str, int, int, str, str]:
     live = start(["cargo", "test"], T)
     try:
@@ -2237,6 +2313,7 @@ def run_cases() -> list[tuple[str, int, int, str, str]]:
     rows += py5_cases()
     rows += small5_cases()
     rows += round6_cases()
+    rows += limits_cases()
     rows.append(sw_case())
     return rows
 
