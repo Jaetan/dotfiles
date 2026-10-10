@@ -5,8 +5,14 @@ Documentation=file://%h/.local/bin/session-limits
 # One budget for a session and its calls: session-limits starts Claude Code in a scope here, and each call's
 # scope is placed here too. A scope is a leaf, so a call's own scope under another slice would escape these caps.
 # CPUs 20-23 belong to the user; the kernel holds every process here to 0-19 (the user manager is delegated cpuset).
-# Of the VM's 31 GiB and 8 GiB swap: room for the system beside the session, and a runaway killed rather than thrashing.
+# Of the VM's 31 GiB and 8 GiB swap: room for the system beside the session. The cap kills a runaway that holds
+# anonymous memory; a working set of file pages (many compilers at once) is instead reclaimed and faulted back at
+# the cap, with nothing killed, so systemd-oomd kills the descendant reclaiming most once the slice's memory
+# pressure stays past the limit for the duration. session-limits marks the session's own scope to be spared.
 [Slice]
 AllowedCPUs=0-19
 MemoryMax=24G
 MemorySwapMax=2G
+ManagedOOMMemoryPressure=kill
+ManagedOOMMemoryPressureLimit=50%
+ManagedOOMMemoryPressureDurationSec=30s

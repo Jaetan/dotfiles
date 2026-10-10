@@ -7,8 +7,8 @@
 # The caps live on the slice (~/.config/systemd/user/claude.slice), not on this scope, because each call Claude Code
 # runs gets a scope of its own under the same slice and a scope is a leaf. The kernel enforces AllowedCPUs only when
 # the user manager is delegated the cpuset controller. OOMPolicy=continue kills only the process that exceeds the cap,
-# not the whole session. Without the slice's caps in force this refuses to start: an absent slice would be created
-# empty, with no cap at all.
+# not the whole session, and ManagedOOMPreference=avoid has systemd-oomd kill a call's scope before the session's.
+# Without the slice's caps in force this refuses to start: an absent slice would be created empty, with no cap at all.
 set -euo pipefail
 
 slice=claude.slice
@@ -35,5 +35,5 @@ if [ "$(systemctl --user show -p MemoryMax --value "$slice")" = infinity ]; then
     exit 1
 fi
 
-exec systemd-run --user --scope --quiet --collect --slice="$slice" -p OOMPolicy=continue \
+exec systemd-run --user --scope --quiet --collect --slice="$slice" -p OOMPolicy=continue -p ManagedOOMPreference=avoid \
     -- taskset -c "$cpus" "$@"
