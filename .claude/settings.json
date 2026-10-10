@@ -109,6 +109,15 @@
             "command": "/home/nicolas/.claude/hooks/workflow-watch-guard.py"
           }
         ]
+      },
+      {
+        "matcher": "Bash|Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/home/nicolas/.claude/hooks/merge-dribble-guard.py"
+          }
+        ]
       }
     ],
     "PostToolUseFailure": [
@@ -153,7 +162,8 @@
   "enabledPlugins": {
     "typescript-lsp@claude-plugins-official": true,
     "rust-analyzer-lsp@claude-plugins-official": true,
-    "caveman@caveman": true
+    "caveman@caveman": true,
+    "cc-plugin-you-should-know@builtin": true
   },
   "extraKnownMarketplaces": {
     "caveman": {
