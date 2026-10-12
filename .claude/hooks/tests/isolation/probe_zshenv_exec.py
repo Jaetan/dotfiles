@@ -1,4 +1,4 @@
-#!/home/nicolas/.local/bin/python3.14
+#!/home/nicolas/.local/bin/python3.15
 """Probe of wrapping each Bash call from zsh's startup file instead of rewriting its text.
 
 usage: probe_zshenv_exec.py [MODEL]   (default claude-haiku-4-5-20251001; each stage is one short headless session)

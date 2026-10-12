@@ -1,4 +1,4 @@
-#!/home/nicolas/.local/bin/python3.14
+#!/home/nicolas/.local/bin/python3.15
 """Probes of the Claude Code hook contract the per-call wrapper rests on, which the hooks reference leaves unsaid.
 
 usage: probe_hook_contract.py [MODEL]   (default claude-haiku-4-5-20251001; each case is one short headless session)

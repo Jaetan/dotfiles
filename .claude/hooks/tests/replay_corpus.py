@@ -1,4 +1,4 @@
-#!/home/nicolas/.local/bin/python3.14
+#!/home/nicolas/.local/bin/python3.15
 """Replay real Bash calls from past session transcripts through both live hooks; write every answer to a JSON file.
 
 usage: replay_corpus.py extract <corpus.json>

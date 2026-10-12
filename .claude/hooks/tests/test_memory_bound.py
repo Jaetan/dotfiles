@@ -1,4 +1,4 @@
-#!/home/nicolas/.local/bin/python3.14
+#!/home/nicolas/.local/bin/python3.15
 """The guard hooks' memory bound: no call makes a hook take the host's memory.
 
 usage: test_memory_bound.py [HOOKS_DIR]    (default: the hooks directory, parent of this tests/ directory)

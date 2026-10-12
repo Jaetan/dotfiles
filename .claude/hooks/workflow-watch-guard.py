@@ -1,4 +1,4 @@
-#!/home/nicolas/.local/bin/python3.14
+#!/home/nicolas/.local/bin/python3.15
 """Hold every workflow run of the main thread to a live token watch, from launch to end.
 
 THE RULE (user, 2026-10-03, ~/.claude/CLAUDE.md): every workflow is watched from its

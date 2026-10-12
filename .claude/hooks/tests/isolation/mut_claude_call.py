@@ -1,4 +1,4 @@
-#!/home/nicolas/.local/bin/python3.14
+#!/home/nicolas/.local/bin/python3.15
 """Mutation run over claude-call and its zshenv line: each mutant must fail at least one case of the suite.
 
 usage: mut_claude_call.py [ID...]   (on CPUs 0-19, under the soft address-space cap the suite asks for)

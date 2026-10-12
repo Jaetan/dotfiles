@@ -1,4 +1,4 @@
-#!/home/nicolas/.local/bin/python3.14
+#!/home/nicolas/.local/bin/python3.15
 """Watch a running workflow's token use and say when it passes a ceiling.
 
 Usage: workflow-token-watch TRANSCRIPT_DIR [LIMIT] [SECONDS]

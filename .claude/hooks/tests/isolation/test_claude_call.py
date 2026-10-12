@@ -1,4 +1,4 @@
-#!/home/nicolas/.local/bin/python3.14
+#!/home/nicolas/.local/bin/python3.15
 """Suite for claude-call and its zshenv line, driven as the Bash tool drives them.
 
 usage: test_claude_call.py [NAME...]   (names select cases)

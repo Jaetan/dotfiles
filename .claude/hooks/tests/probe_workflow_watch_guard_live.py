@@ -1,4 +1,4 @@
-#!/home/nicolas/.local/bin/python3.14
+#!/home/nicolas/.local/bin/python3.15
 """Fire workflow-watch-guard.py through Claude Code itself, beside the kit's other hooks.
 
 usage: probe_workflow_watch_guard_live.py [MODEL]   (default claude-sonnet-5-5; two short headless sessions)
