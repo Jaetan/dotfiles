@@ -1,4 +1,4 @@
-#!/home/nicolas/.local/bin/python3.15
+#!/home/nicolas/.local/bin/python3.14
 """Probe of claude-call as installed, through the real Claude Code harness.
 
 usage: probe_claude_call_harness.py [MODEL]   (default claude-haiku-4-5-20251001; three short headless sessions)

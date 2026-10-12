@@ -1,4 +1,4 @@
-#!/home/nicolas/.local/bin/python3.15
+#!/home/nicolas/.local/bin/python3.14
 """Record the hook events and transcript lines a workflow launch, its watch and its stop produce.
 
 usage: probe_workflow_hook_events.py [MODEL]   (default claude-sonnet-5-5; two short headless sessions)

@@ -1,4 +1,4 @@
-#!/home/nicolas/.local/bin/python3.15
+#!/home/nicolas/.local/bin/python3.14
 """Hold a merge dribble to pull requests GitHub would merge now.
 
 THE RULE (user, 2026-10-10): a dribble that merges a pull request goes to the user only when the pull request is

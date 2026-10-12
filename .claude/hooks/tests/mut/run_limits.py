@@ -1,4 +1,4 @@
-#!/home/nicolas/.local/bin/python3.15
+#!/home/nicolas/.local/bin/python3.14
 """Run only test_guards.limits_cases() (rules 5-6) against HOOKS_DIR, the suite run_muts.py gives a limits mutant.
 
 Usage: [MUT_SUITE=tests/mut/run_limits.py] run_limits.py HOOKS_DIR

@@ -1,4 +1,4 @@
-#!/home/nicolas/.local/bin/python3.15
+#!/home/nicolas/.local/bin/python3.14
 """Hold every test the session reads or writes to the rule that it is deterministic.
 
 THE RULE (user, 2026-10-02): the tests run on machines of very different power,

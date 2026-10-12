@@ -1,4 +1,4 @@
-#!/home/nicolas/.local/bin/python3.15
+#!/home/nicolas/.local/bin/python3.14
 """Block shell polling loops, and jobs nothing will stop, before they run.
 
 WHY A HOOK AND NOT A NOTE. The rule against these loops has been written down

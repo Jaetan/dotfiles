@@ -1,4 +1,4 @@
-#!/home/nicolas/.local/bin/python3.15 -IS
+#!/home/nicolas/.local/bin/python3.14 -IS
 """claude-call: run one Claude Code Bash call in a systemd scope, a log, and a view of its repository.
 
     claude-call LINE      LINE is the tool's own `zsh -c` string, exec'd here from ~/.zshenv

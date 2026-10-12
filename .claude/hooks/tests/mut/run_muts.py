@@ -1,4 +1,4 @@
-#!/home/nicolas/.local/bin/python3.15
+#!/home/nicolas/.local/bin/python3.14
 """Apply each mutant to a copy of the hooks and report which cases of the two suites die.
 
 Usage: [MUT_SUITE=SUITE] run_muts.py MUTS.json HOOKS_DIR [WORKERS]

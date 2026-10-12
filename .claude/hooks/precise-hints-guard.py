@@ -1,4 +1,4 @@
-#!/home/nicolas/.local/bin/python3.15
+#!/home/nicolas/.local/bin/python3.14
 """Hold a Python type hint an edit writes to the repository's own gate, before it lands or at once after.
 
 THE RULE (user, 2026-09-26, widened 2026-09-29): a hint is universally

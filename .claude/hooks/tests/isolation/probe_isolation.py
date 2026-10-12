@@ -1,4 +1,4 @@
-#!/home/nicolas/.local/bin/python3.15
+#!/home/nicolas/.local/bin/python3.14
 """Probes for the isolation design: bind cost, git inside a snapshot, and the per-call wrapper's three properties.
 
 usage: probe_isolation.py [REPO]   (REPO: a git tree read, never written, for the bind measurement; default aletheia)

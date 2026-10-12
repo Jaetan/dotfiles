@@ -1,4 +1,4 @@
-#!/home/nicolas/.local/bin/python3.15
+#!/home/nicolas/.local/bin/python3.14
 """Tally of what falls through claude-call: the collector task's counts, and the evidence for deciding which guard
 rules the runtime now holds.
 

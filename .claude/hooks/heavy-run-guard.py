@@ -1,4 +1,4 @@
-#!/home/nicolas/.local/bin/python3.15
+#!/home/nicolas/.local/bin/python3.14
 """Enforce the user's rules for heavy runs, before a tool call runs and after it.
 
 THE RULES (user, 2026-09-25):

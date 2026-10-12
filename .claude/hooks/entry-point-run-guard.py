@@ -1,4 +1,4 @@
-#!/home/nicolas/.local/bin/python3.15
+#!/home/nicolas/.local/bin/python3.14
 """Hold a commit dribble to a run of every entry point whose change it commits.
 
 THE RULE (user, 2026-10-02): what an entry point prints (a summary, a refusal,
