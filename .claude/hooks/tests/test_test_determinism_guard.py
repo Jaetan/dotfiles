@@ -22,6 +22,7 @@ Exit 0 when every case agrees with its expectation.
 
 from __future__ import annotations
 
+import ast
 import json
 import os
 import shutil
@@ -33,7 +34,8 @@ from typing import Literal, NamedTuple, NewType, TypedDict
 
 # A path as an event spells it; a shell command line; text a file holds; an
 # event as raw text, for the one that cannot be read; prose a case expects or
-# names itself by; a case's name; a count of files; the hook's exit status.
+# names itself by; a case's name; a count of files; the hook's exit status; a
+# module's file name under tools/.
 FilePath = NewType("FilePath", str)
 CommandLine = NewType("CommandLine", str)
 FileText = NewType("FileText", str)
@@ -42,6 +44,7 @@ Prose = NewType("Prose", str)
 CaseId = NewType("CaseId", str)
 FileCount = NewType("FileCount", int)
 ExitStatus = NewType("ExitStatus", int)
+ModuleFile = NewType("ModuleFile", str)
 ALLOW, REPORTED, REFUSE = ExitStatus(0), ExitStatus(1), ExitStatus(2)
 
 
@@ -97,8 +100,24 @@ class Case(NamedTuple):
 HOOKS = Path(sys.argv[1] if len(sys.argv) > 1 else Path(__file__).parent.parent).resolve()
 GUARD = HOOKS / "test-determinism-guard.py"
 SOURCE = Path(sys.argv[2] if len(sys.argv) > 2 else Path.home() / "dev" / "agda" / "aletheia")
-GATE_MODULES = ("__init__.py", "_common.py", "_ratchet.py", "check_cpp_index_loops.py",
-                "check_test_determinism.py")
+
+
+def gate_modules() -> list[ModuleFile]:
+    """Name the gate and every tools module it imports, transitively, with the package's __init__."""
+    found: set[ModuleFile] = {ModuleFile("__init__.py")}
+    pending = [ModuleFile("check_test_determinism.py")]
+    while pending:
+        name = pending.pop()
+        if name in found:
+            continue
+        found.add(name)
+        for node in ast.walk(ast.parse((SOURCE / "tools" / name).read_text())):
+            if isinstance(node, ast.ImportFrom) and node.module and node.module.startswith("tools."):
+                pending.append(ModuleFile(node.module.removeprefix("tools.") + ".py"))
+    return sorted(found)
+
+
+GATE_MODULES = gate_modules()
 INTERPRETER = Path("python") / ".venv" / "bin" / "python"
 
 BASE = Path(tempfile.mkdtemp(prefix="determinism-guard-test-")).resolve()
