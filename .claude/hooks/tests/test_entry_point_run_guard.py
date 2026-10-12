@@ -184,7 +184,8 @@ def transcript(path: Path, repo: Path, issued: list[Issue]) -> None:
 
 
 def hook(event: EventText) -> Outcome:
-    done = subprocess.run([sys.executable, str(GUARD)], input=event, capture_output=True, text=True,
+    # By its path, as the harness runs it, so its interpreter line and its mode are tested too.
+    done = subprocess.run([str(GUARD)], input=event, capture_output=True, text=True,
                           check=False, env=HOOK_ENV)
     return Outcome(ExitStatus(done.returncode), Prose(done.stderr))
 
