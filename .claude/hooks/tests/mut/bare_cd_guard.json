@@ -1,0 +1,107 @@
+[
+ [
+  "bare-cd-guard.py",
+  "CHANGES_DIRECTORY = frozenset({\"cd\", \"pushd\", \"popd\"})",
+  "CHANGES_DIRECTORY = frozenset({\"cd\", \"pushd\"})"
+ ],
+ [
+  "bare-cd-guard.py",
+  "CHANGES_DIRECTORY = frozenset({\"cd\", \"pushd\", \"popd\"})",
+  "CHANGES_DIRECTORY = frozenset({\"cd\", \"popd\"})"
+ ],
+ [
+  "bare-cd-guard.py",
+  "PREFIXES = frozenset({\"builtin\", \"command\"})",
+  "PREFIXES = frozenset({\"builtin\"})"
+ ],
+ [
+  "bare-cd-guard.py",
+  "PREFIXES = frozenset({\"builtin\", \"command\"})",
+  "PREFIXES = frozenset({\"command\"})"
+ ],
+ [
+  "bare-cd-guard.py",
+  "    if _spelled(words[0]) == \"popd\":\n        return None\n",
+  "    if False:\n        return None\n"
+ ],
+ [
+  "bare-cd-guard.py",
+  "    if value is None:\n        return None\n",
+  "    if value is None:\n        value = \"\"\n"
+ ],
+ [
+  "bare-cd-guard.py",
+  "        if _spelled(words[0]) in PREFIXES and len(words) > 1:\n            words = words[1:]\n",
+  "        if False:\n            words = words[1:]\n"
+ ],
+ [
+  "bare-cd-guard.py",
+  "        if _spelled(words[0]) == \"eval\" and command.scope == OWN_SCOPE:",
+  "        if False:"
+ ],
+ [
+  "bare-cd-guard.py",
+  "        if root is not None and target is not None and os.path.realpath(target) == os.path.realpath(root):",
+  "        if root is not None and target is not None:"
+ ],
+ [
+  "bare-cd-guard.py",
+  "        if root is not None and target is not None and os.path.realpath(target) == os.path.realpath(root):",
+  "        if False:"
+ ],
+ [
+  "bare-cd-guard.py",
+  "    return Directory(os.path.normpath(os.path.join(cwd, os.path.expanduser(value))))",
+  "    return Directory(os.path.join(cwd, os.path.expanduser(value)))"
+ ],
+ [
+  "bare-cd-guard.py",
+  "    if not isinstance(event, dict) or event.get(\"tool_name\") != \"Bash\":",
+  "    if not isinstance(event, dict):"
+ ],
+ [
+  "bare-cd-guard.py",
+  "        return REPORTED\n    if not isinstance(event, dict)",
+  "        return ALLOW\n    if not isinstance(event, dict)"
+ ],
+ [
+  "bare-cd-guard.py",
+  "    if found:\n        print(ADVICE",
+  "    if False:\n        print(ADVICE"
+ ],
+ [
+  "bare-cd-guard.py",
+  "        print(f\"bare-cd-guard: this call could not be read, it goes ahead unchecked: {exc}\", file=sys.stderr)\n        return ALLOW",
+  "        print(f\"bare-cd-guard: this call could not be read, it goes ahead unchecked: {exc}\", file=sys.stderr)\n        return REFUSE"
+ ],
+ [
+  "bare-cd-guard.py",
+  "        found.append(Prose(f\"  * `{spelled}` moves the shared shell to {where}\"))",
+  "        pass"
+ ],
+ [
+  "bare-cd-guard.py",
+  "    if len(operands) != 1 or cwd is None:",
+  "    if cwd is None:"
+ ],
+ [
+  "bare-cd-guard.py",
+  "    while rest and _spelled(rest[0]).startswith(\"-\"):",
+  "    while rest and _spelled(rest[0]).startswith(\"-\") and _spelled(rest[0]) != \"-\":"
+ ],
+ [
+  "bare-cd-guard.py",
+  "        if _spelled(rest[0]) == \"--\":\n            return rest[1:]\n",
+  "        if False:\n            return rest[1:]\n"
+ ],
+ [
+  "bare-cd-guard.py",
+  "    return command.job_scope == OWN_SCOPE and not command.pipe_out",
+  "    return command.job_scope == OWN_SCOPE"
+ ],
+ [
+  "bare-cd-guard.py",
+  "    return command.job_scope == OWN_SCOPE and not command.pipe_out",
+  "    return not command.pipe_out"
+ ]
+]

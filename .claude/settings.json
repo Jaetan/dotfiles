@@ -62,6 +62,15 @@
             "command": "/home/nicolas/.claude/hooks/workflow-watch-guard.py"
           }
         ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/home/nicolas/.claude/hooks/bare-cd-guard.py"
+          }
+        ]
       }
     ],
     "PostToolUse": [
