@@ -162,6 +162,16 @@ def gated(repo: Path) -> None:
     git_init(repo)
     for name in GATE_MODULES:
         put(repo / "tools" / name, FileText((SOURCE / "tools" / name).read_text()))
+    table = repo / "tools" / "_determinism_dismissals.py"
+    if table.is_file():
+        # The recorded test imports time, a word the gate's wider net reads, so a
+        # gate that has that net needs it dismissed there beside the record's row.
+        head = "DISMISSED: Mapping[Dismissal, Prose] = {\n"
+        row = ('    Dismissal(PYTHON, NetWord("time"), RelPath("python/tests/test_recorded.py")):'
+               ' Prose("the recorded test imports the module its recorded sleep is from"),\n')
+        text = table.read_text()
+        assert text.count(head) == 1, "the dismissal table changed its shape"
+        put(table, FileText(text.replace(head, head + row)))
     put(repo / "docs" / "TEST_DETERMINISM.yaml", RECORD)
     put(repo / "docs" / "readme.md", FileText("no test here\n"))
     put(repo / "python" / "tests" / "test_recorded.py", RECORDED)

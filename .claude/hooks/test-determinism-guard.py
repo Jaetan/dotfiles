@@ -26,8 +26,8 @@ any, the rule is added to the model's context.
 WRITING A TEST. After an Edit, a Write or a MultiEdit, or a Bash call that
 changed files (the tool response's bashEditDiff, and every file `git status`
 shows where the call changed more than it lists), each test file among them is
-handed to the gate where it stands (`--file PATH --as REL`). A site the record
-does not allow is sent back with exit 2, which shows it to the model at once;
+handed to the gate where it stands (`--file PATH --as REL`). A site or a word
+the gate refuses is sent back with exit 2, which shows it to the model at once;
 otherwise the rule is added to the model's context.
 
 Only a repository holding the gate and python/.venv/bin/python is in scope. An
@@ -134,10 +134,11 @@ RULE = (
     "language or mutation lane."
 )
 FINDING = (
-    "test-determinism-guard: this call left a test using physical time or a thread the\n"
-    "repository's record does not allow (tools/check_test_determinism.py, AGENTS.md,\n"
+    "test-determinism-guard: this call left a test with a time, thread or process site\n"
+    "or word the repository's gate refuses (tools/check_test_determinism.py, AGENTS.md,\n"
     "Universal Rules). The write stands, so rewrite it now: inject the clock or the\n"
-    "scheduler and drive it. A row in the record needs the user's approval. The gate says:\n"
+    "scheduler and drive it, or drop the process. A row in the gate's record or its\n"
+    "dismissals needs the user's approval. The gate says:\n"
 )
 
 
