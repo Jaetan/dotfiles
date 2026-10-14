@@ -1,0 +1,27 @@
+[
+ [
+  "no-polling-loops.py",
+  "        if any(_pgrep_self_match(i, raw, \"Bash\") for i in ours) or _ps_grep_self_match(own, raw, \"Bash\"):",
+  "        if False:"
+ ],
+ [
+  "no-polling-loops.py",
+  "        if any(_pgrep_self_match(i, raw, \"Bash\") for i in ours) or _ps_grep_self_match(own, raw, \"Bash\"):",
+  "        if _ps_grep_self_match(own, raw, \"Bash\"):"
+ ],
+ [
+  "no-polling-loops.py",
+  "        if any(_pgrep_self_match(i, raw, \"Bash\") for i in ours) or _ps_grep_self_match(own, raw, \"Bash\"):",
+  "        if any(_pgrep_self_match(i, raw, \"Bash\") for i in ours):"
+ ],
+ [
+  "no-polling-loops.py",
+  "        own = [i for i in invs if i.origin == \"call\"]",
+  "        own = []"
+ ],
+ [
+  "no-polling-loops.py",
+  "            print(ONE_SHOT_ADVICE, file=sys.stderr)\n            return 2\n        return 0",
+  "            print(ONE_SHOT_ADVICE, file=sys.stderr)\n            return 0\n        return 0"
+ ]
+]

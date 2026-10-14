@@ -905,6 +905,24 @@ LOOPS4 = [
     ("L33", bash("sleep 999 & sleep 998 &\necho work\nkill $(jobs -p)", T), 2, "zsh: $(jobs -p) prints nothing"),
 ]
 
+# A one-shot lookup by a pattern the call's own shell carries (user, 2026-10-14): refused outside loops too.
+ONESHOT = [
+    ("OS01", bash("pgrep -f 'cargo test'", T), 2, "a one-shot pgrep -f meets the call's shell"),
+    ("OS02", bash("pgrep -af cargo", T), 2, "pgrep -af"),
+    ("OS03", bash("pkill -f 'cargo test'", T), 2, "pkill -f would kill the call"),
+    ("OS04", bash("ps aux | grep 'cargo test'", T), 2, "ps | grep meets the call's shell"),
+    ("OS05", bash("pgrep -f \"$UNSET_PATTERN_ONESHOT\"", T), 2, "a pattern the reader cannot know"),
+    ("OS06", bash("bash -c \"pgrep -f cargo\"", T), 2, "a carrier's pgrep, its text on the call's line"),
+    ("OS07", bash("pgrep -f '[c]argo test'", T), 0, "bracketed, the target spelled nowhere else"),
+    ("OS08", bash("pgrep -x cargo", T), 0, "pgrep -x on the process name"),
+    ("OS09", bash("pgrep cargo", T), 0, "pgrep without -f matches names"),
+    ("OS10", bash("ps aux | grep '[c]argo test'", T), 0, "ps | grep, bracketed"),
+    ("OS11", bash("ps aux | grep cargo | grep -v grep", T), 0, "a grep -v grep stage drops the call's lines"),
+    ("OS12", bash("pgrep -f '^cargo'", T), 0, "anchored: the call's line starts with its shell"),
+    ("OS13", bash("cat <<'EOF'\npgrep -f cargo\nEOF", T), 0, "a heredoc's data"),
+    ("OS14", bash("echo 'pgrep -f cargo'", T), 0, "pgrep as an argument"),
+]
+
 LOOPS6 = [
     ("L40", bash("f() { tail -f /tmp/a | grep x & }; trap f INT; f", T), 2, "a trap's function called directly"),
     ("L41", bash("tail -f /tmp/a | grep x &\ntrap 'kill -s 0 $$' EXIT\necho work", T), 2, "kill -s 0 stops nothing"),
@@ -1000,7 +1018,7 @@ SHAPE4 = [
 
 def round4_cases() -> list[tuple[str, int, int, str, str]]:
     rows = []
-    for cid, event, want, what in LOOPS4 + LOOPS6:
+    for cid, event, want, what in LOOPS4 + LOOPS6 + ONESHOT:
         rc, err = hook(LOOPS, event)
         rows.append((cid, want, rc, what, err))
     for cid, event, want, what in CPU4 + SHAPE4:
@@ -1359,7 +1377,7 @@ CLAIMS_LOOPS = [
     ("L24.2", monitor("while kill -0 12345 2>/dev/null; do sleep 5; done", T), 0),
     ("L25.2", monitor("tail -f /tmp/x.log | grep --line-buffered FAIL", T), 0),
     ("L26.2", bash("trap 'kill 0' EXIT\ntail -f /tmp/x.log | grep --line-buffered FAIL &\necho work", T), 0),
-    ("L27.2", bash("sleep 1 & sleep 2 & wait", T), 0), ("L28", bash("pgrep -f 'cargo test'", T), 0),
+    ("L27.2", bash("sleep 1 & sleep 2 & wait", T), 0), ("L28", bash("pgrep -f 'cargo test'", T), 2),
     ("L31.2", bash("finish() { wait; }\nsleep 9 &\nfinish", T), 0),
     ("L32.2", bash(f"source {S}/job.sh; wait $!", T), 0),
 ]

@@ -60,6 +60,16 @@ the hook tries with GNU grep -G; rg and ugrep stages as grep -E, an awk
 hook's greps get 1.5 s in all and 1 s each; past that a pattern is tested as
 plain text.
 
+AND A ONE-SHOT LOOKUP IN BASH IS HELD THE SAME WAY (user, 2026-10-14). A Bash
+call's shell carries the call's whole text as argv too, so a single `pgrep
+-f X`, `pkill -f X` or `ps ... | grep X` outside any loop finds the call
+itself: a job that ended reads as running, and pkill kills the call. The
+memory rule against it held only where the hook did; measured that day, `pgrep
+-f` on a pattern no process carries printed three pids, the call's own shell
+and its wrappers. So a Bash call, and a script of the user's it runs, is held
+to the Monitor rule, tried against the Bash tool's command line; a polling
+loop that does it is refused as a loop, with the note.
+
 A JOB PUT IN THE BACKGROUND OUTLIVES THE CALL. The harness ends a Bash or
 Monitor task when the script's own shell exits and stops nothing else: a `&`
 job is reparented to init and runs on. Measured 2026-09-27: nine Monitor
@@ -128,6 +138,21 @@ _UGREP_ARGV = ("ugrep -G --ignore-files --hidden -I --exclude-dir=.git --exclude
 _PS_COLUMNS = "user        1234  0.0  0.0  12345  6789 ?        S    12:00   0:00 "  # what ps aux prints before it
 _PGREP_VALUES = {"-u", "-U", "-g", "-G", "-P", "-s", "-t", "--signal", "-d", "--delimiter", "--ns", "--nslist",
                  "-F", "--pidfile"}
+
+ONE_SHOT_ADVICE = """BLOCKED: a process looked up by a PATTERN this call's own shell carries.
+
+The Bash tool runs the call as one shell whose command line holds the call's
+whole text, so `pgrep -f`/`pkill -f` (or -af, -fl, --full), or `ps ... | grep`,
+on a pattern the call spells finds that shell: a job that has ended reads as
+running, and pkill kills this very call.
+
+Instead:
+  * A job you started with run_in_background: its notification says when it
+    ends. A pid you forked yourself: `kill -0 <pid>`.
+  * A pattern you cannot avoid: bracket one character, `pgrep -f '[c]argo test'`,
+    and spell the target nowhere else in the call; or `pgrep -x <name>`, which
+    matches the process name alone.
+  * To stop a process, kill it by the pid an earlier call found."""
 
 ADVICE = """BLOCKED: a shell polling loop.
 
@@ -674,6 +699,10 @@ def decide() -> int:
         loops = [i for i in ours if i.code and i.code[0] == "python" and i.code_origin != "repo-script"
                  and C.python_facts(i.code[1], i.cmd.cwd).polls]
     if not loops:
+        own = [i for i in invs if i.origin == "call"]
+        if any(_pgrep_self_match(i, raw, "Bash") for i in ours) or _ps_grep_self_match(own, raw, "Bash"):
+            print(ONE_SHOT_ADVICE, file=sys.stderr)
+            return 2
         return 0
     try:  # the verdict is fixed before anything prints: a fault here costs the note, never the refusal
         self_match = any(_pgrep_self_match(i, raw) for i in ours)
