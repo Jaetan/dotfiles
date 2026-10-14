@@ -146,6 +146,10 @@
           {
             "type": "command",
             "command": "/home/nicolas/.claude/hooks/workflow-watch-guard.py"
+          },
+          {
+            "type": "command",
+            "command": "/home/nicolas/.claude/hooks/red-disposition-guard.py"
           }
         ]
       }
