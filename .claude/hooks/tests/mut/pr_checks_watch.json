@@ -1,0 +1,112 @@
+[
+ [
+  "pr-checks-watch",
+  "GREEN_CONCLUSIONS = frozenset({\"SUCCESS\", \"SKIPPED\", \"NEUTRAL\"})",
+  "GREEN_CONCLUSIONS = frozenset({\"SUCCESS\", \"NEUTRAL\"})"
+ ],
+ [
+  "pr-checks-watch",
+  "GREEN_CONCLUSIONS = frozenset({\"SUCCESS\", \"SKIPPED\", \"NEUTRAL\"})",
+  "GREEN_CONCLUSIONS = frozenset({\"SUCCESS\", \"SKIPPED\"})"
+ ],
+ [
+  "pr-checks-watch",
+  "        ended = status == \"COMPLETED\"\n",
+  "        ended = True\n"
+ ],
+ [
+  "pr-checks-watch",
+  "        state = conclusion if ended and conclusion else status\n",
+  "        state = status\n"
+ ],
+ [
+  "pr-checks-watch",
+  "                     state == \"SUCCESS\")\n",
+  "                     state in ENDED_CONTEXT_STATES)\n"
+ ],
+ [
+  "pr-checks-watch",
+  "ENDED_CONTEXT_STATES = frozenset({\"SUCCESS\", \"FAILURE\", \"ERROR\"})",
+  "ENDED_CONTEXT_STATES = frozenset({\"SUCCESS\", \"ERROR\"})"
+ ],
+ [
+  "pr-checks-watch",
+  "                 False, False)\n",
+  "                 True, True)\n"
+ ],
+ [
+  "pr-checks-watch",
+  "            if context and CheckName(context) not in found:\n",
+  "            if context:\n"
+ ],
+ [
+  "pr-checks-watch",
+  "        if rule.get(\"type\") != \"required_status_checks\":\n",
+  "        if rule.get(\"type\") != \"pull_request\":\n"
+ ],
+ [
+  "pr-checks-watch",
+  "    if before != after:\n        lines.append(Line(f\"head moved from {before} during the watch\"))\n",
+  ""
+ ],
+ [
+  "pr-checks-watch",
+  "    if red:\n",
+  "    if False:\n"
+ ],
+ [
+  "pr-checks-watch",
+  "    if pending or absent or before != after:\n",
+  "    if pending:\n"
+ ],
+ [
+  "pr-checks-watch",
+  "    if pending or absent or before != after:\n",
+  "    if pending or absent:\n"
+ ],
+ [
+  "pr-checks-watch",
+  "    return Verdict(lines, GREEN)\n",
+  "    return Verdict(lines, RED)\n"
+ ],
+ [
+  "pr-checks-watch",
+  "\"--watch\", \"--fail-fast\", \"--interval\", WATCH_INTERVAL",
+  "\"--watch\", \"--interval\", WATCH_INTERVAL"
+ ],
+ [
+  "pr-checks-watch",
+  "WATCH_INTERVAL = \"20\"",
+  "WATCH_INTERVAL = \"10\""
+ ],
+ [
+  "pr-checks-watch",
+  "            kept.write(answer.out)\n",
+  ""
+ ],
+ [
+  "pr-checks-watch",
+  "    if isinstance(first, str):\n        print(first)\n        return UNREAD\n",
+  "    if isinstance(first, str):\n        print(first)\n        return GREEN\n"
+ ],
+ [
+  "pr-checks-watch",
+  "    if isinstance(rules, str):\n        print(rules)\n        return UNREAD\n",
+  "    if isinstance(rules, str):\n        rules = []\n"
+ ],
+ [
+  "pr-checks-watch",
+  "    print(\"\\n\".join(judged.lines), flush=True)\n",
+  ""
+ ],
+ [
+  "pr-checks-watch",
+  "    lines.extend(Line(f\"ABSENT {context} (the ruleset requires it)\") for context in absent)\n",
+  ""
+ ],
+ [
+  "pr-checks-watch",
+  "    red = [check.name for check in not_green if check.ended]\n",
+  "    red = [check.name for check in not_green]\n"
+ ]
+]

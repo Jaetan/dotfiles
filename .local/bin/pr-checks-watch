@@ -1,0 +1,264 @@
+#!/home/nicolas/.local/bin/python3.14
+"""Watch a pull request's checks and end with a verdict that is the exit status.
+
+Usage: pr-checks-watch PR [--record PATH]
+
+PR is the pull request's number in the repository of the working directory.
+The watch is `gh pr checks PR --watch --fail-fast --interval 20`, which ends at
+the first failed check or when every check has ended; its tables are kept in
+PATH when --record names one and dropped otherwise. The verdict is read after
+it, from the head's check rollup (`gh pr view --json statusCheckRollup`) and
+from the contexts the base branch's ruleset requires. It is GREEN when every
+check of the head has ended green (a check run concluded SUCCESS, SKIPPED or
+NEUTRAL, a status context in state SUCCESS) and every required context is among
+them; RED when a check has ended any other way; INCOMPLETE when nothing is red
+but a check is still pending, a required context has no check yet (the moment
+after a push, or a merge job that registers only once its legs end), or the
+head moved during the watch.
+
+Printed on stdout, which the harness keeps as the task's own output: the head
+read before and after the watch, one line per check that is not green and per
+required context absent, then the verdict line, which names the next action.
+Exit 0 GREEN, 1 RED, 3 INCOMPLETE, 2 when gh could not answer (its message
+printed), 4 on a usage error.
+
+Why this script: a watch whose verdict is one line appended to a log behind a
+`;` chain hands the harness the chain's last exit status, and a context that
+reads the task's notification after a clear sees "exit code 0" over an empty
+output and takes it for green (2026-10-15, a red coverage lane read as green).
+pr-watch-guard.py, in the Claude Code hook kit, holds every watch to this
+script and this script's status to the task's.
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import subprocess
+import sys
+from typing import TYPE_CHECKING, Literal, NamedTuple, NewType, TypedDict, cast
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+
+# A commit's hash as GitHub spells it; a check's name (a check run's name or a status context's context);
+# a check's state as the verdict reads it (a conclusion, a status or a context state); a line printed; a
+# pull request's number; a path as the command line spells it; the exit status.
+Sha = NewType("Sha", str)
+CheckName = NewType("CheckName", str)
+CheckState = NewType("CheckState", str)
+Line = NewType("Line", str)
+PullNumber = NewType("PullNumber", int)
+RecordPath = NewType("RecordPath", str)
+ExitStatus = NewType("ExitStatus", int)
+GREEN, RED, UNREAD, INCOMPLETE, USAGE = ExitStatus(0), ExitStatus(1), ExitStatus(2), ExitStatus(3), ExitStatus(4)
+
+# The conclusions of an ended check run that count as green, and the states in which a status context has ended.
+GREEN_CONCLUSIONS = frozenset({"SUCCESS", "SKIPPED", "NEUTRAL"})
+ENDED_CONTEXT_STATES = frozenset({"SUCCESS", "FAILURE", "ERROR"})
+WATCH_INTERVAL = "20"
+
+
+class RollupEntry(TypedDict, total=False):
+    """One entry of `gh pr view --json statusCheckRollup`: a check run or a status context."""
+
+    __typename: Literal["CheckRun", "StatusContext"]
+    name: str
+    status: str
+    conclusion: str | None
+    context: str
+    state: str
+
+
+class PullView(TypedDict, total=False):
+    """What `gh pr view --json headRefOid,baseRefName,statusCheckRollup` answers."""
+
+    headRefOid: str
+    baseRefName: str
+    statusCheckRollup: list[RollupEntry]
+
+
+class RequiredCheck(TypedDict, total=False):
+    """One required status check of a ruleset's rule."""
+
+    context: str
+
+
+class RuleParameters(TypedDict, total=False):
+    """The parameters of a ruleset's rule; only the required checks are read."""
+
+    required_status_checks: list[RequiredCheck]
+
+
+class Rule(TypedDict, total=False):
+    """One rule of `gh api repos/{owner}/{repo}/rules/branches/BASE`."""
+
+    type: str
+    parameters: RuleParameters
+
+
+class Check(NamedTuple):
+    """A check of the head as the verdict reads it."""
+
+    name: CheckName
+    state: CheckState
+    ended: bool
+    green: bool
+
+
+class Verdict(NamedTuple):
+    """The lines to print and the exit status they end in."""
+
+    lines: list[Line]
+    status: ExitStatus
+
+
+def check_of(entry: RollupEntry) -> Check:
+    """Read one rollup entry; a kind gh does not spell is a check that has not ended, so it is named."""
+    kind = entry.get("__typename")
+    if kind == "CheckRun":
+        status = entry.get("status") or "UNKNOWN"
+        conclusion = entry.get("conclusion")
+        ended = status == "COMPLETED"
+        state = conclusion if ended and conclusion else status
+        return Check(CheckName(entry.get("name") or "?"), CheckState(state), ended,
+                     ended and conclusion in GREEN_CONCLUSIONS)
+    if kind == "StatusContext":
+        state = entry.get("state") or "UNKNOWN"
+        return Check(CheckName(entry.get("context") or "?"), CheckState(state), state in ENDED_CONTEXT_STATES,
+                     state == "SUCCESS")
+    return Check(CheckName(entry.get("name") or entry.get("context") or "?"), CheckState(f"UNKNOWN KIND {kind}"),
+                 False, False)
+
+
+def required_contexts(rules: Sequence[Rule]) -> list[CheckName]:
+    """The contexts every required_status_checks rule of a branch's ruleset names, in order, once each."""
+    found: list[CheckName] = []
+    for rule in rules:
+        if rule.get("type") != "required_status_checks":
+            continue
+        for check in rule.get("parameters", {}).get("required_status_checks", []):
+            context = check.get("context")
+            if context and CheckName(context) not in found:
+                found.append(CheckName(context))
+    return found
+
+
+def verdict(pull: PullNumber, before: Sha, after: Sha, checks: Sequence[Check],
+            required: Sequence[CheckName]) -> Verdict:
+    """Judge the head's checks against the ruleset's required contexts."""
+    lines = [Line(f"head {after}")]
+    if before != after:
+        lines.append(Line(f"head moved from {before} during the watch"))
+    not_green = [check for check in checks if not check.green]
+    lines.extend(Line(f"{check.state} {check.name}") for check in not_green)
+    present = {check.name for check in checks}
+    absent = [context for context in required if context not in present]
+    lines.extend(Line(f"ABSENT {context} (the ruleset requires it)") for context in absent)
+    red = [check.name for check in not_green if check.ended]
+    pending = [check.name for check in not_green if not check.ended]
+    if red:
+        lines.append(Line(f"RED: {', '.join(red)}; fix, push and re-arm pr-checks-watch {pull}"))
+        return Verdict(lines, RED)
+    if pending or absent or before != after:
+        waiting = pending + [f"{context} (absent)" for context in absent]
+        if before != after:
+            waiting.append("the head moved")
+        lines.append(Line(f"INCOMPLETE: {', '.join(waiting)}; re-arm pr-checks-watch {pull}"))
+        return Verdict(lines, INCOMPLETE)
+    lines.append(Line(f"GREEN at {after}: every check ended green and every required context is present"))
+    return Verdict(lines, GREEN)
+
+
+class GhAnswer(NamedTuple):
+    """What a gh call printed and how it ended."""
+
+    out: str
+    err: str
+    status: int
+
+
+def gh(*args: str) -> GhAnswer:
+    """Run gh with ``args`` and capture what it printed."""
+    done = subprocess.run(["gh", *args], capture_output=True, text=True, check=False)
+    return GhAnswer(done.stdout, done.stderr, done.returncode)
+
+
+def view(pull: PullNumber) -> PullView | Line:
+    """The pull request's head, base and rollup, or the line saying why gh could not answer."""
+    answer = gh("pr", "view", str(pull), "--json", "headRefOid,baseRefName,statusCheckRollup")
+    if answer.status != 0:
+        return Line(f"UNREAD: gh pr view {pull} ended with status {answer.status}: {answer.err.strip()}")
+    try:
+        return cast("PullView", json.loads(answer.out))
+    except json.JSONDecodeError as exc:
+        return Line(f"UNREAD: gh pr view {pull} printed no JSON: {exc}")
+
+
+def rules_of(base: str) -> list[Rule] | Line:
+    """The base branch's rules, or the line saying why gh could not answer."""
+    answer = gh("api", f"repos/{{owner}}/{{repo}}/rules/branches/{base}")
+    if answer.status != 0:
+        return Line(f"UNREAD: the ruleset of {base} ended with status {answer.status}: {answer.err.strip()}")
+    try:
+        rules = json.loads(answer.out)
+    except json.JSONDecodeError as exc:
+        return Line(f"UNREAD: the ruleset of {base} printed no JSON: {exc}")
+    if not isinstance(rules, list):
+        return Line(f"UNREAD: the ruleset of {base} is not a list of rules")
+    return cast("list[Rule]", rules)
+
+
+def watch(pull: PullNumber, record: RecordPath | None) -> int:
+    """Run gh's watch to its end, keeping its tables in ``record`` where asked, and return its status."""
+    answer = gh("pr", "checks", str(pull), "--watch", "--fail-fast", "--interval", WATCH_INTERVAL)
+    if record is not None:
+        with open(record, "w", encoding="utf-8") as kept:
+            kept.write(answer.out)
+            kept.write(answer.err)
+    return answer.status
+
+
+class _Parser(argparse.ArgumentParser):
+    """An argument parser whose usage error is this script's own exit status."""
+
+    def error(self, message: str) -> None:  # type: ignore[override]  # argparse's own returns NoReturn
+        self.print_usage(sys.stderr)
+        self.exit(USAGE, f"pr-checks-watch: {message}\n")
+
+
+def main(argv: Sequence[str]) -> ExitStatus:
+    """Watch, then judge, printing every line on stdout."""
+    parser = _Parser(prog="pr-checks-watch", description=__doc__.split("\n\n", maxsplit=1)[0])
+    parser.add_argument("pull", type=int, help="the pull request's number")
+    parser.add_argument("--record", help="keep the watch's tables in this file")
+    args = parser.parse_args(argv)
+    pull = PullNumber(args.pull)
+    record = RecordPath(args.record) if args.record else None
+
+    first = view(pull)
+    if isinstance(first, str):
+        print(first)
+        return UNREAD
+    before = Sha(first.get("headRefOid", ""))
+    base = first.get("baseRefName", "")
+    print(f"head {before} watched; base {base}", flush=True)
+    status = watch(pull, record)
+    print(f"watch ended with status {status}", flush=True)
+
+    second = view(pull)
+    if isinstance(second, str):
+        print(second)
+        return UNREAD
+    rules = rules_of(base)
+    if isinstance(rules, str):
+        print(rules)
+        return UNREAD
+    checks = [check_of(entry) for entry in second.get("statusCheckRollup", [])]
+    judged = verdict(pull, before, Sha(second.get("headRefOid", "")), checks, required_contexts(rules))
+    print("\n".join(judged.lines), flush=True)
+    return judged.status
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1:]))

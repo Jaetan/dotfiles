@@ -71,6 +71,15 @@
             "command": "/home/nicolas/.claude/hooks/bare-cd-guard.py"
           }
         ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/home/nicolas/.claude/hooks/pr-watch-guard.py"
+          }
+        ]
       }
     ],
     "PostToolUse": [
