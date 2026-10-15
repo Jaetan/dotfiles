@@ -14,7 +14,10 @@ NEUTRAL, a status context in state SUCCESS) and every required context is among
 them; RED when a check has ended any other way; INCOMPLETE when nothing is red
 but a check is still pending, a required context has no check yet (the moment
 after a push, or a merge job that registers only once its legs end), or the
-head moved during the watch.
+head moved during the watch. A check run is read through the latest run of its
+name in its workflow: a workflow a pull request's push and its body edit start a
+second apart cancels its first run under its concurrency group, and that run,
+superseded, is named and not red.
 
 Printed on stdout, which the harness keeps as the task's own output: the head
 read before and after the watch, one line per check that is not green and per
@@ -63,6 +66,8 @@ class RollupEntry(TypedDict, total=False):
     """One entry of `gh pr view --json statusCheckRollup`: a check run or a status context."""
 
     __typename: Literal["CheckRun", "StatusContext"]
+    workflowName: str
+    startedAt: str
     name: str
     status: str
     conclusion: str | None
@@ -131,6 +136,34 @@ def check_of(entry: RollupEntry) -> Check:
                  False, False)
 
 
+def latest_runs(entries: Sequence[RollupEntry]) -> tuple[list[RollupEntry], list[Line]]:
+    """Keep the latest check run of each name in each workflow, naming every run it supersedes.
+
+    Status contexts and entries of other kinds pass through. Among check runs of one workflow and name the
+    one started last is kept, the later listed on a tie; GitHub reads a required context the same way.
+    """
+    latest: dict[tuple[str, str], RollupEntry] = {}
+    superseded: list[RollupEntry] = []
+    kept: list[RollupEntry] = []
+    for entry in entries:
+        if entry.get("__typename") != "CheckRun":
+            kept.append(entry)
+            continue
+        key = (entry.get("workflowName") or "", entry.get("name") or "")
+        held = latest.get(key)
+        if held is None:
+            latest[key] = entry
+        elif (entry.get("startedAt") or "") >= (held.get("startedAt") or ""):
+            superseded.append(held)
+            latest[key] = entry
+        else:
+            superseded.append(entry)
+    kept.extend(latest.values())
+    notes = [Line(f"SUPERSEDED {check_of(entry).state} {check_of(entry).name} "
+                  f"(a later run of {entry.get('workflowName') or '?'} carries this name)") for entry in superseded]
+    return kept, notes
+
+
 def required_contexts(rules: Sequence[Rule]) -> list[CheckName]:
     """The contexts every required_status_checks rule of a branch's ruleset names, in order, once each."""
     found: list[CheckName] = []
@@ -145,11 +178,12 @@ def required_contexts(rules: Sequence[Rule]) -> list[CheckName]:
 
 
 def verdict(pull: PullNumber, before: Sha, after: Sha, checks: Sequence[Check],
-            required: Sequence[CheckName]) -> Verdict:
-    """Judge the head's checks against the ruleset's required contexts."""
+            required: Sequence[CheckName], notes: Sequence[Line] = ()) -> Verdict:
+    """Judge the head's checks against the ruleset's required contexts; ``notes`` are printed after the head."""
     lines = [Line(f"head {after}")]
     if before != after:
         lines.append(Line(f"head moved from {before} during the watch"))
+    lines.extend(notes)
     not_green = [check for check in checks if not check.green]
     lines.extend(Line(f"{check.state} {check.name}") for check in not_green)
     present = {check.name for check in checks}
@@ -254,8 +288,9 @@ def main(argv: Sequence[str]) -> ExitStatus:
     if isinstance(rules, str):
         print(rules)
         return UNREAD
-    checks = [check_of(entry) for entry in second.get("statusCheckRollup", [])]
-    judged = verdict(pull, before, Sha(second.get("headRefOid", "")), checks, required_contexts(rules))
+    entries, notes = latest_runs(second.get("statusCheckRollup", []))
+    checks = [check_of(entry) for entry in entries]
+    judged = verdict(pull, before, Sha(second.get("headRefOid", "")), checks, required_contexts(rules), notes)
     print("\n".join(judged.lines), flush=True)
     return judged.status
 

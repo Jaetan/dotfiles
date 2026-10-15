@@ -108,5 +108,55 @@
   "pr-checks-watch",
   "    red = [check.name for check in not_green if check.ended]\n",
   "    red = [check.name for check in not_green]\n"
+ ],
+ [
+  "pr-checks-watch",
+  "        if entry.get(\"__typename\") != \"CheckRun\":\n",
+  "        if False:\n"
+ ],
+ [
+  "pr-checks-watch",
+  "        key = (entry.get(\"workflowName\") or \"\", entry.get(\"name\") or \"\")\n",
+  "        key = (entry.get(\"name\") or \"\",)\n"
+ ],
+ [
+  "pr-checks-watch",
+  "        elif (entry.get(\"startedAt\") or \"\") >= (held.get(\"startedAt\") or \"\"):\n",
+  "        elif (entry.get(\"startedAt\") or \"\") > (held.get(\"startedAt\") or \"\"):\n"
+ ],
+ [
+  "pr-checks-watch",
+  "        elif (entry.get(\"startedAt\") or \"\") >= (held.get(\"startedAt\") or \"\"):\n",
+  "        elif (entry.get(\"startedAt\") or \"\") <= (held.get(\"startedAt\") or \"\"):\n"
+ ],
+ [
+  "pr-checks-watch",
+  "        else:\n            superseded.append(entry)\n",
+  "        else:\n            kept.append(entry)\n"
+ ],
+ [
+  "pr-checks-watch",
+  "            superseded.append(held)\n            latest[key] = entry\n",
+  "            latest[key] = entry\n"
+ ],
+ [
+  "pr-checks-watch",
+  "    kept.extend(latest.values())\n",
+  "    kept.extend(superseded)\n    kept.extend(latest.values())\n"
+ ],
+ [
+  "pr-checks-watch",
+  "    return kept, notes\n",
+  "    return kept, []\n"
+ ],
+ [
+  "pr-checks-watch",
+  "    lines.extend(notes)\n",
+  "    pass\n"
+ ],
+ [
+  "pr-checks-watch",
+  "    entries, notes = latest_runs(second.get(\"statusCheckRollup\", []))\n",
+  "    entries, notes = second.get(\"statusCheckRollup\", []), []\n"
  ]
 ]

@@ -46,6 +46,8 @@ class RollupEntry(TypedDict, total=False):
 
     __typename: EntryKind
     name: CheckName
+    workflowName: CheckName
+    startedAt: Prose
     status: RunStatus
     conclusion: Conclusion | None
     context: CheckName
@@ -121,9 +123,11 @@ spec.loader.exec_module(watch)
 
 
 def run(name: CheckName, status: RunStatus = RunStatus("COMPLETED"),
-        conclusion: Conclusion | None = Conclusion("SUCCESS")) -> RollupEntry:
-    """A check run entry of the rollup."""
-    return {"__typename": EntryKind("CheckRun"), "name": name, "status": status, "conclusion": conclusion}
+        conclusion: Conclusion | None = Conclusion("SUCCESS"), started: Prose = Prose("2026-10-15T02:49:04Z"),
+        workflow: CheckName = CheckName("lanes")) -> RollupEntry:
+    """A check run entry of the rollup, started at ``started`` by the workflow ``workflow``."""
+    return {"__typename": EntryKind("CheckRun"), "name": name, "status": status, "conclusion": conclusion,
+            "startedAt": started, "workflowName": workflow}
 
 
 def context(name: CheckName, state: ContextState) -> RollupEntry:
@@ -179,6 +183,27 @@ UNITS = [
     Unit(CaseId("u11"), SHA, SHA, GREEN_ROLLUP, [], watch.GREEN, Prose("no ruleset requirement, every check green")),
     Unit(CaseId("u12"), SHA, SHA, [*GREEN_ROLLUP, context(CheckName("ci/external"), ContextState("PENDING"))], REQUIRED, watch.INCOMPLETE,
          Prose("a pending status context is incomplete"), (Prose("PENDING ci/external"),)),
+    Unit(CaseId("u13"), SHA, SHA, [*GREEN_ROLLUP, run(CheckName("PR title"), conclusion=Conclusion("CANCELLED"), started=Prose("2026-10-15T02:49:03Z"))],
+         REQUIRED, watch.GREEN, Prose("a cancelled run superseded by a later run of its name in its workflow is named, not red"),
+         (Prose("SUPERSEDED CANCELLED PR title (a later run of lanes carries this name)"), Prose("GREEN at " + SHA))),
+    Unit(CaseId("u14"), SHA, SHA, [run(CheckName("PR title"), conclusion=Conclusion("CANCELLED"), started=Prose("2026-10-15T02:49:03Z")), *GREEN_ROLLUP],
+         REQUIRED, watch.GREEN, Prose("the superseded run listed first is still the superseded one"),
+         (Prose("SUPERSEDED CANCELLED PR title"),)),
+    Unit(CaseId("u15"), SHA, SHA, [*GREEN_ROLLUP, run(CheckName("PR title"), conclusion=Conclusion("FAILURE"), started=Prose("2026-10-15T02:49:05Z"))],
+         REQUIRED, watch.RED, Prose("the latest run decides: a failure after a success is red"),
+         (Prose("SUPERSEDED SUCCESS PR title"), Prose("RED: PR title"))),
+    Unit(CaseId("u16"), SHA, SHA, [*GREEN_ROLLUP, run(CheckName("PR title"), conclusion=Conclusion("FAILURE"), started=Prose("2026-10-15T02:49:03Z"),
+                                                   workflow=CheckName("other"))],
+         REQUIRED, watch.RED, Prose("an earlier same-named run of another workflow is superseded by nothing"),
+         (Prose("FAILURE PR title"), Prose("RED: PR title"))),
+    Unit(CaseId("u20"), SHA, SHA, [context(CheckName("ci/other"), ContextState("FAILURE")), *GREEN_ROLLUP], REQUIRED, watch.RED,
+         Prose("status contexts are never folded into one another"), (Prose("FAILURE ci/other"), Prose("RED: ci/other"))),
+    Unit(CaseId("u17"), SHA, SHA, [*GREEN_ROLLUP, run(CheckName("PR title"), RunStatus("IN_PROGRESS"), None, started=Prose("2026-10-15T02:49:05Z"))],
+         REQUIRED, watch.INCOMPLETE, Prose("a later run still running supersedes the ended one and is incomplete"),
+         (Prose("SUPERSEDED SUCCESS PR title"), Prose("INCOMPLETE: PR title"))),
+    Unit(CaseId("u18"), SHA, SHA, [*GREEN_ROLLUP, run(CheckName("PR title"), conclusion=Conclusion("CANCELLED"))],
+         REQUIRED, watch.RED, Prose("on a tie of start times the run listed later is the kept one"),
+         (Prose("SUPERSEDED SUCCESS PR title"), Prose("RED: PR title"))),
 ]
 
 RULES: list[RuleJson] = [{"type": RuleType("pull_request"), "parameters": {}},
@@ -192,9 +217,10 @@ def units() -> DisagreeCount:
     """Run the planted judgements; return how many disagree."""
     bad = 0
     for unit in UNITS:
-        checks = [watch.check_of(entry) for entry in unit.rollup]
+        entries, notes = watch.latest_runs(unit.rollup)
+        checks = [watch.check_of(entry) for entry in entries]
         judged = watch.verdict(watch.PullNumber(409), watch.Sha(unit.before), watch.Sha(unit.after), checks,
-                               [watch.CheckName(name) for name in unit.required])
+                               [watch.CheckName(name) for name in unit.required], notes)
         text = "\n".join(judged.lines)
         missing = [name for name in unit.names if name not in text]
         ok = judged.status == unit.want and not missing and judged.lines[-1].startswith(
@@ -208,7 +234,7 @@ def units() -> DisagreeCount:
     got = watch.required_contexts(RULES)
     ok = got == ["tools/run_ci.py (all gates)", "mutation testing", "PR title"]
     bad += not ok
-    print(f"{'ok  ' if ok else 'MISS'} u13  the required contexts are read from every rule, in order, once each")
+    print(f"{'ok  ' if ok else 'MISS'} u19  the required contexts are read from every rule, in order, once each")
     return DisagreeCount(bad)
 
 
@@ -237,6 +263,11 @@ END_TO_END = [
     EndToEnd(CaseId("e2"), {"views": [view(SHA, [*GREEN_ROLLUP, run(CheckName("coverage floors"), conclusion=Conclusion("FAILURE"))])],
                             "rules": RULES, "watch_table": TableText("fail table"), "watch_status": GhStatus(1)}, [CommandWord("409")], watch.RED,
              Prose("a red run"), (Prose("RED: coverage floors; fix, push and re-arm pr-checks-watch 409"),)),
+    EndToEnd(CaseId("e8"), {"views": [view(SHA, [*GREEN_ROLLUP, run(CheckName("PR title"), conclusion=Conclusion("CANCELLED"),
+                                                              started=Prose("2026-10-15T02:49:03Z"))])],
+                            "rules": RULES, "watch_table": TableText("table"), "watch_status": GhStatus(0)}, [CommandWord("409")], watch.GREEN,
+             Prose("a run its workflow's concurrency cancelled, superseded, is green end to end"),
+             (Prose("SUPERSEDED CANCELLED PR title"), Prose("GREEN at " + SHA))),
     EndToEnd(CaseId("e3"), {"views": [view(SHA, GREEN_ROLLUP), view(SHA2, GREEN_ROLLUP)], "rules": RULES,
                             "watch_table": TableText(""), "watch_status": GhStatus(0)}, [CommandWord("409")], watch.INCOMPLETE,
              Prose("the head moved during the watch"), (Prose("head moved from " + SHA),)),
