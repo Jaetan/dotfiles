@@ -1,0 +1,227 @@
+[
+ [
+  "bytecode-plant-guard.py",
+  "if _commands.prog(argv[0]) in TEST_PROGRAMS:",
+  "if False:"
+ ],
+ [
+  "bytecode-plant-guard.py",
+  "return index + 1 < len(argv) and argv[index + 1] in TEST_MODULES",
+  "return False"
+ ],
+ [
+  "bytecode-plant-guard.py",
+  "            return word[2:] in TEST_MODULES",
+  "            return False"
+ ],
+ [
+  "bytecode-plant-guard.py",
+  "IN_PLACE_FLAG = re.compile(r\"-[A-Za-z]*i[A-Za-z.]*|--in-place(=.*)?\")",
+  "IN_PLACE_FLAG = re.compile(r\"-i\")"
+ ],
+ [
+  "bytecode-plant-guard.py",
+  "if name in IN_PLACE_EDITORS and any(IN_PLACE_FLAG.fullmatch(word) for word in argv[1:]):",
+  "if False:"
+ ],
+ [
+  "bytecode-plant-guard.py",
+  "                reading.in_place[place(word)] += 1",
+  "                pass"
+ ],
+ [
+  "bytecode-plant-guard.py",
+  "    if name == \"tee\":",
+  "    if False:"
+ ],
+ [
+  "bytecode-plant-guard.py",
+  "        if redirect.op in WRITE_REDIRECTS and redirect.target is not None:",
+  "        if False:"
+ ],
+ [
+  "bytecode-plant-guard.py",
+  "            if target.endswith(\".py\") and (target, source) in reading.copies:",
+  "            if False:"
+ ],
+ [
+  "bytecode-plant-guard.py",
+  "            reading.copies.add((source, target))",
+  "            pass"
+ ],
+ [
+  "bytecode-plant-guard.py",
+  "    if name == \"git\" and RESTORERS & set(argv[1:]):",
+  "    if False:"
+ ],
+ [
+  "bytecode-plant-guard.py",
+  "        reading.stashes |= not rest or rest[0] in STASHERS or rest[0].startswith(\"-\")",
+  "        pass"
+ ],
+ [
+  "bytecode-plant-guard.py",
+  "        found = {path for path in self.edits if path in restored}",
+  "        found = set[FilePath]()"
+ ],
+ [
+  "bytecode-plant-guard.py",
+  "        found |= {path for path, count in self.in_place.items() if count > 1}",
+  "        found |= {path for path, count in self.in_place.items() if count > 0}"
+ ],
+ [
+  "bytecode-plant-guard.py",
+  "        found |= set(self.written_back)",
+  "        pass"
+ ],
+ [
+  "bytecode-plant-guard.py",
+  "        restored = self.restores | ({*self.edits} if self.stashes else set[FilePath]())",
+  "        restored = self.restores"
+ ],
+ [
+  "bytecode-plant-guard.py",
+  "    if name == \"rm\":\n        return names_bytecode",
+  "    if name == \"rm\":\n        return False"
+ ],
+ [
+  "bytecode-plant-guard.py",
+  "        return names_bytecode and removes",
+  "        return False"
+ ],
+ [
+  "bytecode-plant-guard.py",
+  "    if PREFIX in inv.cmd.assigns:\n        return True",
+  "    if PREFIX in inv.cmd.assigns:\n        return False"
+ ],
+ [
+  "bytecode-plant-guard.py",
+  "    return any(_spelled(word).startswith(PREFIX + \"=\") for word in inv.cmd.words)",
+  "    return False"
+ ],
+ [
+  "bytecode-plant-guard.py",
+  "    return PREFIX in source or (BYTECODE.search(source) is not None and DELETES.search(source) is not None)",
+  "    return BYTECODE.search(source) is not None and DELETES.search(source) is not None"
+ ],
+ [
+  "bytecode-plant-guard.py",
+  "    return PREFIX in source or (BYTECODE.search(source) is not None and DELETES.search(source) is not None)",
+  "    return PREFIX in source"
+ ],
+ [
+  "bytecode-plant-guard.py",
+  "    if inv.code_origin != \"repo-script\":\n        return False",
+  "    if inv.code_origin != \"repo-script\":\n        return True"
+ ],
+ [
+  "bytecode-plant-guard.py",
+  "        if word == \"-m\" or word.startswith(\"-m\"):\n            return True",
+  "        if word == \"-m\" or word.startswith(\"-m\"):\n            return False"
+ ],
+ [
+  "bytecode-plant-guard.py",
+  "        return listed.returncode == 0",
+  "        return False"
+ ],
+ [
+  "bytecode-plant-guard.py",
+  "        if path.endswith(\".py\") and _python.UNKNOWN not in path",
+  "        if path.endswith(\".pyx\") and _python.UNKNOWN not in path"
+ ],
+ [
+  "bytecode-plant-guard.py",
+  "    return isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute) and node.func.attr in READ_METHODS",
+  "    return False"
+ ],
+ [
+  "bytecode-plant-guard.py",
+  "        return bool(node.values) and all(_is_read(value) for value in node.values)",
+  "        return False"
+ ],
+ [
+  "bytecode-plant-guard.py",
+  "        if not (value is not None and (_is_read(value) or from_dicts(value))) and name not in loop_values",
+  "        if not (value is not None and _is_read(value)) and name not in loop_values"
+ ],
+ [
+  "bytecode-plant-guard.py",
+  "            loop_values |= {Identifier(name.id) for name in ast.walk(value) if isinstance(name, ast.Name)}",
+  "            pass"
+ ],
+ [
+  "bytecode-plant-guard.py",
+  "            isinstance(data, ast.Subscript) and isinstance(data.value, ast.Name) and data.value.id in dicts)",
+  "            False)"
+ ],
+ [
+  "bytecode-plant-guard.py",
+  "        if path is not None and path.endswith(\".py\"):",
+  "        if False:"
+ ],
+ [
+  "bytecode-plant-guard.py",
+  "        elif path is None and PY_LITERAL.search(source):",
+  "        elif False:"
+ ],
+ [
+  "bytecode-plant-guard.py",
+  "    if any(text is not None and starts_tests(_split(CallText(text))) for text, _ in facts.commands):",
+  "    if False:"
+ ],
+ [
+  "bytecode-plant-guard.py",
+  "    if IN_PROCESS_RUN.search(source):\n        return True",
+  "    if IN_PROCESS_RUN.search(source):\n        return False"
+ ],
+ [
+  "bytecode-plant-guard.py",
+  "    return unread and TEST_WORD.search(source) is not None",
+  "    return False"
+ ],
+ [
+  "bytecode-plant-guard.py",
+  "        return self.shaped and bool(self.unguarded) and not self.deletes_bytecode",
+  "        return self.shaped and bool(self.unguarded)"
+ ],
+ [
+  "bytecode-plant-guard.py",
+  "        return bool(self.planted_paths) and self.runs > 0",
+  "        return bool(self.planted_paths)"
+ ],
+ [
+  "bytecode-plant-guard.py",
+  "        return False  # Python would recompile it",
+  "        pass"
+ ],
+ [
+  "bytecode-plant-guard.py",
+  "    if len(data) < 16 or data[:4] != importlib.util.MAGIC_NUMBER:",
+  "    if len(data) < 16:"
+ ],
+ [
+  "bytecode-plant-guard.py",
+  "    return not isinstance(held, CodeType) or held != fresh",
+  "    return False"
+ ],
+ [
+  "bytecode-plant-guard.py",
+  "    return [] if len(names) > MAX_SCANNED else [tree / name for name in names]",
+  "    return []"
+ ],
+ [
+  "bytecode-plant-guard.py",
+  "        if reading.refused:",
+  "        if reading.shaped:"
+ ],
+ [
+  "bytecode-plant-guard.py",
+  "        print(f\"bytecode-plant-guard: this call could not be read, it goes ahead unchecked: {exc}\", file=sys.stderr)\n        return ALLOW",
+  "        print(f\"bytecode-plant-guard: this call could not be read, it goes ahead unchecked: {exc}\", file=sys.stderr)\n        return REFUSE"
+ ],
+ [
+  "bytecode-plant-guard.py",
+  "        print(f\"bytecode-plant-guard: the event could not be read, the call goes ahead: {exc}\", file=sys.stderr)\n        return REPORTED",
+  "        print(f\"bytecode-plant-guard: the event could not be read, the call goes ahead: {exc}\", file=sys.stderr)\n        return ALLOW"
+ ]
+]
