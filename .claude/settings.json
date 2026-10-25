@@ -89,6 +89,15 @@
             "command": "/home/nicolas/.claude/hooks/bytecode-plant-guard.py"
           }
         ]
+      },
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/home/nicolas/.claude/hooks/background-run-watch-guard.py"
+          }
+        ]
       }
     ],
     "PostToolUse": [
@@ -154,6 +163,15 @@
             "command": "/home/nicolas/.claude/hooks/bytecode-plant-guard.py"
           }
         ]
+      },
+      {
+        "matcher": "Bash|Monitor|TaskStop",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/home/nicolas/.claude/hooks/background-run-watch-guard.py"
+          }
+        ]
       }
     ],
     "PostToolUseFailure": [
@@ -179,6 +197,14 @@
             "command": "/home/nicolas/.claude/hooks/red-disposition-guard.py"
           }
         ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/home/nicolas/.claude/hooks/background-run-watch-guard.py"
+          }
+        ]
       }
     ],
     "SessionStart": [
@@ -187,6 +213,14 @@
           {
             "type": "command",
             "command": "/home/nicolas/.claude/hooks/workflow-watch-guard.py"
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/home/nicolas/.claude/hooks/background-run-watch-guard.py"
           }
         ]
       }

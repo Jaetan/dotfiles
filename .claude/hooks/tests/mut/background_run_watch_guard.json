@@ -1,0 +1,182 @@
+[
+ [
+  "background-run-watch-guard.py",
+  "OUTPUT_OPS = frozenset({\">\", \">>\", \">|\", \"&>\", \"&>>\"})",
+  "OUTPUT_OPS = frozenset({\">>\", \">|\", \"&>\", \"&>>\"})"
+ ],
+ [
+  "background-run-watch-guard.py",
+  "resolved(written, invocation.cmd.cwd or cwd)",
+  "resolved(written, cwd)"
+ ],
+ [
+  "background-run-watch-guard.py",
+  "        if invocation.heavy is None:\n            continue\n",
+  "        if False:\n            continue\n"
+ ],
+ [
+  "background-run-watch-guard.py",
+  "not isinstance(command, str) or task in state[\"ended\"]:",
+  "not isinstance(command, str):"
+ ],
+ [
+  "background-run-watch-guard.py",
+  "    if OPERATORS & set(text):\n",
+  "    if False:\n"
+ ],
+ [
+  "background-run-watch-guard.py",
+  "    if QUOTES & set(text):\n",
+  "    if False:\n"
+ ],
+ [
+  "background-run-watch-guard.py",
+  "if any(\"$\" in HOME_PREFIX.sub(\"\", word) or \"`\" in word for word in words):",
+  "if False:"
+ ],
+ [
+  "background-run-watch-guard.py",
+  "if not 3 <= len(words) <= 4:",
+  "if not 2 <= len(words) <= 4:"
+ ],
+ [
+  "background-run-watch-guard.py",
+  "if not (plain_path(program) and plain_path(log)):",
+  "if not plain_path(program):"
+ ],
+ [
+  "background-run-watch-guard.py",
+  "    if os.path.realpath(program) != os.path.realpath(WATCHER):\n",
+  "    if False:\n"
+ ],
+ [
+  "background-run-watch-guard.py",
+  "not 1 <= int(words[2]) <= LONGEST_SILENCE",
+  "not 0 <= int(words[2]) <= LONGEST_SILENCE"
+ ],
+ [
+  "background-run-watch-guard.py",
+  "not 1 <= int(words[2]) <= LONGEST_SILENCE",
+  "not 1 <= int(words[2]) <= LONGEST_SILENCE + 1"
+ ],
+ [
+  "background-run-watch-guard.py",
+  "if not words[2].isdigit() or not",
+  "if not"
+ ],
+ [
+  "background-run-watch-guard.py",
+  "if not 0 < interval <= LONGEST_INTERVAL:",
+  "if not 0 <= interval <= LONGEST_INTERVAL:"
+ ],
+ [
+  "background-run-watch-guard.py",
+  "if not 0 < interval <= LONGEST_INTERVAL:",
+  "if not 0 < interval < LONGEST_INTERVAL:"
+ ],
+ [
+  "background-run-watch-guard.py",
+  "if not run[\"log\"] or run[\"log\"] == watch.log]",
+  "if run[\"log\"] == watch.log]"
+ ],
+ [
+  "background-run-watch-guard.py",
+  "if not run[\"log\"] or run[\"log\"] == watch.log]",
+  "if True]"
+ ],
+ [
+  "background-run-watch-guard.py",
+  "        elif task in state[\"ended\"]:\n            reason",
+  "        elif False:\n            reason"
+ ],
+ [
+  "background-run-watch-guard.py",
+  "            if ends or expired:\n",
+  "            if ends:\n"
+ ],
+ [
+  "background-run-watch-guard.py",
+  "            if ends or expired:\n",
+  "            if expired:\n"
+ ],
+ [
+  "background-run-watch-guard.py",
+  "            if ends:\n                del state[\"runs\"]",
+  "            if False:\n                del state[\"runs\"]"
+ ],
+ [
+  "background-run-watch-guard.py",
+  "        elif ends or expired:\n            state[\"ended\"]",
+  "        elif False:\n            state[\"ended\"]"
+ ],
+ [
+  "background-run-watch-guard.py",
+  "each.get(\"status\") not in TERMINAL}",
+  "True}"
+ ],
+ [
+  "background-run-watch-guard.py",
+  "STOPS_REFUSED = Count(1)",
+  "STOPS_REFUSED = Count(2)"
+ ],
+ [
+  "background-run-watch-guard.py",
+  "    if KILL_SWITCH.exists() or not owed:",
+  "    if not owed:"
+ ],
+ [
+  "background-run-watch-guard.py",
+  "ALWAYS_ALLOWED = frozenset({\"Monitor\", \"TaskStop\", \"ToolSearch\"})",
+  "ALWAYS_ALLOWED = frozenset({\"Monitor\", \"ToolSearch\"})"
+ ],
+ [
+  "background-run-watch-guard.py",
+  "if not os.access(os.path.realpath(WATCHER), os.X_OK):",
+  "if False:"
+ ],
+ [
+  "background-run-watch-guard.py",
+  "            if watched(state, task):\n                run[\"refused\"] = Count(0)",
+  "            if False:\n                run[\"refused\"] = Count(0)"
+ ],
+ [
+  "background-run-watch-guard.py",
+  "NEW_PROCESS = frozenset({\"startup\", \"resume\"})",
+  "NEW_PROCESS = frozenset({\"startup\", \"resume\", \"clear\"})"
+ ],
+ [
+  "background-run-watch-guard.py",
+  "    if event.get(\"agent_id\"):\n        return Decision(ALLOW)",
+  "    if False:\n        return Decision(ALLOW)"
+ ],
+ [
+  "background-run-watch-guard.py",
+  "if not isinstance(command, str) or WATCHER.name not in command:",
+  "if not isinstance(command, str):"
+ ],
+ [
+  "background-run-watch-guard.py",
+  "if well_formed(cast(\"State\", data)) else",
+  "if True else"
+ ],
+ [
+  "background-run-watch-guard.py",
+  "        state[\"watches\"].pop(task, None)\n",
+  ""
+ ],
+ [
+  "background-run-watch-guard.py",
+  "        state[\"runs\"].pop(task, None)\n",
+  ""
+ ],
+ [
+  "background-run-watch-guard.py",
+  "        elif not plain_path(Word(run[\"log\"])):",
+  "        elif False:"
+ ],
+ [
+  "background-run-watch-guard.py",
+  "    return Decision(REPORTED, told) if told else Decision(ALLOW)",
+  "    return Decision(ALLOW)"
+ ]
+]

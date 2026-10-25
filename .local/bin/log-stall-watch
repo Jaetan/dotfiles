@@ -1,0 +1,146 @@
+#!/home/nicolas/.local/bin/python3.14
+"""Watch a background run's log and say when it stops growing before the run's exit line.
+
+Usage: log-stall-watch LOG SILENCE [SECONDS]
+
+LOG is the file a background run sends its output to, by its absolute path. SILENCE is how many
+seconds the log may go without growing, a whole number from 1 to 1800; SECONDS, the interval between
+reads, is above 0 and at most 60, and 30 when not given.
+
+Each read takes the log's size, its modification time and its last lines. Meant to run under the
+Monitor tool, where each line it prints is an event:
+  * STALL, once each time the log has gone SILENCE seconds without growing, saying how long: a run
+    that hangs writes nothing and sends no notice of its own. The log growing again re-arms it.
+  * ENDED, with the log's last three lines, when the log ends in a line starting `EXIT=`, the line a
+    call appends with `; echo "EXIT=$?" >> LOG`; then it exits. A run's processes are not read: each
+    tool call runs in a sandbox of its own, and another call cannot read its processes' descriptors.
+  * WAITING, once, while the log does not exist yet.
+It stops nothing itself. background-run-watch-guard.py, in the Claude Code hook kit, holds every heavy
+run the main thread starts in the background to this watch.
+
+Exit 0 when the run ended; 2 on a usage error.
+"""
+
+import sys
+import time
+from pathlib import Path
+from typing import NamedTuple, NewType
+
+# Seconds of silence, of a clock, or between reads; a file's size; a command line argument; a line to
+# print; the exit status.
+Seconds = NewType("Seconds", float)
+Bytes = NewType("Bytes", int)
+Argument = NewType("Argument", str)
+Line = NewType("Line", str)
+ExitStatus = NewType("ExitStatus", int)
+ENDED, USAGE = ExitStatus(0), ExitStatus(2)
+
+LONGEST_SILENCE = 1800
+LONGEST_INTERVAL = Seconds(60.0)
+DEFAULT_INTERVAL = Seconds(30.0)
+EXIT_LINE = "EXIT="
+TAIL_LINES = 3
+TAIL_BYTES = 64 * 1024  # the end of the log read for its last lines
+USAGE_TEXT = "usage: log-stall-watch LOG SILENCE [SECONDS]"
+
+
+class Watch(NamedTuple):
+    """What the command line asks: the log, the silence allowed, the interval between reads."""
+
+    log: Path
+    silence: Seconds
+    interval: Seconds
+
+
+class Reading(NamedTuple):
+    """One read of the log: whether it exists, its size and modification time, its last lines."""
+
+    exists: bool
+    size: Bytes
+    mtime: Seconds
+    last: tuple[Line, ...]
+
+
+class Seen(NamedTuple):
+    """What the reads so far leave: the size and time last read, whether this silence was told, whether
+    the log's absence was."""
+
+    size: Bytes
+    mtime: Seconds
+    told: bool
+    waited: bool
+
+
+def parsed(arguments: list[Argument]) -> Watch | Line:
+    """The watch the arguments ask for, or what is wrong with them."""
+    if not 2 <= len(arguments) <= 3:
+        return Line("it takes LOG SILENCE [SECONDS]")
+    log = Path(arguments[0])
+    if not log.is_absolute():
+        return Line(f"LOG {arguments[0]} is not an absolute path")
+    if not arguments[1].isdigit() or not 1 <= int(arguments[1]) <= LONGEST_SILENCE:
+        return Line(f"SILENCE {arguments[1]} is not a whole number from 1 to {LONGEST_SILENCE}")
+    interval = DEFAULT_INTERVAL
+    if len(arguments) == 3:
+        try:
+            interval = Seconds(float(arguments[2]))
+        except ValueError:
+            return Line(f"SECONDS {arguments[2]} is not a number")
+        if not 0 < interval <= LONGEST_INTERVAL:
+            return Line(f"SECONDS {arguments[2]} is not above 0 and at most {LONGEST_INTERVAL:g}")
+    return Watch(log, Seconds(float(arguments[1])), interval)
+
+
+def last_lines(log: Path, size: Bytes) -> tuple[Line, ...]:
+    """The log's last lines, read from its end."""
+    with log.open("rb") as handle:
+        handle.seek(max(0, size - TAIL_BYTES))
+        text = handle.read().decode("utf-8", "replace")
+    return tuple(Line(line) for line in text.splitlines()[-TAIL_LINES:])
+
+
+def read(log: Path) -> Reading:
+    """Read the log once."""
+    try:
+        status = log.stat()
+        last = last_lines(log, Bytes(status.st_size))
+    except OSError:
+        return Reading(False, Bytes(0), Seconds(0.0), ())
+    return Reading(True, Bytes(status.st_size), Seconds(status.st_mtime), last)
+
+
+def verdict(watch: Watch, seen: Seen, reading: Reading, now: Seconds) -> tuple[Seen, list[Line], bool]:
+    """What one read says: the state it leaves, the lines to print, and whether the run ended."""
+    if not reading.exists:
+        lines = [] if seen.waited else [Line(f"WAITING: {watch.log} does not exist yet")]
+        return seen._replace(waited=True), lines, False
+    if reading.last and reading.last[-1].startswith(EXIT_LINE):
+        return seen, [Line(f"ENDED: {watch.log} ends in its exit line; its last lines:"), *reading.last], True
+    grew = (reading.size, reading.mtime) != (seen.size, seen.mtime)
+    told = seen.told and not grew
+    silent = Seconds(now - reading.mtime)
+    lines: list[Line] = []
+    if silent >= watch.silence and not told:
+        lines.append(Line(f"STALL: {watch.log} has not grown for {silent:.0f}s, past {watch.silence:.0f}s, and "
+                          "holds no exit line"))
+        told = True
+    return Seen(reading.size, reading.mtime, told, seen.waited), lines, False
+
+
+def main() -> ExitStatus:
+    watch = parsed([Argument(argument) for argument in sys.argv[1:]])
+    if not isinstance(watch, Watch):
+        print(f"log-stall-watch: {watch}\n{USAGE_TEXT}", file=sys.stderr)
+        return USAGE
+    seen = Seen(Bytes(-1), Seconds(-1.0), told=False, waited=False)
+    while True:
+        seen, lines, ended = verdict(watch, seen, read(watch.log), Seconds(time.time()))
+        for line in lines:
+            print(line, flush=True)
+        if ended:
+            return ENDED
+        time.sleep(watch.interval)
+
+
+if __name__ == "__main__":
+    sys.exit(main())

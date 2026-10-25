@@ -1,0 +1,102 @@
+[
+ [
+  "log-stall-watch",
+  "if silent >= watch.silence and not told:",
+  "if silent > watch.silence and not told:"
+ ],
+ [
+  "log-stall-watch",
+  "if silent >= watch.silence and not told:",
+  "if silent >= watch.silence:"
+ ],
+ [
+  "log-stall-watch",
+  "told = seen.told and not grew",
+  "told = seen.told"
+ ],
+ [
+  "log-stall-watch",
+  "grew = (reading.size, reading.mtime) != (seen.size, seen.mtime)",
+  "grew = reading.mtime != seen.mtime"
+ ],
+ [
+  "log-stall-watch",
+  "grew = (reading.size, reading.mtime) != (seen.size, seen.mtime)",
+  "grew = reading.size != seen.size"
+ ],
+ [
+  "log-stall-watch",
+  "if reading.last and reading.last[-1].startswith(EXIT_LINE):",
+  "if any(line.startswith(EXIT_LINE) for line in reading.last):"
+ ],
+ [
+  "log-stall-watch",
+  "if reading.last and reading.last[-1].startswith(EXIT_LINE):",
+  "if reading.last[-1].startswith(EXIT_LINE):"
+ ],
+ [
+  "log-stall-watch",
+  "lines = [] if seen.waited else",
+  "lines = [] if False else"
+ ],
+ [
+  "log-stall-watch",
+  "not 1 <= int(arguments[1]) <= LONGEST_SILENCE",
+  "not 0 <= int(arguments[1]) <= LONGEST_SILENCE"
+ ],
+ [
+  "log-stall-watch",
+  "not 1 <= int(arguments[1]) <= LONGEST_SILENCE",
+  "not 1 <= int(arguments[1]) <= LONGEST_SILENCE + 1"
+ ],
+ [
+  "log-stall-watch",
+  "if not arguments[1].isdigit() or not",
+  "if not"
+ ],
+ [
+  "log-stall-watch",
+  "if not 0 < interval <= LONGEST_INTERVAL:",
+  "if not 0 <= interval <= LONGEST_INTERVAL:"
+ ],
+ [
+  "log-stall-watch",
+  "if not 0 < interval <= LONGEST_INTERVAL:",
+  "if not 0 < interval < LONGEST_INTERVAL:"
+ ],
+ [
+  "log-stall-watch",
+  "DEFAULT_INTERVAL = Seconds(30.0)",
+  "DEFAULT_INTERVAL = Seconds(31.0)"
+ ],
+ [
+  "log-stall-watch",
+  "text.splitlines()[-TAIL_LINES:]",
+  "text.splitlines()[-2:]"
+ ],
+ [
+  "log-stall-watch",
+  "    if not log.is_absolute():\n",
+  "    if False:\n"
+ ],
+ [
+  "log-stall-watch",
+  "        if ended:\n            return ENDED\n",
+  "        if False:\n            return ENDED\n"
+ ],
+ [
+  "log-stall-watch",
+  "if not 2 <= len(arguments) <= 3:",
+  "if not 1 <= len(arguments) <= 3:"
+ ],
+ [
+  "log-stall-watch",
+  "return seen._replace(waited=True), lines, False",
+  "return seen, lines, False"
+ ],
+ [
+  "log-stall-watch",
+  "handle.seek(max(0, size - TAIL_BYTES))",
+  "handle.seek(max(0, size - 8))"
+ ]
+]
