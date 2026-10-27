@@ -76,8 +76,8 @@
  ],
  [
   "pr-watch-guard.py",
-  "        return REFUSE\n    return ALLOW\n",
-  "        return ALLOW\n    return ALLOW\n"
+  "return REFUSE if found or doubled else ALLOW",
+  "return ALLOW if found or doubled else ALLOW"
  ],
  [
   "pr-watch-guard.py",
@@ -108,5 +108,60 @@
   "pr-watch-guard.py",
   "            k = j + 1  # the compound ends here with the watcher's status; what follows it decides\n            continue\n",
   "            return None\n"
+ ],
+ [
+  "pr-watch-guard.py",
+  "        elif not word.startswith(\"-\"):\n",
+  "        elif True:\n"
+ ],
+ [
+  "pr-watch-guard.py",
+  "            next(words, None)\n",
+  "            pass\n"
+ ],
+ [
+  "pr-watch-guard.py",
+  "C.is_python(words[0]) and C.prog(words[1]) == WATCHER",
+  "C.prog(words[1]) == WATCHER"
+ ],
+ [
+  "pr-watch-guard.py",
+  "if words and _is_watcher(words):",
+  "if False:"
+ ],
+ [
+  "pr-watch-guard.py",
+  "for watch in running if watch.pr == pr and watch.tree == tree)",
+  "for watch in running if watch.pr == pr)"
+ ],
+ [
+  "pr-watch-guard.py",
+  "for watch in running if watch.pr == pr and watch.tree == tree)",
+  "for watch in running if watch.tree == tree)"
+ ],
+ [
+  "pr-watch-guard.py",
+  "tree = _tree(Directory(inv.cmd.cwd or cwd))",
+  "tree = _tree(cwd)"
+ ],
+ [
+  "pr-watch-guard.py",
+  "return Tree(_shell.tree_of(directory) or os.path.realpath(directory))",
+  "return Tree(os.path.realpath(directory))"
+ ],
+ [
+  "pr-watch-guard.py",
+  "return REFUSE if found or doubled else ALLOW",
+  "return REFUSE if found else ALLOW"
+ ],
+ [
+  "pr-watch-guard.py",
+  "        doubled = duplicates(CallText(text), cwd)\n",
+  "        doubled = []\n"
+ ],
+ [
+  "pr-watch-guard.py",
+  "            operands = words[2:]\n",
+  "            operands = words[1:]\n"
  ]
 ]

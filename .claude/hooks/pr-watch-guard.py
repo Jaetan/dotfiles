@@ -27,9 +27,17 @@ WHAT IS REFUSED, in a Bash call read by `_commands.expand` (carriers and scripts
     status and is allowed, as is a redirection of stderr alone; a compound's closing word (`fi`, `done`,
     `esac`, `}`) after it is not a command, since the compound's status is the watcher's.
 The command after it is read at the call's top level, where the task's status is decided; the pipe, the
-redirection, the job and the bare gh anywhere the reader follows. Text the reader cannot follow goes ahead with a note
-on stderr; a fault of the hook's own is reported (exit 1) and the call goes ahead. Exit 2 refuses, naming each
-problem and the shape to use.
+redirection, the job and the bare gh anywhere the reader follows.
+
+A SECOND WATCH OF ONE PULL REQUEST is refused too: `pr-checks-watch N` while a process of the same watcher for
+the same N runs in the same git tree (read from /proc: the watcher by its script's name as a command or as its
+interpreter's first operand, N its first operand past `--record`'s value, the tree the one holding its working
+directory). The watch armed before a /clear runs on and notifies the new context, but a call cannot see it: `ps`
+in the tool's sandbox showed none four times (2026-10-15, 10-22, 10-24, 10-27), a memory saying so each time, and
+a duplicate was armed each time. The hook runs outside the sandbox, where /proc shows it.
+
+Text the reader cannot follow goes ahead with a note on stderr; a fault of the hook's own is reported (exit 1)
+and the call goes ahead. Exit 2 refuses, naming each problem and the shape to use.
 """
 
 from __future__ import annotations
@@ -38,7 +46,7 @@ import json
 import os
 import re
 import sys
-from typing import NewType
+from typing import NamedTuple, NewType
 
 import _commands as C
 import _shell
@@ -76,6 +84,28 @@ Watch with the script whose exit status and stdout are the verdict, alone or bef
 It ends at the first red check or when every check has ended, then reads the head's rollup and the ruleset's
 required contexts: exit 0 GREEN, 1 RED, 3 INCOMPLETE (re-arm), 2 when gh could not answer. The task's
 notification carries that status, and its output the lines that explain it."""
+
+DUPLICATE = """BLOCKED: this call arms a second watch of a pull request whose first watch is running.
+
+{problems}
+
+The running watch notifies this context when it ends, a clear between them or not: wait for that notification.
+A call's `ps` cannot see a watch an earlier call started; the hook reads /proc outside the sandbox. Only if that
+watch is known to be wrong, end it first (`kill PID`) and arm again."""
+
+
+# A process number; a pull request as the watcher's operand spells it; a git tree's root.
+ProcessId = NewType("ProcessId", int)
+PullRequest = NewType("PullRequest", str)
+Tree = NewType("Tree", str)
+
+
+class LiveWatch(NamedTuple):
+    """A watcher process running now: its number, the pull request it watches and the tree it runs in."""
+
+    pid: ProcessId
+    pr: PullRequest
+    tree: Tree
 
 
 def _is_watcher(argv: list[CommandWord]) -> bool:
@@ -160,6 +190,67 @@ def masked_at_top_level(text: CallText) -> list[Prose]:
     return found
 
 
+def _watched_pr(args: list[CommandWord]) -> PullRequest | None:
+    """The pull request a watcher's operands name: the first that is no option and no `--record` value."""
+    words = iter(args)
+    for word in words:
+        if word == "--record":
+            next(words, None)
+        elif not word.startswith("-"):
+            return PullRequest(word)
+    return None
+
+
+def _tree(directory: Directory) -> Tree:
+    """The git tree holding ``directory``, or the directory itself outside every tree."""
+    return Tree(_shell.tree_of(directory) or os.path.realpath(directory))
+
+
+def live_watches() -> list[LiveWatch]:
+    """Every watcher process running now, read from /proc."""
+    found: list[LiveWatch] = []
+    for entry in os.scandir("/proc"):
+        if not entry.name.isdigit():
+            continue
+        try:
+            with open(f"/proc/{entry.name}/cmdline", "rb") as fh:
+                raw = fh.read()
+            cwd = Directory(os.readlink(f"/proc/{entry.name}/cwd"))
+        except OSError:
+            continue  # gone, or not ours to read
+        words = [CommandWord(word.decode(errors="replace")) for word in raw.split(b"\0") if word]
+        if words and _is_watcher(words):
+            operands = words[1:]
+        elif len(words) > 1 and C.is_python(words[0]) and C.prog(words[1]) == WATCHER:
+            operands = words[2:]
+        else:
+            continue
+        pr = _watched_pr(operands)
+        if pr is not None:
+            found.append(LiveWatch(ProcessId(int(entry.name)), pr, _tree(cwd)))
+    return found
+
+
+def duplicates(text: CallText, cwd: Directory) -> list[Prose]:
+    """One line per watcher the call starts whose pull request a running watcher in the same tree watches."""
+    _shell.reset_budget()
+    found: list[Prose] = []
+    running: list[LiveWatch] | None = None
+    for inv in C.expand(text, cwd):
+        argv = [CommandWord(word) for word in inv.core.argv]
+        if not _is_watcher(argv):
+            continue
+        pr = _watched_pr(argv[1:])
+        if pr is None:
+            continue
+        if running is None:
+            running = live_watches()
+        tree = _tree(Directory(inv.cmd.cwd or cwd))
+        found.extend(Prose(f"  * a watch of #{pr} is already running in {tree} (pid {watch.pid})")
+                     for watch in running if watch.pr == pr and watch.tree == tree)
+    return found
+
+
 def problems(text: CallText, cwd: Directory, background: bool) -> list[Prose]:
     """One line per way the call's watch hides its verdict from the task."""
     _shell.reset_budget()
@@ -210,6 +301,7 @@ def main() -> ExitStatus:
     cwd = Directory(raw_cwd if isinstance(raw_cwd, str) and raw_cwd else os.getcwd())
     try:
         found = problems(CallText(text), cwd, background)
+        doubled = duplicates(CallText(text), cwd)
     except (_shell.ParseError, _shell.BudgetExceeded) as exc:
         print(f"pr-watch-guard: this call could not be read, it goes ahead unchecked: {exc}", file=sys.stderr)
         return ALLOW
@@ -219,8 +311,9 @@ def main() -> ExitStatus:
         return REPORTED
     if found:
         print(ADVICE.format(problems="\n".join(dict.fromkeys(found))), file=sys.stderr)
-        return REFUSE
-    return ALLOW
+    if doubled:
+        print(DUPLICATE.format(problems="\n".join(dict.fromkeys(doubled))), file=sys.stderr)
+    return REFUSE if found or doubled else ALLOW
 
 
 if __name__ == "__main__":

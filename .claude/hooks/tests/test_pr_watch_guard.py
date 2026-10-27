@@ -5,7 +5,8 @@ Every case pipes one PreToolUse event for a Bash call to the hook, run by its pa
 and compares the answer with the rule: exit 2 refuses a bare `gh pr checks --watch` and a `pr-checks-watch`
 whose verdict cannot reach the task (stdout to a file or a pipe, a command after it joined by `;`, a newline
 or `||`, or the call run in the foreground), naming each; exit 0 lets the rest through; exit 1 reports an
-event the hook could not read.
+event the hook could not read. The live cases start a process that sleeps under a watcher's command line, in a
+directory the case names, and expect a second watch of the same pull request in the same tree refused.
 
 Usage: test_pr_watch_guard.py [GUARD]
   GUARD  the guard to test, or a hooks directory holding it (default: ..)
@@ -15,6 +16,7 @@ Exit 0 when every case agrees with its expectation.
 import json
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 from typing import NamedTuple, NewType
 
@@ -24,13 +26,16 @@ CaseId = NewType("CaseId", str)
 Prose = NewType("Prose", str)
 CallText = NewType("CallText", str)
 EventText = NewType("EventText", str)
+CommandWord = NewType("CommandWord", str)  # a word of a process's command line
+CommandLine = NewType("CommandLine", str)  # a command line written with single spaces
+Directory = NewType("Directory", str)  # a working directory as the event spells it
 ExitStatus = NewType("ExitStatus", int)
 ALLOW, REPORTED, REFUSE = ExitStatus(0), ExitStatus(1), ExitStatus(2)
 
 HOOKS = Path(__file__).resolve().parent.parent
 GIVEN = Path(sys.argv[1] if len(sys.argv) > 1 else HOOKS).resolve()
 GUARD = GIVEN / "pr-watch-guard.py" if GIVEN.is_dir() else GIVEN
-CWD = "/home/nicolas/dev/agda/aletheia"
+CWD = Directory("/home/nicolas/dev/agda/aletheia")
 
 
 class Case(NamedTuple):
@@ -128,10 +133,80 @@ CASES = [
 ]
 
 
-def event(text: CallText, background: bool) -> EventText:
-    """Return the PreToolUse event for a Bash call of ``text``."""
+class LiveCase(NamedTuple):
+    """A process sleeping under ``live`` in ``live_cwd``, a background call of ``text`` from ``cwd``, the answer,
+    and words the refusal names (``{pid}`` stands for the sleeping process's)."""
+
+    id: CaseId
+    live: tuple[CommandWord, ...]
+    live_cwd: Directory
+    text: CallText
+    cwd: Directory
+    want: ExitStatus
+    what: Prose
+    names: tuple[Prose, ...] = ()
+
+
+# A watcher runs as its interpreter with the script's path after it, as the kernel starts a shebang script.
+INTERPRETER = CommandWord("/home/nicolas/.local/bin/python3.14")
+WATCHER = CommandWord("/home/nicolas/.local/bin/pr-checks-watch")
+SCRATCH = Path(tempfile.mkdtemp(prefix="pr-watch-guard-"))
+ELSEWHERE = Directory(str(SCRATCH / "elsewhere"))  # a directory in no git tree
+SUBDIR = Directory(f"{CWD}/tools")
+
+
+def argv(line: CommandLine) -> tuple[CommandWord, ...]:
+    """The words of a command line written with single spaces."""
+    return tuple(CommandWord(word) for word in line.split(" "))
+
+
+LIVE_CASES = [
+    LiveCase(CaseId("l1"), (INTERPRETER, WATCHER, *argv(CommandLine("458 --record a.log"))), CWD,
+             CallText('pr-checks-watch 458 --record "$S/b.log"'), CWD, REFUSE,
+             Prose("a second watch of a pull request whose first is running (the 2026-10-27 slip)"),
+             (Prose("a watch of #458 is already running"), Prose("pid {pid}"))),
+    LiveCase(CaseId("l2"), (INTERPRETER, WATCHER, *argv(CommandLine("458"))), CWD,
+             CallText("pr-checks-watch 457"), CWD, ALLOW, Prose("a watch of another pull request")),
+    LiveCase(CaseId("l3"), (INTERPRETER, WATCHER, *argv(CommandLine("458"))), ELSEWHERE,
+             CallText("pr-checks-watch 458"), CWD, ALLOW,
+             Prose("the same number watched outside this tree is another repository's")),
+    LiveCase(CaseId("l4"), argv(CommandLine("vim pr-checks-watch 458")), CWD, CallText("pr-checks-watch 458"), CWD,
+             ALLOW, Prose("a process naming the script as an argument is not a watch")),
+    LiveCase(CaseId("l5"), (INTERPRETER, WATCHER, *argv(CommandLine("458"))), CWD,
+             CallText(f"cd {CWD} && pr-checks-watch 458"), ELSEWHERE, REFUSE,
+             Prose("the tree is the one the watcher would run in, after the call's cd"),
+             (Prose("a watch of #458 is already running"),)),
+    LiveCase(CaseId("l6"), (INTERPRETER, WATCHER, *argv(CommandLine("--record a.log 458"))), CWD,
+             CallText("pr-checks-watch 458"), CWD, REFUSE,
+             Prose("the running watch's number read past its --record value"),
+             (Prose("a watch of #458 is already running"),)),
+    LiveCase(CaseId("l7"), (INTERPRETER, WATCHER, *argv(CommandLine("458"))), SUBDIR,
+             CallText("pr-checks-watch 458"), CWD, REFUSE,
+             Prose("a watch started in a subdirectory of the tree is the tree's"),
+             (Prose("a watch of #458 is already running"),)),
+    LiveCase(CaseId("l8"), (INTERPRETER, WATCHER, *argv(CommandLine("--record=a.log 458"))), CWD,
+             CallText("pr-checks-watch 458"), CWD, REFUSE,
+             Prose("the record option spelled with `=` is no operand"),
+             (Prose("a watch of #458 is already running"),)),
+    LiveCase(CaseId("l9"), (WATCHER, *argv(CommandLine("458"))), CWD, CallText("pr-checks-watch 458"), CWD, REFUSE,
+             Prose("a watcher whose command is its own name, no interpreter before it"),
+             (Prose("a watch of #458 is already running"),)),
+]
+
+
+def sleeper() -> Path:
+    """Build a program that sleeps until killed, under whatever command line it is started with."""
+    src = SCRATCH / "sleeper.c"
+    src.write_text("#include <unistd.h>\nint main(void){for(;;)pause();}\n")
+    out = SCRATCH / "sleeper"
+    subprocess.run(["cc", "-O0", "-o", str(out), str(src)], check=True)
+    return out
+
+
+def event(text: CallText, background: bool, cwd: Directory = CWD) -> EventText:
+    """Return the PreToolUse event for a Bash call of ``text`` from ``cwd``."""
     return EventText(json.dumps({
-        "hook_event_name": "PreToolUse", "tool_name": "Bash", "cwd": CWD,
+        "hook_event_name": "PreToolUse", "tool_name": "Bash", "cwd": cwd,
         "tool_input": {"command": text, "run_in_background": background},
     }))
 
@@ -172,7 +247,26 @@ def main() -> ExitStatus:
         ok = outcome.status == want
         bad += not ok
         print(f"{'ok  ' if ok else 'MISS'} {case_id:<4} want={want} got={outcome.status} {what}")
-    total = len(CASES) + len(others)
+    Path(ELSEWHERE).mkdir()
+    program = sleeper()
+    for live in LIVE_CASES:
+        # Popen returns once the child has exec'd, so its command line is in /proc when the hook reads it.
+        proc = subprocess.Popen(list(live.live), executable=str(program), cwd=live.live_cwd)
+        try:
+            outcome = answer(event(live.text, True, live.cwd))
+        finally:
+            proc.kill()
+            proc.wait()
+        names = [Prose(name.replace("{pid}", str(proc.pid))) for name in live.names]
+        missing = [name for name in names if name not in outcome.stderr]
+        ok = outcome.status == live.want and not missing
+        bad += not ok
+        print(f"{'ok  ' if ok else 'MISS'} {live.id:<4} want={live.want} got={outcome.status} {live.what}")
+        if not ok:
+            print("        " + " | ".join(outcome.stderr.strip().splitlines()[-4:])[:300])
+            for name in missing:
+                print(f"        not named: {name}")
+    total = len(CASES) + len(others) + len(LIVE_CASES)
     print(f"{total} cases, {bad} disagree")
     return ExitStatus(1 if bad else 0)
 
