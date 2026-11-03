@@ -98,6 +98,15 @@
             "command": "/home/nicolas/.claude/hooks/background-run-watch-guard.py"
           }
         ]
+      },
+      {
+        "matcher": "Workflow",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/home/nicolas/.claude/hooks/workflow-launch-guard.py"
+          }
+        ]
       }
     ],
     "PostToolUse": [

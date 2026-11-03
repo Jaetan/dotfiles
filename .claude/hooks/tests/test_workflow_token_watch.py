@@ -363,8 +363,10 @@ def over_limit_returns(directory: Path) -> bool:
 
 
 def limit_is_read(directory: Path) -> bool:
-    write(directory / "agent-a.jsonl", [call(MessageId("m1"), produced=Tokens(1_000_000)),
-                                        call(MessageId("m2"), written=Tokens(1_000_001))])
+    write(directory / "agent-a.jsonl", [call(MessageId("m1"), produced=Tokens(700_000))])
+    write(directory / "agent-b.jsonl", [call(MessageId("m1"), produced=Tokens(600_000)),
+                                        call(MessageId("m2"), written=Tokens(100_000))])
+    write(directory / "agent-c.jsonl", [call(MessageId("m1"), written=Tokens(600_001))])
     ran = run_main([Argument(str(directory)), Argument("2000000")])
     small = run_main([Argument(str(directory)), Argument("2000002")])
     return ran is not None and small is not None and ran.status == 0 and small.status is None \
@@ -372,9 +374,51 @@ def limit_is_read(directory: Path) -> bool:
 
 
 def default_ceiling(directory: Path) -> bool:
-    write(directory / "agent-a.jsonl", [call(MessageId("m1"), produced=Tokens(2_000_001))])
+    for name, tokens in (("a", 700_000), ("b", 700_000), ("c", 600_001)):
+        write(directory / f"agent-{name}.jsonl", [call(MessageId("m1"), produced=Tokens(tokens))])
     ran = run_main([Argument(str(directory))])
     return ran is not None and ran.status == 0 and "ceiling 2,000,000" in ran.out.text()
+
+
+def agent_over_returns(directory: Path) -> bool:
+    write(directory / "agent-a.jsonl", [call(MessageId("m1"), produced=Tokens(5))])
+    write(directory / "agent-b.jsonl", [call(MessageId("m1"), produced=Tokens(350_000), reread=Tokens(9_000_000)),
+                                        call(MessageId("m2"), produced=Tokens(999_999)),
+                                        call(MessageId("m2"), written=Tokens(350_001))])
+    ran = run_main([Argument(str(directory))])
+    return ran is not None and ran.status == 0 and ran.clock.slept == [] and ran.out.text() \
+        == "OVER LIMIT: agent-b.jsonl 700,001 new tokens, agent ceiling 700,000; stop the workflow\n"
+
+
+def agents_under_keep_watching(directory: Path) -> bool:
+    write(directory / "agent-a.jsonl", [call(MessageId("m1"), produced=Tokens(400_000)),
+                                        call(MessageId("m2"), written=Tokens(300_000))])
+    write(directory / "agent-b.jsonl", [call(MessageId("m1"), produced=Tokens(400_000))])
+    ran = run_main([Argument(str(directory))])
+    return ran is not None and ran.status is None and ran.clock.slept == [5.0] \
+        and ran.out.text() == "1,100,000 new tokens of 2,000,000\n"
+
+
+def total_line_first(directory: Path) -> bool:
+    write(directory / "agent-a.jsonl", [call(MessageId("m1"), produced=Tokens(2_000_001))])
+    ran = run_main([Argument(str(directory))])
+    return ran is not None and ran.status == 0 \
+        and ran.out.text() == "OVER LIMIT: 2,000,001 new tokens, ceiling 2,000,000; stop the workflow\n"
+
+
+def most_named(directory: Path) -> bool:
+    for name, tokens in (("a", 700_001), ("b", 700_003), ("c", 700_002)):
+        write(directory / f"agent-{name}.jsonl", [call(MessageId("m1"), produced=Tokens(tokens))])
+    tally = WATCH.Tally()
+    limit = Tokens(3_000_000)
+    return tally.report(tally.read(directory), limit) \
+        == "OVER LIMIT: agent-b.jsonl 700,003 new tokens, agent ceiling 700,000; stop the workflow"
+
+
+def any_id_counts(directory: Path) -> bool:
+    write(directory / "agent-a.jsonl", [call(MessageId("m1"), produced=Tokens(1))],
+          RawText(b'{"message": {"role": "assistant", "id": [1], "usage": {"output_tokens": 2}}}\n'))
+    return WATCH.Tally().read(directory) == 3
 
 
 # The command line ----------------------------------------------------------------
@@ -383,6 +427,12 @@ def usage_without_arguments(directory: Path) -> bool:
     del directory
     done = subprocess.run([str(WATCHER)], capture_output=True, text=True, check=False)
     return done.returncode == 2 and "Usage: workflow-token-watch" in done.stderr
+
+
+def usage_names_both_ceilings(directory: Path) -> bool:
+    del directory
+    doc = WATCH.__doc__ or ""
+    return f"{WATCH.CEILING:,}" in doc and f"{WATCH.AGENT_CEILING:,}" in doc
 
 
 def runs_under_the_kits_python(directory: Path) -> bool:
@@ -434,6 +484,14 @@ CASES = [
     Case(CaseId("T23"), Prose("past the ceiling the loop returns 0 without sleeping"), over_limit_returns),
     Case(CaseId("T24"), Prose("its shebang is the kit's guards' interpreter line, and that interpreter exists"),
          runs_under_the_kits_python),
+    Case(CaseId("T26"), Prose("one agent past 700,000 under the ceiling is named OVER LIMIT, and the loop returns 0 "
+                              "without sleeping"), agent_over_returns),
+    Case(CaseId("T27"), Prose("agents at or under 700,000 each, past it together, keep the watch going"),
+         agents_under_keep_watching),
+    Case(CaseId("T28"), Prose("past both ceilings at one read, the total's line alone is printed"), total_line_first),
+    Case(CaseId("T29"), Prose("of several agents past 700,000, the one with the most is named"), most_named),
+    Case(CaseId("T30"), Prose("a call whose id is not text counts"), any_id_counts),
+    Case(CaseId("T31"), Prose("the usage names both ceilings as the watcher holds them"), usage_names_both_ceilings),
 ]
 
 

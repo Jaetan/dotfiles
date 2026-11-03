@@ -46,13 +46,13 @@
  ],
  [
   "workflow-token-watch",
-  "self.usage[CallKey(f\"{transcript.name}:{message['id']}\")] = tokens_of(usage)",
-  "self.usage[CallKey(message[\"id\"])] = tokens_of(usage)"
+  "calls = self.usage.setdefault(AgentName(transcript.name), {})",
+  "calls = self.usage.setdefault(AgentName(\"\"), {})"
  ],
  [
   "workflow-token-watch",
-  "self.usage[CallKey(f\"{transcript.name}:{message['id']}\")] = tokens_of(usage)",
-  "self.usage[CallKey(str(len(self.usage)))] = tokens_of(usage)"
+  "calls[CallId(str(message[\"id\"]))] = tokens_of(usage)",
+  "calls[CallId(str(len(calls)))] = tokens_of(usage)"
  ],
  [
   "workflow-token-watch",
@@ -156,12 +156,12 @@
  ],
  [
   "workflow-token-watch",
-  "        if total > limit:\n            return ExitStatus(0)",
-  "        if total >= limit:\n            return ExitStatus(0)"
+  "        if tally.over(total, limit) is not None:\n            return ExitStatus(0)",
+  "        if tally.over(total, limit) is None:\n            return ExitStatus(0)"
  ],
  [
   "workflow-token-watch",
-  "        if total > limit:\n            return ExitStatus(0)",
+  "        if tally.over(total, limit) is not None:\n            return ExitStatus(0)",
   "        if False:\n            return ExitStatus(0)"
  ],
  [
@@ -213,5 +213,95 @@
   "workflow-token-watch",
   "    if isinstance(parts, list) and parts:\n",
   "    if parts:\n"
+ ],
+ [
+  "workflow-token-watch",
+  "AGENT_CEILING = Tokens(700_000)",
+  "AGENT_CEILING = Tokens(700_001)"
+ ],
+ [
+  "workflow-token-watch",
+  "AGENT_CEILING = Tokens(700_000)",
+  "AGENT_CEILING = Tokens(699_999)"
+ ],
+ [
+  "workflow-token-watch",
+  "        if tokens > AGENT_CEILING:",
+  "        if tokens >= AGENT_CEILING:"
+ ],
+ [
+  "workflow-token-watch",
+  "        if tokens > AGENT_CEILING:",
+  "        if False:"
+ ],
+ [
+  "workflow-token-watch",
+  "tokens, name = max(((tokens, name) for name, tokens in self.agents().items()),",
+  "tokens, name = min(((tokens, name) for name, tokens in self.agents().items()),"
+ ],
+ [
+  "workflow-token-watch",
+  "                           default=(Tokens(0), AgentName(\"\")))",
+  "                           key=lambda pair: pair[1], default=(Tokens(0), AgentName(\"\")))"
+ ],
+ [
+  "workflow-token-watch",
+  "                           default=(Tokens(0), AgentName(\"\")))",
+  "                           default=(Tokens(AGENT_CEILING + 1), AgentName(\"\")))"
+ ],
+ [
+  "workflow-token-watch",
+  ",\n                           default=(Tokens(0), AgentName(\"\")))",
+  ")"
+ ],
+ [
+  "workflow-token-watch",
+  "        if total > limit:\n            return Line(f\"OVER LIMIT: {total:,} new tokens, ceiling {limit:,}; stop the workflow\")\n        tokens, name = max(((tokens, name) for name, tokens in self.agents().items()),\n                           default=(Tokens(0), AgentName(\"\")))\n        if tokens > AGENT_CEILING:\n            return Line(f\"OVER LIMIT: {name} {tokens:,} new tokens, \"\n                        f\"agent ceiling {AGENT_CEILING:,}; stop the workflow\")\n",
+  "        tokens, name = max(((tokens, name) for name, tokens in self.agents().items()),\n                           default=(Tokens(0), AgentName(\"\")))\n        if tokens > AGENT_CEILING:\n            return Line(f\"OVER LIMIT: {name} {tokens:,} new tokens, \"\n                        f\"agent ceiling {AGENT_CEILING:,}; stop the workflow\")\n        if total > limit:\n            return Line(f\"OVER LIMIT: {total:,} new tokens, ceiling {limit:,}; stop the workflow\")\n"
+ ],
+ [
+  "workflow-token-watch",
+  "f\"OVER LIMIT: {name} {tokens:,} new tokens, \"",
+  "f\"OVER LIMIT: {tokens:,} new tokens, \""
+ ],
+ [
+  "workflow-token-watch",
+  "f\"agent ceiling {AGENT_CEILING:,}; stop the workflow\"",
+  "f\"ceiling {AGENT_CEILING:,}; stop the workflow\""
+ ],
+ [
+  "workflow-token-watch",
+  "return {name: Tokens(sum(calls.values())) for name, calls in self.usage.items()}",
+  "return {name: Tokens(max(calls.values())) for name, calls in self.usage.items()}"
+ ],
+ [
+  "workflow-token-watch",
+  "        return Tokens(sum(self.agents().values()))",
+  "        return Tokens(max(self.agents().values(), default=0))"
+ ],
+ [
+  "workflow-token-watch",
+  "        if (over := self.over(total, limit)) is not None:\n            return over",
+  "        if False:\n            return over"
+ ],
+ [
+  "workflow-token-watch",
+  "calls[CallId(str(message[\"id\"]))] = tokens_of(usage)",
+  "calls[message[\"id\"]] = tokens_of(usage)"
+ ],
+ [
+  "workflow-token-watch",
+  "calls = self.usage.setdefault(AgentName(transcript.name), {})",
+  "calls = self.usage[AgentName(transcript.name)] = {}"
+ ],
+ [
+  "workflow-token-watch",
+  "calls = self.usage.setdefault(AgentName(transcript.name), {})",
+  "calls = self.usage.setdefault(AgentName(str(transcript)), {})"
+ ],
+ [
+  "workflow-token-watch",
+  "        if tally.over(total, limit) is not None:\n            return ExitStatus(0)",
+  "        if total > limit:\n            return ExitStatus(0)"
  ]
 ]
