@@ -41,6 +41,29 @@ the environment a subprocess is given. A shell deletion of __pycache__ or .pyc
 set on the command that starts a plant script does not guard the runs inside
 it, which share it pass after pass.
 
+A PREFIX THE CALL KEEPS (PreToolUse, Bash; user, 2026-11-03). A call, planting
+or not, is refused (exit 2) when its shell gives PYTHONPYCACHEPREFIX a directory
+mktemp makes in the call and no later command removes it. A removal is an
+rm -r, -rf, -fr or -R through the variable the prefix was given, or through
+PYTHONPYCACHEPREFIX itself once exported: the reader gives every mktemp one
+path, so a copy of that variable, or another mktemp variable, cannot be told
+from it. An exporter naming PYTHONPYCACHEPREFIX bare (export, declare -x and the
+like) gives it the directory it holds, removed through PYTHONPYCACHEPREFIX
+alone: the reader records no command for an assignment standing alone without a
+redirection, nor the variable it reads. An inline "$(mktemp ...)" not exported
+names a directory no later command can name. A directory made on each pass of a
+loop is removed in that loop, since a removal after it reaches the last pass's
+alone; a removal that runs only when the tests pass, after &&, counts. Two loop
+shapes go through with a removal after the loop, since the reader gives every
+mktemp one path and keeps only the innermost loop: a variable given a mktemp
+directory before a loop and a new one on each pass, and a directory made in an
+outer loop and given in an inner one; their leftovers go to pyc-sweep, which
+removes a bytecode cache under /tmp untouched for 7200 s. Python code the hook
+reads that names the prefix and calls tempfile.mkdtemp is refused unless it
+calls shutil.rmtree; tempfile.TemporaryDirectory removes its own. 556 such
+directories held 8.4 GB of tmpfs charged to claude.slice, and systemd-oomd
+killed a call.
+
 AFTER A CALL (PostToolUse, Bash). After a call that plants and tests, guarded
 or not, the git work tree it ran in, and each one holding a .py it planted, is
 scanned: a tracked .py whose __pycache__ entry this interpreter would accept
@@ -66,7 +89,7 @@ from collections.abc import Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
 from types import CodeType
-from typing import Literal, NewType
+from typing import Literal, NamedTuple, NewType
 
 import _commands
 import _python
@@ -75,8 +98,9 @@ import _shell
 # The text of a Bash call or of a command Python code starts; a directory or a
 # path as the call or the event spells it; one word of a command line; Python
 # source a call hands an interpreter; a name Python code binds; how many test
-# runs a call starts; a line the hook prints; the hook's answer: 0 lets the call
-# through, 1 reports an error of its own, 2 reports a finding.
+# runs a call starts; a loop of the call, by the reader's id, 0 outside every
+# loop; a line the hook prints; the hook's answer: 0 lets the call through, 1
+# reports an error of its own, 2 reports a finding.
 CallText = NewType("CallText", str)
 Directory = NewType("Directory", str)
 FilePath = NewType("FilePath", str)
@@ -84,18 +108,22 @@ CommandWord = NewType("CommandWord", str)
 Source = NewType("Source", str)
 Identifier = NewType("Identifier", str)
 RunCount = NewType("RunCount", int)
+LoopId = NewType("LoopId", int)
 Prose = NewType("Prose", str)
 ExitStatus = NewType("ExitStatus", int)
 ALLOW, REPORTED, REFUSE = ExitStatus(0), ExitStatus(1), ExitStatus(2)
+NO_LOOP = LoopId(0)
 
 type Arm = Literal["PreToolUse", "PostToolUse"]
 
 PREFIX = "PYTHONPYCACHEPREFIX"
+PREFIX_VARIABLE = _shell.VariableName(PREFIX)
 TEST_PROGRAMS = frozenset({"pytest", "py.test"})
 TEST_MODULES = frozenset({"pytest", "unittest"})
 IN_PLACE_EDITORS = frozenset({"sed", "perl"})
 COPIERS = frozenset({"cp", "mv", "install"})
 RESTORERS = frozenset({"checkout", "restore"})
+EXPORTERS = frozenset({"export", "declare", "typeset", "readonly", "local"})
 STASHERS = frozenset({"push", "pop", "apply"})
 WRITE_REDIRECTS = frozenset({">", ">>", ">|", "&>", "&>>"})
 READ_METHODS = frozenset({"read_text", "read_bytes", "read"})
@@ -109,6 +137,11 @@ TEST_WORD = re.compile(r"\b(pytest|unittest)\b")
 IN_PROCESS_RUN = re.compile(r"\b(pytest|unittest)\.main\(")
 BYTECODE = re.compile(r"__pycache__|\.pyc\b")
 DELETES = re.compile(r"\bunlink\(|\brmtree\(|\bremove\(|\brm\b|-delete\b")
+MKDTEMP = re.compile(r"\bmkdtemp\(")
+RMTREE = re.compile(r"\brmtree\(")
+RECURSIVE_FLAG = re.compile(r"-[A-Za-z]*[rR][A-Za-z]*|--recursive")
+# The variable a word as written starts by reading: the reader spells each reference ${NAME}, an operator after it.
+REFERENCE = re.compile(r"\$\{([A-Za-z_][A-Za-z0-9_]*)")
 UNPLACED = FilePath("a .py the code names, through a path the reader cannot place")
 # A work tree past this many tracked .py files is not scanned whole: the scan
 # would cost seconds per call.
@@ -122,11 +155,23 @@ Python reuses a .pyc whose source keeps its size and its mtime second, so a plan
 restored within the second keeps running: a pass then tests the previous plant, and
 the tree keeps the planted bytecode (USER RULE 2026-10-24). Give every pass fresh
 bytecode where its test run starts:
-  * a shell run: PYTHONPYCACHEPREFIX="$(mktemp -d)" pytest ...
-  * a run Python starts: env=os.environ | {{"PYTHONPYCACHEPREFIX": tempfile.mkdtemp()}}, new per pass
+  * a shell run: P="$(mktemp -d)"; PYTHONPYCACHEPREFIX="$P" pytest ...; rm -rf "$P"
+  * a run Python starts: with tempfile.TemporaryDirectory() as prefix:, new per pass, its run inside
+    the block given env=os.environ | {{"PYTHONPYCACHEPREFIX": prefix}}
   * or delete the planted modules' __pycache__ entries before each pass and after the last restore.
 PYTHONDONTWRITEBYTECODE and -B stop writing, not reading: neither is a guard. A prefix
 set on the command that starts a plant script does not reach the passes inside it."""
+
+LEAKS = """BLOCKED: this call gives PYTHONPYCACHEPREFIX a directory it makes and does not remove.
+{leaks}
+The directory outlives the call on the tmpfs charged to claude.slice: 556 of them held
+8.4 GB and systemd-oomd killed a call (USER RULING 2026-11-03). Remove it in the same call:
+  * a shell run: P="$(mktemp -d)"; PYTHONPYCACHEPREFIX="$P" pytest ...; rm -rf "$P"
+  * a run Python starts: with tempfile.TemporaryDirectory() as prefix:, its run inside the
+    block given env=os.environ | {{"PYTHONPYCACHEPREFIX": prefix}}
+An inline PYTHONPYCACHEPREFIX="$(mktemp -d)" names a directory no later command can remove.
+A removal counts through the prefix's own variable, not a copy of it, and a directory made on
+each pass of a loop is removed in that pass."""
 
 LEFT_BEHIND = """bytecode-plant-guard: this call planted a change in a Python file, and the tree now holds
 bytecode Python would run in place of its source:
@@ -147,6 +192,7 @@ class Reading:
     written_back: list[FilePath] = field(default_factory=list[FilePath])
     stashes: bool = False
     unguarded: list[Prose] = field(default_factory=list[Prose])
+    leaks: list[Prose] = field(default_factory=list[Prose])
     runs: RunCount = RunCount(0)
     deletes_bytecode: bool = False
 
@@ -307,6 +353,91 @@ def _python_guard(source: Source) -> bool:
     return PREFIX in source or (BYTECODE.search(source) is not None and DELETES.search(source) is not None)
 
 
+def _mktemp_path(inv: _commands.Inv) -> Directory | None:
+    """Return the path the reader gives what a mktemp command makes, None for another command."""
+    argv = _argv(inv)
+    if not argv or _commands.prog(argv[0]) != "mktemp":
+        return None
+    said = _shell.commands(f'printf %s "$({shlex.join(["mktemp", *argv[1:]])})"', inv.cmd.cwd)
+    value = said[-1].words[-1].value if said else None
+    return Directory(value) if value else None
+
+
+class Binding(NamedTuple):
+    """A directory an invocation gives PYTHONPYCACHEPREFIX, and the variables a later rm -r can remove it through."""
+
+    path: Directory
+    names: frozenset[_shell.VariableName]
+
+
+def _read_from(spelled: CommandWord) -> frozenset[_shell.VariableName]:
+    """Return the variable a value as written starts by reading, as a set: empty for an inline substitution."""
+    reference = REFERENCE.match(spelled)
+    return frozenset({_shell.VariableName(reference.group(1))}) if reference else frozenset()
+
+
+def _prefix_bindings(inv: _commands.Inv) -> list[Binding]:
+    """Return each directory an invocation gives PYTHONPYCACHEPREFIX, through the variable its value is read from,
+    and through PYTHONPYCACHEPREFIX itself once exported; an export naming it bare, through PYTHONPYCACHEPREFIX
+    alone, since the reader records no command for the assignment it exports."""
+    found: list[Binding] = []
+    given = inv.cmd.assigns.get(PREFIX)
+    if given is not None:
+        found.append(Binding(Directory(given), _read_from(CommandWord(inv.cmd.assign_words[PREFIX_VARIABLE].text))))
+    exports = bool(inv.cmd.words) and _spelled(inv.cmd.words[0]) in EXPORTERS
+    for word in inv.cmd.words[1:]:
+        spelled = _spelled(word)
+        if spelled.startswith(PREFIX + "="):
+            names = _read_from(CommandWord(word.text.partition("=")[2]))
+            found.append(Binding(Directory(spelled[len(PREFIX) + 1:]), names | {PREFIX_VARIABLE} if exports else names))
+        elif exports and spelled == PREFIX and (held := inv.cmd.env.get(PREFIX)) is not None:
+            found.append(Binding(Directory(held), frozenset({PREFIX_VARIABLE})))
+    return found
+
+
+def _removes(inv: _commands.Inv, binding: Binding) -> bool:
+    """Say whether a command removes a binding's directory: rm -r, -rf, -fr or -R of one of its variables holding
+    it."""
+    argv = _argv(inv)
+    if not argv or _commands.prog(argv[0]) != "rm" or not any(RECURSIVE_FLAG.fullmatch(word) for word in argv[1:]):
+        return False
+    return any(word.value is not None and _read_from(CommandWord(word.text)) & binding.names
+               and os.path.normpath(word.value) == os.path.normpath(binding.path) for word in inv.cmd.words)
+
+
+def _loop_making(invs: Sequence[_commands.Inv], inv: _commands.Inv, binding: Binding) -> LoopId:
+    """Return the loop each pass of which makes the directory an invocation gives the prefix, NO_LOOP for none: its
+    own loop when none of the binding's variables holds the directory as that loop starts."""
+    start = next(other for other in invs if other.cmd.loop_id == inv.cmd.loop_id)
+    held = any(start.cmd.env.get(name) == binding.path for name in binding.names)
+    return NO_LOOP if held else LoopId(inv.cmd.loop_id)
+
+
+def _unremoved_prefixes(invs: Sequence[_commands.Inv]) -> list[Prose]:
+    """Return one line per mktemp directory the call gives PYTHONPYCACHEPREFIX and no later command removes, through
+    a variable the prefix is given, in the loop that makes it."""
+    made = {path for inv in invs if (path := _mktemp_path(inv)) is not None}
+    found: list[Prose] = []
+    for index, inv in enumerate(invs):
+        where = Prose(" ".join(_argv(inv)[:4]))
+        for binding in _prefix_bindings(inv):
+            if binding.path not in made:
+                continue
+            loop = _loop_making(invs, inv, binding)
+            if any(_removes(later, binding) and (later.cmd.loop_id == loop or loop == NO_LOOP)
+                   for later in invs[index + 1:]):
+                continue
+            through = " or ".join(f'"${name}"' for name in sorted(binding.names))
+            if not binding.names:
+                kept = "an inline mktemp directory, which no later command can name"
+            elif loop != NO_LOOP:
+                kept = f"a mktemp directory each pass of its loop makes, which no rm -r of {through} in the loop removes"
+            else:
+                kept = f"a mktemp directory no later rm -r of {through} removes"
+            found.append(Prose(f"  * {where} is given {kept}"))
+    return found
+
+
 def _python_writes(facts: _python.Facts) -> list[FilePath]:
     """Return the .py paths of Python code's write sites the reader places."""
     return [
@@ -437,7 +568,8 @@ def _python_tests(source: Source, facts: _python.Facts) -> bool:
 def read_call(text: CallText, cwd: Directory) -> Reading:
     """Read what a call plants and puts back, and the test runs it starts, each with its guard."""
     reading = Reading()
-    for inv in _commands.expand(text, cwd):
+    invs = _commands.expand(text, cwd)
+    for inv in invs:
         argv = _argv(inv)
         where = Prose(" ".join(argv[:4]))
         _read_shell(inv, reading)
@@ -449,6 +581,9 @@ def read_call(text: CallText, cwd: Directory) -> Reading:
         if inv.code is None or inv.code[0] != "python" or _tracked_code(inv):
             continue
         source = Source(inv.code[1])
+        if PREFIX in source and MKDTEMP.search(source) and not RMTREE.search(source):
+            reading.leaks.append(Prose(f"  * Python code run by {where} gives {PREFIX} a tempfile.mkdtemp directory "
+                                       "and never calls shutil.rmtree"))
         facts = _commands.python_facts(source, inv.cmd.cwd)
         reading.edits.update(_placed(path, _cwd(inv)) for path in _python_writes(facts))
         reading.written_back += [
@@ -461,6 +596,7 @@ def read_call(text: CallText, cwd: Directory) -> Reading:
                     Prose(f"  * Python code run by {where} starts tests and neither names {PREFIX} "
                           "nor deletes bytecode")
                 )
+    reading.leaks += _unremoved_prefixes(invs)
     return reading
 
 
@@ -521,10 +657,12 @@ def answer(arm: Arm, text: CallText, cwd: Directory) -> tuple[ExitStatus, Prose]
     """Read the call and answer it for the arm the event names."""
     reading = read_call(text, cwd)
     if arm == "PreToolUse":
+        said: list[Prose] = []
         if reading.refused:
-            said = REFUSAL.format(plants="\n".join(reading.plants), runs="\n".join(reading.unguarded))
-            return REFUSE, Prose(said)
-        return ALLOW, Prose("")
+            said.append(Prose(REFUSAL.format(plants="\n".join(reading.plants), runs="\n".join(reading.unguarded))))
+        if reading.leaks:
+            said.append(Prose(LEAKS.format(leaks="\n".join(reading.leaks))))
+        return (REFUSE if said else ALLOW), Prose("\n\n".join(said))
     if not reading.shaped:
         return ALLOW, Prose("")
     stale = left_behind(reading, cwd)

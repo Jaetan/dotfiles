@@ -1,0 +1,264 @@
+#!/home/nicolas/.local/bin/python3.14
+"""Remove the bytecode caches and the ended calls' folders left behind under a RAM-backed temporary directory.
+
+Usage: pyc-sweep [--age SECONDS] [--now EPOCH] [--dry-run] ROOT...
+
+/tmp on this machine is tmpfs: a file there is RAM, charged to the memory cgroup of the process that
+wrote it until the file is deleted, and only swap can reclaim it. A test run given a fresh
+PYTHONPYCACHEPREFIX that nobody removes leaves a directory of .pyc files behind; 556 of them held 8.4 GB
+of claude.slice's 24 GiB cap on 2026-11-03, and systemd-oomd then killed whichever call was reclaiming.
+
+A directory under a ROOT, at any depth, is removed whole when the newest modification time in it, of a file
+or a directory, is more than SECONDS old (7200 when not given), and it is one of two kinds. The newest time
+is that of the last write, so a directory a run is filling is kept. A directory in it left unwritable is made
+writable for the removal.
+
+  cache  it holds at least one .pyc file, every one ours, no other file, no symbolic link and nothing else
+         (a socket, a pipe, a device). Only bytecode goes, which an import compiles again.
+  call   a call's TMPDIR as claude-call makes it: ours, named cc-<pid>-<8 hex digits>, read whole, its owner
+         file `<pid> <start time> <unit>` naming a call that has ended, the pid's /proc stat gone or giving
+         another start time (field 22). It goes whatever it holds. A call's folder whose call is live, or whose
+         owner file is missing or garbled, is kept, and a cache in it still goes.
+
+A ROOT itself is never removed, symbolic links are never followed, and a directory that cannot be read is
+kept with everything above it.
+
+--now EPOCH reads the age against EPOCH instead of the clock; --dry-run prints what it would remove.
+Each removal is one line `removed PATH BYTES`, then `swept N directories, BYTES bytes`.
+Exit 0 when the sweep ran, 1 when a removal failed, 2 on a usage error.
+"""
+
+import math
+import os
+import re
+import shutil
+import stat
+import subprocess
+import sys
+import time
+from pathlib import Path
+from typing import NamedTuple, NewType
+
+# Seconds of age or of a clock; a size in bytes; a count of files; a command-line argument; a line to
+# print; the exit status; a process id and its start time as /proc gives it.
+Seconds = NewType("Seconds", float)
+Bytes = NewType("Bytes", int)
+Count = NewType("Count", int)
+Argument = NewType("Argument", str)
+Prose = NewType("Prose", str)
+ExitStatus = NewType("ExitStatus", int)
+Pid = NewType("Pid", int)
+StartTime = NewType("StartTime", str)
+
+DEFAULT_AGE = Seconds(7200)
+USAGE = Prose("usage: pyc-sweep [--age SECONDS] [--now EPOCH] [--dry-run] ROOT...")
+ME = os.getuid()
+PROC = Path("/proc")
+CALL_FOLDER = re.compile(r"cc-[0-9]+-[0-9a-f]{8}")
+
+
+class Tree(NamedTuple):
+    """What a directory's subtree holds: whether only bytecode, how much of it, its newest time, the bytes
+    everything in it takes, and whether all of it could be read."""
+
+    bytecode_only: bool
+    pycs: Count
+    size: Bytes
+    newest: Seconds
+    held: Bytes
+    whole: bool
+
+
+class Found(NamedTuple):
+    """A subtree that goes whole, and the bytes it frees: its bytecode's for a cache, everything's for a call's."""
+
+    path: Path
+    size: Bytes
+
+
+class Survey(NamedTuple):
+    """What a directory holds, and the largest subtrees below it that go whole."""
+
+    tree: Tree
+    inner: list[Found]
+
+
+class Sweep(NamedTuple):
+    """The subtrees a sweep removes, and whether every ROOT could be read."""
+
+    removable: list[Found]
+    read_whole: bool
+
+
+def removable(tree: Tree, old_before: Seconds) -> bool:
+    """Say whether a subtree goes whole: ours, bytecode alone and at least one file of it, written before."""
+    return tree.bytecode_only and tree.pycs > 0 and tree.newest < old_before
+
+
+def start_time(pid: Pid) -> StartTime | None:
+    """Return the start time of process PID, field 22 of its /proc stat, or None when it has none."""
+    try:
+        return StartTime((PROC / str(pid) / "stat").read_bytes().rsplit(b")", 1)[1].split()[19].decode())
+    except (OSError, IndexError):
+        return None
+
+
+def removable_call(folder: Path, own: os.stat_result, tree: Tree, old_before: Seconds) -> bool:
+    """Say whether FOLDER, whose lstat is OWN, is a call's TMPDIR that goes whole: named and owned as claude-call
+    makes one, read whole, written before OLD_BEFORE, and its owner record naming a call that has ended."""
+    if not (CALL_FOLDER.fullmatch(folder.name) and own.st_uid == ME and tree.whole and tree.newest < old_before):
+        return False
+    try:
+        pid, started, _unit = (folder / "owner").read_text(encoding="utf-8").split()
+        return start_time(Pid(int(pid))) != started
+    except (OSError, ValueError):
+        return False
+
+
+def survey(directory: Path, old_before: Seconds) -> Survey:
+    """Return what DIRECTORY holds and the largest removable subtrees strictly below it.
+
+    A child removable whole is listed whole; a child that is not is searched in its own children, so a
+    bytecode directory inside a directory holding sources is still found. Whether DIRECTORY itself goes
+    is its caller's to say, from the Tree returned.
+    """
+    try:
+        own = directory.lstat()
+        children = list(directory.iterdir())
+    except OSError:
+        return Survey(Tree(bytecode_only=False, pycs=Count(0), size=Bytes(0), newest=Seconds(0), held=Bytes(0),
+                           whole=False), [])
+    only = True
+    whole = True
+    pycs = 0
+    size = 0
+    held = 0
+    newest = own.st_mtime
+    inner: list[Found] = []
+    for child in children:
+        try:
+            st = child.lstat()
+        except OSError:
+            whole = False
+            only = False
+            continue
+        newest = max(newest, st.st_mtime)
+        held += st.st_blocks * 512
+        if stat.S_ISDIR(st.st_mode):
+            sub, sub_inner = survey(child, old_before)
+            only = only and sub.bytecode_only
+            whole = whole and sub.whole
+            pycs += sub.pycs
+            size += sub.size
+            held += sub.held
+            newest = max(newest, sub.newest)
+            if removable(sub, old_before):
+                inner.append(Found(child, sub.size))
+            elif removable_call(child, st, sub, old_before):
+                inner.append(Found(child, sub.held))
+            else:
+                inner.extend(sub_inner)
+        elif stat.S_ISREG(st.st_mode) and child.name.endswith(".pyc") and st.st_uid == ME:
+            pycs += 1
+            size += st.st_blocks * 512
+        else:
+            only = False
+    return Survey(Tree(bytecode_only=only, pycs=Count(pycs), size=Bytes(size), newest=Seconds(newest),
+                       held=Bytes(held), whole=whole), inner)
+
+
+def sweep(roots: list[Path], old_before: Seconds) -> Sweep:
+    """Return every removable subtree under ROOTS; a ROOT is searched, never itself removed."""
+    found: list[Found] = []
+    whole = True
+    for root in roots:
+        try:
+            if not stat.S_ISDIR(root.lstat().st_mode):
+                whole = False
+                continue
+        except OSError:
+            whole = False
+            continue
+        found.extend(survey(root, old_before).inner)
+    return Sweep(removable=found, read_whole=whole)
+
+
+def remove(path: Path) -> None:
+    """Remove PATH whole; a directory in it left unwritable is made writable and the removal tried again."""
+    try:
+        shutil.rmtree(path)
+    except OSError:
+        subprocess.run(["chmod", "-R", "u+rwx", str(path)], capture_output=True, check=False)
+        shutil.rmtree(path)
+
+
+class Options(NamedTuple):
+    """The command line, read."""
+
+    age: Seconds
+    now: Seconds | None
+    dry_run: bool
+    roots: list[Path]
+
+
+def read_options(argv: list[Argument]) -> Options | None:
+    """Return the options ARGV gives, or None when it is no command line this script takes."""
+    age, now, dry_run, roots = DEFAULT_AGE, None, False, []
+    rest = list(argv)
+    while rest:
+        word = rest.pop(0)
+        if word in ("--age", "--now"):
+            if not rest:
+                return None
+            try:
+                value = float(rest.pop(0))
+            except ValueError:
+                return None
+            if value < 0 or math.isnan(value) or math.isinf(value):
+                return None
+            if word == "--age":
+                age = Seconds(value)
+            else:
+                now = Seconds(value)
+        elif word == "--dry-run":
+            dry_run = True
+        elif word.startswith("-"):
+            return None
+        else:
+            roots.append(Path(word))
+    if not roots or any(not root.is_absolute() for root in roots):
+        return None
+    return Options(age=age, now=now, dry_run=dry_run, roots=roots)
+
+
+def main(argv: list[Argument]) -> ExitStatus:
+    options = read_options(argv)
+    if options is None:
+        print(USAGE, file=sys.stderr)
+        return ExitStatus(2)
+    now = options.now if options.now is not None else Seconds(time.time())
+    found = sweep(options.roots, Seconds(now - options.age))
+    failed = False
+    total = 0
+    for path, size in found.removable:
+        if options.dry_run:
+            print(f"would remove {path} {size}")
+            total += size
+            continue
+        try:
+            remove(path)
+        except OSError as exc:
+            print(f"failed {path}: {exc}", file=sys.stderr)
+            failed = True
+            continue
+        print(f"removed {path} {size}")
+        total += size
+    verb = "would sweep" if options.dry_run else "swept"
+    print(f"{verb} {len(found.removable)} directories, {total} bytes")
+    if not found.read_whole:
+        print("a ROOT is no directory this sweep can read", file=sys.stderr)
+    return ExitStatus(1 if failed else 0)
+
+
+if __name__ == "__main__":
+    sys.exit(main([Argument(word) for word in sys.argv[1:]]))

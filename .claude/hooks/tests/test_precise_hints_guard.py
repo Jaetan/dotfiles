@@ -105,7 +105,15 @@ class Case(NamedTuple):
 HOOKS = Path(sys.argv[1] if len(sys.argv) > 1 else Path(__file__).parent.parent).resolve()
 GUARD = HOOKS / "precise-hints-guard.py"
 SOURCE = Path(sys.argv[2] if len(sys.argv) > 2 else Path.home() / "dev" / "agda" / "aletheia")
-GATE_MODULES = ("__init__.py", "_common.py", "_ratchet.py", "check_precise_hints.py")
+
+
+def gate_modules() -> list[Path]:
+    """Return the gate and every private module of tools/ it may import, so a new import of the gate's
+    is copied too (a fixed list missed tools/_vendored.py, and every gated case then failed)."""
+    tools = SOURCE / "tools"
+    return [tools / "__init__.py", tools / "check_precise_hints.py", *sorted(tools.glob("_*.py"))]
+
+
 INTERPRETER = Path("python") / ".venv" / "bin" / "python"
 
 BASE = Path(tempfile.mkdtemp(prefix="hints-guard-test-")).resolve()
@@ -136,8 +144,8 @@ def gated(repo: Path) -> None:
     """Build a repository holding the gate, its record and one recorded file, all committed."""
     git_init(repo)
     (repo / "tools").mkdir()
-    for name in GATE_MODULES:
-        shutil.copy(SOURCE / "tools" / name, repo / "tools" / name)
+    for module in gate_modules():
+        shutil.copy(module, repo / "tools" / module.name)
     (repo / "docs").mkdir()
     (repo / "docs" / "PYTHON_IMPRECISE_HINTS.yaml").write_text(RECORD)
     (repo / "tools" / "recorded.py").write_text(RECORDED)
@@ -280,6 +288,13 @@ def cases() -> list[Case]:
         Case(c("P34"), write(KIT / "hooks" / "new.py", t("def f(a: str) -> None: ...\n"), cwd=KIT), REPORTED,
              p("a checkout whose gate refuses --root judges nothing, and says so"),
              p("refused its arguments"), checker=OLD),
+        Case(c("P35"), write(KIT / "hooks" / "next" / "recorded.py", t(RECORDED), cwd=KIT), ALLOW,
+             p("a staged copy under next/ is held to the rows of the file it stands for")),
+        Case(c("P36"), write(KIT / "hooks" / "next" / "recorded.py", t(RECORDED + "\n\ndef h(d: str) -> None: ...\n"),
+                             cwd=KIT), REFUSE,
+             p("a staged copy past the rows of the file it stands for"), p("recorded.py")),
+        Case(c("P37"), write(R / "next" / "tools" / "recorded.py", t(RECORDED)), REFUSE,
+             p("a repository's own gate judges a next/ path as it is"), p("next/tools/recorded.py")),
     ]
 
 

@@ -6,10 +6,12 @@ usage: test_claude_call.py [NAME...]   (names select cases)
 
 Each case makes a throwaway repository and runs a line of the tool's shape (`source <snapshot> ... && eval '<call>'
 < /dev/null && pwd -P >| <cwd file>`) through `zsh -c`, with ZDOTDIR pointing at a .zshenv that sources the
-installed claude-call.zshenv, CLAUDECODE=1 and CLAUDE_CALL_ROOT in a scratch directory: the path a real call takes.
-Scopes go under the real claude.slice. Exit 0 when every case passes.
+installed claude-call.zshenv, CLAUDECODE=1, and CLAUDE_CALL_ROOT and CLAUDE_CALL_TMP in a scratch directory: the
+path a real call takes. Scopes go under the real claude.slice. Exit 0 when every case passes.
 """
+import contextlib
 import os
+import re
 import resource
 import shlex
 import shutil
@@ -19,12 +21,19 @@ import sys
 import tempfile
 import time
 from pathlib import Path
+from typing import NewType
 
 HOOKS = Path(__file__).resolve().parents[2]
 WRAPPER = Path(os.environ.get("CLAUDE_CALL_UNDER_TEST", HOOKS / "claude-call"))
 SNIPPET = Path(os.environ.get("CLAUDE_CALL_SNIPPET_UNDER_TEST", HOOKS / "claude-call.zshenv"))
 WORK = Path(tempfile.mkdtemp(prefix="claude-call-test-"))
 ROOT = WORK / "root"
+TMP = WORK / "tmp"  # the calls' own TMPDIRs, which the wrapper leaves for pyc-sweep: here, the suite's to remove
+TMP.mkdir()
+UNSET = "\0"  # an extra variable given this is left unset: no environment value holds a NUL
+Pid = NewType("Pid", str)  # a pid as an owner file spells it
+StatLine = NewType("StatLine", str)  # the text of /proc/<pid>/stat
+StartTime = NewType("StartTime", str)  # its field 22, the start time an owner file records
 ZDOT = WORK / "zdot"
 ZDOT.mkdir()
 (ZDOT / ".zshenv").write_text(f"source {SNIPPET}\n")
@@ -33,13 +42,14 @@ results: list[tuple[str, bool, str]] = []
 
 
 def env(**extra: str) -> dict[str, str]:
+    """The call's environment; an extra variable given UNSET is left unset."""
     # Not what an enclosing call set: its preload would mask the one under test, and its CLAUDE_CALL skip the wrap.
     e = {k: v for k, v in os.environ.items()
          if k not in ("CLAUDE_CALL", "ZDOTDIR", "LD_PRELOAD", "ASAN_OPTIONS") and not k.startswith("GIT_")}
     e.update(CLAUDECODE="1", ZDOTDIR=str(ZDOT), CLAUDE_CALL_ROOT=str(ROOT), CLAUDE_CODE_SESSION_ID="testsess0000",
-             CLAUDE_CALL_OFF=str(WORK / "off"), CLAUDE_CALL_BIN=str(WRAPPER))
+             CLAUDE_CALL_OFF=str(WORK / "off"), CLAUDE_CALL_BIN=str(WRAPPER), CLAUDE_CALL_TMP=str(TMP))
     e.update(extra)
-    return e
+    return {k: v for k, v in e.items() if v != UNSET}
 
 
 def line(call: str, cwdfile: Path) -> str:
@@ -163,6 +173,92 @@ def case_leftover() -> None:
     time.sleep(0.3)
     check("leftover: a job the call left is stopped", pid is not None and not Path(f"/proc/{pid}").exists(),
           f"pid {pid}")
+
+
+def started_at(stat: StatLine) -> StartTime | None:
+    with contextlib.suppress(IndexError):
+        return StartTime(stat.rsplit(")", 1)[1].split()[19])
+    return None
+
+
+def start_time(pid: Pid) -> StartTime | None:
+    """The start time of a living process; None once it is gone."""
+    with contextlib.suppress(OSError):
+        return started_at(StatLine(Path(f"/proc/{pid}/stat").read_text()))
+    return None
+
+
+def tmpdir_left(tmpdir: Path) -> bool:
+    """A call's TMPDIR is still there, with its owner file."""
+    return str(tmpdir).startswith(f"{TMP}/cc-") and tmpdir.is_dir() and (tmpdir / "owner").is_file()
+
+
+def case_tmpdir() -> None:
+    r = repo("tmpdir")
+    plain = WORK / "tmpdir-plain"
+    plain.mkdir()
+    given = WORK / "given"
+    given.mkdir(exist_ok=True)
+    show = ('print -r -- "dir=$TMPDIR"; print -r -- "mode=$(stat -c %a "$TMPDIR")"; '
+            'print -r -- "owner=$(<"$TMPDIR/owner")"; read -r pid rest < "$TMPDIR/owner"; '
+            'print -r -- "stat=$(<"/proc/$pid/stat")"; f=$(mktemp); echo kept > "$f"; print -r -- "made=$f"')
+    seen = [dict(ln.split("=", 1) for ln in run(show, cwd, TMPDIR=str(given))[0].stdout.splitlines() if "=" in ln)
+            for cwd in (r, r, plain)]
+    dirs = [s.get("dir", "") for s in seen]
+    named = [re.fullmatch(r"cc-(\d+)-[0-9a-f]{8}", Path(d).name) for d in dirs]
+    check("tmpdir: TMPDIR names a directory of each call's own, cc-<pid>-<8 hex digits>, in a view and outside one",
+          all(named) and all(Path(d).parent == TMP for d in dirs) and len(set(dirs)) == 3, str(dirs))
+    check("tmpdir: mode 0700", [s.get("mode") for s in seen] == ["700"] * 3, str([s.get("mode") for s in seen]))
+    records = [(s.get("owner", "").split() + ["-"] * 3)[:3] for s in seen]
+    check("tmpdir: its owner file names the live wrapper, `<pid> <start time> <unit>`",
+          all(m and rec[0] == m[1] and rec[1] == started_at(StatLine(s.get("stat", "")))
+              and re.fullmatch(r"claude-call-.+\.scope", rec[2]) for m, rec, s in zip(named, records, seen)),
+          str(records))
+    check("tmpdir: the directory and its owner file are left after the call",
+          all(tmpdir_left(Path(d)) for d in dirs), str(dirs))
+    check("tmpdir: once the call has ended, its owner file names a process gone or another",
+          all(rec[0].isdigit() and start_time(Pid(rec[0])) != rec[1] for rec in records), str(records))
+    made = [s.get("made", "") for s in seen]
+    p, _ = run(f"cat {' '.join(shlex.quote(f) for f in made)}", plain)
+    check("tmpdir: a file one call made with mktemp is there for the next", p.stdout == "kept\n" * 3
+          and all(Path(f).parent == Path(d) for f, d in zip(made, dirs)), repr(p.stdout + p.stderr))
+    p, _ = run('print -r -- "$TMPDIR"', plain, warns=True, TMPDIR=str(given), CLAUDE_CALL_SLICE="init.scope")
+    unwrapped = p.stdout.strip()
+    check("tmpdir: a call run unwrapped, its scope refused, keeps a TMPDIR of its own",
+          "runs unwrapped" in p.stderr and tmpdir_left(Path(unwrapped)) and unwrapped not in dirs,
+          repr(p.stdout + p.stderr))
+    p, _ = run('print -r -- "$TMPDIR"', plain, CLAUDE_CALL_TMP=UNSET)
+    real = p.stdout.strip()
+    biggest = int(Path("/proc/sys/kernel/pid_max").read_text()) - 1
+    pid = m[1] if (m := re.fullmatch(r"/tmp/cc-(\d+)-[0-9a-f]{8}", real)) else ""
+    check("tmpdir: on /tmp by default, at most 24 characters whatever the pid",
+          bool(pid) and len(real.replace(f"cc-{pid}-", f"cc-{biggest}-")) <= 24, repr(real))
+    if Path(real).name.startswith("cc-"):  # whatever a mutant named it, wherever it put it
+        shutil.rmtree(real, ignore_errors=True)
+
+
+def case_tmpdir_fail_open() -> None:
+    r = repo("tmpdirfail")
+    given = WORK / "given"
+    given.mkdir(exist_ok=True)
+    count = WORK / "tmpdir-runs"
+    unwritable = WORK / "tmp-acl"  # a directory made here can hold no file: its owner file cannot be written
+    unwritable.mkdir()
+    subprocess.run(["setfacl", "-d", "-m", "u::r-x", str(unwritable)], check=True)
+    for label, where in (("its directory cannot be made", WORK / "tmp-missing"),
+                         ("its owner file cannot be written", unwritable)):
+        before = len(events("no-tmpdir"))
+        count.unlink(missing_ok=True)
+        p, _ = run(f'echo once >> {count}; print -r -- "$TMPDIR"', r, warns=True, TMPDIR=str(given),
+                   CLAUDE_CALL_TMP=str(where))
+        runs = len(count.read_text().splitlines()) if count.exists() else 0
+        check(f"tmpdir_fail_open: when {label}, the call runs once with the TMPDIR it was given",
+              p.stdout == f"{given}\n" and runs == 1, repr(p.stdout + p.stderr))
+        check(f"tmpdir_fail_open: when {label}, stderr says so and an event records it",
+              "claude-call: no TMPDIR of its own" in p.stderr and len(events("no-tmpdir")) == before + 1,
+              repr(p.stderr[-300:]))
+    check("tmpdir_fail_open: a directory whose owner file failed is not left", not list(unwritable.iterdir()),
+          str(list(unwritable.iterdir())))
 
 
 def case_isolated_from_edits() -> None:
@@ -366,10 +462,10 @@ def case_shape() -> None:
 def case_signal() -> None:
     r = repo("signal")
     signals_before = len(events("signal"))
-    proc = start("echo changed >> sub/a.txt; tail -f /dev/null", r)
+    proc = start('print -r -- "$TMPDIR"; echo changed >> sub/a.txt; tail -f /dev/null', r)
     time.sleep(1.5)
     proc.send_signal(signal.SIGTERM)
-    proc.communicate(timeout=30)
+    tmpdir = proc.communicate(timeout=30)[0].strip()
     check("signal: exits 143", proc.returncode == 143, str(proc.returncode))
     time.sleep(0.3)
     left = subprocess.run(["systemctl", "--user", "list-units", "--all", "--no-legend", "claude-call-*testsess*"],
@@ -381,6 +477,8 @@ def case_signal() -> None:
     text = logs()[-1].read_text()
     check("signal: the log names what it had changed", "not synced back" in text and "sub/a.txt" in text, text[-300:])
     check("signal: recorded as an event", len(events("signal")) == signals_before + 1, str(events()[-2:]))
+    run("true", r)
+    check("signal: its TMPDIR is left, past the next call too", tmpdir_left(Path(tmpdir)), repr(tmpdir))
 
 
 def case_stale_view() -> None:

@@ -223,5 +223,252 @@
   "bytecode-plant-guard.py",
   "        print(f\"bytecode-plant-guard: the event could not be read, the call goes ahead: {exc}\", file=sys.stderr)\n        return REPORTED",
   "        print(f\"bytecode-plant-guard: the event could not be read, the call goes ahead: {exc}\", file=sys.stderr)\n        return ALLOW"
+ ],
+ [
+  "bytecode-plant-guard.py",
+  "    if not argv or _commands.prog(argv[0]) != \"mktemp\":\n        return None",
+  "    if True:\n        return None"
+ ],
+ [
+  "bytecode-plant-guard.py",
+  "    value = said[-1].words[-1].value if said else None",
+  "    value = None"
+ ],
+ [
+  "bytecode-plant-guard.py",
+  "    if given is not None:",
+  "    if False:"
+ ],
+ [
+  "bytecode-plant-guard.py",
+  "    exports = bool(inv.cmd.words) and _spelled(inv.cmd.words[0]) in EXPORTERS",
+  "    exports = False"
+ ],
+ [
+  "bytecode-plant-guard.py",
+  "        if spelled.startswith(PREFIX + \"=\"):",
+  "        if False:"
+ ],
+ [
+  "bytecode-plant-guard.py",
+  "    if not argv or _commands.prog(argv[0]) != \"rm\" or not any(RECURSIVE_FLAG.fullmatch(word) for word in argv[1:]):",
+  "    if not argv or not any(RECURSIVE_FLAG.fullmatch(word) for word in argv[1:]):"
+ ],
+ [
+  "bytecode-plant-guard.py",
+  "    if not argv or _commands.prog(argv[0]) != \"rm\" or not any(RECURSIVE_FLAG.fullmatch(word) for word in argv[1:]):",
+  "    if not argv or _commands.prog(argv[0]) != \"rm\":"
+ ],
+ [
+  "bytecode-plant-guard.py",
+  "RECURSIVE_FLAG = re.compile(r\"-[A-Za-z]*[rR][A-Za-z]*|--recursive\")",
+  "RECURSIVE_FLAG = re.compile(r\"-[A-Za-z]*r[A-Za-z]*|--recursive\")"
+ ],
+ [
+  "bytecode-plant-guard.py",
+  "RECURSIVE_FLAG = re.compile(r\"-[A-Za-z]*[rR][A-Za-z]*|--recursive\")",
+  "RECURSIVE_FLAG = re.compile(r\"-[A-Za-z]*[rR][A-Za-z]*\")"
+ ],
+ [
+  "bytecode-plant-guard.py",
+  "RECURSIVE_FLAG = re.compile(r\"-[A-Za-z]*[rR][A-Za-z]*|--recursive\")",
+  "RECURSIVE_FLAG = re.compile(r\"-[rR][A-Za-z]*|--recursive\")"
+ ],
+ [
+  "bytecode-plant-guard.py",
+  "RECURSIVE_FLAG = re.compile(r\"-[A-Za-z]*[rR][A-Za-z]*|--recursive\")",
+  "RECURSIVE_FLAG = re.compile(r\"-[A-Za-z]*[rR]|--recursive\")"
+ ],
+ [
+  "bytecode-plant-guard.py",
+  "        if PREFIX in source and MKDTEMP.search(source) and not RMTREE.search(source):",
+  "        if False:"
+ ],
+ [
+  "bytecode-plant-guard.py",
+  "        if PREFIX in source and MKDTEMP.search(source) and not RMTREE.search(source):",
+  "        if MKDTEMP.search(source) and not RMTREE.search(source):"
+ ],
+ [
+  "bytecode-plant-guard.py",
+  "        if PREFIX in source and MKDTEMP.search(source) and not RMTREE.search(source):",
+  "        if PREFIX in source and not RMTREE.search(source):"
+ ],
+ [
+  "bytecode-plant-guard.py",
+  "        if PREFIX in source and MKDTEMP.search(source) and not RMTREE.search(source):",
+  "        if PREFIX in source and MKDTEMP.search(source):"
+ ],
+ [
+  "bytecode-plant-guard.py",
+  "    reading.leaks += _unremoved_prefixes(invs)",
+  "    pass"
+ ],
+ [
+  "bytecode-plant-guard.py",
+  "        if reading.leaks:\n",
+  "        if False:\n"
+ ],
+ [
+  "bytecode-plant-guard.py",
+  "        return (REFUSE if said else ALLOW), Prose(\"\\n\\n\".join(said))",
+  "        return ALLOW, Prose(\"\\n\\n\".join(said))"
+ ],
+ [
+  "bytecode-plant-guard.py",
+  "  * a shell run: P=\"$(mktemp -d)\"; PYTHONPYCACHEPREFIX=\"$P\" pytest ...; rm -rf \"$P\"\n",
+  "  * a shell run: PYTHONPYCACHEPREFIX=\"$(mktemp -d)\" pytest ...\n",
+  0
+ ],
+ [
+  "bytecode-plant-guard.py",
+  "  * a shell run: P=\"$(mktemp -d)\"; PYTHONPYCACHEPREFIX=\"$P\" pytest ...; rm -rf \"$P\"\n",
+  "  * a shell run: PYTHONPYCACHEPREFIX=\"$(mktemp -d)\" pytest ...\n",
+  1
+ ],
+ [
+  "bytecode-plant-guard.py",
+  "  * a run Python starts: with tempfile.TemporaryDirectory() as prefix:, new per pass, its run inside\n    the block given env=os.environ | {{\"PYTHONPYCACHEPREFIX\": prefix}}\n",
+  "  * a run Python starts: env=os.environ | {{\"PYTHONPYCACHEPREFIX\": tempfile.mkdtemp()}}, new per pass\n"
+ ],
+ [
+  "bytecode-plant-guard.py",
+  "  * a run Python starts: with tempfile.TemporaryDirectory() as prefix:, its run inside the\n    block given env=os.environ | {{\"PYTHONPYCACHEPREFIX\": prefix}}\n",
+  "  * a run Python starts: env=os.environ | {{\"PYTHONPYCACHEPREFIX\": tempfile.mkdtemp()}}\n"
+ ],
+ [
+  "bytecode-plant-guard.py",
+  "        found.append(Binding(Directory(given), _read_from(CommandWord(inv.cmd.assign_words[PREFIX_VARIABLE].text))))",
+  "        found.append(Binding(Directory(given), frozenset()))"
+ ],
+ [
+  "bytecode-plant-guard.py",
+  "            names = _read_from(CommandWord(word.text.partition(\"=\")[2]))",
+  "            names = _read_from(CommandWord(word.text))"
+ ],
+ [
+  "bytecode-plant-guard.py",
+  "names | {PREFIX_VARIABLE} if exports else names))",
+  "names))"
+ ],
+ [
+  "bytecode-plant-guard.py",
+  "names | {PREFIX_VARIABLE} if exports else names))",
+  "names | {PREFIX_VARIABLE}))"
+ ],
+ [
+  "bytecode-plant-guard.py",
+  "REFERENCE = re.compile(r\"\\$\\{([A-Za-z_][A-Za-z0-9_]*)\")",
+  "REFERENCE = re.compile(r\"\\$\\{([A-Za-z_])\")"
+ ],
+ [
+  "bytecode-plant-guard.py",
+  "    return any(word.value is not None and _read_from(CommandWord(word.text)) & binding.names\n",
+  "    return any(word.value is not None and _read_from(CommandWord(word.text))\n"
+ ],
+ [
+  "bytecode-plant-guard.py",
+  "               and os.path.normpath(word.value) == os.path.normpath(binding.path) for word in inv.cmd.words)",
+  "               for word in inv.cmd.words)"
+ ],
+ [
+  "bytecode-plant-guard.py",
+  "               and os.path.normpath(word.value) == os.path.normpath(binding.path) for word in inv.cmd.words)",
+  "               and word.value == binding.path for word in inv.cmd.words)"
+ ],
+ [
+  "bytecode-plant-guard.py",
+  "    return NO_LOOP if held else LoopId(inv.cmd.loop_id)",
+  "    return LoopId(inv.cmd.loop_id)"
+ ],
+ [
+  "bytecode-plant-guard.py",
+  "    return NO_LOOP if held else LoopId(inv.cmd.loop_id)",
+  "    return NO_LOOP"
+ ],
+ [
+  "bytecode-plant-guard.py",
+  "    held = any(start.cmd.env.get(name) == binding.path for name in binding.names)",
+  "    held = binding.path in start.cmd.env.values()"
+ ],
+ [
+  "bytecode-plant-guard.py",
+  "    start = next(other for other in invs if other.cmd.loop_id == inv.cmd.loop_id)",
+  "    start = inv"
+ ],
+ [
+  "bytecode-plant-guard.py",
+  "            if binding.path not in made:\n                continue",
+  "            if False:\n                continue"
+ ],
+ [
+  "bytecode-plant-guard.py",
+  "            if any(_removes(later, binding) and (later.cmd.loop_id == loop or loop == NO_LOOP)\n                   for later in invs[index + 1:]):",
+  "            if any(_removes(later, binding) and True\n                   for later in invs[index + 1:]):"
+ ],
+ [
+  "bytecode-plant-guard.py",
+  "            if any(_removes(later, binding) and (later.cmd.loop_id == loop or loop == NO_LOOP)\n                   for later in invs[index + 1:]):",
+  "            if any(_removes(later, binding) and (later.cmd.loop_id == loop)\n                   for later in invs[index + 1:]):"
+ ],
+ [
+  "bytecode-plant-guard.py",
+  "            if any(_removes(later, binding) and (later.cmd.loop_id == loop or loop == NO_LOOP)\n                   for later in invs[index + 1:]):",
+  "            if any(_removes(later, binding) and (later.cmd.loop_id == loop or loop == NO_LOOP)\n                   for later in invs):"
+ ],
+ [
+  "bytecode-plant-guard.py",
+  "            if any(_removes(later, binding) and (later.cmd.loop_id == loop or loop == NO_LOOP)\n                   for later in invs[index + 1:]):",
+  "            if False:"
+ ],
+ [
+  "_shell.py",
+  "            assign_words[VariableName(m.group(1))] = ew\n",
+  ""
+ ],
+ [
+  "_shell.py",
+  "        self.out.append(self._cmd(cmd_words, assigns, ctx.redirects + redirs, env, ctx, assign_words))",
+  "        self.out.append(self._cmd(cmd_words, assigns, ctx.redirects + redirs, env, ctx, {}))"
+ ],
+ [
+  "_shell.py",
+  "                self.out.append(self._cmd([], assigns, ctx.redirects + redirs, dict(ctx.env), ctx, assign_words))",
+  "                self.out.append(self._cmd([], assigns, ctx.redirects + redirs, dict(ctx.env), ctx, {}))"
+ ],
+ [
+  "bytecode-plant-guard.py",
+  "        elif exports and spelled == PREFIX and (held := inv.cmd.env.get(PREFIX)) is not None:\n",
+  "        elif False:\n"
+ ],
+ [
+  "bytecode-plant-guard.py",
+  "elif exports and spelled == PREFIX and",
+  "elif spelled == PREFIX and"
+ ],
+ [
+  "bytecode-plant-guard.py",
+  "elif exports and spelled == PREFIX and",
+  "elif exports and spelled != PREFIX and"
+ ],
+ [
+  "bytecode-plant-guard.py",
+  "Binding(Directory(held), frozenset({PREFIX_VARIABLE}))",
+  "Binding(Directory(held), frozenset())"
+ ],
+ [
+  "bytecode-plant-guard.py",
+  "(held := inv.cmd.env.get(PREFIX)) is not None",
+  "(held := inv.cmd.assigns.get(PREFIX)) is not None"
+ ],
+ [
+  "bytecode-plant-guard.py",
+  "(held := inv.cmd.env.get(PREFIX)) is not None",
+  "(held := inv.cmd.env.get(PREFIX)) is None"
+ ],
+ [
+  "bytecode-plant-guard.py",
+  "EXPORTERS = frozenset({\"export\", \"declare\", ",
+  "EXPORTERS = frozenset({\"export\", "
  ]
 ]

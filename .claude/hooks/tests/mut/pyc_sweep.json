@@ -1,0 +1,417 @@
+[
+ [
+  "pyc-sweep",
+  "return tree.bytecode_only and tree.pycs > 0 and tree.newest < old_before",
+  "return tree.bytecode_only and tree.pycs > 0 and tree.newest <= old_before"
+ ],
+ [
+  "pyc-sweep",
+  "return tree.bytecode_only and tree.pycs > 0 and tree.newest < old_before",
+  "return tree.bytecode_only and tree.newest < old_before"
+ ],
+ [
+  "pyc-sweep",
+  "return tree.bytecode_only and tree.pycs > 0 and tree.newest < old_before",
+  "return tree.pycs > 0 and tree.newest < old_before"
+ ],
+ [
+  "pyc-sweep",
+  "return tree.bytecode_only and tree.pycs > 0 and tree.newest < old_before",
+  "return tree.bytecode_only and tree.pycs > 0"
+ ],
+ [
+  "pyc-sweep",
+  "        return Survey(Tree(bytecode_only=False, pycs=Count(0)",
+  "        return Survey(Tree(bytecode_only=True, pycs=Count(0)"
+ ],
+ [
+  "pyc-sweep",
+  "    newest = own.st_mtime\n",
+  "    newest = 0.0\n"
+ ],
+ [
+  "pyc-sweep",
+  "            only = False\n            continue\n",
+  "            continue\n"
+ ],
+ [
+  "pyc-sweep",
+  "        newest = max(newest, st.st_mtime)\n",
+  "        pass\n"
+ ],
+ [
+  "pyc-sweep",
+  "        if stat.S_ISDIR(st.st_mode):",
+  "        if False:"
+ ],
+ [
+  "pyc-sweep",
+  "            only = only and sub.bytecode_only\n",
+  "            pass\n"
+ ],
+ [
+  "pyc-sweep",
+  "            pycs += sub.pycs\n",
+  "            pass\n"
+ ],
+ [
+  "pyc-sweep",
+  "            size += sub.size\n",
+  "            pass\n"
+ ],
+ [
+  "pyc-sweep",
+  "            newest = max(newest, sub.newest)\n",
+  "            pass\n"
+ ],
+ [
+  "pyc-sweep",
+  "            if removable(sub, old_before):",
+  "            if sub.pycs:"
+ ],
+ [
+  "pyc-sweep",
+  "                inner.extend(sub_inner)\n",
+  "                pass\n"
+ ],
+ [
+  "pyc-sweep",
+  "        elif stat.S_ISREG(st.st_mode) and child.name.endswith(\".pyc\") and st.st_uid == ME:",
+  "        elif child.name.endswith(\".pyc\") and st.st_uid == ME:"
+ ],
+ [
+  "pyc-sweep",
+  "        elif stat.S_ISREG(st.st_mode) and child.name.endswith(\".pyc\") and st.st_uid == ME:",
+  "        elif stat.S_ISREG(st.st_mode) and st.st_uid == ME:"
+ ],
+ [
+  "pyc-sweep",
+  "        elif stat.S_ISREG(st.st_mode) and child.name.endswith(\".pyc\") and st.st_uid == ME:",
+  "        elif stat.S_ISREG(st.st_mode) and child.name.endswith(\".pyc\"):"
+ ],
+ [
+  "pyc-sweep",
+  "            size += st.st_blocks * 512\n",
+  "            size += st.st_size\n"
+ ],
+ [
+  "pyc-sweep",
+  "        else:\n            only = False\n",
+  "        else:\n            pass\n"
+ ],
+ [
+  "pyc-sweep",
+  "            if not stat.S_ISDIR(root.lstat().st_mode):",
+  "            if False:"
+ ],
+ [
+  "pyc-sweep",
+  "            if not stat.S_ISDIR(root.lstat().st_mode):\n                whole = False\n",
+  "            if not stat.S_ISDIR(root.lstat().st_mode):\n"
+ ],
+ [
+  "pyc-sweep",
+  "        except OSError:\n            whole = False\n            continue\n        found.extend",
+  "        except OSError:\n            continue\n        found.extend"
+ ],
+ [
+  "pyc-sweep",
+  "            if not rest:\n                return None\n",
+  "            if not rest:\n                break\n"
+ ],
+ [
+  "pyc-sweep",
+  "            if value < 0 or math.isnan(value) or math.isinf(value):",
+  "            if math.isnan(value) or math.isinf(value):"
+ ],
+ [
+  "pyc-sweep",
+  "            if value < 0 or math.isnan(value) or math.isinf(value):",
+  "            if value < 0 or math.isinf(value):"
+ ],
+ [
+  "pyc-sweep",
+  "            if value < 0 or math.isnan(value) or math.isinf(value):",
+  "            if value < 0 or math.isnan(value):"
+ ],
+ [
+  "pyc-sweep",
+  "            if word == \"--age\":",
+  "            if word != \"--age\":"
+ ],
+ [
+  "pyc-sweep",
+  "        elif word.startswith(\"-\"):\n            return None\n",
+  "        elif word.startswith(\"-\"):\n            pass\n"
+ ],
+ [
+  "pyc-sweep",
+  "    if not roots or any(not root.is_absolute() for root in roots):",
+  "    if not roots:"
+ ],
+ [
+  "pyc-sweep",
+  "    if not roots or any(not root.is_absolute() for root in roots):",
+  "    if any(not root.is_absolute() for root in roots):"
+ ],
+ [
+  "pyc-sweep",
+  "        print(USAGE, file=sys.stderr)",
+  "        print(USAGE)"
+ ],
+ [
+  "pyc-sweep",
+  "    now = options.now if options.now is not None else Seconds(time.time())",
+  "    now = Seconds(time.time())"
+ ],
+ [
+  "pyc-sweep",
+  "    found = sweep(options.roots, Seconds(now - options.age))",
+  "    found = sweep(options.roots, Seconds(now + options.age))"
+ ],
+ [
+  "pyc-sweep",
+  "        if options.dry_run:\n            print(f\"would remove",
+  "        if False:\n            print(f\"would remove"
+ ],
+ [
+  "pyc-sweep",
+  "            print(f\"would remove {path} {size}\")\n            total += size\n",
+  "            print(f\"would remove {path} {size}\")\n"
+ ],
+ [
+  "pyc-sweep",
+  "            failed = True\n",
+  "            pass\n"
+ ],
+ [
+  "pyc-sweep",
+  "            failed = True\n            continue\n",
+  "            failed = True\n"
+ ],
+ [
+  "pyc-sweep",
+  "        print(f\"removed {path} {size}\")\n        total += size\n",
+  "        print(f\"removed {path} {size}\")\n"
+ ],
+ [
+  "pyc-sweep",
+  "    verb = \"would sweep\" if options.dry_run else \"swept\"",
+  "    verb = \"swept\""
+ ],
+ [
+  "pyc-sweep",
+  "    if not found.read_whole:",
+  "    if False:"
+ ],
+ [
+  "pyc-sweep",
+  "    return ExitStatus(1 if failed else 0)",
+  "    return ExitStatus(0)"
+ ],
+ [
+  "pyc-sweep",
+  "            st = child.lstat()",
+  "            st = os.lstat(child)"
+ ],
+ [
+  "pyc-sweep",
+  "        children = list(directory.iterdir())",
+  "        children = [Path(p) for p in os.listdir(directory)]"
+ ],
+ [
+  "pyc-sweep",
+  "CALL_FOLDER = re.compile(r\"cc-[0-9]+-[0-9a-f]{8}\")",
+  "CALL_FOLDER = re.compile(r\"cc-[0-9]+-[0-9a-f]+\")"
+ ],
+ [
+  "pyc-sweep",
+  "CALL_FOLDER = re.compile(r\"cc-[0-9]+-[0-9a-f]{8}\")",
+  "CALL_FOLDER = re.compile(r\"cc-[0-9]+-[0-9a-fA-F]{8}\")"
+ ],
+ [
+  "pyc-sweep",
+  "CALL_FOLDER = re.compile(r\"cc-[0-9]+-[0-9a-f]{8}\")",
+  "CALL_FOLDER = re.compile(r\"cc-[0-9]*-[0-9a-f]{8}\")"
+ ],
+ [
+  "pyc-sweep",
+  "CALL_FOLDER = re.compile(r\"cc-[0-9]+-[0-9a-f]{8}\")",
+  "CALL_FOLDER = re.compile(r\"cc-[^-]+-[0-9a-f]{8}\")"
+ ],
+ [
+  "pyc-sweep",
+  "CALL_FOLDER.fullmatch(folder.name)",
+  "CALL_FOLDER.search(folder.name)"
+ ],
+ [
+  "pyc-sweep",
+  "CALL_FOLDER.fullmatch(folder.name)",
+  "CALL_FOLDER.match(folder.name)"
+ ],
+ [
+  "pyc-sweep",
+  "    if not (CALL_FOLDER.fullmatch(folder.name) and own.st_uid == ME and tree.whole and tree.newest < old_before):",
+  "    if not (own.st_uid == ME and tree.whole and tree.newest < old_before):"
+ ],
+ [
+  "pyc-sweep",
+  "    if not (CALL_FOLDER.fullmatch(folder.name) and own.st_uid == ME and tree.whole and tree.newest < old_before):",
+  "    if not (CALL_FOLDER.fullmatch(folder.name) and tree.whole and tree.newest < old_before):"
+ ],
+ [
+  "pyc-sweep",
+  "    if not (CALL_FOLDER.fullmatch(folder.name) and own.st_uid == ME and tree.whole and tree.newest < old_before):",
+  "    if not (CALL_FOLDER.fullmatch(folder.name) and own.st_uid == ME and tree.newest < old_before):"
+ ],
+ [
+  "pyc-sweep",
+  "    if not (CALL_FOLDER.fullmatch(folder.name) and own.st_uid == ME and tree.whole and tree.newest < old_before):",
+  "    if not (CALL_FOLDER.fullmatch(folder.name) and own.st_uid == ME and tree.whole and tree.newest <= old_before):"
+ ],
+ [
+  "pyc-sweep",
+  "    if not (CALL_FOLDER.fullmatch(folder.name) and own.st_uid == ME and tree.whole and tree.newest < old_before):",
+  "    if not (CALL_FOLDER.fullmatch(folder.name) and own.st_uid == ME and tree.whole):"
+ ],
+ [
+  "pyc-sweep",
+  "        pid, started, _unit = ",
+  "        pid, started, *_unit = "
+ ],
+ [
+  "pyc-sweep",
+  "        return start_time(Pid(int(pid))) != started\n",
+  "        return start_time(Pid(pid)) != started\n"
+ ],
+ [
+  "pyc-sweep",
+  "        return start_time(Pid(int(pid))) != started\n",
+  "        return start_time(Pid(int(pid))) == started\n"
+ ],
+ [
+  "pyc-sweep",
+  "        return start_time(Pid(int(pid))) != started\n",
+  "        return start_time(Pid(int(pid))) not in (started, None)\n"
+ ],
+ [
+  "pyc-sweep",
+  "        return start_time(Pid(int(pid))) != started\n",
+  "        return start_time(Pid(int(pid))) is None\n"
+ ],
+ [
+  "pyc-sweep",
+  "    except (OSError, ValueError):\n        return False\n",
+  "    except (OSError, ValueError):\n        return True\n"
+ ],
+ [
+  "pyc-sweep",
+  "    except (OSError, ValueError):\n",
+  "    except OSError:\n"
+ ],
+ [
+  "pyc-sweep",
+  "    except (OSError, ValueError):\n",
+  "    except ValueError:\n"
+ ],
+ [
+  "pyc-sweep",
+  "        return StartTime((PROC / str(pid) / \"stat\").read_bytes().rsplit(b\")\", 1)[1].split()[19].decode())",
+  "        return StartTime((PROC / str(pid) / \"stat\").read_bytes().split(b\")\", 1)[1].split()[19].decode())"
+ ],
+ [
+  "pyc-sweep",
+  "        return StartTime((PROC / str(pid) / \"stat\").read_bytes().rsplit(b\")\", 1)[1].split()[19].decode())",
+  "        return StartTime((PROC / str(pid) / \"stat\").read_bytes().rsplit(b\")\", 1)[1].split()[20].decode())"
+ ],
+ [
+  "pyc-sweep",
+  "        return StartTime((PROC / str(pid) / \"stat\").read_bytes().rsplit(b\")\", 1)[1].split()[19].decode())",
+  "        return StartTime((PROC / str(pid) / \"stat\").read_bytes().rsplit(b\")\", 1)[1].split()[18].decode())"
+ ],
+ [
+  "pyc-sweep",
+  "        return StartTime((PROC / str(pid) / \"stat\").read_bytes().rsplit(b\")\", 1)[1].split()[19].decode())",
+  "        return StartTime((Path(\"/proc\") / str(pid) / \"stat\").read_bytes().rsplit(b\")\", 1)[1].split()[19].decode())"
+ ],
+ [
+  "pyc-sweep",
+  "    except (OSError, IndexError):\n",
+  "    except OSError:\n"
+ ],
+ [
+  "pyc-sweep",
+  "    except (OSError, IndexError):\n",
+  "    except IndexError:\n"
+ ],
+ [
+  "pyc-sweep",
+  "        return Survey(Tree(bytecode_only=False, pycs=Count(0), size=Bytes(0), newest=Seconds(0), held=Bytes(0),\n                           whole=False), [])",
+  "        return Survey(Tree(bytecode_only=False, pycs=Count(0), size=Bytes(0), newest=Seconds(0), held=Bytes(0),\n                           whole=True), [])"
+ ],
+ [
+  "pyc-sweep",
+  "            whole = False\n            only = False\n",
+  "            only = False\n"
+ ],
+ [
+  "pyc-sweep",
+  "            whole = whole and sub.whole\n",
+  "            pass\n"
+ ],
+ [
+  "pyc-sweep",
+  "        held += st.st_blocks * 512\n",
+  "        pass\n"
+ ],
+ [
+  "pyc-sweep",
+  "        held += st.st_blocks * 512\n",
+  "        held += st.st_size\n"
+ ],
+ [
+  "pyc-sweep",
+  "            held += sub.held\n",
+  "            pass\n"
+ ],
+ [
+  "pyc-sweep",
+  "                inner.append(Found(child, sub.held))\n",
+  "                inner.append(Found(child, sub.size))\n"
+ ],
+ [
+  "pyc-sweep",
+  "                inner.append(Found(child, sub.held))\n",
+  "                inner.append(Found(child, sub.held))\n                inner.extend(sub_inner)\n"
+ ],
+ [
+  "pyc-sweep",
+  "            elif removable_call(child, st, sub, old_before):",
+  "            elif False:"
+ ],
+ [
+  "pyc-sweep",
+  "held=Bytes(held), whole=whole), inner)",
+  "held=Bytes(held), whole=True), inner)"
+ ],
+ [
+  "pyc-sweep",
+  "        subprocess.run([\"chmod\", \"-R\", \"u+rwx\", str(path)], capture_output=True, check=False)\n",
+  "        pass\n"
+ ],
+ [
+  "pyc-sweep",
+  "        subprocess.run([\"chmod\", \"-R\", \"u+rwx\", str(path)], capture_output=True, check=False)\n",
+  "        subprocess.run([\"chmod\", \"-R\", \"u+rx\", str(path)], capture_output=True, check=False)\n"
+ ],
+ [
+  "pyc-sweep",
+  "        subprocess.run([\"chmod\", \"-R\", \"u+rwx\", str(path)], capture_output=True, check=False)\n        shutil.rmtree(path)\n",
+  "        subprocess.run([\"chmod\", \"-R\", \"u+rwx\", str(path)], capture_output=True, check=False)\n"
+ ],
+ [
+  "pyc-sweep",
+  "            remove(path)\n",
+  "            shutil.rmtree(path)\n"
+ ]
+]

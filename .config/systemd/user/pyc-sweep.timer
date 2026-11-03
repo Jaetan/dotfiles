@@ -1,0 +1,10 @@
+[Unit]
+Description=Hourly sweep of the Python bytecode caches left under /tmp
+
+[Timer]
+OnCalendar=hourly
+Persistent=true
+RandomizedDelaySec=120
+
+[Install]
+WantedBy=timers.target

@@ -7,7 +7,10 @@ harness runs it, with the call's cwd a fresh git work tree holding a module
 matrix sits in an ignored directory, and a tracked copy of one. A PreToolUse
 case compares the answer with the rule: exit 2 refuses a call that plants a
 change in a .py and starts a test run no fresh-bytecode guard reaches, naming
-what it plants; exit 0 lets the rest through. A PostToolUse case first leaves
+what it plants, and a call, planting or not, that gives PYTHONPYCACHEPREFIX a
+directory it makes with mktemp or tempfile.mkdtemp and does not remove; exit 0
+lets the rest through, the two loop shapes the guard names as known limits
+included. A PostToolUse case first leaves
 the module's __pycache__ entry as a plant restored within the second leaves it
 (the planted code under the source's own mtime and size), or as another case
 needs, then expects exit 2 naming the module after a call that plants and
@@ -58,6 +61,11 @@ ORIGINAL = FileText('def f():\n    return "ab"\n')
 PLANTED = FileText('def f():\n    return "ba"\n')
 
 REFUSED = Prose("BLOCKED: this call plants a change in a Python file")
+LEAKED = Prose("BLOCKED: this call gives PYTHONPYCACHEPREFIX a directory it makes and does not remove")
+# The forms every refusal before a call shows: a prefix made, handed to the run and removed in the same call.
+REMOVAL_FORMS = (Prose('P="$(mktemp -d)"; PYTHONPYCACHEPREFIX="$P" pytest ...; rm -rf "$P"'),
+                 Prose("with tempfile.TemporaryDirectory() as prefix:"),
+                 Prose('env=os.environ | {"PYTHONPYCACHEPREFIX": prefix}'))
 LEFT = Prose("bytecode Python would run in place of its source")
 
 # A plant script that restores the module and runs pytest per pass with no guard.
@@ -70,12 +78,24 @@ for old, new in (("ab", "ba"), ("return", "return  ")):
     subprocess.run(["python3", "-m", "pytest", "-q"], check=False)
     module.write_text(original)
 ''')
-# The same, each pass on a new bytecode prefix.
+# The same, each pass on a new bytecode prefix that its with block removes.
 PREFIXED = FileText(UNGUARDED.replace(
+    '    subprocess.run(["python3", "-m", "pytest", "-q"], check=False)',
+    '    with tempfile.TemporaryDirectory() as prefix:\n'
+    '        subprocess.run(["python3", "-m", "pytest", "-q"], check=False,\n'
+    '                       env=os.environ | {"PYTHONPYCACHEPREFIX": prefix})',
+).replace("import subprocess\n", "import os\nimport subprocess\nimport tempfile\n"))
+# Each pass on a new tempfile.mkdtemp prefix that nothing removes.
+MKDTEMP_PREFIXED = FileText(UNGUARDED.replace(
     'subprocess.run(["python3", "-m", "pytest", "-q"], check=False)',
     'subprocess.run(["python3", "-m", "pytest", "-q"], check=False,\n'
     '                   env=os.environ | {"PYTHONPYCACHEPREFIX": tempfile.mkdtemp()})',
 ).replace("import subprocess\n", "import os\nimport subprocess\nimport tempfile\n"))
+# The same, each prefix removed by shutil.rmtree after its pass.
+RMTREE_PREFIXED = FileText(MKDTEMP_PREFIXED.replace(
+    '{"PYTHONPYCACHEPREFIX": tempfile.mkdtemp()})',
+    '{"PYTHONPYCACHEPREFIX": (prefix := tempfile.mkdtemp())})\n    shutil.rmtree(prefix)',
+).replace("import os\n", "import os\nimport shutil\n"))
 # The same, deleting the module's bytecode before each pass.
 CLEARED = FileText(UNGUARDED.replace(
     "    module.write_text(original.replace(old, new))\n",
@@ -168,11 +188,12 @@ for path, text in originals.items():
 ''')
 SCRIPTS = {"by_name.py": BY_NAME, "by_items.py": BY_ITEMS, "by_dict.py": BY_DICT, "unread.py": UNREAD, "unguarded.py": UNGUARDED, "prefixed.py": PREFIXED, "cleared.py": CLEARED,
            "in_process.py": IN_PROCESS, "logger.py": LOGGER, "unplaced.py": UNPLACED,
-           "names_a_test.py": NAMES_A_TEST}
+           "names_a_test.py": NAMES_A_TEST, "mkdtemp_prefixed.py": MKDTEMP_PREFIXED,
+           "rmtree_prefixed.py": RMTREE_PREFIXED}
 
-LOOP = "for p in a b; do sed -i 's/ab/ba/' pkg/m.py; {run} -q; git checkout pkg/m.py; done"
-UNGUARDED_LOOP = LOOP.format(run=".venv/bin/pytest")
-PREFIXED_LOOP = LOOP.format(run='PYTHONPYCACHEPREFIX="$(mktemp -d)" .venv/bin/pytest')
+LOOP = "for p in a b; do sed -i 's/ab/ba/' pkg/m.py; {run}; git checkout pkg/m.py; done"
+UNGUARDED_LOOP = LOOP.format(run=".venv/bin/pytest -q")
+PREFIXED_LOOP = LOOP.format(run='P="$(mktemp -d)"; PYTHONPYCACHEPREFIX="$P" .venv/bin/pytest -q; rm -rf "$P"')
 INLINE = ("python3 - <<'EOF'\nimport subprocess\nfrom pathlib import Path\nm = Path('pkg/m.py')\n"
           "o = m.read_text()\nm.write_text(o.replace('ab', 'ba'))\n"
           "subprocess.run(['python3', '-m', 'pytest', '-q'])\nm.write_text(o)\nEOF")
@@ -187,7 +208,7 @@ BEFORE = [
     ("P05", "a shell loop: sed -i, pytest, git checkout", UNGUARDED_LOOP, True),
     ("P06", "the loop with a prefix on each run", PREFIXED_LOOP, False),
     ("P07", "the loop through env with a prefix",
-     LOOP.format(run='env PYTHONPYCACHEPREFIX="$(mktemp -d)" pytest'), False),
+     LOOP.format(run='P="$(mktemp -d)"; env PYTHONPYCACHEPREFIX="$P" pytest -q; rm -rf "$P"'), False),
     ("P08", "perl -pi on a .py, python -m pytest, git checkout",
      "perl -pi -e 's/ab/ba/' pkg/m.py && .venv/bin/python -m pytest -q; git checkout pkg/m.py", True),
     ("P09", "an edit then a run, no restore: the .pyc records the old mtime",
@@ -202,8 +223,8 @@ BEFORE = [
      "rm -rf pkg/__pycache__; sed -i 's/ab/ba/' pkg/m.py; pytest -q; git checkout pkg/m.py", False),
     ("P14", "inline Python that plants and starts pytest", INLINE, True),
     ("P15", "python -c that edits, a run, git checkout",
-     "python3 -c \"from pathlib import Path; Path('pkg/m.py').write_text('x = 1')\" && pytest -q; "
-     "git checkout pkg/m.py", True),
+     ("python3 -c \"from pathlib import Path; Path('pkg/m.py').write_text('x = 1')\" && pytest -q; "
+     "git checkout pkg/m.py"), True),
     ("P16", "a redirection onto a .py, a run, cp back from a copy",
      "cp pkg/m.py /tmp/m.bak; echo 'x = 1' > pkg/m.py && pytest -q; cp /tmp/m.bak pkg/m.py", True),
     ("P17", "a single cp onto a .py, then a run", "cp /dev/null pkg/m.py && python -m unittest", False),
@@ -225,17 +246,120 @@ BEFORE = [
      "sed -i 's/ab/ba/' pkg/m.py; pytest -q; sed -i 's/ba/ab/' pkg/m.py", True),
     ("P30", "git stash puts back what sed planted", "sed -i 's/ab/ba/' pkg/m.py; pytest -q; git stash", True),
     ("P31", "Python editing two files once each, then a run",
-     "python3 - <<'EOF'\nfrom pathlib import Path\nfor name in ['pkg/m.py', 'test_m.py']:\n"
-     "    pass\nPath('pkg/m.py').write_text('x = 1')\nPath('test_m.py').write_text('y = 2')\nEOF\npytest -q",
+     ("python3 - <<'EOF'\nfrom pathlib import Path\nfor name in ['pkg/m.py', 'test_m.py']:\n"
+     "    pass\nPath('pkg/m.py').write_text('x = 1')\nPath('test_m.py').write_text('y = 2')\nEOF\npytest -q"),
      False),
     ("P32", "a plant script the repository tracks, by path", "python3 tools/plant_tool.py", False),
     ("P33", "a plant module the repository tracks, by -m", "python3 -m tools.plant_tool", False),
     ("P34", "an edit script rebinding its text before writing, then a run",
-     "python3 - <<'EOF'\nfrom pathlib import Path\np = Path('pkg/m.py')\nt = p.read_text()\n"
-     "t = t.replace('ab', 'ba')\np.write_text(t)\nEOF\npytest -q", False),
+     ("python3 - <<'EOF'\nfrom pathlib import Path\np = Path('pkg/m.py')\nt = p.read_text()\n"
+     "t = t.replace('ab', 'ba')\np.write_text(t)\nEOF\npytest -q"), False),
     ("P35", "a plant script keeping originals in a dict, as a red-first matrix does", "python3 by_dict.py", True),
     ("P36", "the original taken out of the dict by name, then written back", "python3 by_name.py", True),
     ("P37", "every original written back by a loop over the dict's items", "python3 by_items.py", True),
+]
+# Before a call, a bytecode prefix the call makes: (id, what the case shows, the call, whether the rule refuses it).
+RUN = 'P="$(mktemp -d)"; PYTHONPYCACHEPREFIX="$P" pytest -q; '
+TWO = 'A="$(mktemp -d)"; B="$(mktemp -d)"; '
+PREFIXES = [
+    ("L01", "an inline mktemp prefix on a test run", 'PYTHONPYCACHEPREFIX="$(mktemp -d)" pytest -q', True),
+    ("L02", "an inline mktemp prefix through env", 'env PYTHONPYCACHEPREFIX="$(mktemp -d)" pytest -q', True),
+    ("L03", "an inline prefix, then another mktemp directory removed",
+     'PYTHONPYCACHEPREFIX="$(mktemp -d)" pytest -q; S="$(mktemp -d)"; rm -rf "$S"', True),
+    ("L04", "an inline prefix through env beside a mktemp variable it removes",
+     'S="$(mktemp -d)"; env PYTHONPYCACHEPREFIX="$(mktemp -d)" pytest -q; rm -rf "$S"', True),
+    ("L05", "a mktemp variable as the prefix, never removed", RUN.rstrip("; "), True),
+    ("L06", "the variable removed by rm -f, which keeps a directory", RUN + 'rm -f "$P"', True),
+    ("L07", "the variable removed before the run",
+     'P="$(mktemp -d)"; rm -rf "$P"; PYTHONPYCACHEPREFIX="$P" pytest -q', True),
+    ("L08", "a directory inside the prefix removed, not the prefix", RUN + 'rm -rf "$P/pkg"', True),
+    ("L09", "the template removed as a literal, not the directory mktemp made",
+     'P="$(mktemp -d /tmp/pyc.XXXXXX)"; PYTHONPYCACHEPREFIX="$P" pytest -q; rm -rf /tmp/pyc.XXXXXX', True),
+    ("L10", "an exported inline prefix, never removed", 'export PYTHONPYCACHEPREFIX="$(mktemp -d)"; pytest -q', True),
+    ("L11", "an inline prefix on a call that plants nothing and runs no test",
+     'PYTHONPYCACHEPREFIX="$(mktemp -d)" python3 -c "print(1)"', True),
+    ("L12", "the planting loop with an inline prefix on each run",
+     LOOP.format(run='PYTHONPYCACHEPREFIX="$(mktemp -d)" .venv/bin/pytest -q'), True),
+    ("L13", "the planting loop through env with an inline prefix",
+     LOOP.format(run='env PYTHONPYCACHEPREFIX="$(mktemp -d)" pytest -q'), True),
+    ("L14", "a plant script giving each pass a tempfile.mkdtemp prefix it never removes",
+     "python3 mkdtemp_prefixed.py", True),
+    ("L15", "python -c handing PYTHONPYCACHEPREFIX a tempfile.mkdtemp directory",
+     ("python3 -c \"import os, subprocess, tempfile; "
+     "subprocess.run(['true'], env=os.environ | {'PYTHONPYCACHEPREFIX': tempfile.mkdtemp()})\""), True),
+    ("L16", "the variable removed by rm -rf after the run", RUN + 'rm -rf "$P"', False),
+    ("L17", "rm -fr", RUN + 'rm -fr "$P"', False),
+    ("L18", "rm -R", RUN + 'rm -R "$P"', False),
+    ("L19", "rm -r", RUN + 'rm -r "$P"', False),
+    ("L20", "rm -f -r, the flags apart", RUN + 'rm -f -r "$P"', False),
+    ("L21", "rm --recursive", RUN + 'rm --recursive "$P"', False),
+    ("L22", "the variable through env, removed",
+     'P="$(mktemp -d)"; env PYTHONPYCACHEPREFIX="$P" pytest -q; rm -rf "$P"', False),
+    ("L23", "an exported inline prefix removed through its name",
+     'export PYTHONPYCACHEPREFIX="$(mktemp -d)"; pytest -q; rm -rf "$PYTHONPYCACHEPREFIX"', False),
+    ("L24", "a new prefix per pass in a loop, each removed",
+     'for p in a b; do P="$(mktemp -d)"; PYTHONPYCACHEPREFIX="$P" pytest -q; rm -rf "$P"; done', False),
+    ("L25", "the prefix removed by an EXIT trap",
+     'P="$(mktemp -d)"; trap \'rm -rf "$P"\' EXIT; PYTHONPYCACHEPREFIX="$P" pytest -q', False),
+    ("L26", "a fixed prefix the call does not make", "PYTHONPYCACHEPREFIX=/tmp/pyc pytest -q", False),
+    ("L27", "a plant script removing each tempfile.mkdtemp prefix with shutil.rmtree",
+     "python3 rmtree_prefixed.py", False),
+    ("L28", "inline Python handing the prefix a tempfile.TemporaryDirectory inside its with block",
+     ("python3 - <<'EOF'\nimport os, subprocess, tempfile\nwith tempfile.TemporaryDirectory() as prefix:\n"
+     "    subprocess.run(['true'], env=os.environ | {'PYTHONPYCACHEPREFIX': prefix})\nEOF"), False),
+    ("L29", "python -c making a tempfile.mkdtemp directory that is no prefix",
+     "python3 -c \"import tempfile; print(tempfile.mkdtemp())\"", False),
+    ("L30", "cp -r of the variable copies the prefix and removes nothing", RUN + 'cp -r "$P" /tmp/copy', True),
+    ("L31", "the variable removed with a trailing slash", RUN + 'rm -rf "$P/"', False),
+    ("L32", "the prefix from one mktemp variable, another removed",
+     TWO + 'PYTHONPYCACHEPREFIX="$A" pytest -q; rm -rf "$B"', True),
+    ("L33", "an inline prefix beside a mktemp variable made before it and removed",
+     'S="$(mktemp -d)"; PYTHONPYCACHEPREFIX="$(mktemp -d)" pytest -q; rm -rf "$S"', True),
+    ("L34", "through env, the prefix from one mktemp variable, another removed",
+     TWO + 'env PYTHONPYCACHEPREFIX="$A" pytest -q; rm -rf "$B"', True),
+    ("L35", "an exported prefix from one mktemp variable, another removed",
+     TWO + 'export PYTHONPYCACHEPREFIX="$A"; pytest -q; rm -rf "$B"', True),
+    ("L36", "an exported inline prefix beside a mktemp variable made before it and removed",
+     'S="$(mktemp -d)"; export PYTHONPYCACHEPREFIX="$(mktemp -d)"; pytest -q; rm -rf "$S"', True),
+    ("L37", "the prefix removed through a copy of its variable, which the reader cannot tell from another",
+     RUN + 'D="$P"; rm -rf "$D"', True),
+    ("L38", "two mktemp variables, the prefix's removed beside the other",
+     TWO + 'PYTHONPYCACHEPREFIX="$A" pytest -q; rm -rf "$B" "$A"', False),
+    ("L39", "an exported prefix from a mktemp variable, removed through that variable",
+     TWO + 'export PYTHONPYCACHEPREFIX="$A"; pytest -q; rm -rf "$A"', False),
+    ("L40", "a new prefix per pass of a loop, only the last removed after the loop",
+     'for p in a b; do P="$(mktemp -d)"; PYTHONPYCACHEPREFIX="$P" pytest -q; done; rm -rf "$P"', True),
+    ("L41", "the prefix removed after &&, which runs only when the tests pass",
+     RUN.removesuffix("; ") + ' && rm -rf "$P"', False),
+    ("L42", "one prefix made before a loop, given on each pass, removed after the loop",
+     'P="$(mktemp -d)"; for p in a b; do PYTHONPYCACHEPREFIX="$P" pytest -q; done; rm -rf "$P"', False),
+    ("L43", "a new prefix per pass of a loop beside a mktemp variable made before it, both removed after",
+     'S="$(mktemp -d)"; for p in a b; do P="$(mktemp -d)"; PYTHONPYCACHEPREFIX="$P" pytest -q; done; '
+     'rm -rf "$P" "$S"', True),
+    ("L44", "the variable removed through ${P:?}, which stops on an empty value", RUN + 'rm -rf "${P:?}"', False),
+    ("L45", "a prefix made outside every loop, removed inside a later one",
+     RUN + 'for d in once; do rm -rf "$P"; done', False),
+    ("L46", "a prefix through env removed only through an exported PYTHONPYCACHEPREFIX holding another",
+     TWO + 'export PYTHONPYCACHEPREFIX="$A"; env PYTHONPYCACHEPREFIX="$B" pytest -q; rm -rf "$A" "$PYTHONPYCACHEPREFIX"',
+     True),
+    ("L47", "an inline prefix assigned alone, with a redirection, then a test run",
+     'PYTHONPYCACHEPREFIX="$(mktemp -d)" > /dev/null; pytest -q', True),
+    ("L48", "an inline prefix assigned alone, exported bare, never removed",
+     'PYTHONPYCACHEPREFIX="$(mktemp -d)"; export PYTHONPYCACHEPREFIX; pytest -q', True),
+    ("L49", "an inline prefix assigned alone, exported bare by declare -x, never removed",
+     'PYTHONPYCACHEPREFIX="$(mktemp -d)"; declare -x PYTHONPYCACHEPREFIX; pytest -q', True),
+    ("L50", "an inline prefix assigned alone, exported bare, removed through its name",
+     'PYTHONPYCACHEPREFIX="$(mktemp -d)"; export PYTHONPYCACHEPREFIX; pytest -q; rm -rf "$PYTHONPYCACHEPREFIX"',
+     False),
+    ("L51", "an exported prefix removed, then unset by name, which gives it nothing",
+     'export PYTHONPYCACHEPREFIX="$(mktemp -d)"; pytest -q; rm -rf "$PYTHONPYCACHEPREFIX"; unset PYTHONPYCACHEPREFIX',
+     False),
+    ("L52", "known limit: a variable given a mktemp directory before a loop and a new one each pass, the last removed",
+     'P="$(mktemp -d)"; for p in a b; do P="$(mktemp -d)"; PYTHONPYCACHEPREFIX="$P" pytest -q; done; rm -rf "$P"',
+     False),
+    ("L53", "known limit: a directory made in an outer loop, given in an inner one, the last removed after both",
+     'for o in a b; do P="$(mktemp -d)"; for i in x; do PYTHONPYCACHEPREFIX="$P" pytest -q; done; done; rm -rf "$P"',
+     False),
 ]
 # After a call: (id, what the case shows, the call, the module's bytecode before it, whether the rule names it).
 AFTER = [
@@ -328,6 +452,11 @@ def cases() -> list[Case]:
         for case_id, what, call, refuses in BEFORE
     ]
     built += [
+        Case(CaseId(case_id), Prose(what), CallText(call), REFUSE if refuses else ALLOW,
+             LEAKED if refuses else Prose(""))
+        for case_id, what, call, refuses in PREFIXES
+    ]
+    built += [
         Case(CaseId(case_id), Prose(what), CallText(call), REFUSE if names else ALLOW,
              LEFT if names else Prose(""), "PostToolUse", bytecode)
         for case_id, what, call, bytecode, names in AFTER
@@ -366,6 +495,8 @@ def main() -> ExitStatus:
             ok = outcome.status == case.want and case.says in outcome.stderr
             if ok and case.arm == "PostToolUse" and case.want == REFUSE:
                 ok = str(MODULE) in outcome.stderr
+            if ok and case.arm == "PreToolUse" and case.want == REFUSE:
+                ok = all(form in outcome.stderr for form in REMOVAL_FORMS)
             bad += not ok
             print(f"{'ok  ' if ok else 'MISS'} {case.id:<4} want={case.want} got={outcome.status} {case.what}")
             if not ok and outcome.stderr.strip():

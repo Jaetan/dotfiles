@@ -1,0 +1,32 @@
+[
+ [
+  "precise-hints-guard.py",
+  "    if gate.record is not None and head == STAGED:",
+  "    if head == STAGED:"
+ ],
+ [
+  "precise-hints-guard.py",
+  "    if gate.record is not None and head == STAGED:",
+  "    if gate.record is not None:"
+ ],
+ [
+  "precise-hints-guard.py",
+  "    if gate.record is not None and head == STAGED:",
+  "    if gate.record is not None and head != STAGED:"
+ ],
+ [
+  "precise-hints-guard.py",
+  "        return RepoPath(rest)",
+  "        return rel"
+ ],
+ [
+  "precise-hints-guard.py",
+  "STAGED = \"next\"",
+  "STAGED = \"staged\""
+ ],
+ [
+  "precise-hints-guard.py",
+  "    rel = judged_as(RepoPath(path.relative_to(gate.root).as_posix()), gate)",
+  "    rel = RepoPath(path.relative_to(gate.root).as_posix())"
+ ]
+]

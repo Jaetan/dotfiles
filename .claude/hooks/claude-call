@@ -10,6 +10,11 @@ The Bash tool runs `zsh -c '<snapshot> ... && eval <call> < /dev/null && pwd -P 
          (SIGTERM, then SIGKILL after TimeoutStopSec).
   log    the call's whole output, both streams, to LOGS/<time>-<session>-<pid>.log, as well as to the tool.
          Logs older than KEEP_DAYS go, then the oldest until at most KEEP_LOGS logs and KEEP_BYTES remain.
+  tmpdir TMPDIR names a directory of the call's own, TMP/cc-<pid>-<8 hex digits>, mode 0700: 24 characters at most,
+         since a unix socket's path holds 108 bytes and Go's t.TempDir adds up to about 80. It outlives the call, so
+         a later call can read what this one left there; its `owner` file, written as a view's is, tells a reader
+         when the call has ended, and ~/.local/bin/pyc-sweep, never this file, removes it. The random digits keep a
+         reused pid from naming a directory an earlier call left.
   view   inside a git repository, the call runs in a bubblewrap mount namespace where the repository's path shows
          a snapshot of its sources, taken when the call starts, so an edit made meanwhile cannot reach it:
            - tracked files and untracked files not ignored, as the working tree has them, copied (posix tar keeps
@@ -32,11 +37,12 @@ The Bash tool runs `zsh -c '<snapshot> ... && eval <call> < /dev/null && pwd -P 
          call's version kept under CONFLICTS and named on stderr. A call ended by a signal is not synced back;
          the files it had changed are named in its log.
 
-Fail open: when a log, a view or a sync cannot be made, the call still runs, and stderr says what was skipped. When
-the scope or the view does not start, the call has not run (a marker it writes just before starting is still empty)
-and runs unwrapped, exactly once; a call that did start is never run again.
+Fail open: when a log, a view, a TMPDIR or a sync cannot be made, the call still runs, and stderr says what was
+skipped; without a TMPDIR of its own, the call keeps the one it was given. When the scope or the view does not
+start, the call has not run (a marker it writes just before starting is still empty) and runs unwrapped, exactly
+once; a call that did start is never run again.
 Environment: CLAUDE_CALL=1 inside (the ~/.zshenv line does not wrap again); CLAUDE_CALL_ROOT moves LOGS, VIEWS and
-CONFLICTS (the tests use it); CLAUDE_CALL_SLICE names the slice.
+CONFLICTS, CLAUDE_CALL_TMP moves TMP off /tmp (the tests use both); CLAUDE_CALL_SLICE names the slice.
 """
 import contextlib
 import fcntl
@@ -55,6 +61,7 @@ from typing import BinaryIO
 
 ROOT = Path(os.environ.get("CLAUDE_CALL_ROOT", Path.home() / "dev" / "logs"))
 LOGS, VIEWS, CONFLICTS = ROOT / "claude-calls", ROOT / "claude-views", ROOT / "claude-conflicts"
+TMP = Path(os.environ.get("CLAUDE_CALL_TMP", "/tmp"))
 EVENTS, EVENTS_BYTES = ROOT / "claude-call-events.log", 1 << 20  # its newest half is kept past the cap
 SLICE = os.environ.get("CLAUDE_CALL_SLICE", "claude.slice")
 KEEP_DAYS, KEEP_LOGS, KEEP_BYTES = 5, 50, 100 << 20
@@ -140,6 +147,12 @@ def remove_tree(path: Path) -> None:
         shutil.rmtree(path, ignore_errors=True)
 
 
+def owner_record(unit: str) -> str:
+    """The `owner` file of a view or a TMPDIR, `<pid> <start time> <unit>`: the wrapper's pid, its start time read
+    from /proc/<pid>/stat (a process reusing the pid has another), and the call's scope."""
+    return f"{os.getpid()} {start_time(os.getpid())} {unit}\n"
+
+
 def reap_stale_views() -> None:
     """A view whose wrapper died without cleaning up (SIGKILL): its scope stopped, its directory removed."""
     for owner in VIEWS.glob("*/owner") if VIEWS.exists() else ():
@@ -196,7 +209,7 @@ class View:
         self.dir = VIEWS / ident
         self.snap = self.dir / "snap"
         self.snap.mkdir(parents=True)
-        (self.dir / "owner").write_text(f"{os.getpid()} {start_time(os.getpid())} {unit}\n")
+        (self.dir / "owner").write_text(owner_record(unit))
         queries = [subprocess.Popen(["git", "-C", str(top), *args], env=GIT_ENV, stdout=subprocess.PIPE, text=True)
                    for args in (["ls-files", "-z", "--cached", "--others", "--exclude-standard"],
                                 ["ls-files", "-z", "--others", "--ignored", "--exclude-standard", "--directory"],
@@ -347,6 +360,22 @@ def make_marker(ident: str) -> Path | None:
     return None
 
 
+def make_tmpdir(unit: str) -> Path | None:
+    """The call's TMPDIR and its owner file, or None, nothing left behind, when either cannot be made."""
+    made = TMP / f"cc-{os.getpid()}-{os.urandom(4).hex()}"
+    try:
+        made.mkdir(mode=0o700)
+        try:
+            (made / "owner").write_text(owner_record(unit))
+        except OSError:
+            shutil.rmtree(made, ignore_errors=True)
+            raise
+    except OSError as e:
+        warn("no-tmpdir", f"no TMPDIR of its own ({e}); the call runs with the TMPDIR it was given")
+        return None
+    return made
+
+
 def never_started(marker: Path | None) -> bool:
     """The marker is still empty: the scope or the view failed before the call ran, so it may run unwrapped once.
     Without a marker the call is taken to have run, and is never run again."""
@@ -399,9 +428,13 @@ def main(line: str) -> int:
         view = None
     mark("view")
     scope = scope_argv(unit)
+    tmpdir = make_tmpdir(unit)
+    mark("tmpdir")
     MARKER = make_marker(ident)
     started = ["/bin/sh", "-c", 'printf 1 > "$0" && exec "$@"', str(MARKER)] if MARKER else []
     argv = [*scope, *(view.argv() if view else []), *started, ZSH, "-c", line]
+    if tmpdir:  # inherited by the call, and by an unwrapped run when the scope does not start
+        os.environ["TMPDIR"] = str(tmpdir)
 
     def stop() -> None:
         if scope[0] == "systemd-run":

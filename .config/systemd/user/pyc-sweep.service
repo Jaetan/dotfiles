@@ -1,0 +1,10 @@
+[Unit]
+Description=Remove the Python bytecode caches left under /tmp (tmpfs, charged to memory until deleted)
+Documentation=file:%h/.local/bin/pyc-sweep
+
+[Service]
+Type=oneshot
+ExecStart=%h/.local/bin/pyc-sweep /tmp
+MemoryMax=256M
+Nice=10
+IOSchedulingClass=idle

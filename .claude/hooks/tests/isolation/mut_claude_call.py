@@ -2,6 +2,7 @@
 """Mutation run over claude-call and its zshenv line: each mutant must fail at least one case of the suite.
 
 usage: mut_claude_call.py [ID...]   (on CPUs 0-19, under the soft address-space cap the suite asks for)
+       CLAUDE_CALL_SOURCES=DIR mutates the three files DIR holds (a staged copy) instead of the kit's own
 
 A mutant is one exact replacement in a copy of the wrapper, the snippet or the rmdir interposer, with the suite's
 cases that guard it; the suite runs against the copies (CLAUDE_CALL_UNDER_TEST, CLAUDE_CALL_SNIPPET_UNDER_TEST; the
@@ -16,6 +17,7 @@ from pathlib import Path
 
 HOOKS = Path(__file__).resolve().parents[2]
 SUITE = Path(__file__).with_name("test_claude_call.py")
+SOURCES = Path(os.environ.get("CLAUDE_CALL_SOURCES", HOOKS))
 W, Z, C = "claude-call", "claude-call.zshenv", "claude-call-rmdir.c"
 MUTANTS = [
     ("stop-after-call", W, "    stop()  # the call's leftovers hold its pipes: stopping them ends the pumps",
@@ -82,6 +84,35 @@ MUTANTS = [
     ("no-fail-open", W, '        os.execv(ZSH, [ZSH, "-c", sys.argv[1]])', "        sys.exit(1)", ["fail_open"]),
     ("cwd-lost", W, '*started, ZSH, "-c", line]', '*started, ZSH, "-c", line.replace("pwd -P >|", "true >|")]',
      ["cd_persists"]),
+    ("tmpdir-unset", W, '        os.environ["TMPDIR"] = str(tmpdir)', "        pass", ["tmpdir"]),
+    ("tmpdir-mode", W, "        made.mkdir(mode=0o700)", "        made.mkdir(mode=0o755)", ["tmpdir"]),
+    ("tmpdir-no-owner", W, '            (made / "owner").write_text(owner_record(unit))', "            pass",
+     ["tmpdir"]),
+    ("owner-pid", W, 'return f"{os.getpid()} {start_time(os.getpid())}',
+     'return f"{os.getppid()} {start_time(os.getpid())}', ["tmpdir"]),
+    ("owner-start", W, "{start_time(os.getpid())} {unit}", "{start_time(os.getppid())} {unit}", ["tmpdir"]),
+    ("tmpdir-pid-only", W, 'f"cc-{os.getpid()}-{os.urandom(4).hex()}"', 'f"cc-{os.getpid()}"', ["tmpdir"]),
+    ("tmpdir-off-tmp", W, '"CLAUDE_CALL_TMP", "/tmp"', '"CLAUDE_CALL_TMP", "/var/tmp"', ["tmpdir"]),
+    ("tmpdir-removed-at-end", W, "        raise NeverStarted\n    if MARKER:",
+     "        raise NeverStarted\n    if tmpdir:\n        remove_tree(tmpdir)\n    if MARKER:", ["tmpdir"]),
+    ("tmpdir-removed-on-signal", W,
+     "        stop()\n        if view:\n            with contextlib.suppress(Exception):",
+     "        stop()\n        if tmpdir:\n            remove_tree(tmpdir)\n        if view:\n"
+     "            with contextlib.suppress(Exception):", ["signal"]),
+    ("tmpdir-reaped", W, '    for owner in VIEWS.glob("*/owner") if VIEWS.exists() else ():',
+     '    for owner in [*VIEWS.glob("*/owner"), *TMP.glob("cc-*/owner")]:', ["tmpdir", "signal"]),
+    ("tmpdir-not-unwrapped", W, '        os.environ["CLAUDE_CALL"] = "1"\n        os.execv(ZSH',
+     '        os.environ["CLAUDE_CALL"] = "1"\n        os.environ.pop("TMPDIR", None)\n        os.execv(ZSH',
+     ["tmpdir"]),
+    ("tmpdir-no-warning", W,
+     '        warn("no-tmpdir", f"no TMPDIR of its own ({e}); the call runs with the TMPDIR it was given")',
+     "        pass", ["tmpdir_fail_open"]),
+    ("tmpdir-fails-closed", W, "    except OSError as e:\n        warn(\"no-tmpdir\"",
+     "    except FileExistsError as e:\n        warn(\"no-tmpdir\"", ["tmpdir_fail_open"]),
+    ("tmpdir-half-left", W, "            shutil.rmtree(made, ignore_errors=True)\n            raise",
+     "            raise", ["tmpdir_fail_open"]),
+    ("tmpdir-half-used", W, "            shutil.rmtree(made, ignore_errors=True)\n            raise",
+     "            shutil.rmtree(made, ignore_errors=True)", ["tmpdir_fail_open"]),
     ("snippet-nesting", Z, "&& -z $CLAUDE_CALL ", "", ["off_and_nesting"]),
     ("snippet-off", Z, "&& ! -e ${CLAUDE_CALL_OFF:-$HOME/.claude/claude-call.off}", "", ["off_and_nesting"]),
     ("snippet-shape", Z,
@@ -92,7 +123,7 @@ chosen = [m for m in MUTANTS if len(sys.argv) == 1 or m[0] in sys.argv[1:]]
 survivors, errors = [], []
 with tempfile.TemporaryDirectory(prefix="mut-claude-call-") as tmp:
     for ident, target, old, new, cases in chosen:
-        files = {name: (HOOKS / name).read_text() for name in (W, Z, C)}
+        files = {name: (SOURCES / name).read_text() for name in (W, Z, C)}
         if files[target].count(old) != 1:
             errors.append(ident)
             print(f"ERROR {ident}: the replacement matches {files[target].count(old)} times", flush=True)

@@ -40,6 +40,11 @@ or ~/dev/agda/aletheia, as tests/check_hints.sh finds it) runs with --root that
 directory and --record that file. A checkout whose gate refuses those arguments
 judges nothing, and the hook says so rather than refusing.
 
+A STAGED COPY. Such a directory works on copies under its next/ and installs
+each by renaming it over the live file (USER RULING 2026-11-03), so a file under
+next/ is judged as the path it stands for: next/_shell.py is held to the rows
+of _shell.py, which a copy shares until it is installed.
+
 Either way the gate decides what it reads; the hook only skips what cannot be
 in its scope, a suffix other than .py and .sh, and a file no gate covers. An error of the hook's own is reported and the call goes ahead, as the
 other guards here do: a hook that fails must never block the session silently.
@@ -141,6 +146,8 @@ INTERPRETER = Path("python") / ".venv" / "bin" / "python"
 RECORD = "PYTHON_IMPRECISE_HINTS.yaml"
 # The checkout whose gate judges such a directory, as tests/check_hints.sh finds it.
 CHECKER = Path(os.environ.get("ALETHEIA_REPO") or Path.home() / "dev" / "agda" / "aletheia")
+# Where such a directory keeps the staged copies it installs over its live files.
+STAGED = "next"
 EDITORS: frozenset[Editor] = frozenset({"Edit", "Write", "MultiEdit"})
 SUFFIXES = frozenset({".py", ".sh"})
 GATE_MEMORY = 2 << 30
@@ -214,9 +221,21 @@ def cap_gate_memory() -> None:
     resource.setrlimit(resource.RLIMIT_AS, (GATE_MEMORY, GATE_MEMORY))
 
 
+def judged_as(rel: RepoPath, gate: Gate) -> RepoPath:
+    """Return the path a file is judged under: a staged copy under next/ stands for the file it replaces.
+
+    Only a directory held to its own record stages copies (the kit's next/, installed by renaming each
+    file over the live one), so a repository's own gate judges every path as it is.
+    """
+    head, _, rest = rel.partition("/")
+    if gate.record is not None and head == STAGED:
+        return RepoPath(rest)
+    return rel
+
+
 def run_gate(gate: Gate, file: Path, path: Path) -> GateRun:
     """Hand one file's text to the gate, as the path it stands for under the gate's tree."""
-    rel = RepoPath(path.relative_to(gate.root).as_posix())
+    rel = judged_as(RepoPath(path.relative_to(gate.root).as_posix()), gate)
     held = ["--root", str(gate.root), "--record", str(gate.record)] if gate.record is not None else []
     run = subprocess.run(
         [str(gate.checker / INTERPRETER), "-m", "tools.check_precise_hints", *held,

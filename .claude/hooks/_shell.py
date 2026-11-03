@@ -63,8 +63,11 @@ import subprocess
 import tempfile
 from collections.abc import Callable
 from dataclasses import dataclass, field
+from typing import NewType
 
-__all__ = ["Command", "ParseError", "Redirect", "Word", "commands", "tree_of"]
+__all__ = ["Command", "ParseError", "Redirect", "VariableName", "Word", "commands", "tree_of"]
+
+VariableName = NewType("VariableName", str)  # the name a shell assignment gives a value
 
 
 class ParseError(Exception):
@@ -158,6 +161,8 @@ class Command:
     disowned: bool = False  # started with zsh's `&!` or `&|`: no wait of this shell reaps it
     unparsed: str | None = None  # text it runs later that the reader could not follow (a trap's)
     dialect: str = "bash"  # the shell that runs it: "zsh" (the tool's own), "bash", "sh" or "fish"
+    # Each assignment before its words, its value as a Word: how it is spelled, and what it substitutes.
+    assign_words: dict[VariableName, Word] = field(default_factory=dict[VariableName, Word])
 
     @property
     def argv(self) -> list[str]:
@@ -1545,6 +1550,7 @@ class _Evaluator:
         if self.work > MAX_COMMANDS:
             raise BudgetExceeded(f"more than {MAX_COMMANDS} commands to read")
         assigns: dict[str, str | None] = {}
+        assign_words: dict[VariableName, Word] = {}
         partials: dict[str, str] = {}
         arrays: dict[str, str | None] = {}  # name[@]: a literal array's elements, NUL-joined; None when unknown
         dropped: list[str] = []  # name[@] of a name given a plain value: no array under it any more
@@ -1569,6 +1575,7 @@ class _Evaluator:
             for sub in ew.substitutions:
                 self.sub(sub, ctx, "assign")
             assigns[m.group(1)] = None if (m.group(2) or m.group(3)) else ew.value
+            assign_words[VariableName(m.group(1))] = ew
             if assigns[m.group(1)] is None and not (m.group(2) or m.group(3)) and ew.partial:
                 partials[m.group(1)] = ew.partial
             literal = not head and len(w.segments) == 2 and w.segments[1][0] == _UNKNOWN \
@@ -1589,7 +1596,7 @@ class _Evaluator:
         redirs = self.own_redirects(node.redirs, ctx)
         if not cmd_words:
             if redirs:  # the environment it ran in, copied only for a command that is recorded
-                self.out.append(self._cmd([], assigns, ctx.redirects + redirs, dict(ctx.env), ctx))
+                self.out.append(self._cmd([], assigns, ctx.redirects + redirs, dict(ctx.env), ctx, assign_words))
             ctx.env.update(assigns)
             for key in dropped:
                 ctx.env.pop(key, None)
@@ -1598,7 +1605,7 @@ class _Evaluator:
                 _set_partial(ctx, k, partials.get(k))
             return
         env = dict(ctx.env)
-        self.out.append(self._cmd(cmd_words, assigns, ctx.redirects + redirs, env, ctx))
+        self.out.append(self._cmd(cmd_words, assigns, ctx.redirects + redirs, env, ctx, assign_words))
         if name == "exec" and len(cmd_words) == 1:
             ctx.redirects = ctx.redirects + redirs  # `exec >log` redirects what follows
         elif name in ("cd", "pushd", "popd"):
@@ -1670,11 +1677,11 @@ class _Evaluator:
                 ctx.partials.pop(w.text, None)
 
     def _cmd(self, words: list[Word], assigns: dict[str, str | None], redirects: list[Redirect],
-             env: dict[str, str | None], ctx: _Ctx) -> Command:
+             env: dict[str, str | None], ctx: _Ctx, assign_words: dict[VariableName, Word]) -> Command:
         return Command(words, assigns, redirects, ctx.cwd, env, ctx.background, ctx.pipe_in, ctx.pipe_out,
                        ctx.pipe_err, ctx.depth, ctx.scope, ctx.job_scope, ctx.bg_scope, ctx.function, ctx.loop,
                        ctx.loop_id, ctx.loop_body, ctx.feeds, ctx.proc, ctx.job, disowned=ctx.disowned,
-                       dialect=self.dialect)
+                       dialect=self.dialect, assign_words=assign_words)
 
     def made(self, path: str) -> bool:
         """A directory an earlier mkdir of this call makes: the builtin cd enters it."""
