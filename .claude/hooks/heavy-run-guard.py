@@ -15,6 +15,8 @@ THE RULES (user, 2026-09-25):
      run, not how many a tool starts.
   6. A unit systemd-run starts stays in the session's claude.slice, under its
      memory and CPU caps (user, 2026-10-10).
+  7. A recursive search reads no run-record directory it does not skip by
+     name (user, 2026-11-04).
 
 WHY A HOOK AND NOT A NOTE. Rules 1 and 2 were a memory and were broken anyway:
 the probe store was appended to a batch of quick lint commands, so the call
@@ -80,6 +82,37 @@ killed. Rule 6: each systemd-run a command runs under names the user manager
 claude.slice or one beneath it (`claude-<name>.slice`); an option's value is
 read as that option's own. A bare one lands in app.slice, outside every cap.
 
+RULE 7, for the same commands. The run-record directories are the checkout's
+tools/ci-output and aletheia-ci-output beside the checkout. A grep, egrep or
+fgrep run recursively, or an rgrep, is refused when a path it is given (none
+meaning where it runs, xargs's operands where the reader places them, each
+placed as rule 4 places a write and its symlinks resolved) is a record
+directory, or holds one that no --exclude-dir glob matches by name. Its
+options are read as GNU grep's getopt reads them: anywhere before `--`, long
+ones abbreviated, the last of -r, -R, --recursive and -d deciding, the first
+operand the pattern unless -e or -f gave one. A path naming a record
+directory itself is refused whatever it excludes: grep skips such a path only
+as it is spelled, and `tools/ci-output/`, or `.` inside it, is read whole. A
+filter after grep (`| grep -v ci-output`) reads nothing less: such a grep read
+the 82 GB under tools/ci-output before its filter saw a line, filled
+claude.slice's page cache, and systemd-oomd killed calls. An rg is held alike,
+its options read as ripgrep 15.1 reads them (long ones named whole, the first
+operand the pattern unless -e, -f or --files gave none, no path meaning its
+stdin when that is a pipe, a heredoc or a file but /dev/null, else where it
+runs): a record directory it holds is skipped when the last -g matching the
+directory's name negates it (`-g '!ci-output'`), and tools/ci-output while rg
+reads the .gitignore inside it, which -u, --no-ignore and --no-ignore-vcs stop.
+A find is refused when a start point it is given (placed alike, none meaning
+where it runs, after -H, -L, -P, -D and -O) is or holds a record directory and
+it hands what lies beneath to a program that reads contents: one its -exec,
+-execdir, -ok or -okdir runs, or an xargs later in its pipeline runs, any
+program but the name-only ones (ls, stat, echo, rm ...). It is skipped when a
+-path, -wholename, -name or one of their case-blind kin before a -prune, alone
+or in a group, matches it or a directory above it as find prints it (none
+while -depth, -d or -delete turns -prune off), when a -path or -wholename after
+-not or `!` matches what it holds, or when the last -maxdepth stops at it. A
+find that only lists names reads no contents and passes.
+
 RULE 4. Every path a call would write is resolved from the command's own
 words (redirections; cp, mv (both ends), install, ln, rsync; rm, touch,
 mkdir, tee, truncate, chmod; sed -i, perl -i, awk -i inplace; dd of=; tar,
@@ -132,10 +165,12 @@ as a hook error: an unguarded call is never silent.
 
 from __future__ import annotations
 
+import fnmatch
 import hashlib
 import json
 import os
 import re
+import shlex
 import shutil
 import subprocess
 import sys
@@ -143,7 +178,7 @@ import tempfile
 import time
 from dataclasses import dataclass
 from pathlib import Path
-from typing import NewType
+from typing import NamedTuple, NewType
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import _commands as C  # noqa: E402
@@ -994,6 +1029,412 @@ N within 1-20 and shared with what runs beside it. A unit systemd-run starts sta
 `systemd-run --user --slice=claude.slice ...` (or `--slice-inherit`); a bare one lands outside every cap."""
 
 
+RecordDir = NewType("RecordDir", str)  # a run-record directory
+SearchPath = NewType("SearchPath", str)  # a path a search is given, as the command spells it
+WorkDir = NewType("WorkDir", str)  # the directory a command runs in
+DirGlob = NewType("DirGlob", str)  # an --exclude-dir pattern
+
+# The directories CI runs record into, gigabytes each: the checkout's own, which its .gitignore lists, and the one
+# beside it, which no .gitignore covers. Each is spelled as realpath gives it: a search's path is compared resolved.
+RUN_RECORDS = (RecordDir("/home/nicolas/dev/agda/aletheia/tools/ci-output"),
+               RecordDir("/home/nicolas/dev/agda/aletheia-ci-output"))
+
+
+class Reach(NamedTuple):
+    """A run-record directory a search path reaches: beneath it, or the path itself."""
+
+    record: RecordDir
+    beneath: bool
+
+
+def records_reached(path: SearchPath, cwd: WorkDir | None) -> list[Reach]:
+    """The run-record directories a path a recursive search is given is or holds.
+
+    The path is placed as rule 4 places a write (an unknown part charged to the directory before it, a glob to the
+    directory it sits in), and its symlinks are resolved, since a search follows a path it is given.
+    """
+    reached = []
+    for target in _at([path], cwd, "a search"):
+        here = os.path.realpath(target.path)
+        for record in RUN_RECORDS:
+            if record == here or record.startswith(os.path.join(here, "")):
+                reached.append(Reach(record, record != here))
+    return reached
+
+
+# GNU grep's long options (3.12), each with whether it takes a value in the next word when it has no `=`, and the
+# letters whose short option takes the rest of its word or the next word as its value.
+_GREP_LONG = {"after-context": True, "basic-regexp": False, "before-context": True, "binary": False,
+              "binary-files": True, "byte-offset": False, "color": False, "colour": False, "context": True,
+              "count": False, "dereference-recursive": False, "devices": True, "directories": True, "exclude": True,
+              "exclude-dir": True, "exclude-from": True, "extended-regexp": False, "file": True,
+              "files-with-matches": False, "files-without-match": False, "fixed-regexp": False,
+              "fixed-strings": False, "group-separator": True, "help": False, "ignore-case": False, "include": True,
+              "initial-tab": False, "invert-match": False, "label": True, "line-buffered": False,
+              "line-number": False, "line-regexp": False, "max-count": True, "no-filename": False,
+              "no-group-separator": False, "no-ignore-case": False, "no-messages": False, "null": False,
+              "null-data": False, "only-matching": False, "perl-regexp": False, "quiet": False, "recursive": False,
+              "regexp": True, "silent": False, "text": False, "version": False, "with-filename": False,
+              "word-regexp": False}
+_GREP_SHORT_VALUE = frozenset("ABCDXdefm")
+_GREP_AS_SHORT = {"recursive": "r", "dereference-recursive": "R", "directories": "d", "regexp": "e", "file": "f"}
+
+
+SkipOption = NewType("SkipOption", str)  # the option that skips a directory, `{}` standing for its name
+
+
+class Search(NamedTuple):
+    """What a search reads: whether it recurses, its paths, the directory-name globs it skips, and the option a
+    refusal names for one."""
+
+    recursive: bool
+    paths: list[SearchPath]
+    excluded: list[DirGlob]
+    skip: SkipOption = SkipOption("--exclude-dir matching `{}`")
+
+
+def grep_search(inv: C.Inv) -> Search | None:
+    """A grep, egrep, fgrep or rgrep's options, read as GNU getopt reads them; None for any other command.
+
+    Options stand anywhere before `--`; a long one may be cut to a prefix no other option shares; the last of
+    -r, -R and -d decides whether it recurses (`-d rec` is the shortest recurse grep takes); the first operand is
+    the pattern unless -e or -f gave one, and `-` is standard input.
+    """
+    argv = inv.core.argv
+    name = C.prog(argv[0]) if argv else ""
+    if name not in ("grep", "egrep", "fgrep", "rgrep"):
+        return None
+    args = (["-r"] if name == "rgrep" else []) + argv[1:]  # rgrep runs `grep -r "$@"`
+    seen = []  # each option as its short letter, or its long name, with its value
+    operands = []
+    ended = False
+    k = 0
+    while k < len(args):
+        arg = args[k]
+        k += 1
+        if ended or arg == "-" or not arg.startswith("-"):
+            operands.append(arg)
+        elif arg == "--":
+            ended = True
+        elif arg.startswith("--"):
+            word, eq, value = arg[2:].partition("=")
+            matches = [n for n in _GREP_LONG if n.startswith(word)]
+            full = word if word in _GREP_LONG else matches[0] if len(matches) == 1 else None
+            if full is None:
+                continue  # grep refuses it, or it is --colo or --fixed-, a flag that decides nothing here
+            if _GREP_LONG[full] and not eq:
+                value = args[k] if k < len(args) else ""
+                k += 1
+            seen.append((_GREP_AS_SHORT.get(full, full), value))
+        else:
+            for j in range(1, len(arg)):
+                if arg[j] in _GREP_SHORT_VALUE:
+                    value = arg[j + 1:]
+                    if not value:
+                        value = args[k] if k < len(args) else ""
+                        k += 1
+                    seen.append((arg[j], value))
+                    break
+                seen.append((arg[j], ""))
+    recursive = given = False
+    excluded = []
+    for opt, value in seen:
+        if opt in ("r", "R"):
+            recursive = True
+        elif opt == "d":
+            recursive = len(value) > 2 and "recurse".startswith(value)
+        elif opt in ("e", "f"):
+            given = True
+        elif opt == "exclude-dir":
+            excluded.append(DirGlob(value))
+    return Search(recursive, [SearchPath(p) for p in operands[0 if given else 1:]], excluded)
+
+
+# ripgrep's options (15.1) that take a value: a long one is named whole, since rg takes no abbreviation; a short one
+# takes the rest of its word, a leading `=` dropped, or else the next word.
+_RG_LONG_VALUE = frozenset({
+    "after-context", "before-context", "color", "colors", "context", "context-separator", "dfa-size-limit", "encoding",
+    "engine", "field-context-separator", "field-match-separator", "file", "generate", "glob", "hostname-bin",
+    "hyperlink-format", "iglob", "ignore-file", "max-columns", "max-count", "max-depth", "max-filesize",
+    "path-separator", "pre", "pre-glob", "regex-size-limit", "regexp", "replace", "sort", "sortr", "threads", "type",
+    "type-add", "type-clear", "type-not"})
+_RG_SHORT_VALUE = frozenset("ABCEMTdefgjmrt")
+_RG_AS_SHORT = {"glob": "g", "regexp": "e", "file": "f", "unrestricted": "u"}
+_GITIGNORED_RECORD = RUN_RECORDS[0]  # the checkout's: the .gitignore inside it lists `*`
+
+
+def _reads_stdin(cmd: _shell.Command) -> bool:
+    """Whether rg finds something to search on a command's stdin: a pipe, a heredoc or a file, but /dev/null, a
+    character device as the call's own stdin is."""
+    sources = [r for r in C._stdin_sources(cmd) if r.fd in (None, 0)]
+    return bool(sources) and not (sources[-1].op == "<" and sources[-1].target is not None
+                                  and sources[-1].target.value == "/dev/null")
+
+
+def rg_search(inv: C.Inv) -> Search | None:
+    """An rg's options, read as ripgrep 15.1 reads them; None for any other command.
+
+    Options stand anywhere before `--`; the first operand is the pattern unless -e, -f or --files gave none. With no
+    path rg searches its stdin when `_reads_stdin` finds one and neither --files nor `-f -` is given, else where it
+    runs. A record directory is skipped when the last -g whose glob matches its name negates it, and the checkout's
+    while rg reads VCS ignore files, which the first -u, --no-ignore and --no-ignore-vcs turn off and --ignore and
+    --ignore-vcs back on.
+    """
+    argv = inv.core.argv
+    if not argv or C.prog(argv[0]) != "rg":
+        return None
+    words = iter(argv[1:])
+    opts = []  # each option as its short letter, or its long name, with its value
+    operands = []
+    for word in words:
+        if word == "--":
+            operands += words
+        elif word == "-" or not word.startswith("-"):
+            operands.append(word)
+        elif word.startswith("--"):
+            name, eq, value = word[2:].partition("=")
+            opts.append((_RG_AS_SHORT.get(name, name),
+                         value if eq or name not in _RG_LONG_VALUE else next(words, "")))
+        else:
+            for j, letter in enumerate(word[1:], 1):
+                if letter in _RG_SHORT_VALUE:
+                    opts.append((letter, word[j + 1:].removeprefix("=") or next(words, "")))
+                    break
+                opts.append((letter, ""))
+    patterned = listing = stdin_taken = ignore_off = False
+    unrestricted = 0
+    globs = []
+    for opt, value in opts:
+        match opt:
+            case "e":
+                patterned = True
+            case "f":
+                patterned, stdin_taken = True, stdin_taken or value == "-"
+            case "files":
+                listing = True
+            case "u":
+                unrestricted += 1
+                ignore_off = ignore_off or unrestricted == 1
+            case "no-ignore" | "no-ignore-vcs":
+                ignore_off = True
+            case "ignore" | "ignore-vcs":
+                ignore_off = False
+            case "g":
+                globs.append(value)
+    paths = operands if patterned or listing else operands[1:]
+    if not paths and not listing and not stdin_taken and _reads_stdin(inv.cmd):
+        paths = ["-"]
+    skipped = []
+    for record in RUN_RECORDS:
+        name = os.path.basename(record)
+        last = next((g for g in reversed(globs) if fnmatch.fnmatchcase(name, g.removeprefix("!"))), "")
+        if last.startswith("!") or (record == _GITIGNORED_RECORD and not ignore_off):
+            skipped.append(DirGlob(name))
+    return Search(True, [SearchPath(p) for p in paths], skipped, SkipOption("-g '!{}'"))
+
+
+# Programs that read no file's contents, only names and metadata: a find handing its paths to any other reads them.
+NAME_ONLY = frozenset({"ls", "eza", "stat", "echo", "printf", "basename", "dirname", "realpath", "readlink", "du",
+                       "test", "[", "true", "false", "rm", "rmdir", "mv", "ln", "touch", "chmod", "chown", "mkdir"})
+FindTest = NewType("FindTest", str)  # a find test matching a path or a name: -path, -name and their kin
+FindGlob = NewType("FindGlob", str)  # the pattern such a test is given
+FindDepth = NewType("FindDepth", int)  # the levels below its start points a find descends
+FoundPath = NewType("FoundPath", str)  # a path as find prints it
+_FIND_PATH_TESTS = frozenset({"-path", "-wholename", "-ipath", "-iwholename"})
+_FIND_TESTS = _FIND_PATH_TESTS | {"-name", "-iname"}
+_FIND_EXEC = frozenset({"-exec", "-execdir", "-ok", "-okdir"})
+_FIND_NO_PRUNE = frozenset({"-depth", "-d", "-delete"})  # each turns -prune off, as find(1) says
+
+
+class FindMatch(NamedTuple):
+    """A find test matching a path or a name, with the pattern it is given."""
+
+    test: FindTest
+    glob: FindGlob
+
+
+class FindGroup(NamedTuple):
+    """A parenthesized group of a find's expression while it is read: its tests, and whether a -not precedes it."""
+
+    tests: list[FindMatch]
+    negated: bool
+
+
+class FindRead(NamedTuple):
+    """What a find reads: its start points, whether an -exec of it runs a reader, its last -maxdepth, the tests a
+    -prune follows, and the path tests a -not or `!` precedes."""
+
+    roots: list[SearchPath]
+    reads: bool
+    maxdepth: FindDepth | None
+    pruned: list[FindMatch]
+    negated: list[FindMatch]
+
+
+def _reads_contents(core: C.Core) -> bool:
+    """Whether a command, its wrappers peeled, runs a program that reads the files it is given."""
+    return bool(core.argv) and C.prog(core.argv[0]) not in NAME_ONLY
+
+
+def find_read(inv: C.Inv) -> FindRead | None:
+    """A find's start points and expression, read as GNU find 4.10 reads them; None for any other command.
+
+    -H, -L, -P, -D with its value and -O<level> come before the start points, which end at the first word starting
+    `-`, `(` or `!`. An -exec, -execdir, -ok or -okdir runs the words up to `;` or `+`, none of them read as the
+    expression's own. An operand is a test with its pattern or a parenthesized group: a -prune after one, `-a` or
+    `-and` between them or not, prunes what its tests match, and a -not or `!` before one negates its path tests.
+    """
+    argv = inv.core.argv
+    if not argv or C.prog(argv[0]) != "find":
+        return None
+    k = 1
+    while k < len(argv) and (argv[k] in ("-H", "-L", "-P", "-D") or argv[k].startswith("-O")):
+        k += 2 if argv[k] == "-D" else 1
+    roots = []
+    while k < len(argv) and not argv[k].startswith(("-", "(", "!")):
+        roots.append(SearchPath(argv[k]))
+        k += 1
+    reads, prunes, negating = False, True, False
+    maxdepth: FindDepth | None = None
+    pruned: list[FindMatch] = []
+    negated: list[FindMatch] = []
+    groups: list[FindGroup] = []  # the groups open at this word, innermost last
+    last: list[FindMatch] = []  # the tests of the operand the word before ends
+    while k < len(argv):
+        word = argv[k]
+        k += 1
+        if word in ("-a", "-and", "-not", "!"):
+            negating ^= word in ("-not", "!")  # a second negation takes the first back
+            continue
+        done: list[FindMatch] = []  # the tests of the operand this word ends
+        if word in _FIND_EXEC:
+            end = next((j for j in range(k, len(argv)) if argv[j] in (";", "+")), len(argv))
+            reads = reads or _reads_contents(C.unwrap(argv[k:end]))
+            k = end + 1
+        elif word in _FIND_TESTS and k < len(argv):
+            done = [FindMatch(FindTest(word), FindGlob(argv[k]))]
+            k += 1
+        elif word == "(":
+            groups.append(FindGroup([], negating))
+        elif word == ")" and groups:
+            done, negating = groups.pop()
+        elif word == "-maxdepth" and "".join(argv[k:k + 1]).isdigit():
+            maxdepth = FindDepth(int(argv[k]))
+        elif word == "-prune":
+            pruned += last
+        elif word in _FIND_NO_PRUNE:
+            prunes = False
+        if negating:
+            negated += [m for m in done if m.test in _FIND_PATH_TESTS]
+        if groups:
+            groups[-1].tests.extend(done)
+        last, negating = done, False
+    return FindRead(roots or [SearchPath(".")], reads, maxdepth, pruned if prunes else [], negated)
+
+
+def _find_match(match: FindMatch, path: FoundPath) -> bool:
+    """Whether a find test matches a path as find prints it: -name and -iname match its last part, the others the
+    whole of it, and those starting `-i` ignore case."""
+    subject = os.path.basename(path) if match.test in ("-name", "-iname") else path
+    if match.test.startswith("-i"):
+        return fnmatch.fnmatchcase(subject.lower(), match.glob.lower())
+    return fnmatch.fnmatchcase(subject, match.glob)
+
+
+def _feeds_xargs_reader(inv: C.Inv, later: list[C.Inv]) -> bool:
+    """Whether what a command prints reaches an xargs running a reader later in its pipeline, filters or none between.
+
+    The pipeline's later elements are the later commands sharing its job scope (a carrier's text, a find's -exec and a
+    subshell are read in scopes of their own) up to the first that reads no pipe.
+    """
+    if not inv.cmd.pipe_out:
+        return False
+    for nxt in later:
+        if nxt.cmd.job_scope != inv.cmd.job_scope:
+            continue
+        if not nxt.cmd.pipe_in:
+            return False
+        if nxt.core.via_xargs and _reads_contents(nxt.core):
+            return True
+    return False
+
+
+def find_problems(inv: C.Inv, find: FindRead, here: WorkDir, where: Prose) -> list[Prose]:
+    """A find whose paths reach a reader hands it no file beneath a run-record directory it does not skip."""
+    problems: list[Prose] = []
+    for root in find.roots:
+        start = _known_part(root)
+        for reach in records_reached(root, here):
+            rel = os.path.relpath(reach.record, os.path.realpath(C.resolve(start, here) or start))
+            parts = [] if rel == "." else rel.split("/")
+            # The start point as find prints it, and each directory from it down to the record directory.
+            printed = [FoundPath(os.path.join(start, *parts[:n])) for n in range(len(parts) + 1)]
+            if find.maxdepth is not None and find.maxdepth <= len(parts):
+                continue  # find stops at the record directory, never opening what it holds
+            if any(_find_match(m, p) for m in find.pruned for p in printed):
+                continue
+            inside = (FoundPath(os.path.join(printed[-1], "x")), FoundPath(os.path.join(printed[-1], "x", "y")))
+            if any(all(_find_match(m, p) for p in inside) for m in find.negated):
+                continue
+            problems.append(Prose(f"`{_quoted(inv)}`{where} reads {reach.record}, "
+                                  + (f"beneath `{root}`" if reach.beneath else f"the directory `{root}` names")
+                                  + f", which no `-path {shlex.quote(printed[-1])} -prune` skips"))
+    return problems
+
+
+def _quoted(inv: C.Inv) -> Prose:
+    """A command as a refusal quotes it: shell-quoted, cut at 120 characters."""
+    said = shlex.join(inv.core.argv)
+    return Prose(said if len(said) <= 120 else said[:117] + "...")
+
+
+def search_problems(invs: list[C.Inv], cwd: WorkDir) -> list[Prose]:
+    """Rule 7 over every command the call runs, in any script it reads or Python it starts.
+
+    A recursive grep or an rg reads no run-record directory it does not skip, and a find hands no file beneath one it
+    does not skip to a program that reads it.
+    """
+    problems: list[Prose] = []
+    for k, inv in enumerate(invs):
+        where = Prose("" if inv.origin in ("call", "script") else " (in a repository script this call runs)")
+        here = WorkDir(inv.cmd.cwd) if inv.cmd.cwd else cwd  # a cd the reader could not follow: where the call starts
+        find = find_read(inv)
+        if find is not None and (find.reads or _feeds_xargs_reader(inv, invs[k + 1:])):
+            problems += find_problems(inv, find, here, where)
+        search = grep_search(inv) or rg_search(inv)
+        if search is None or not search.recursive:
+            continue
+        paths = search.paths
+        if inv.core.via_xargs:  # its operands arrive on stdin: where the reader placed them, else where it runs
+            paths = paths + [SearchPath(p) for p in (inv.xargs_paths if inv.xargs_paths is not None else ["."])]
+        for path in paths or [SearchPath(".")]:  # `-` (standard input) resolves to no record directory
+            for reach in records_reached(path, here):
+                name = os.path.basename(reach.record)
+                if reach.beneath and any(fnmatch.fnmatchcase(name, glob) for glob in search.excluded):
+                    continue
+                problems.append(Prose(f"`{_quoted(inv)}`{where} reads {reach.record}, "
+                                      + (f"beneath `{path}`, which no {search.skip.format(name)} skips"
+                                         if reach.beneath else f"the directory `{path}` names")))
+    return problems
+
+
+_RECORD_NAMES = sorted({os.path.basename(r) for r in RUN_RECORDS})
+SEARCH_ADVICE = """BLOCKED (rule 7): a recursive search reads a run-record directory.
+
+{problems}
+
+A run record holds gigabytes, and grep reads all of it before a filter after it (`| grep -v ci-output`) sees a
+line: one such grep read the 82 GB under tools/ci-output, filled claude.slice's page cache, and systemd-oomd killed
+calls. Search so that no record is opened, each skipped by name:
+  rg -n """ + " ".join(f"-g '!{n}'" for n in _RECORD_NAMES) + """ PATTERN PATHS
+  git grep -n PATTERN -- PATHS
+  grep -rn """ + " ".join(f"--exclude-dir={n}" for n in _RECORD_NAMES) + """ PATTERN PATHS
+  find PATHS \\( """ + " -o ".join(f"-name {n}" for n in _RECORD_NAMES) + """ \\) -prune -o -type f -exec grep -n PATTERN {{}} +
+rg skips tools/ci-output through the .gitignore inside it until -u, --no-ignore or --no-ignore-vcs turns ignore
+files off; no ignore file covers aletheia-ci-output.
+A grep or rg path naming a record directory itself is read whatever it excludes: name the run inside it instead."""
+
+
 SHAPE_ADVICE = """BLOCKED: a heavy command in a shape the user's rules refuse.
 
 {problems}
@@ -1319,6 +1760,10 @@ def before(event: dict) -> int:
     problems = limit_problems(invs + started)
     if problems:
         print(LIMIT_ADVICE.format(problems=_lines(problems, "  * ")), file=sys.stderr)
+        return 2
+    problems = search_problems(invs + started, WorkDir(cwd))
+    if problems:
+        print(SEARCH_ADVICE.format(problems=_lines(problems, "  * ")), file=sys.stderr)
         return 2
     problems = shape_problems(invs, tool) + started_problems(started)
     if problems:

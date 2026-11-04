@@ -1,14 +1,17 @@
 #!/usr/bin/env python3
 """Regression cases for red-disposition-guard.py.
 
-Every case builds, under a fresh temporary directory, a git work tree (with the probe store's record when the case
-gives one) and a project directory holding the session's transcript path and, when the case gives one, a task list.
-It then pipes a Stop event to the hook, with HOME pointed at the case's own directory so the kill switch is the
-case's, and compares the exit status with the rule: 2 keeps the turn going with a finding, 1 reports an error of the
-hook's own, 0 lets the turn end. The hand-over sentences are the ones a session wrote, blocked or let through.
+Every case builds, under a fresh temporary directory, a git work tree and a project directory holding the session's
+transcript path and, when the case gives one, a task list. The tree holds what the case gives of the probe store's
+record in tools/ci-output, the records module, and a stand-in interpreter answering for the module's command; the
+case's directory holds what it gives of the record beside the tree, where the module places it. It then pipes a Stop
+event to the hook, with HOME pointed at the case's own directory so the kill switch is the case's, and compares the
+exit status with the rule: 2 keeps the turn going with a finding, 1 reports an error of the hook's own, 0 lets the
+turn end. The hand-over sentences are the ones a session wrote, blocked or let through.
 
 Usage: test_red_disposition_guard.py [GUARD]
   GUARD  the guard to test, or a hooks directory holding it (default: ..)
+Prints a MISS line, with the case's number, for each case that disagrees, then the count that disagree.
 Exit 0 when every case agrees with its expectation.
 """
 
@@ -44,6 +47,16 @@ SLICES = ProbeName("tools_mutation_cpp_slices.py--the-sliced-union-is-the-unslic
 OTHER = ProbeName("README.md--an-unresolved-check-exits-zero.sh")
 ROW = FileText(f"- `{SLICES}` — N.43: legs older than cpp/CMakeLists.txt; a pin-change gate")
 NO_TASK_ROW = FileText(f"- `{SLICES}` — legs older than cpp/CMakeLists.txt")
+# The tree's python/.venv/bin/python, standing in for `python -m tools._records probes`: it refuses any other command
+# and any address-space bound but 2 GiB, then answers as the module does, from the directory it runs in.
+COMMAND_CHECKS = FileText(
+    '#!/bin/sh\n'
+    '[ "$*" = "-m tools._records probes" ] || { echo "stand-in: called as $*" >&2; exit 9; }\n'
+    '[ "$(ulimit -v)" = 2097152 ] || { echo "stand-in: $(ulimit -v) KiB of address space" >&2; exit 9; }\n'
+    'd=$(pwd -P)\n')
+BESIDE = FileText(COMMAND_CHECKS + 'echo "${d%/*}/aletheia-ci-output/probes/${d##*/}"\n')
+RELATIVE = FileText(COMMAND_CHECKS + 'echo "aletheia-ci-output/probes/${d##*/}"\n')
+REFUSING = FileText(BESIDE + "echo 'records: no checkout' >&2\nexit 2\n")
 
 
 def record(*rows: tuple[ProbeName, Verdict]) -> FileText:
@@ -72,6 +85,9 @@ class Case(NamedTuple):
     event_name: EventName = "Stop"
     says: Prose | None = None
     no_list: bool = False
+    module: bool = False
+    interpreter: FileText | None = None
+    beside: FileText | None = None
 
 
 CASES = [
@@ -100,7 +116,8 @@ CASES = [
     Case(CaseId("a quoted example"), ALLOW,
          Prose('- **Live check:** it refused a stop on "206 of 207 pass" and made the model continue.')),
     Case(CaseId("a curly-quoted example"), ALLOW, Prose("It refused a stop on \u201c206 of 207 pass\u201d.")),
-    Case(CaseId("an example in a code span"), ALLOW, Prose("Arm two refuses `206 of 207 pass` and lets `22 of 22` through.")),
+    Case(CaseId("an example in a code span"), ALLOW,
+         Prose("Arm two refuses `206 of 207 pass` and lets `22 of 22` through.")),
     Case(CaseId("a result beside a quoted example"), REFUSE,
          Prose('It refused "206 of 207 pass"; the store: 205 of 207 pass.'), says=Prose("205 of 207")),
     Case(CaseId("a count where the session has no task list"), ALLOW, Prose("Store before: 206 of 207 pass."),
@@ -126,6 +143,25 @@ CASES = [
          task_list=FileText(f"# Task list\n\n## Red checks\n\n## N.43 — probes\n\n- **Finding** `{SLICES}` refuses\n")),
     Case(CaseId("cwd below the work tree's top"), REFUSE, record=record((SLICES, FAIL)), subdir=True),
     Case(CaseId("outside a git work tree"), ALLOW, record=record((SLICES, FAIL)), in_git=False),
+    # Arm one: where the tree keeps its record.
+    Case(CaseId("the module's place read, tools/ci-output not"), REFUSE, record=record((SLICES, FAIL)),
+         task_list=tasks(ROW), module=True, interpreter=BESIDE, beside=record((SLICES, PASS)), says=Prose("stale")),
+    Case(CaseId("a red in the module's place needs its row"), REFUSE, task_list=tasks(), module=True,
+         interpreter=BESIDE, beside=record((SLICES, FAIL), (OTHER, PASS)), says=Prose("no '## Red checks' row")),
+    Case(CaseId("no record in the module's place: not read"), ALLOW, record=record((SLICES, FAIL)), task_list=tasks(),
+         module=True, interpreter=BESIDE),
+    Case(CaseId("tools/ci-output read in a tree without the module"), REFUSE, record=record((SLICES, FAIL)),
+         task_list=tasks(), interpreter=BESIDE, beside=record((SLICES, PASS)), says=Prose(SLICES)),
+    Case(CaseId("the records command exits 2"), REPORTED, task_list=tasks(), module=True, interpreter=REFUSING,
+         beside=record((SLICES, FAIL)),
+         says=Prose("went unchecked: RecordsUnnamedError: `python/.venv/bin/python -m tools._records probes` named no "
+                    "place: exit 2, stderr 'records: no checkout', stdout '")),
+    Case(CaseId("the records command answers a relative path"), REPORTED, task_list=tasks(), module=True,
+         interpreter=RELATIVE, beside=record((SLICES, FAIL)),
+         says=Prose("went unchecked: RecordsUnnamedError: `python/.venv/bin/python -m tools._records probes` named no "
+                    "place: exit 0, stderr '', stdout 'aletheia-ci-output/probes/tree'")),
+    Case(CaseId("the records command has no interpreter"), REPORTED, record=record((SLICES, PASS)), module=True,
+         says=Prose("went unchecked: FileNotFoundError")),
     Case(CaseId("both arms report"), REFUSE, Prose("Store: 206 of 207 pass."), record=record((SLICES, FAIL)),
          says=Prose("206 of 207")),
     # The hook itself.
@@ -137,16 +173,26 @@ CASES = [
 ]
 
 
+def put(path: Path, text: FileText | None, executable: bool = False) -> None:
+    """Write ``text`` at ``path``, its directories made, unless the case gives no text."""
+    if text is None:
+        return
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(text, encoding="utf-8")
+    if executable:
+        path.chmod(0o755)
+
+
 def run(case: Case, home: Path) -> tuple[ExitStatus, Prose]:
     """Build the case's trees, pipe its event to the hook, and return its exit status and stderr."""
     tree = home / "tree"
     (tree / "sub").mkdir(parents=True)
     if case.in_git:
         subprocess.run(["git", "init", "-q", str(tree)], check=True, env=GIT_ENV)
-    if case.record is not None:
-        target = tree / "tools" / "ci-output" / "probes" / "timings.tsv"
-        target.parent.mkdir(parents=True)
-        target.write_text(case.record, encoding="utf-8")
+    put(tree / "tools" / "ci-output" / "probes" / "timings.tsv", case.record)
+    put(tree / "tools" / "_records.py", FileText("") if case.module else None)
+    put(tree / "python" / ".venv" / "bin" / "python", case.interpreter, executable=True)
+    put(home / "aletheia-ci-output" / "probes" / "tree" / "timings.tsv", case.beside)
     project = home / ".claude" / "projects" / "-tree"
     (project / "memory").mkdir(parents=True)
     if not case.no_list:
@@ -171,10 +217,10 @@ def main() -> ExitStatus:
         lacks = case.says is not None and case.says not in stderr
         if status != case.want or lacks:
             failed += 1
-            print(f"FAIL {case.name}: exit {status}, want {case.want}" + (f", stderr lacks {case.says!r}" if lacks else "")
-                  + f"\n  {stderr.strip()}")
+            print(f"MISS {number} {case.name}: exit {status}, want {case.want}"
+                  + (f", stderr lacks {case.says!r}" if lacks else "") + f"\n  {stderr.strip()}")
     shutil.rmtree(BASE)
-    print(f"{len(CASES) - failed} of {len(CASES)} cases agree")
+    print(f"{len(CASES)} cases, {failed} disagree")
     return ExitStatus(1 if failed else 0)
 
 

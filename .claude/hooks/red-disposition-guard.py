@@ -12,12 +12,16 @@ and it fails exactly when the excuse reads as analysis. This hook reads the resu
 
 WHEN IT LOOKS. At the end of every turn (Stop).
 
-ARM ONE, THE RED LEDGER. In a git work tree holding a probe store's record, `tools/ci-output/probes/timings.tsv`
-(columns probe, verdict, seconds), every probe whose verdict is not PASS must have a row in the `## Red checks`
-section of the task list beside the session's transcript (`<project dir>/memory/TASKS.md`), and every row must
-name a probe the record does not pass. A row is a list item whose first code span is the probe's file name, followed
-by a task id (`N.43`). A red with no row, a row with no task id, and a row whose probe passes or is gone are each a
-finding. A work tree without the record is not read.
+ARM ONE, THE RED LEDGER. In a git work tree holding a probe store's record, `timings.tsv` (columns probe, verdict,
+seconds), every probe whose verdict is not PASS must have a row in the `## Red checks` section of the task list beside
+the session's transcript (`<project dir>/memory/TASKS.md`), and every row must name a probe the record does not pass.
+A row is a list item whose first code span is the probe's file name, followed by a task id (`N.43`). A red with no
+row, a row with no task id, and a row whose probe passes or is gone are each a finding. A tree holding the records
+module, `tools/_records.py`, keeps the record in the folder `python/.venv/bin/python -m tools._records probes` prints
+when run in the tree (beside the checkout, or under $ALETHEIA_CI_OUTPUT); a tree without it, in
+`tools/ci-output/probes/`. A work tree with no record there is not read. A records command that names no place (an
+exit other than 0, no interpreter, an answer that is not an absolute path, no answer in time) is an error of the
+hook's own.
 
 ARM TWO, THE HAND-OVER'S COUNTS. Where the session has a task list, so a task id is there to name, in the turn's
 last message a count of results that passed below its total (`206
@@ -34,6 +38,7 @@ KILL SWITCH: while ~/.claude/red-disposition-guard.off exists the hook refuses n
 import csv
 import json
 import re
+import resource
 import subprocess
 import sys
 from pathlib import Path
@@ -53,7 +58,13 @@ ExitStatus = NewType("ExitStatus", int)
 ALLOW, REPORTED, REFUSE = ExitStatus(0), ExitStatus(1), ExitStatus(2)
 
 KILL_SWITCH = Path.home() / ".claude" / "red-disposition-guard.off"
-RECORD = Path("tools/ci-output/probes/timings.tsv")
+RECORD = Path("tools/ci-output/probes/timings.tsv")  # where a tree without the records module keeps its record
+RECORDS_MODULE = Path("tools/_records.py")
+INTERPRETER = Path("python/.venv/bin/python")
+RECORDS_COMMAND = ("-m", "tools._records", "probes")
+# The records command's bounds, the ones the kit's gate readers give their child: it measured 0.16 s, within 60 MiB.
+RECORDS_MEMORY = 2 << 30
+RECORDS_SECONDS = 60
 PASS = Verdict("PASS")
 LEDGER_HEADING = "## Red checks"
 _TASK_ID = re.compile(r"\b[A-Z]\.[0-9]+\b")
@@ -91,6 +102,29 @@ def work_tree(cwd: Path) -> Path | None:
     out = subprocess.run(["git", "-C", str(cwd), "rev-parse", "--show-toplevel"],
                          capture_output=True, text=True, check=False)
     return Path(out.stdout.strip()) if out.returncode == 0 and out.stdout.strip() else None
+
+
+class RecordsUnnamedError(subprocess.SubprocessError):
+    """The records command answered without naming a place."""
+
+
+def cap_records_memory() -> None:
+    """Bound the records command's address space."""
+    resource.setrlimit(resource.RLIMIT_AS, (RECORDS_MEMORY, RECORDS_MEMORY))
+
+
+def record_of(top: Path) -> Path:
+    """Name the probe store's record of the work tree at ``top``: in the folder its records module names, or in
+    ``tools/ci-output`` when it holds no such module. A command that names no place raises."""
+    if not (top / RECORDS_MODULE).is_file():
+        return top / RECORD
+    run = subprocess.run([str(top / INTERPRETER), *RECORDS_COMMAND], cwd=top, capture_output=True, text=True,
+                         timeout=RECORDS_SECONDS, check=False, preexec_fn=cap_records_memory)
+    answer = run.stdout.strip()
+    if run.returncode != 0 or not Path(answer).is_absolute():
+        raise RecordsUnnamedError(f"`{INTERPRETER} {' '.join(RECORDS_COMMAND)}` named no place: exit {run.returncode}, "
+                                  f"stderr {run.stderr.strip()!r}, stdout {answer!r}")
+    return Path(answer) / RECORD.name
 
 
 def record_verdicts(record: Path) -> dict[ProbeName, Verdict]:
@@ -167,9 +201,9 @@ def handle(event: Event) -> ExitStatus:
     tasks = Path(transcript).parent / "memory" / "TASKS.md" if transcript else None
     listed = tasks is not None and tasks.is_file()
     top = work_tree(Path(cwd)) if cwd else None
-    if top is not None and (top / RECORD).is_file():
+    if top is not None and (record := record_of(top)).is_file():
         text = Prose(tasks.read_text(encoding="utf-8")) if tasks is not None and listed else Prose("")
-        findings += ledger_findings(record_verdicts(top / RECORD), ledger_rows(text))
+        findings += ledger_findings(record_verdicts(record), ledger_rows(text))
     if listed:
         findings += count_findings(event.get("last_assistant_message") or Prose(""))
     if not findings:
