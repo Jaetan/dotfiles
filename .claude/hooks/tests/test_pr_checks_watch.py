@@ -1,330 +1,370 @@
-#!/usr/bin/env python3
+#!/home/nicolas/.local/bin/python3.14
 """Regression cases for pr-checks-watch, the script every pull request watch runs through.
 
-The verdict is a pure function over a head before and after the watch, the rollup's checks and the ruleset's
-required contexts: it is held over planted rollups, loaded from the script itself. The script whole is held
-by running it with a stand-in `gh` first on PATH, which answers `pr view`, `api` and `pr checks` from a table
-the case plants and logs each call: the verdict lines land on stdout, the watch's tables in --record, and the
-exit status is the verdict's.
+Each case copies the script into a temporary directory of its own and plants beside the copy a stand-in
+pr-all-green, which records its command line and what the script had printed when it started, prints planted
+lines and ends with a planted status (a negative one by that signal). A stand-in `gh`, alone on PATH, answers
+`pr view` and `pr checks` from the case's plan, recording each call and, at the watch, what the script had
+printed; a case may plant it without its execute bit, leave it out, or have it remove itself once it has
+answered the view. The case holds the exit status, every line of stdout in order, gh's calls, pr-all-green's
+command line and the record, over an earlier record where the case plants one.
 
 Usage: test_pr_checks_watch.py [SCRIPT]
   SCRIPT  the script to test, or a directory holding it (default: ../../../.local/bin beside this kit)
 Exit 0 when every case agrees with its expectation.
 """
 
-import importlib.machinery
-import importlib.util
 import json
 import os
+import shutil
 import subprocess
 import sys
 import tempfile
 from pathlib import Path
 from typing import Literal, NamedTuple, NewType, TypedDict
 
-# A case's name; prose a case names itself by or expects; a commit's hash; a check's name; a check run's
-# status and conclusion and a status context's state as GitHub spells them; the text of the watch's table;
-# gh's exit status; a word of the script's command line; how many cases disagree; the exit status.
+# A case's name; prose a case names itself by or expects; a commit's hash; a word of a command line, where
+# {dir} stands for the case's own directory; text a process prints or a file holds, {dir} the same; an exit
+# status a stand-in or the script ends with; how many cases disagree; this suite's exit status.
 CaseId = NewType("CaseId", str)
 Prose = NewType("Prose", str)
 Sha = NewType("Sha", str)
-CheckName = NewType("CheckName", str)
-RunStatus = NewType("RunStatus", str)
-Conclusion = NewType("Conclusion", str)
-ContextState = NewType("ContextState", str)
-TableText = NewType("TableText", str)
-GhStatus = NewType("GhStatus", int)
-CommandWord = NewType("CommandWord", str)
-EntryKind = NewType("EntryKind", str)
-RuleType = NewType("RuleType", str)
+Word = NewType("Word", str)
+Text = NewType("Text", str)
+Status = NewType("Status", int)
 DisagreeCount = NewType("DisagreeCount", int)
 ExitStatus = NewType("ExitStatus", int)
 
 
-class RollupEntry(TypedDict, total=False):
-    """One entry of a planted rollup: a check run or a status context, as gh prints them."""
-
-    __typename: EntryKind
-    name: CheckName
-    workflowName: CheckName
-    startedAt: Prose
-    status: RunStatus
-    conclusion: Conclusion | None
-    context: CheckName
-    state: ContextState
-
-
-class PullView(TypedDict):
-    """What the stand-in answers `gh pr view --json`."""
+class PullView(TypedDict, total=False):
+    """What the stand-in gh answers `pr view --json headRefOid`."""
 
     headRefOid: Sha
-    baseRefName: CheckName
-    statusCheckRollup: list[RollupEntry]
 
 
-class RequiredCheck(TypedDict):
-    """One required check of a planted rule."""
+class GhPlan(TypedDict):
+    """What the stand-in gh answers: the view (an object, a failure, or text printed as it is) and the watch."""
 
-    context: CheckName
-
-
-class RuleParams(TypedDict, total=False):
-    """A planted rule's parameters."""
-
-    required_status_checks: list[RequiredCheck]
+    view: PullView | Literal["fail"] | Text
+    vanish: bool  # the stand-in removes itself once it has answered the view
+    watch_out: Text
+    watch_err: Text
+    watch_status: Status
 
 
-class RuleJson(TypedDict):
-    """One planted rule of the base branch's ruleset."""
+class VerdictPlan(TypedDict):
+    """What the stand-in pr-all-green prints on stdout and stderr and ends with."""
 
-    type: RuleType
-    parameters: RuleParams
+    lines: list[Text]
+    err: Text
+    status: Status
 
 
-class StubTable(TypedDict):
-    """What the stand-in gh answers: the views in order (the last repeats), the rules, and the watch."""
+class VerdictFile(VerdictPlan):
+    """The plan as the stand-in reads it, with the file the script's stdout goes to."""
 
-    views: list[PullView | Literal["fail"]]
-    rules: list[RuleJson] | Literal["fail"]
-    watch_table: TableText
-    watch_status: GhStatus
+    stdout: Text
+
+
+class Case(NamedTuple):
+    """One run of a copy of the script beside its stand-ins, and what the run must show."""
+
+    id: CaseId
+    what: Prose
+    argv: list[Word]
+    gh: GhPlan
+    verdict: VerdictPlan | None  # None: no pr-all-green beside the copy
+    want: ExitStatus
+    out: list[Text] | None  # every stdout line, in order; None: only `has` is read
+    calls: list[Text]  # gh's calls, in order
+    given: list[Word] | None  # pr-all-green's command line; None: it never runs
+    record: Text | None = None  # what {dir}/watch.log holds; None: no such file
+    has: Prose = Prose("")  # words stdout or stderr carries
+    link: bool = False  # run through a symlink in another directory, a decoy pr-all-green beside the link
+    runnable: bool = True  # False: pr-all-green planted without its execute bit
+    gh_file: Literal["runnable", "absent", "unrunnable"] = "runnable"  # the stand-in gh, as planted
+    stale: Text | None = None  # what {dir}/watch.log holds before the run; None: no such file
+
 
 HOOKS = Path(__file__).resolve().parent.parent
 GIVEN = Path(sys.argv[1]).resolve() if len(sys.argv) > 1 else HOOKS.parent.parent / ".local/bin"
 SCRIPT = GIVEN / "pr-checks-watch" if GIVEN.is_dir() else GIVEN
 BASE = Path(tempfile.mkdtemp(prefix="pr-checks-watch-test-")).resolve()
-STUB = """#!/usr/bin/env python3
-import json, os, sys
-table = json.load(open(os.environ["STUB_GH_TABLE"]))
-with open(os.environ["STUB_GH_LOG"], "a") as log:
-    log.write(" ".join(sys.argv[1:]) + "\\n")
+GH_STUB = """#!@PYTHON@
+import json, sys
+from pathlib import Path
+case = Path(__file__).resolve().parent.parent
+plan = json.loads((case / "gh.json").read_text())
 args = sys.argv[1:]
+with open(case / "gh.calls", "a") as log:
+    log.write(" ".join(args) + "\\n")
 if args[:2] == ["pr", "view"]:
-    views = table["views"]
-    answer = views.pop(0) if len(views) > 1 else views[0]
-    json.dump(table, open(os.environ["STUB_GH_TABLE"], "w"))  # the next call, a new process, reads the rest
-    if answer == "fail":
+    if plan["vanish"]:
+        Path(__file__).unlink()
+    if plan["view"] == "fail":
         sys.stderr.write("gh: could not resolve the pull request\\n"); sys.exit(1)
-    print(json.dumps(answer)); sys.exit(0)
-if args[:1] == ["api"]:
-    if table["rules"] == "fail":
-        sys.stderr.write("gh: HTTP 404\\n"); sys.exit(1)
-    print(json.dumps(table["rules"])); sys.exit(0)
+    print(plan["view"] if isinstance(plan["view"], str) else json.dumps(plan["view"])); sys.exit(0)
 if args[:2] == ["pr", "checks"]:
-    print(table["watch_table"]); sys.exit(table["watch_status"])
+    (case / "gh.seen").write_text((case / "stdout.txt").read_text())
+    sys.stdout.write(plan["watch_out"]); sys.stderr.write(plan["watch_err"]); sys.exit(plan["watch_status"])
 sys.stderr.write("stub gh: unexpected call\\n"); sys.exit(9)
-"""
+""".replace("@PYTHON@", sys.executable)
+VERDICT_STUB = """#!@PYTHON@
+import json, os, sys
+from pathlib import Path
+here = Path(__file__).parent
+plan = json.loads((here / "verdict.json").read_text())
+(here / "verdict.calls").write_text(json.dumps(sys.argv[1:]))
+(here / "verdict.seen").write_text(Path(plan["stdout"]).read_text())
+for line in plan["lines"]:
+    print(line)
+sys.stdout.flush()
+sys.stderr.write(plan["err"])
+if plan["status"] < 0:
+    os.kill(os.getpid(), -plan["status"])
+sys.exit(plan["status"])
+""".replace("@PYTHON@", sys.executable)
 
-spec = importlib.util.spec_from_loader("pr_checks_watch", importlib.machinery.SourceFileLoader(
-    "pr_checks_watch", str(SCRIPT)))
-assert spec is not None and spec.loader is not None
-watch = importlib.util.module_from_spec(spec)
-spec.loader.exec_module(watch)
-
-
-def run(name: CheckName, status: RunStatus = RunStatus("COMPLETED"),
-        conclusion: Conclusion | None = Conclusion("SUCCESS"), started: Prose = Prose("2026-10-15T02:49:04Z"),
-        workflow: CheckName = CheckName("lanes")) -> RollupEntry:
-    """A check run entry of the rollup, started at ``started`` by the workflow ``workflow``."""
-    return {"__typename": EntryKind("CheckRun"), "name": name, "status": status, "conclusion": conclusion,
-            "startedAt": started, "workflowName": workflow}
-
-
-def context(name: CheckName, state: ContextState) -> RollupEntry:
-    """A status context entry of the rollup."""
-    return {"__typename": EntryKind("StatusContext"), "context": name, "state": state}
-
-
-REQUIRED = [watch.CheckName("tools/run_ci.py (all gates)"), watch.CheckName("mutation testing")]
-GREEN_ROLLUP = [run(CheckName("tools/run_ci.py (all gates)")), run(CheckName("mutation testing")), run(CheckName("PR title")),
-                run(CheckName("lint"), conclusion=Conclusion("SKIPPED")), run(CheckName("note"), conclusion=Conclusion("NEUTRAL")), context(CheckName("ci/external"), ContextState("SUCCESS"))]
-SHA, SHA2 = watch.Sha("a" * 40), watch.Sha("b" * 40)
+SHA = Sha("a" * 40)
+HEAD_LINE = Text(f"head {SHA} watched")
+VIEW: PullView = {"headRefOid": SHA}
+CALLS = [Text("pr view 409 --json headRefOid"), Text("pr checks 409 --watch --fail-fast --interval 20")]
+GIVEN_PLAIN = [Word("409"), Word("--head"), Word(SHA)]
+RECORDED = [Word("409"), Word("--record"), Word("{dir}/watch.log")]
+GIVEN_LOGS = [*GIVEN_PLAIN, Word("--logs"), Word("{dir}/watch.log.logs")]
 
 
-class Unit(NamedTuple):
-    """One planted judgement: what verdict() gets, the status it must answer, and words its lines must carry."""
-
-    id: CaseId
-    before: Sha
-    after: Sha
-    rollup: list[RollupEntry]
-    required: list[CheckName]
-    want: ExitStatus
-    what: Prose
-    names: tuple[Prose, ...] = ()
+def plan(watch_status: Status = Status(0), view: PullView | Literal["fail"] | Text = VIEW,
+         watch_out: Text = Text("lanes\tpass\n"), watch_err: Text = Text(""), *, vanish: bool = False) -> GhPlan:
+    """The stand-in gh's answers."""
+    return {"view": view, "vanish": vanish, "watch_out": watch_out, "watch_err": watch_err,
+            "watch_status": watch_status}
 
 
-UNITS = [
-    Unit(CaseId("u1"), SHA, SHA, GREEN_ROLLUP, REQUIRED, watch.GREEN, Prose("every check green, required present"),
-         (Prose("GREEN at " + SHA),)),
-    Unit(CaseId("u2"), SHA, SHA, [*GREEN_ROLLUP, run(CheckName("coverage floors"), conclusion=Conclusion("FAILURE"))], REQUIRED,
-         watch.RED, Prose("one failed check is red"), (Prose("FAILURE coverage floors"), Prose("RED: coverage floors"))),
-    Unit(CaseId("u3"), SHA, SHA, [*GREEN_ROLLUP, run(CheckName("bench"), RunStatus("IN_PROGRESS"), None)], REQUIRED, watch.INCOMPLETE,
-         Prose("a running check is incomplete"), (Prose("IN_PROGRESS bench"), Prose("INCOMPLETE: bench"))),
-    Unit(CaseId("u4"), SHA, SHA, [run(CheckName("tools/run_ci.py (all gates)"))], REQUIRED, watch.INCOMPLETE,
-         Prose("a required context with no check yet is incomplete"),
-         (Prose("ABSENT mutation testing (the ruleset requires it)"), Prose("mutation testing (absent)"))),
-    Unit(CaseId("u5"), SHA, SHA, [], REQUIRED, watch.INCOMPLETE,
-         Prose("no check at all, the registration race, is incomplete, never green"),
-         (Prose("ABSENT tools/run_ci.py (all gates)"),)),
-    Unit(CaseId("u6"), SHA, SHA2, GREEN_ROLLUP, REQUIRED, watch.INCOMPLETE,
-         Prose("a head that moved is incomplete even when green"),
-         (Prose("head moved from " + SHA), Prose("the head moved"))),
-    Unit(CaseId("u7"), SHA, SHA, [*GREEN_ROLLUP, context(CheckName("ci/external"), ContextState("FAILURE"))], REQUIRED, watch.RED,
-         Prose("a failed status context is red"), (Prose("FAILURE ci/external"),)),
-    Unit(CaseId("u8"), SHA, SHA, [*GREEN_ROLLUP, run(CheckName("legs"), conclusion=Conclusion("CANCELLED"))], REQUIRED, watch.RED,
-         Prose("a cancelled check has ended and is not green"), (Prose("CANCELLED legs"),)),
-    Unit(CaseId("u9"), SHA, SHA, [*GREEN_ROLLUP, run(CheckName("pending"), RunStatus("IN_PROGRESS"), None),
-                                  run(CheckName("coverage floors"), conclusion=Conclusion("FAILURE"))], REQUIRED, watch.RED,
-         Prose("red outranks pending"), (Prose("RED: coverage floors"),)),
-    Unit(CaseId("u10"), SHA, SHA, [*GREEN_ROLLUP, {"__typename": EntryKind("Other"), "name": CheckName("odd")}], REQUIRED,
-         watch.INCOMPLETE, Prose("an entry of a kind gh does not spell is named, not ignored"),
-         (Prose("UNKNOWN KIND Other odd"),)),
-    Unit(CaseId("u11"), SHA, SHA, GREEN_ROLLUP, [], watch.GREEN, Prose("no ruleset requirement, every check green")),
-    Unit(CaseId("u12"), SHA, SHA, [*GREEN_ROLLUP, context(CheckName("ci/external"), ContextState("PENDING"))], REQUIRED, watch.INCOMPLETE,
-         Prose("a pending status context is incomplete"), (Prose("PENDING ci/external"),)),
-    Unit(CaseId("u13"), SHA, SHA, [*GREEN_ROLLUP, run(CheckName("PR title"), conclusion=Conclusion("CANCELLED"), started=Prose("2026-10-15T02:49:03Z"))],
-         REQUIRED, watch.GREEN, Prose("a cancelled run superseded by a later run of its name in its workflow is named, not red"),
-         (Prose("SUPERSEDED CANCELLED PR title (a later run of lanes carries this name)"), Prose("GREEN at " + SHA))),
-    Unit(CaseId("u14"), SHA, SHA, [run(CheckName("PR title"), conclusion=Conclusion("CANCELLED"), started=Prose("2026-10-15T02:49:03Z")), *GREEN_ROLLUP],
-         REQUIRED, watch.GREEN, Prose("the superseded run listed first is still the superseded one"),
-         (Prose("SUPERSEDED CANCELLED PR title"),)),
-    Unit(CaseId("u15"), SHA, SHA, [*GREEN_ROLLUP, run(CheckName("PR title"), conclusion=Conclusion("FAILURE"), started=Prose("2026-10-15T02:49:05Z"))],
-         REQUIRED, watch.RED, Prose("the latest run decides: a failure after a success is red"),
-         (Prose("SUPERSEDED SUCCESS PR title"), Prose("RED: PR title"))),
-    Unit(CaseId("u16"), SHA, SHA, [*GREEN_ROLLUP, run(CheckName("PR title"), conclusion=Conclusion("FAILURE"), started=Prose("2026-10-15T02:49:03Z"),
-                                                   workflow=CheckName("other"))],
-         REQUIRED, watch.RED, Prose("an earlier same-named run of another workflow is superseded by nothing"),
-         (Prose("FAILURE PR title"), Prose("RED: PR title"))),
-    Unit(CaseId("u20"), SHA, SHA, [context(CheckName("ci/other"), ContextState("FAILURE")), *GREEN_ROLLUP], REQUIRED, watch.RED,
-         Prose("status contexts are never folded into one another"), (Prose("FAILURE ci/other"), Prose("RED: ci/other"))),
-    Unit(CaseId("u17"), SHA, SHA, [*GREEN_ROLLUP, run(CheckName("PR title"), RunStatus("IN_PROGRESS"), None, started=Prose("2026-10-15T02:49:05Z"))],
-         REQUIRED, watch.INCOMPLETE, Prose("a later run still running supersedes the ended one and is incomplete"),
-         (Prose("SUPERSEDED SUCCESS PR title"), Prose("INCOMPLETE: PR title"))),
-    Unit(CaseId("u18"), SHA, SHA, [*GREEN_ROLLUP, run(CheckName("PR title"), conclusion=Conclusion("CANCELLED"))],
-         REQUIRED, watch.RED, Prose("on a tie of start times the run listed later is the kept one"),
-         (Prose("SUPERSEDED SUCCESS PR title"), Prose("RED: PR title"))),
-]
-
-RULES: list[RuleJson] = [{"type": RuleType("pull_request"), "parameters": {}},
-         {"type": RuleType("required_status_checks"), "parameters": {"required_status_checks": [
-             {"context": CheckName("tools/run_ci.py (all gates)")}, {"context": CheckName("mutation testing")}]}},
-         {"type": RuleType("required_status_checks"), "parameters": {"required_status_checks": [
-             {"context": CheckName("mutation testing")}, {"context": CheckName("PR title")}]}}]
+def answer(status: Status, *lines: Text, err: Text = Text("")) -> VerdictPlan:
+    """The stand-in pr-all-green's answer."""
+    return {"lines": list(lines), "err": err, "status": status}
 
 
-def units() -> DisagreeCount:
-    """Run the planted judgements; return how many disagree."""
-    bad = 0
-    for unit in UNITS:
-        entries, notes = watch.latest_runs(unit.rollup)
-        checks = [watch.check_of(entry) for entry in entries]
-        judged = watch.verdict(watch.PullNumber(409), watch.Sha(unit.before), watch.Sha(unit.after), checks,
-                               [watch.CheckName(name) for name in unit.required], notes)
-        text = "\n".join(judged.lines)
-        missing = [name for name in unit.names if name not in text]
-        ok = judged.status == unit.want and not missing and judged.lines[-1].startswith(
-            {watch.GREEN: "GREEN", watch.RED: "RED", watch.INCOMPLETE: "INCOMPLETE"}[judged.status])
-        bad += not ok
-        print(f"{'ok  ' if ok else 'MISS'} {unit.id:<4} want={unit.want} got={judged.status} {unit.what}")
-        if not ok:
-            print("        " + " | ".join(judged.lines)[:300])
-            for name in missing:
-                print(f"        not named: {name}")
-    got = watch.required_contexts(RULES)
-    ok = got == ["tools/run_ci.py (all gates)", "mutation testing", "PR title"]
-    bad += not ok
-    print(f"{'ok  ' if ok else 'MISS'} u19  the required contexts are read from every rule, in order, once each")
-    return DisagreeCount(bad)
+def watched(status: Status, *lines: Text) -> list[Text]:
+    """Every stdout line of a run that reached pr-all-green."""
+    return [HEAD_LINE, Text(f"watch ended with status {status}"), *lines]
 
 
-class EndToEnd(NamedTuple):
-    """One run of the script against a planted gh: the table, the status, and words stdout must carry."""
-
-    id: CaseId
-    table: StubTable
-    argv: list[CommandWord]
-    want: ExitStatus
-    what: Prose
-    names: tuple[Prose, ...] = ()
+def no_verdict(status: Status) -> Text:
+    """The line naming a status of pr-all-green that is no verdict."""
+    return Text(f"UNREAD: pr-all-green ended with status {status}, which is no verdict")
 
 
-def view(sha: Sha, rollup: list[RollupEntry]) -> PullView:
-    """What the stand-in answers `gh pr view --json`."""
-    return {"headRefOid": sha, "baseRefName": CheckName("main"), "statusCheckRollup": rollup}
+def no_head(printed: Text) -> Text:
+    """The line naming a view that holds no head, with what gh printed."""
+    return Text(f"UNREAD: gh pr view 409 answered no string headRefOid: {printed}")
 
 
-END_TO_END = [
-    EndToEnd(CaseId("e1"), {"views": [view(SHA, GREEN_ROLLUP)], "rules": RULES, "watch_table": TableText("all pass table"),
-                            "watch_status": GhStatus(0)}, [CommandWord("409"), CommandWord("--record"), CommandWord(str(BASE / "e1.log"))], watch.GREEN,
-             Prose("a green run: the verdict on stdout, the tables in the record"),
-             (Prose("head " + SHA + " watched; base main"), Prose("watch ended with status 0"),
-              Prose("GREEN at " + SHA))),
-    EndToEnd(CaseId("e2"), {"views": [view(SHA, [*GREEN_ROLLUP, run(CheckName("coverage floors"), conclusion=Conclusion("FAILURE"))])],
-                            "rules": RULES, "watch_table": TableText("fail table"), "watch_status": GhStatus(1)}, [CommandWord("409")], watch.RED,
-             Prose("a red run"), (Prose("RED: coverage floors; fix, push and re-arm pr-checks-watch 409"),)),
-    EndToEnd(CaseId("e8"), {"views": [view(SHA, [*GREEN_ROLLUP, run(CheckName("PR title"), conclusion=Conclusion("CANCELLED"),
-                                                              started=Prose("2026-10-15T02:49:03Z"))])],
-                            "rules": RULES, "watch_table": TableText("table"), "watch_status": GhStatus(0)}, [CommandWord("409")], watch.GREEN,
-             Prose("a run its workflow's concurrency cancelled, superseded, is green end to end"),
-             (Prose("SUPERSEDED CANCELLED PR title"), Prose("GREEN at " + SHA))),
-    EndToEnd(CaseId("e3"), {"views": [view(SHA, GREEN_ROLLUP), view(SHA2, GREEN_ROLLUP)], "rules": RULES,
-                            "watch_table": TableText(""), "watch_status": GhStatus(0)}, [CommandWord("409")], watch.INCOMPLETE,
-             Prose("the head moved during the watch"), (Prose("head moved from " + SHA),)),
-    EndToEnd(CaseId("e4"), {"views": ["fail"], "rules": RULES, "watch_table": TableText(""), "watch_status": GhStatus(0)}, [CommandWord("409")],
-             watch.UNREAD, Prose("gh that cannot answer is unread, its message printed"),
-             (Prose("UNREAD: gh pr view 409 ended with status 1: gh: could not resolve the pull request"),)),
-    EndToEnd(CaseId("e5"), {"views": [view(SHA, GREEN_ROLLUP)], "rules": "fail", "watch_table": TableText(""),
-                            "watch_status": GhStatus(0)}, [CommandWord("409")], watch.UNREAD,
-             Prose("a ruleset gh cannot read is unread"), (Prose("UNREAD: the ruleset of main"),)),
-    EndToEnd(CaseId("e6"), {"views": [view(SHA, GREEN_ROLLUP)], "rules": RULES, "watch_table": TableText(""),
-                            "watch_status": GhStatus(0)}, [CommandWord("409"), CommandWord("--unknown")], watch.USAGE,
-             Prose("an argument the script does not take is a usage error")),
-    EndToEnd(CaseId("e7"), {"views": [view(SHA, GREEN_ROLLUP)], "rules": RULES, "watch_table": TableText(""),
-                            "watch_status": GhStatus(0)}, [], watch.USAGE, Prose("no pull request is a usage error")),
+def unkept(record: Text, why: Text) -> Text:
+    """The line naming a record that cannot be written, and why."""
+    return Text(f"UNREAD: the record {record} cannot be written: {why}")
+
+
+def unstarted(why: Text) -> Text:
+    """The line naming a gh that cannot be started, and why."""
+    return Text(f"UNREAD: gh could not be started: {why}")
+
+
+ALL_GREEN = (Text(f"pull request #409: OPEN CLEAN {SHA}"), Text(f"ALL GREEN at {SHA}: every point holds"))
+RED = (Text(f"pull request #409: OPEN CLEAN {SHA}"), Text("  - [red] job lint concluded skipped"),
+       Text(f"RED at {SHA}: 1 problem(s)"))
+UNREAD = (Text("gh could not answer: HTTP 502"),)
+INCOMPLETE = (Text(f"pull request #409: OPEN BLOCKED {SHA}"), Text(f"INCOMPLETE at {SHA}: 1 problem(s)"))
+NOT_MERGED = Text("NOT MERGED: #409 reads OPEN after the merge")
+S0, S1, S2, S3, S4, S5, S8 = (Status(n) for n in (0, 1, 2, 3, 4, 5, 8))
+MISSING = Text("{dir}/missing/watch.log")
+# The stand-ins' directory: open(2) refuses to write a directory to every account, root included.
+DIRECTORY = Text("{dir}/bin")
+FULL = Text("/dev/full")  # opens, but no write reaches it
+
+CASES = [
+    Case(CaseId("c1"), Prose("ALL GREEN passes through as 0, the watch's tables in the record, --logs beside it"),
+         RECORDED, plan(watch_err=Text("gh: a note on stderr\n")), answer(S0, *ALL_GREEN), ExitStatus(0),
+         watched(S0, *ALL_GREEN), CALLS, GIVEN_LOGS, Text("lanes\tpass\ngh: a note on stderr\n")),
+    Case(CaseId("c2"), Prose("RED passes through as 1, even where the watch ended 0"),
+         [Word("409")], plan(), answer(S1, *RED), ExitStatus(1), watched(S0, *RED), CALLS, GIVEN_PLAIN),
+    Case(CaseId("c3"), Prose("UNREAD passes through as 2"),
+         [Word("409")], plan(), answer(S2, *UNREAD), ExitStatus(2), watched(S0, *UNREAD), CALLS, GIVEN_PLAIN),
+    Case(CaseId("c4"), Prose("INCOMPLETE passes through as 3, the watch's pending status 8 no verdict"),
+         RECORDED, plan(S8), answer(S3, *INCOMPLETE), ExitStatus(3), watched(S8, *INCOMPLETE), CALLS, GIVEN_LOGS,
+         Text("lanes\tpass\n")),
+    Case(CaseId("c5"), Prose("a watch that failed fast is no verdict: ALL GREEN reads 0"),
+         [Word("409")], plan(S1), answer(S0, *ALL_GREEN), ExitStatus(0), watched(S1, *ALL_GREEN), CALLS, GIVEN_PLAIN),
+    Case(CaseId("c6"), Prose("pr-all-green's usage status 4 is no verdict: UNREAD, the status named"),
+         [Word("409")], plan(), answer(S4, err=Text("pr-all-green: usage\n")), ExitStatus(2),
+         watched(S0, no_verdict(S4)), CALLS, GIVEN_PLAIN, has=Prose("pr-all-green: usage")),
+    Case(CaseId("c7"), Prose("pr-all-green's NOT MERGED status 5 is no verdict: UNREAD, the status named"),
+         [Word("409")], plan(), answer(S5, NOT_MERGED), ExitStatus(2), watched(S0, NOT_MERGED, no_verdict(S5)), CALLS,
+         GIVEN_PLAIN),
+    Case(CaseId("c8"), Prose("a pr-all-green ended by a signal is no verdict: UNREAD, the status named"),
+         [Word("409")], plan(), answer(Status(-15), Text("reading")), ExitStatus(2),
+         watched(S0, Text("reading"), no_verdict(Status(-15))), CALLS, GIVEN_PLAIN),
+    Case(CaseId("c9"), Prose("no pr-all-green beside the script: UNREAD, naming the path, never a traceback's RED"),
+         [Word("409")], plan(), None, ExitStatus(2),
+         watched(S0, Text("UNREAD: {dir}/pr-all-green could not run: No such file or directory")), CALLS, None),
+    Case(CaseId("c10"), Prose("a pr-all-green that cannot be run: UNREAD, naming the path and why"),
+         [Word("409")], plan(), answer(S0, *ALL_GREEN), ExitStatus(2),
+         watched(S0, Text("UNREAD: {dir}/pr-all-green could not run: Permission denied")), CALLS, None, runnable=False),
+    Case(CaseId("c11"), Prose("gh failing before the watch: UNREAD with its message, no watch, no pr-all-green"),
+         RECORDED, plan(view="fail"), answer(S0, *ALL_GREEN), ExitStatus(2),
+         [Text("UNREAD: gh pr view 409 ended with status 1: gh: could not resolve the pull request")], CALLS[:1], None),
+    Case(CaseId("c12"), Prose("gh printing no JSON before the watch: UNREAD, no watch, no pr-all-green"),
+         [Word("409")], plan(view=Text("no json")), answer(S0, *ALL_GREEN), ExitStatus(2),
+         [Text("UNREAD: gh pr view 409 printed no JSON: Expecting value: line 1 column 1 (char 0)")], CALLS[:1], None),
+    Case(CaseId("c13"), Prose("a view naming no head: UNREAD with what gh printed, no watch, no pr-all-green"),
+         [Word("409")], plan(view={}), answer(S0, *ALL_GREEN), ExitStatus(2), [no_head(Text("{}"))], CALLS[:1], None),
+    Case(CaseId("c14"), Prose("an empty --record keeps no record and passes no --logs"),
+         [Word("409"), Word("--record"), Word("")], plan(), answer(S0, *ALL_GREEN), ExitStatus(0),
+         watched(S0, *ALL_GREEN), CALLS, GIVEN_PLAIN),
+    Case(CaseId("c15"), Prose("run through a symlink, pr-all-green is the one beside the resolved script"),
+         [Word("409")], plan(), answer(S0, *ALL_GREEN), ExitStatus(0), watched(S0, *ALL_GREEN), CALLS, GIVEN_PLAIN,
+         link=True),
+    Case(CaseId("c16"), Prose("an argument the script does not take is a usage error, nothing called"),
+         [Word("409"), Word("--unknown")], plan(), answer(S0, *ALL_GREEN), ExitStatus(4), [], [], None,
+         has=Prose("unrecognized arguments: --unknown")),
+    Case(CaseId("c17"), Prose("no pull request is a usage error, nothing called"),
+         [], plan(), answer(S0, *ALL_GREEN), ExitStatus(4), [], [], None,
+         has=Prose("the following arguments are required: pull")),
+    Case(CaseId("c18"), Prose("a pull request that is no number is a usage error, nothing called"),
+         [Word("abc")], plan(), answer(S0, *ALL_GREEN), ExitStatus(4), [], [], None,
+         has=Prose("invalid int value: 'abc'")),
+    Case(CaseId("c19"), Prose("--help prints the usage and exits 0, nothing called"),
+         [Word("--help")], plan(), answer(S0, *ALL_GREEN), ExitStatus(0), None, [], None,
+         has=Prose("usage: pr-checks-watch")),
+    Case(CaseId("c20"), Prose("a view that is a JSON array: UNREAD, never a traceback's RED"),
+         [Word("409")], plan(view=Text('["a"]')), answer(S0, *ALL_GREEN), ExitStatus(2), [no_head(Text('["a"]'))],
+         CALLS[:1], None),
+    Case(CaseId("c21"), Prose("a view that is a JSON string spelling a head: UNREAD, never taken for the head"),
+         [Word("409")], plan(view=Text(f'"{SHA}"')), answer(S0, *ALL_GREEN), ExitStatus(2),
+         [no_head(Text(f'"{SHA}"'))], CALLS[:1], None),
+    Case(CaseId("c22"), Prose("a view whose headRefOid is no string: UNREAD, never a traceback's RED"),
+         [Word("409")], plan(view=Text('{"headRefOid": 5}')), answer(S0, *ALL_GREEN), ExitStatus(2),
+         [no_head(Text('{"headRefOid": 5}'))], CALLS[:1], None),
+    Case(CaseId("c23"), Prose("a record in a missing directory: UNREAD naming it and why, no watch, no pr-all-green"),
+         [Word("409"), Word("--record"), Word(MISSING)], plan(), answer(S0, *ALL_GREEN), ExitStatus(2),
+         [HEAD_LINE, unkept(MISSING, Text("No such file or directory"))], CALLS[:1], None),
+    Case(CaseId("c24"), Prose("a record that is a directory: UNREAD naming it and why, no watch, no pr-all-green"),
+         [Word("409"), Word("--record"), Word(DIRECTORY)], plan(), answer(S0, *ALL_GREEN), ExitStatus(2),
+         [HEAD_LINE, unkept(DIRECTORY, Text("Is a directory"))], CALLS[:1], None),
+    Case(CaseId("c25"), Prose("a record whose write fails after the watch: UNREAD naming it and why, no pr-all-green"),
+         [Word("409"), Word("--record"), Word(FULL)], plan(), answer(S0, *ALL_GREEN), ExitStatus(2),
+         [HEAD_LINE, unkept(FULL, Text("No space left on device"))], CALLS, None),
+    Case(CaseId("c26"), Prose("no gh on PATH: UNREAD naming gh and why, never a traceback's RED, nothing run"),
+         [Word("409")], plan(), answer(S0, *ALL_GREEN), ExitStatus(2), [unstarted(Text("No such file or directory"))],
+         [], None, gh_file="absent"),
+    Case(CaseId("c27"), Prose("a gh without its execute bit: UNREAD naming gh and why, never a traceback's RED"),
+         [Word("409")], plan(), answer(S0, *ALL_GREEN), ExitStatus(2), [unstarted(Text("Permission denied"))],
+         [], None, gh_file="unrunnable"),
+    Case(CaseId("c28"), Prose("a gh gone by the watch: UNREAD naming gh and why, never a traceback's RED"),
+         [Word("409")], plan(vanish=True), answer(S0, *ALL_GREEN), ExitStatus(2),
+         [HEAD_LINE, unstarted(Text("No such file or directory"))], CALLS[:1], None),
+    Case(CaseId("c29"), Prose("a view whose headRefOid is empty: UNREAD, no watch, no pr-all-green"),
+         [Word("409")], plan(view={"headRefOid": Sha("")}), answer(S0, *ALL_GREEN), ExitStatus(2),
+         [Text("UNREAD: gh pr view 409 answered an empty headRefOid")], CALLS[:1], None),
+    Case(CaseId("c30"), Prose("an earlier record is replaced by the watch's tables, never appended to"),
+         RECORDED, plan(), answer(S0, *ALL_GREEN), ExitStatus(0), watched(S0, *ALL_GREEN), CALLS, GIVEN_LOGS,
+         Text("lanes\tpass\n"), stale=Text("lanes\tfail\n")),
 ]
 
 
-def end_to_end() -> DisagreeCount:
-    """Run the script against the stand-in gh; return how many cases disagree."""
-    bad = 0
-    bin_dir = BASE / "bin"
-    bin_dir.mkdir()
-    stub = bin_dir / "gh"
-    stub.write_text(STUB, encoding="utf-8")
-    stub.chmod(0o755)
-    for case in END_TO_END:
-        table = BASE / f"{case.id}.json"
-        table.write_text(json.dumps(case.table), encoding="utf-8")
-        log = BASE / f"{case.id}.calls"
-        env = os.environ | {"PATH": f"{bin_dir}{os.pathsep}{os.environ.get('PATH', '')}",
-                            "STUB_GH_TABLE": str(table), "STUB_GH_LOG": str(log)}
-        done = subprocess.run([str(SCRIPT), *case.argv], capture_output=True, text=True, check=False, env=env)
-        missing = [name for name in case.names if name not in done.stdout]
-        ok = done.returncode == case.want and not missing
-        if case.id == "e1":
-            record = (BASE / "e1.log").read_text(encoding="utf-8")
-            calls = log.read_text(encoding="utf-8").splitlines()
-            watched = "pr checks 409 --watch --fail-fast --interval 20" in calls
-            rules_read = "api repos/{owner}/{repo}/rules/branches/main" in calls
-            ok = ok and record.startswith("all pass table") and watched and rules_read
-            if not (record.startswith("all pass table") and watched and rules_read):
-                print(f"        record={record[:40]!r} calls={calls}")
-        bad += not ok
-        print(f"{'ok  ' if ok else 'MISS'} {case.id:<4} want={case.want} got={done.returncode} {case.what}")
-        if not ok:
-            print("        stdout: " + " | ".join(done.stdout.strip().splitlines())[:300])
-            print("        stderr: " + " | ".join(done.stderr.strip().splitlines())[:300])
-            for name in missing:
-                print(f"        not named: {name}")
-    return DisagreeCount(bad)
+def plant(path: Path, text: Text) -> None:
+    """Write an executable stand-in."""
+    path.write_text(text, encoding="utf-8")
+    path.chmod(0o755)
+
+
+def lines_of(path: Path) -> list[Text]:
+    """The lines a file holds, none when it is absent."""
+    return [Text(line) for line in path.read_text(encoding="utf-8").splitlines()] if path.exists() else []
+
+
+def run(case: Case) -> list[Prose]:
+    """Run the case; every way it disagrees with its expectation."""
+    home = BASE / case.id
+    (home / "bin").mkdir(parents=True)
+    copy = home / "pr-checks-watch"
+    shutil.copyfile(SCRIPT, copy)
+    copy.chmod(0o755)
+    if case.gh_file != "absent":
+        plant(home / "bin" / "gh", Text(GH_STUB))
+    if case.gh_file == "unrunnable":
+        (home / "bin" / "gh").chmod(0o644)
+    if case.stale is not None:
+        (home / "watch.log").write_text(case.stale, encoding="utf-8")
+    (home / "gh.json").write_text(json.dumps(case.gh), encoding="utf-8")
+    stdout = home / "stdout.txt"
+    if case.verdict is not None:
+        plant(home / "pr-all-green", Text(VERDICT_STUB))
+        if not case.runnable:
+            (home / "pr-all-green").chmod(0o644)
+        planted: VerdictFile = {**case.verdict, "stdout": Text(str(stdout))}
+        (home / "verdict.json").write_text(json.dumps(planted), encoding="utf-8")
+    target = copy
+    decoy = home / "link"
+    if case.link:
+        decoy.mkdir()
+        target = decoy / "pr-checks-watch"
+        target.symlink_to(copy)
+        plant(decoy / "pr-all-green", Text(VERDICT_STUB))
+        lure: VerdictFile = {**answer(S1, Text("DECOY")), "stdout": Text(str(stdout))}
+        (decoy / "verdict.json").write_text(json.dumps(lure), encoding="utf-8")
+
+    env = os.environ | {"PATH": str(home / "bin")}  # no gh but the stand-in is ever found
+    argv = [word.replace("{dir}", str(home)) for word in case.argv]
+    with stdout.open("w", encoding="utf-8") as out:
+        done = subprocess.run([str(target), *argv], stdout=out, stderr=subprocess.PIPE, text=True, check=False, env=env,
+                              cwd=home)
+    printed = stdout.read_text(encoding="utf-8")
+    wrong: list[Prose] = []
+    if done.returncode != case.want:
+        wrong.append(Prose(f"status {done.returncode}, not {case.want}"))
+    want_out = None if case.out is None else [Text(line.replace("{dir}", str(home))) for line in case.out]
+    if want_out is not None and printed.splitlines() != want_out:
+        wrong.append(Prose(f"stdout {printed.splitlines()}, not {want_out}"))
+    if case.has not in printed + done.stderr:
+        wrong.append(Prose(f"neither stdout nor stderr carries {case.has!r}"))
+    calls = lines_of(home / "gh.calls")
+    if calls != case.calls:
+        wrong.append(Prose(f"gh calls {calls}, not {case.calls}"))
+    given = home / "verdict.calls"
+    got = json.loads(given.read_text(encoding="utf-8")) if given.exists() else None
+    want_given = None if case.given is None else [Word(word.replace("{dir}", str(home))) for word in case.given]
+    if got != want_given:
+        wrong.append(Prose(f"pr-all-green given {got}, not {want_given}"))
+    if (decoy / "verdict.calls").exists():
+        wrong.append(Prose("the decoy pr-all-green beside the symlink ran"))
+    record = home / "watch.log"
+    kept = record.read_text(encoding="utf-8") if record.exists() else None
+    if kept != case.record:
+        wrong.append(Prose(f"record {kept!r}, not {case.record!r}"))
+    seen = {"watch": home / "gh.seen", "pr-all-green": home / "verdict.seen"}
+    for who, lead in (("watch", 1), ("pr-all-green", 2)):
+        if want_out is not None and seen[who].exists():
+            before = seen[who].read_text(encoding="utf-8")
+            if before != "".join(line + "\n" for line in want_out[:lead]):
+                wrong.append(Prose(f"stdout held {before!r} when the {who} started"))
+    if wrong:
+        wrong.append(Prose("stderr: " + " | ".join(done.stderr.strip().splitlines())[:300]))
+    return wrong
 
 
 def main() -> ExitStatus:
     """Run every case; exit 0 when all agree."""
-    bad = units() + end_to_end()
-    total = len(UNITS) + 1 + len(END_TO_END)
-    print(f"{total} cases, {bad} disagree")
+    bad = DisagreeCount(0)
+    for case in CASES:
+        wrong = run(case)
+        bad = DisagreeCount(bad + bool(wrong))
+        print(f"{'MISS' if wrong else 'ok  '} {case.id:<4} want={case.want} {case.what}")
+        for line in wrong:
+            print(f"        {line}"[:400])
+    shutil.rmtree(BASE, ignore_errors=True)
+    print(f"{len(CASES)} cases, {bad} disagree")
     return ExitStatus(1 if bad else 0)
 
 

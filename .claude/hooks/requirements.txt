@@ -1,5 +1,7 @@
-# The packages workflow-launch-guard.py parses a workflow's script with, installed into
+# The packages the kit reads with (workflow-launch-guard.py a workflow script, pr-all-green the workflow files), installed into
 # and run under /home/nicolas/.local/bin/python3.14:
 #   /home/nicolas/.local/bin/python3.14 -m pip install -r requirements.txt
 tree-sitter==0.25.2
 tree-sitter-javascript==0.25.0
+# pr-all-green reads the workflow files' triggers with it:
+PyYAML==6.0.3

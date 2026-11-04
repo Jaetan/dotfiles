@@ -1,0 +1,1047 @@
+[
+ [
+  "pr-all-green",
+  "READY = frozenset({\"CLEAN\", \"HAS_HOOKS\"})",
+  "READY = frozenset({\"CLEAN\"})"
+ ],
+ [
+  "pr-all-green",
+  "READY = frozenset({\"CLEAN\", \"HAS_HOOKS\"})",
+  "READY = frozenset({\"CLEAN\", \"HAS_HOOKS\", \"UNSTABLE\"})"
+ ],
+ [
+  "pr-all-green",
+  "WAITING = frozenset({\"BLOCKED\", \"UNKNOWN\"})",
+  "WAITING = frozenset({\"UNKNOWN\"})"
+ ],
+ [
+  "pr-all-green",
+  "WAITING = frozenset({\"BLOCKED\", \"UNKNOWN\"})",
+  "WAITING = frozenset({\"BLOCKED\", \"UNKNOWN\", \"BEHIND\"})"
+ ],
+ [
+  "pr-all-green",
+  "GREEN_STEP = frozenset({\"success\", \"skipped\"})",
+  "GREEN_STEP = frozenset({\"success\", \"skipped\", \"failure\"})"
+ ],
+ [
+  "pr-all-green",
+  "DEFAULT_TYPES = frozenset({\"opened\", \"synchronize\", \"reopened\"})",
+  "DEFAULT_TYPES = frozenset({\"opened\", \"synchronize\", \"reopened\", \"closed\"})"
+ ],
+ [
+  "pr-all-green",
+  "CONDITIONAL_STEPS = frozenset({Name(\"build staleness\")})",
+  "CONDITIONAL_STEPS = frozenset({Name(\"build staleness\"), Name(\"proofs\")})"
+ ],
+ [
+  "pr-all-green",
+  "CONDITIONAL_STEPS = frozenset({Name(\"build staleness\")})",
+  "CONDITIONAL_STEPS = frozenset()"
+ ],
+ [
+  "pr-all-green",
+  "NO_FILES = \"##[warning]No files were found\"",
+  "NO_FILES = \"##[warning]No artifacts\""
+ ],
+ [
+  "pr-all-green",
+  "    if any(c in pattern for c in \"?+[]{}\\\\\"):",
+  "    if any(c in pattern for c in \"?+{}\\\\\"):"
+ ],
+ [
+  "pr-all-green",
+  "            out, i = out + \"(?:.*/)?\", i + 3",
+  "            out, i = out + \".*/\", i + 3"
+ ],
+ [
+  "pr-all-green",
+  "            out, i = out + \".*\", i + 2",
+  "            out, i = out + \"[^/]*\", i + 2"
+ ],
+ [
+  "pr-all-green",
+  "            out, i = out + \"[^/]*\", i + 1",
+  "            out, i = out + \".*\", i + 1"
+ ],
+ [
+  "pr-all-green",
+  "            if glob_matches(Pattern(pattern[1:]), name):\n                chosen = False",
+  "            if glob_matches(Pattern(pattern[1:]), name):\n                chosen = chosen"
+ ],
+ [
+  "pr-all-green",
+  "    on = doc.get(YamlText(\"on\"))",
+  "    on = doc.get(YamlText(\"on:\"))"
+ ],
+ [
+  "pr-all-green",
+  "    if \"pull_request_target\" in events:",
+  "    if \"pull_request_target\" in events and False:"
+ ],
+ [
+  "pr-all-green",
+  "    if \"pull_request\" not in events:\n        return False",
+  "    if \"pull_request\" not in events:\n        return True"
+ ],
+ [
+  "pr-all-green",
+  "    if unknown:\n",
+  "    if False:\n"
+ ],
+ [
+  "pr-all-green",
+  "    if \"paths\" in filters and \"paths-ignore\" in filters:",
+  "    if \"paths\" in filters and \"paths-ignore\" in filters and False:"
+ ],
+ [
+  "pr-all-green",
+  "    if not types & DEFAULT_TYPES:\n        return False",
+  "    if not types & DEFAULT_TYPES:\n        return True"
+ ],
+ [
+  "pr-all-green",
+  "    if \"branches\" in filters and not selected(base, of(\"branches\")):",
+  "    if \"branches\" in filters and selected(base, of(\"branches\")):"
+ ],
+ [
+  "pr-all-green",
+  "    if \"branches-ignore\" in filters and selected(base, of(\"branches-ignore\")):",
+  "    if \"branches-ignore\" in filters and not selected(base, of(\"branches-ignore\")):"
+ ],
+ [
+  "pr-all-green",
+  "        return any(selected(f, chosen) for f in files)",
+  "        return all(selected(f, chosen) for f in files)"
+ ],
+ [
+  "pr-all-green",
+  "        return any(not selected(f, ignored) for f in files)",
+  "        return not all(selected(f, ignored) for f in files) and False"
+ ],
+ [
+  "pr-all-green",
+  "        if \"HTTP 404\" in str(exc):",
+  "        if True:"
+ ],
+ [
+  "pr-all-green",
+  "            if e[\"type\"] == \"file\" and e[\"path\"].endswith((\".yml\", \".yaml\"))}",
+  "            if e[\"path\"].endswith((\".yml\", \".yaml\"))}"
+ ],
+ [
+  "pr-all-green",
+  "[f[\"previous_filename\"] for f in files if \"previous_filename\" in f]",
+  "[]"
+ ],
+ [
+  "pr-all-green",
+  "    if len(files) != pull[\"changed_files\"]:",
+  "    if len(files) > pull[\"changed_files\"]:"
+ ],
+ [
+  "pr-all-green",
+  "        if not runs_on_pull(text, path, base_ref, names):\n            continue",
+  "        if True:\n            continue"
+ ],
+ [
+  "pr-all-green",
+  "    return sorted([*later, *others], key=lambda x: (x[\"run_started_at\"], x[\"id\"], x[\"run_attempt\"]))",
+  "    return sorted([*later, *others], key=lambda x: (x[\"run_started_at\"], x[\"id\"], x[\"run_attempt\"]), reverse=True)"
+ ],
+ [
+  "pr-all-green",
+  "RunKey(x[\"path\"], x[\"event\"]) == RunKey(me[\"path\"], me[\"event\"])",
+  "RunKey(x[\"path\"], me[\"event\"]) == RunKey(me[\"path\"], me[\"event\"])"
+ ],
+ [
+  "pr-all-green",
+  "        elif run[\"conclusion\"] != \"success\":\n            r.add(\"red\", Prose(named(run)",
+  "        elif run[\"conclusion\"] not in (\"success\", \"failure\", \"startup_failure\"):\n            r.add(\"red\", Prose(named(run)"
+ ],
+ [
+  "pr-all-green",
+  "        if RunKey(path, PULL_REQUEST) not in ran:",
+  "        if False:"
+ ],
+ [
+  "pr-all-green",
+  "        if job[\"conclusion\"] != \"success\":",
+  "        if job[\"conclusion\"] not in (\"success\", \"skipped\", \"neutral\"):"
+ ],
+ [
+  "pr-all-green",
+  "        if bad:\n",
+  "        if False:\n"
+ ],
+ [
+  "pr-all-green",
+  "        if check[\"id\"] in of_attempts:",
+  "        if check[\"id\"] in of_attempts or check[\"app\"][\"slug\"] == \"github-actions\":"
+ ],
+ [
+  "pr-all-green",
+  "        elif check[\"conclusion\"] != \"success\":",
+  "        elif check[\"conclusion\"] == \"cancelled\":"
+ ],
+ [
+  "pr-all-green",
+  "        if entry[\"state\"] == \"pending\":",
+  "        if entry[\"state\"] != \"success\":"
+ ],
+ [
+  "pr-all-green",
+  "        elif entry[\"state\"] != \"success\":",
+  "        elif False:"
+ ],
+ [
+  "pr-all-green",
+  "        if context not in names:",
+  "        if False:"
+ ],
+ [
+  "pr-all-green",
+  "    if not required:\n",
+  "    if False:\n"
+ ],
+ [
+  "pr-all-green",
+  "        if job[\"status\"] != \"completed\" or not job[\"steps\"]:\n            continue",
+  "        if job[\"status\"] == \"never\" or not job[\"steps\"]:\n            continue"
+ ],
+ [
+  "pr-all-green",
+  "            if line.startswith(\"##[error]\"):",
+  "            if line.startswith(\"##[error] \"):"
+ ],
+ [
+  "pr-all-green",
+  "                if any(marker in line for marker in RETRIED):",
+  "                if any(marker in line for marker in ()):"
+ ],
+ [
+  "pr-all-green",
+  "                elif line.startswith(NO_FILES):",
+  "                elif False:"
+ ],
+ [
+  "pr-all-green",
+  "LOG_STAMP = re.compile(r\"^\\S+Z \")",
+  "LOG_STAMP = re.compile(r\"^$\")"
+ ],
+ [
+  "pr-all-green",
+  "        if part is None or part[1] == \"all gates\" or job[\"id\"] not in logs:",
+  "        if part is None or job[\"id\"] not in logs:"
+ ],
+ [
+  "pr-all-green",
+  "        if twin is None:",
+  "        if False and twin is None:"
+ ],
+ [
+  "pr-all-green",
+  "        missing = there.passed - here.passed - CONDITIONAL_STEPS",
+  "        missing = frozenset()"
+ ],
+ [
+  "pr-all-green",
+  "        if len(here.results) != 1:",
+  "        if len(here.results) > 1:"
+ ],
+ [
+  "pr-all-green",
+  "        if here.skipped - there.skipped:",
+  "        if False:"
+ ],
+ [
+  "pr-all-green",
+  "            if artifact[\"size_in_bytes\"] <= 0:",
+  "            if artifact[\"size_in_bytes\"] < 0:"
+ ],
+ [
+  "pr-all-green",
+  "    word, status = ((\"RED\", RED) if \"red\" in kinds else (\"UNREAD\", UNREAD) if \"unread\" in kinds",
+  "    word, status = ((\"UNREAD\", UNREAD) if \"unread\" in kinds else (\"RED\", RED) if \"red\" in kinds"
+ ],
+ [
+  "pr-all-green",
+  "                    else (\"INCOMPLETE\", INCOMPLETE) if kinds else (\"ALL GREEN\", ALL_GREEN))",
+  "                    else (\"ALL GREEN\", ALL_GREEN))"
+ ],
+ [
+  "pr-all-green",
+  "    if view[\"state\"] != \"OPEN\":",
+  "    if view[\"state\"] == \"MERGED\":"
+ ],
+ [
+  "pr-all-green",
+  "    if view[\"headRefOid\"] != r.head:",
+  "    if False:"
+ ],
+ [
+  "pr-all-green",
+  "    if view[\"mergeStateStatus\"] in WAITING:",
+  "    if view[\"mergeStateStatus\"] in WAITING and False:"
+ ],
+ [
+  "pr-all-green",
+  "    elif view[\"mergeStateStatus\"] not in READY:",
+  "    elif False:"
+ ],
+ [
+  "pr-all-green",
+  "        r.add(\"unread\", Prose(f\"which workflows run on this pull request cannot be read: {exc}\"))",
+  "        pass"
+ ],
+ [
+  "pr-all-green",
+  "    if view[\"state\"] != \"MERGED\" or commit is None:",
+  "    if view[\"state\"] != \"MERGED\" and commit is None:"
+ ],
+ [
+  "pr-all-green",
+  "    if args.pull <= 0 or not re.fullmatch(r\"[0-9a-f]{40}\", args.head):",
+  "    if not re.fullmatch(r\"[0-9a-f]{40}\", args.head):"
+ ],
+ [
+  "pr-all-green",
+  "    if args.body is not None and not args.body.is_file():",
+  "    if False:"
+ ],
+ [
+  "pr-all-green",
+  "        if status != ALL_GREEN or args.body is None:",
+  "        if args.body is None:"
+ ],
+ [
+  "pr-all-green",
+  "Arg(\"--match-head-commit\"),",
+  "Arg(\"--subject\"),"
+ ],
+ [
+  "pr-all-green",
+  "    except (GhError, subprocess.CalledProcessError) as exc:",
+  "    except subprocess.CalledProcessError as exc:"
+ ],
+ [
+  "pr-all-green",
+  "RETRIED = (\"failed on attempt 1\", \"retrying once\", \"re-measuring once\", \"could not preserve attempt-1\")",
+  "RETRIED = (\"retrying once\", \"re-measuring once\", \"could not preserve attempt-1\")"
+ ],
+ [
+  "pr-all-green",
+  "RETRIED = (\"failed on attempt 1\", \"retrying once\", \"re-measuring once\", \"could not preserve attempt-1\")",
+  "RETRIED = (\"failed on attempt 1\", \"re-measuring once\", \"could not preserve attempt-1\")"
+ ],
+ [
+  "pr-all-green",
+  "RETRIED = (\"failed on attempt 1\", \"retrying once\", \"re-measuring once\", \"could not preserve attempt-1\")",
+  "RETRIED = (\"failed on attempt 1\", \"retrying once\", \"could not preserve attempt-1\")"
+ ],
+ [
+  "pr-all-green",
+  "RETRIED = (\"failed on attempt 1\", \"retrying once\", \"re-measuring once\", \"could not preserve attempt-1\")",
+  "RETRIED = (\"failed on attempt 1\", \"retrying once\", \"re-measuring once\")"
+ ],
+ [
+  "pr-all-green",
+  "            if line.startswith(\"##[error]\"):\n",
+  "            if any(marker in line for marker in RETRIED):\n                r.add(\"red\", Prose(f\"{label} passed on a retry after a failed first attempt: {line[:200]}\"))\n            if line.startswith(\"##[error]\"):\n"
+ ],
+ [
+  "pr-all-green",
+  "FIRST_ATTEMPT = \"attempt1\"",
+  "FIRST_ATTEMPT = \"attempt-1\""
+ ],
+ [
+  "pr-all-green",
+  "            if FIRST_ATTEMPT in artifact[\"name\"]:",
+  "            if False:"
+ ],
+ [
+  "pr-all-green",
+  "        elif len(items) < total:",
+  "        elif False:"
+ ],
+ [
+  "pr-all-green",
+  "        elif len(items) < total:",
+  "        elif len(items) <= total:"
+ ],
+ [
+  "pr-all-green",
+  "Arg(\"--paginate\"), Arg(f\"repos/{self.repo}/{path}\"), Arg(\"--jq\"),\n                      Arg(f\"{{total_count",
+  "Arg(f\"repos/{self.repo}/{path}\"), Arg(\"--jq\"),\n                      Arg(f\"{{total_count"
+ ],
+ [
+  "pr-all-green",
+  "Arg(\"--paginate\"), Arg(f\"repos/{self.repo}/{path}\"), Arg(\"--jq\"),\n                      Arg(f\".{key}[]\"",
+  "Arg(f\"repos/{self.repo}/{path}\"), Arg(\"--jq\"),\n                      Arg(f\".{key}[]\""
+ ],
+ [
+  "pr-all-green",
+  "r.counted(ApiPath(f\"actions/runs?head_sha={r.head}&per_page=100\"), \"workflow_runs\")",
+  "r.listed(ApiPath(f\"actions/runs?head_sha={r.head}&per_page=100\"), \"workflow_runs\")"
+ ],
+ [
+  "pr-all-green",
+  "r.counted(ApiPath(f\"commits/{r.head}/check-runs?filter=all&per_page=100\"), \"check_runs\")",
+  "r.listed(ApiPath(f\"commits/{r.head}/check-runs?filter=all&per_page=100\"), \"check_runs\")"
+ ],
+ [
+  "pr-all-green",
+  "r.counted(ApiPath(f\"commits/{r.head}/status\"), \"statuses\")",
+  "r.listed(ApiPath(f\"commits/{r.head}/status\"), \"statuses\")"
+ ],
+ [
+  "pr-all-green",
+  "r.counted(ApiPath(f\"commits/{r.head}/status\"), \"statuses\")",
+  "json.loads(r.api(ApiPath(f\"commits/{r.head}/status\")))[\"statuses\"]"
+ ],
+ [
+  "pr-all-green",
+  "r.listed(ApiPath(f\"rules/branches/{base}\"), None)",
+  "json.loads(r.api(ApiPath(f\"rules/branches/{base}\")))"
+ ],
+ [
+  "pr-all-green",
+  "        for n in range(1, run[\"run_attempt\"] + 1):",
+  "        for n in range(run[\"run_attempt\"], run[\"run_attempt\"] + 1):"
+ ],
+ [
+  "pr-all-green",
+  "            at = run if n == run[\"run_attempt\"] else cast(",
+  "            at = run if True else cast("
+ ],
+ [
+  "pr-all-green",
+  "        if run[\"status\"] != \"completed\":\n            r.add(\"incomplete\", named(run))",
+  "        if False:\n            r.add(\"incomplete\", named(run))"
+ ],
+ [
+  "pr-all-green",
+  "        elif run[\"conclusion\"] == \"cancelled\" and all(",
+  "        elif run[\"conclusion\"] != \"success\" and all("
+ ],
+ [
+  "pr-all-green",
+  "all(j[\"conclusion\"] in EXCUSED_JOB for j in a.jobs)",
+  "any(j[\"conclusion\"] in EXCUSED_JOB for j in a.jobs)"
+ ],
+ [
+  "pr-all-green",
+  "EXCUSED_JOB = frozenset({\"success\", \"skipped\", \"cancelled\"})",
+  "EXCUSED_JOB = frozenset({\"success\", \"skipped\"})"
+ ],
+ [
+  "pr-all-green",
+  "EXCUSED_JOB = frozenset({\"success\", \"skipped\", \"cancelled\"})",
+  "EXCUSED_JOB = frozenset({\"success\", \"cancelled\"})"
+ ],
+ [
+  "pr-all-green",
+  "EXCUSED_JOB = frozenset({\"success\", \"skipped\", \"cancelled\"})",
+  "EXCUSED_JOB = frozenset({\"skipped\", \"cancelled\"})"
+ ],
+ [
+  "pr-all-green",
+  "EXCUSED_JOB = frozenset({\"success\", \"skipped\", \"cancelled\"})",
+  "EXCUSED_JOB = frozenset({\"success\", \"skipped\", \"cancelled\", \"failure\"})"
+ ],
+ [
+  "pr-all-green",
+  "    held.covered.append(a)\n    waiting = ",
+  "    waiting = "
+ ],
+ [
+  "pr-all-green",
+  "    if waiting:\n",
+  "    if False:\n"
+ ],
+ [
+  "pr-all-green",
+  "    if not after:\n",
+  "    if False:\n"
+ ],
+ [
+  "pr-all-green",
+  "    if after[-1][\"conclusion\"] != \"success\":",
+  "    if False:"
+ ],
+ [
+  "pr-all-green",
+  "    print(f\"superseded {named(a.run)}, replaced by {named(after[-1])}\")",
+  "    pass"
+ ],
+ [
+  "pr-all-green",
+  "b.run[\"run_attempt\"] > a.run[\"run_attempt\"]",
+  "b.run[\"run_attempt\"] >= a.run[\"run_attempt\"]"
+ ],
+ [
+  "pr-all-green",
+  "    return [b.run for b in attempts if b.run[\"id\"] == a.run[\"id\"] and b.run[\"run_attempt\"] > a.run[\"run_attempt\"]]",
+  "    return []"
+ ],
+ [
+  "pr-all-green",
+  "RunKey(x[\"path\"], x[\"event\"]) == RunKey(me[\"path\"], me[\"event\"])",
+  "RunKey(me[\"path\"], x[\"event\"]) == RunKey(me[\"path\"], me[\"event\"])"
+ ],
+ [
+  "pr-all-green",
+  "(x[\"created_at\"] > me[\"run_started_at\"] or",
+  "(x[\"created_at\"] >= me[\"run_started_at\"] or"
+ ],
+ [
+  "pr-all-green",
+  "(x[\"created_at\"] > me[\"run_started_at\"] or",
+  "(x[\"created_at\"] > me[\"created_at\"] or"
+ ],
+ [
+  "pr-all-green",
+  "        if check[\"id\"] in of_attempts:",
+  "        if check[\"id\"] in jobs:"
+ ],
+ [
+  "pr-all-green",
+  "r.counted(ApiPath(f\"commits/{r.head}/check-suites?per_page=100\"), \"check_suites\")",
+  "r.listed(ApiPath(f\"commits/{r.head}/check-suites?per_page=100\"), \"check_suites\")"
+ ],
+ [
+  "pr-all-green",
+  "        if suite[\"id\"] not in holding:",
+  "        if suite[\"id\"] in holding:"
+ ],
+ [
+  "pr-all-green",
+  "    if merge is None:\n",
+  "    if False:\n"
+ ],
+ [
+  "pr-all-green",
+  "    if parents[1:] != [r.head]:",
+  "    if False:"
+ ],
+ [
+  "pr-all-green",
+  "    at_merge = workflow_files(r, merge)",
+  "    at_merge = workflow_files(r, r.head)"
+ ],
+ [
+  "pr-all-green",
+  "    at_base = workflow_files(r, parents[0])",
+  "    at_base = workflow_files(r, pull[\"base\"][\"sha\"])"
+ ],
+ [
+  "pr-all-green",
+  "    judged = [a for a in attempts if (a.run[\"id\"], a.run[\"run_attempt\"]) not in covered]",
+  "    judged = list(attempts)"
+ ],
+ [
+  "pr-all-green",
+  "    check_artifacts(r, {a.run[\"id\"]: a.run for a in judged})",
+  "    check_artifacts(r, {a.run[\"id\"]: a.run for a in attempts})"
+ ],
+ [
+  "pr-all-green",
+  "            if not job[\"steps\"]:",
+  "            if False:"
+ ],
+ [
+  "pr-all-green",
+  "line.startswith(\"##[warning]\") and any(marker in line for marker in RETRIED)",
+  "any(marker in line for marker in RETRIED)"
+ ],
+ [
+  "pr-all-green",
+  "line.startswith(\"##[warning]\") and any(marker in line for marker in RETRIED)",
+  "line.startswith(\"##[warning]\") and False"
+ ],
+ [
+  "pr-all-green",
+  "line.startswith(\"##[warning]\") and any(marker in line for marker in RETRIED)",
+  "line.startswith(\"##[error]\") or line.startswith(\"##[warning]\") and any(marker in line for marker in RETRIED)"
+ ],
+ [
+  "pr-all-green",
+  "                    r.add(\"red\", Prose(f\"{kind} run {a.run['id']}",
+  "                    r.add(\"incomplete\", Prose(f\"{kind} run {a.run['id']}"
+ ],
+ [
+  "pr-all-green",
+  "    read_covered(r, held.covered, {a.run[\"id\"] for a in judged})",
+  "    pass"
+ ],
+ [
+  "pr-all-green",
+  " for a in covered if a.run[\"id\"] not in judged}",
+  " for a in covered}"
+ ],
+ [
+  "pr-all-green",
+  "if FIRST_ATTEMPT in x[\"name\"]]",
+  "if False]"
+ ],
+ [
+  "pr-all-green",
+  "if FIRST_ATTEMPT in x[\"name\"]]",
+  "if FIRST_ATTEMPT in x[\"name\"] or x[\"size_in_bytes\"] <= 0]"
+ ],
+ [
+  "pr-all-green",
+  "    except OSError as exc:",
+  "    except PermissionError as exc:"
+ ],
+ [
+  "pr-all-green",
+  "    except yaml.YAMLError as exc:\n        raise UnreadLedger",
+  "    except yaml.constructor.ConstructorError as exc:\n        raise UnreadLedger"
+ ],
+ [
+  "pr-all-green",
+  "    if not isinstance(doc, dict) or set(doc) != {\"failures\"}:",
+  "    if not isinstance(doc, dict):"
+ ],
+ [
+  "pr-all-green",
+  "    if not isinstance(doc, dict) or set(doc) != {\"failures\"}:",
+  "    if set(doc) != {\"failures\"}:"
+ ],
+ [
+  "pr-all-green",
+  "    if not isinstance(entries, list):",
+  "    if entries is None:"
+ ],
+ [
+  "pr-all-green",
+  "        if not isinstance(entry, dict):\n",
+  "        if False:\n"
+ ],
+ [
+  "pr-all-green",
+  "        if set(entry) != set(LEDGER_KEYS):",
+  "        if set(entry) < set(LEDGER_KEYS):"
+ ],
+ [
+  "pr-all-green",
+  "        if set(entry) != set(LEDGER_KEYS):",
+  "        if set(entry) > set(LEDGER_KEYS):"
+ ],
+ [
+  "pr-all-green",
+  "        if not all(isinstance(v, str) for v in entry.values()):",
+  "        if False:"
+ ],
+ [
+  "pr-all-green",
+  "        if not REPOSITORY.fullmatch(repository):",
+  "        if False:"
+ ],
+ [
+  "pr-all-green",
+  "REPOSITORY = re.compile(r\"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+\")",
+  "REPOSITORY = re.compile(r\".+\")"
+ ],
+ [
+  "pr-all-green",
+  "        for key, number in ((\"run\", run), (\"attempt\", attempt)):",
+  "        for key, number in ((\"run\", run),):"
+ ],
+ [
+  "pr-all-green",
+  "        for key, number in ((\"run\", run), (\"attempt\", attempt)):",
+  "        for key, number in ((\"attempt\", attempt),):"
+ ],
+ [
+  "pr-all-green",
+  "DECIMAL = re.compile(r\"[0-9]+\")",
+  "DECIMAL = re.compile(r\".+\")"
+ ],
+ [
+  "pr-all-green",
+  "        if not finding.strip():",
+  "        if not finding:"
+ ],
+ [
+  "pr-all-green",
+  "        if repository == repo:",
+  "        if True:"
+ ],
+ [
+  "pr-all-green",
+  "failures[AttemptId(GitHubId(int(run)), GitHubId(int(attempt)))]",
+  "failures[AttemptId(GitHubId(int(attempt)), GitHubId(int(run)))]"
+ ],
+ [
+  "pr-all-green",
+  "    for n, entry in enumerate(entries, 1):",
+  "    for n, entry in enumerate(entries):"
+ ],
+ [
+  "pr-all-green",
+  "args.ledger or Path(__file__).resolve().parent / LEDGER_NAME",
+  "Path(__file__).resolve().parent / LEDGER_NAME"
+ ],
+ [
+  "pr-all-green",
+  "args.ledger or Path(__file__).resolve().parent / LEDGER_NAME",
+  "args.ledger or Path(__file__).parent / LEDGER_NAME"
+ ],
+ [
+  "pr-all-green",
+  "LEDGER_NAME = \"pr-all-green-github-side.yaml\"",
+  "LEDGER_NAME = \"pr-all-green-github-side.yml\""
+ ],
+ [
+  "pr-all-green",
+  "        print(f\"the ledger cannot be read: {exc}\")\n        return UNREAD",
+  "        print(f\"the ledger cannot be read: {exc}\")\n        return RED"
+ ],
+ [
+  "pr-all-green",
+  "        elif run[\"conclusion\"] == \"failure\" and finding is not None:",
+  "        elif run[\"conclusion\"] != \"success\" and finding is not None:"
+ ],
+ [
+  "pr-all-green",
+  "        elif run[\"conclusion\"] == \"failure\" and finding is not None:",
+  "        elif run[\"conclusion\"] == \"failure\":"
+ ],
+ [
+  "pr-all-green",
+  "        later = later_attempts(a, attempts)\n        if run[\"status\"]",
+  "        later = replacements(r, a, attempts, runs)\n        if run[\"status\"]"
+ ],
+ [
+  "pr-all-green",
+  "            r.add(\"red\", Prose(named(run) + ledger_hint(r, a, later)))",
+  "            r.add(\"red\", named(run))"
+ ],
+ [
+  "pr-all-green",
+  "if s[\"conclusion\"] not in EXCUSED_STEP]",
+  "if False]"
+ ],
+ [
+  "pr-all-green",
+  "        r.add(\"red\", Prose(f\"{named(a.run)}: the ledger names it",
+  "        r.add(\"incomplete\", Prose(f\"{named(a.run)}: the ledger names it"
+ ],
+ [
+  "pr-all-green",
+  "    if later and later[-1][\"status\"] != \"completed\":",
+  "    if False:"
+ ],
+ [
+  "pr-all-green",
+  "    if later and later[-1][\"status\"] != \"completed\":",
+  "    if later[-1][\"status\"] != \"completed\":"
+ ],
+ [
+  "pr-all-green",
+  "        held.covered.append(a)\n        r.add(\"incomplete\"",
+  "        r.add(\"incomplete\""
+ ],
+ [
+  "pr-all-green",
+  "        r.add(\"incomplete\", Prose(f\"{named(a.run)}, GitHub-side",
+  "        r.add(\"red\", Prose(f\"{named(a.run)}, GitHub-side"
+ ],
+ [
+  "pr-all-green",
+  "    if not later or later[-1][\"conclusion\"] != \"success\":\n        r.add",
+  "    if not later:\n        r.add"
+ ],
+ [
+  "pr-all-green",
+  "    if not later or later[-1][\"conclusion\"] != \"success\":\n        r.add",
+  "    if later[-1][\"conclusion\"] != \"success\":\n        r.add"
+ ],
+ [
+  "pr-all-green",
+  "        r.add(\"red\", Prose(f\"{named(a.run)}: GitHub-side per the ledger",
+  "        r.add(\"incomplete\", Prose(f\"{named(a.run)}: GitHub-side per the ledger"
+ ],
+ [
+  "pr-all-green",
+  "    held.covered.append(a)\n    print(f\"github-side",
+  "    print(f\"github-side"
+ ],
+ [
+  "pr-all-green",
+  "    print(f\"github-side run {a.run['id']} attempt {a.run['run_attempt']}: {finding}\")",
+  "    pass"
+ ],
+ [
+  "pr-all-green",
+  "    if run[\"conclusion\"] != \"failure\" or ledger_refuses(a) or not later or later[-1][\"conclusion\"] != \"success\":",
+  "    if ledger_refuses(a) or not later or later[-1][\"conclusion\"] != \"success\":"
+ ],
+ [
+  "pr-all-green",
+  "    if run[\"conclusion\"] != \"failure\" or ledger_refuses(a) or not later or later[-1][\"conclusion\"] != \"success\":",
+  "    if run[\"conclusion\"] != \"failure\" or ledger_refuses(a) or later[-1][\"conclusion\"] != \"success\":"
+ ],
+ [
+  "pr-all-green",
+  "    if run[\"conclusion\"] != \"failure\" or ledger_refuses(a) or not later or later[-1][\"conclusion\"] != \"success\":",
+  "    if run[\"conclusion\"] != \"failure\" or ledger_refuses(a) or not later:"
+ ],
+ [
+  "pr-all-green",
+  "excused by an entry of the ledger {r.ledger.path} naming run",
+  "excused by an entry of the ledger {LEDGER_NAME} naming run"
+ ],
+ [
+  "pr-all-green",
+  "        kind = \"cancelled\" if a.run[\"conclusion\"] == \"cancelled\" else \"github-side\"",
+  "        kind = \"cancelled\""
+ ],
+ [
+  "pr-all-green",
+  "        kind = \"cancelled\" if a.run[\"conclusion\"] == \"cancelled\" else \"github-side\"",
+  "        kind = \"github-side\""
+ ],
+ [
+  "pr-all-green",
+  "        if job[\"status\"] != \"completed\" or not job[\"steps\"]:",
+  "        if job[\"status\"] != \"completed\":"
+ ],
+ [
+  "pr-all-green",
+  "    if run[\"conclusion\"] != \"failure\" or ledger_refuses(a) or not later or later[-1][\"conclusion\"] != \"success\":",
+  "    if run[\"conclusion\"] != \"failure\" or not later or later[-1][\"conclusion\"] != \"success\":"
+ ],
+ [
+  "pr-all-green",
+  "if s[\"conclusion\"] not in EXCUSED_STEP]",
+  "if s[\"conclusion\"] == \"failure\"]"
+ ],
+ [
+  "pr-all-green",
+  "EXCUSED_STEP = frozenset({\"success\", \"skipped\", \"cancelled\", None})",
+  "EXCUSED_STEP = frozenset({\"success\", \"skipped\", None})"
+ ],
+ [
+  "pr-all-green",
+  "EXCUSED_STEP = frozenset({\"success\", \"skipped\", \"cancelled\", None})",
+  "EXCUSED_STEP = frozenset({\"success\", \"skipped\", \"cancelled\"})"
+ ],
+ [
+  "pr-all-green",
+  "EXCUSED_STEP = frozenset({\"success\", \"skipped\", \"cancelled\", None})",
+  "EXCUSED_STEP = frozenset({\"success\", \"cancelled\", None})"
+ ],
+ [
+  "pr-all-green",
+  "EXCUSED_STEP = frozenset({\"success\", \"skipped\", \"cancelled\", None})",
+  "EXCUSED_STEP = frozenset({\"success\", \"skipped\", \"cancelled\", None, \"timed_out\"})"
+ ],
+ [
+  "pr-all-green",
+  "EXCUSED_STEP = frozenset({\"success\", \"skipped\", \"cancelled\", None})",
+  "EXCUSED_STEP = frozenset({\"success\", \"skipped\", \"cancelled\", None, \"failure\"})"
+ ],
+ [
+  "pr-all-green",
+  "LEDGER_JOB = frozenset({\"success\", \"skipped\", \"cancelled\", \"failure\"})",
+  "LEDGER_JOB = frozenset({\"success\", \"skipped\", \"cancelled\"})"
+ ],
+ [
+  "pr-all-green",
+  "LEDGER_JOB = frozenset({\"success\", \"skipped\", \"cancelled\", \"failure\"})",
+  "LEDGER_JOB = frozenset({\"skipped\", \"cancelled\", \"failure\"})"
+ ],
+ [
+  "pr-all-green",
+  "LEDGER_JOB = frozenset({\"success\", \"skipped\", \"cancelled\", \"failure\"})",
+  "LEDGER_JOB = frozenset({\"success\", \"cancelled\", \"failure\"})"
+ ],
+ [
+  "pr-all-green",
+  "LEDGER_JOB = frozenset({\"success\", \"skipped\", \"cancelled\", \"failure\"})",
+  "LEDGER_JOB = frozenset({\"success\", \"skipped\", \"failure\"})"
+ ],
+ [
+  "pr-all-green",
+  "LEDGER_JOB = frozenset({\"success\", \"skipped\", \"cancelled\", \"failure\"})",
+  "LEDGER_JOB = frozenset({\"success\", \"skipped\", \"cancelled\", \"failure\", \"timed_out\"})"
+ ],
+ [
+  "pr-all-green",
+  "    ours = failed_steps(a)\n",
+  "    ours = []\n"
+ ],
+ [
+  "pr-all-green",
+  "r.add(\"red\", Prose(f\"{named(a.run)}: it was cancelled",
+  "r.add(\"incomplete\", Prose(f\"{named(a.run)}: it was cancelled"
+ ],
+ [
+  "pr-all-green",
+  "    ours = ledger_refuses(a)\n",
+  "    ours = failed_steps(a)\n"
+ ],
+ [
+  "pr-all-green",
+  "for j in a.jobs if j[\"conclusion\"] not in LEDGER_JOB]",
+  "for j in a.jobs if False]"
+ ],
+ [
+  "pr-all-green",
+  "    return [*failed_steps(a), *jobs]",
+  "    return jobs"
+ ],
+ [
+  "pr-all-green",
+  "    if run[\"conclusion\"] != \"failure\" or ledger_refuses(a) or not later or later[-1][\"conclusion\"] != \"success\":",
+  "    if run[\"conclusion\"] != \"failure\" or failed_steps(a) or not later or later[-1][\"conclusion\"] != \"success\":"
+ ],
+ [
+  "pr-all-green",
+  "    return run[\"event\"] != PULL_REQUEST or any(str(p[\"number\"]) == r.pull for p in run[\"pull_requests\"] or [])",
+  "    return True"
+ ],
+ [
+  "pr-all-green",
+  "    return run[\"event\"] != PULL_REQUEST or any(str(p[\"number\"]) == r.pull for p in run[\"pull_requests\"] or [])",
+  "    return any(str(p[\"number\"]) == r.pull for p in run[\"pull_requests\"] or [])"
+ ],
+ [
+  "pr-all-green",
+  "    return run[\"event\"] != PULL_REQUEST or any(str(p[\"number\"]) == r.pull for p in run[\"pull_requests\"] or [])",
+  "    return run[\"event\"] != PULL_REQUEST or any(str(p[\"number\"]) != r.pull for p in run[\"pull_requests\"] or [])"
+ ],
+ [
+  "pr-all-green",
+  "    return run[\"event\"] != PULL_REQUEST or any(str(p[\"number\"]) == r.pull for p in run[\"pull_requests\"] or [])",
+  "    return run[\"event\"] != PULL_REQUEST or any(str(p[\"number\"]) == r.pull for p in run[\"pull_requests\"])"
+ ],
+ [
+  "pr-all-green",
+  "RunKey(me[\"path\"], me[\"event\"]) and for_pull(r, x)",
+  "RunKey(me[\"path\"], me[\"event\"])"
+ ],
+ [
+  "pr-all-green",
+  "for x in runs if for_pull(r, x)}",
+  "for x in runs}"
+ ],
+ [
+  "pr-all-green",
+  "        now = renamed.get(path, path)",
+  "        now = path"
+ ],
+ [
+  "pr-all-green",
+  "        elif now not in expected:",
+  "        elif path not in expected:"
+ ],
+ [
+  "pr-all-green",
+  "        if now not in at_merge:",
+  "        if path not in at_merge:"
+ ],
+ [
+  "pr-all-green",
+  "if f[\"status\"] == \"renamed\" and \"previous_filename\" in f}",
+  "if \"previous_filename\" in f}"
+ ],
+ [
+  "pr-all-green",
+  "stopped[path] = Prose(\"not at the test merge commit\" if now == path else",
+  "stopped[path] = Prose(\"not at the test merge commit\" if True else"
+ ],
+ [
+  "pr-all-green",
+  "        self.once(path, items)\n        return items\n\n    def counted",
+  "        return items\n\n    def counted"
+ ],
+ [
+  "pr-all-green",
+  "        self.once(path, items)\n        return items\n\n    def once",
+  "        return items\n\n    def once"
+ ],
+ [
+  "pr-all-green",
+  "        if len(counts) < len(pages):",
+  "        if False:"
+ ],
+ [
+  "pr-all-green",
+  "for page in pages if page[\"total_count\"] is not None]",
+  "for page in pages]"
+ ],
+ [
+  "pr-all-green",
+  "            if \"id\" not in item:",
+  "            if False:"
+ ],
+ [
+  "pr-all-green",
+  "            if \"id\" not in item:",
+  "            if True:"
+ ],
+ [
+  "pr-all-green",
+  "            if i in seen:",
+  "            if False:"
+ ],
+ [
+  "pr-all-green",
+  "            seen.add(i)",
+  "            pass"
+ ],
+ [
+  "pr-all-green",
+  "        if path in r.stops:",
+  "        if False:"
+ ],
+ [
+  "pr-all-green",
+  "        if path in r.stops:",
+  "        if True:"
+ ],
+ [
+  "pr-all-green",
+  "    for path in sorted(r.stops - stopped.keys()):",
+  "    for path in sorted(frozenset[RepoPath]()):"
+ ],
+ [
+  "pr-all-green",
+  "            stopped[path] = Prose(\"deleted at the test merge commit\" if now == path",
+  "            stopped[path] = Prose(\"not at the test merge commit\" if now == path"
+ ],
+ [
+  "pr-all-green",
+  "        if now not in at_merge:",
+  "        if False:"
+ ],
+ [
+  "pr-all-green",
+  "and me[\"run_attempt\"] == 1 and x[\"id\"] > me[\"id\"]",
+  "and x[\"id\"] > me[\"id\"]"
+ ],
+ [
+  "pr-all-green",
+  "and me[\"run_attempt\"] == 1 and x[\"id\"] > me[\"id\"]",
+  "and me[\"run_attempt\"] == 1"
+ ],
+ [
+  "pr-all-green",
+  "or (x[\"created_at\"] == me[\"run_started_at\"]",
+  "or (False"
+ ],
+ [
+  "pr-all-green",
+  "    _ = p.add_argument(\"--stops\", action=\"append\", type=RepoPath)",
+  "    _ = p.add_argument(\"--stops\", type=RepoPath, nargs=\"?\")"
+ ],
+ [
+  "pr-all-green",
+  "frozenset(args.stops or [])",
+  "frozenset[RepoPath]()"
+ ]
+]

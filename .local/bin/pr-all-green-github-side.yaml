@@ -1,0 +1,10 @@
+# The investigated-run ledger pr-all-green reads beside its resolved path, or from its --ledger. A failed attempt
+# of a workflow run is excused only when an entry here names its repository, its run id and its attempt with the
+# finding that shows the failure was GitHub's own, none of its jobs has a step concluded failure, and a later
+# attempt of the same run concluded success. A failure no entry names stays red. A message is no finding: the
+# runner's "lost communication with the server" annotation names causes of ours too. Each entry holds exactly:
+#   - repository: OWNER/NAME
+#     run: the run id
+#     attempt: the attempt number
+#     finding: what showed the failure was GitHub's
+failures: []

@@ -3,10 +3,10 @@
 
 THE RULE (user, 2026-10-15). A pull request opened or pushed is babysat: a background watch ends at the first
 red check or when every check has ended, and what it found is read from where the harness keeps a task's
-result, its exit status and its own output. The watch is `pr-checks-watch N` (in ~/.local/bin), which ends with
-a verdict that is its exit status and its stdout: GREEN only when every check of the head has ended green and
-every context the ruleset requires is among them; RED, INCOMPLETE or UNREAD otherwise, each naming the next
-action.
+result, its exit status and its own output. The watch is `pr-checks-watch N` (in ~/.local/bin), which waits for
+the checks to end and then takes pr-all-green's verdict on the head it read first, the reading a merge goes
+through: exit 0 GREEN, 1 RED, 2 UNREAD, 3 INCOMPLETE, 4 on a usage error, the status its own and the lines that
+explain it on its stdout.
 
 WHY A HOOK AND NOT A NOTE. The rule was two memories. On 2026-10-15 the watch of #409 was armed as they say,
 `gh pr checks 409 --watch --fail-fast --interval 20`, and did its job: it ended at the first red check and
@@ -81,9 +81,9 @@ Watch with the script whose exit status and stdout are the verdict, alone or bef
 
   pr-checks-watch N --record "$S/prN-checks.log"
 
-It ends at the first red check or when every check has ended, then reads the head's rollup and the ruleset's
-required contexts: exit 0 GREEN, 1 RED, 3 INCOMPLETE (re-arm), 2 when gh could not answer. The task's
-notification carries that status, and its output the lines that explain it."""
+It ends at the first red check or when every check has ended, then takes pr-all-green's verdict on the head it
+read first, the reading a merge goes through: exit 0 GREEN, 1 RED, 2 UNREAD, 3 INCOMPLETE (re-arm), 4 on a
+usage error. The task's notification carries that status, and its output the lines that explain it."""
 
 DUPLICATE = """BLOCKED: this call arms a second watch of a pull request whose first watch is running.
 

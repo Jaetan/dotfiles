@@ -1,162 +1,332 @@
 [
  [
   "pr-checks-watch",
-  "GREEN_CONCLUSIONS = frozenset({\"SUCCESS\", \"SKIPPED\", \"NEUTRAL\"})",
-  "GREEN_CONCLUSIONS = frozenset({\"SUCCESS\", \"NEUTRAL\"})"
+  "Arg(\"--json\"), Arg(\"headRefOid\"))",
+  "Arg(\"--json\"), Arg(\"headRefOid,baseRefName\"))"
  ],
  [
   "pr-checks-watch",
-  "GREEN_CONCLUSIONS = frozenset({\"SUCCESS\", \"SKIPPED\", \"NEUTRAL\"})",
-  "GREEN_CONCLUSIONS = frozenset({\"SUCCESS\", \"SKIPPED\"})"
- ],
- [
-  "pr-checks-watch",
-  "        ended = status == \"COMPLETED\"\n",
-  "        ended = True\n"
- ],
- [
-  "pr-checks-watch",
-  "        state = conclusion if ended and conclusion else status\n",
-  "        state = status\n"
- ],
- [
-  "pr-checks-watch",
-  "                     state == \"SUCCESS\")\n",
-  "                     state in ENDED_CONTEXT_STATES)\n"
- ],
- [
-  "pr-checks-watch",
-  "ENDED_CONTEXT_STATES = frozenset({\"SUCCESS\", \"FAILURE\", \"ERROR\"})",
-  "ENDED_CONTEXT_STATES = frozenset({\"SUCCESS\", \"ERROR\"})"
- ],
- [
-  "pr-checks-watch",
-  "                 False, False)\n",
-  "                 True, True)\n"
- ],
- [
-  "pr-checks-watch",
-  "            if context and CheckName(context) not in found:\n",
-  "            if context:\n"
- ],
- [
-  "pr-checks-watch",
-  "        if rule.get(\"type\") != \"required_status_checks\":\n",
-  "        if rule.get(\"type\") != \"pull_request\":\n"
- ],
- [
-  "pr-checks-watch",
-  "    if before != after:\n        lines.append(Line(f\"head moved from {before} during the watch\"))\n",
-  ""
- ],
- [
-  "pr-checks-watch",
-  "    if red:\n",
+  "    if answer.status != 0:\n",
   "    if False:\n"
  ],
  [
   "pr-checks-watch",
-  "    if pending or absent or before != after:\n",
-  "    if pending:\n"
+  "{answer.status}: {answer.err.strip()}\")",
+  "{answer.status}: {answer.err}\")"
  ],
  [
   "pr-checks-watch",
-  "    if pending or absent or before != after:\n",
-  "    if pending or absent:\n"
+  "        return Line(f\"UNREAD: gh pr view {pull} printed no JSON: {exc}\")\n",
+  "        return PullView()\n"
  ],
  [
   "pr-checks-watch",
-  "    return Verdict(lines, GREEN)\n",
-  "    return Verdict(lines, RED)\n"
+  "    if isinstance(first, str):\n",
+  "    if False:\n"
  ],
  [
   "pr-checks-watch",
-  "\"--watch\", \"--fail-fast\", \"--interval\", WATCH_INTERVAL",
-  "\"--watch\", \"--interval\", WATCH_INTERVAL"
+  "        print(first)\n        return UNREAD\n",
+  "        print(first)\n        return RED\n"
+ ],
+ [
+  "pr-checks-watch",
+  "        print(first)\n",
+  "        pass\n"
+ ],
+ [
+  "pr-checks-watch",
+  "head = first[\"headRefOid\"]",
+  "head = Sha(\"\")"
+ ],
+ [
+  "pr-checks-watch",
+  "print(f\"head {head} watched\", flush=True)",
+  "print(f\"head {head} watched\")"
+ ],
+ [
+  "pr-checks-watch",
+  "print(f\"watch ended with status {status}\", flush=True)",
+  "print(f\"watch ended with status {status}\")"
+ ],
+ [
+  "pr-checks-watch",
+  "status = watch(args.pull, record)",
+  "status = watch(args.pull, None)"
+ ],
+ [
+  "pr-checks-watch",
+  "return judge(args.pull, head, record)",
+  "return judge(args.pull, head, None)"
+ ],
+ [
+  "pr-checks-watch",
+  "record = args.record or None",
+  "record = args.record"
+ ],
+ [
+  "pr-checks-watch",
+  "return USAGE if exc.code else GREEN",
+  "return USAGE"
+ ],
+ [
+  "pr-checks-watch",
+  "return USAGE if exc.code else GREEN",
+  "return GREEN"
+ ],
+ [
+  "pr-checks-watch",
+  "\"pull\", type=int, help=",
+  "\"pull\", help="
+ ],
+ [
+  "pr-checks-watch",
+  "ExitStatus(3), ExitStatus(4)",
+  "ExitStatus(3), ExitStatus(2)"
+ ],
+ [
+  "pr-checks-watch",
+  "return GhAnswer(GhText(done.stdout), GhText(done.stderr),",
+  "return GhAnswer(GhText(done.stderr), GhText(done.stdout),"
+ ],
+ [
+  "pr-checks-watch",
+  "subprocess.run([\"gh\", *args],",
+  "subprocess.run([\"gh\", *args[:-1]],"
+ ],
+ [
+  "pr-checks-watch",
+  "Arg(\"--watch\"), Arg(\"--fail-fast\"), ",
+  "Arg(\"--watch\"), "
  ],
  [
   "pr-checks-watch",
   "WATCH_INTERVAL = \"20\"",
-  "WATCH_INTERVAL = \"10\""
+  "WATCH_INTERVAL = \"30\""
  ],
  [
   "pr-checks-watch",
-  "            kept.write(answer.out)\n",
+  "    if record is not None and (refused := keep(record, GhText(answer.out",
+  "    if (refused := keep(record, GhText(answer.out"
+ ],
+ [
+  "pr-checks-watch",
+  "GhText(answer.out + answer.err)",
+  "GhText(answer.err)"
+ ],
+ [
+  "pr-checks-watch",
+  "GhText(answer.out + answer.err)",
+  "GhText(answer.out)"
+ ],
+ [
+  "pr-checks-watch",
+  "    return answer.status\n",
+  "    return GREEN\n"
+ ],
+ [
+  "pr-checks-watch",
+  "script = Path(__file__).resolve().with_name(VERDICT_SCRIPT)",
+  "script = Path(__file__).with_name(VERDICT_SCRIPT)"
+ ],
+ [
+  "pr-checks-watch",
+  "command = [str(script), str(pull), \"--head\", head]",
+  "command = [str(script), str(pull), head]"
+ ],
+ [
+  "pr-checks-watch",
+  "    if record is not None:\n        command +=",
+  "    if True:\n        command +="
+ ],
+ [
+  "pr-checks-watch",
+  "f\"{record}.logs\"",
+  "f\"{record}\""
+ ],
+ [
+  "pr-checks-watch",
+  "done = subprocess.run(command, check=False)",
+  "done = subprocess.run(command, check=False, capture_output=True)"
+ ],
+ [
+  "pr-checks-watch",
+  "    except OSError as exc:\n        print(f\"UNREAD: {script}",
+  "    except FileNotFoundError as exc:\n        print(f\"UNREAD: {script}"
+ ],
+ [
+  "pr-checks-watch",
+  "        print(f\"UNREAD: {script} could not run: {exc.strerror}\")\n        return UNREAD\n",
+  "        print(f\"UNREAD: {script} could not run: {exc.strerror}\")\n        return RED\n"
+ ],
+ [
+  "pr-checks-watch",
+  "could not run: {exc.strerror}\")",
+  "could not run: {exc}\")"
+ ],
+ [
+  "pr-checks-watch",
+  "    if done.returncode in VERDICTS:\n",
+  "    if done.returncode <= INCOMPLETE:\n"
+ ],
+ [
+  "pr-checks-watch",
+  "    if done.returncode in VERDICTS:\n",
+  "    if True:\n"
+ ],
+ [
+  "pr-checks-watch",
+  "VERDICTS = frozenset({GREEN, RED, UNREAD, INCOMPLETE})",
+  "VERDICTS = frozenset({RED, UNREAD, INCOMPLETE})"
+ ],
+ [
+  "pr-checks-watch",
+  "VERDICTS = frozenset({GREEN, RED, UNREAD, INCOMPLETE})",
+  "VERDICTS = frozenset({GREEN, UNREAD, INCOMPLETE})"
+ ],
+ [
+  "pr-checks-watch",
+  "VERDICTS = frozenset({GREEN, RED, UNREAD, INCOMPLETE})",
+  "VERDICTS = frozenset({GREEN, RED, INCOMPLETE})"
+ ],
+ [
+  "pr-checks-watch",
+  "VERDICTS = frozenset({GREEN, RED, UNREAD, INCOMPLETE})",
+  "VERDICTS = frozenset({GREEN, RED, UNREAD})"
+ ],
+ [
+  "pr-checks-watch",
+  "        return ExitStatus(done.returncode)\n",
+  "        return GREEN\n"
+ ],
+ [
+  "pr-checks-watch",
+  "    print(f\"UNREAD: {VERDICT_SCRIPT} ended with status {done.returncode}, which is no verdict\")\n",
   ""
  ],
  [
   "pr-checks-watch",
-  "    if isinstance(first, str):\n        print(first)\n        return UNREAD\n",
-  "    if isinstance(first, str):\n        print(first)\n        return GREEN\n"
+  "which is no verdict\")\n    return UNREAD\n",
+  "which is no verdict\")\n    return RED\n"
  ],
  [
   "pr-checks-watch",
-  "    if isinstance(rules, str):\n        print(rules)\n        return UNREAD\n",
-  "    if isinstance(rules, str):\n        rules = []\n"
+  "    sys.exit(main())\n",
+  "    main()\n"
  ],
  [
   "pr-checks-watch",
-  "    print(\"\\n\".join(judged.lines), flush=True)\n",
+  "head = answered.get(\"headRefOid\") if isinstance(answered, dict) else None",
+  "head = answered.get(\"headRefOid\")"
+ ],
+ [
+  "pr-checks-watch",
+  "if isinstance(answered, dict) else None",
+  "if isinstance(answered, dict) else answered"
+ ],
+ [
+  "pr-checks-watch",
+  "    if not isinstance(head, str):\n",
+  "    if head is None:\n"
+ ],
+ [
+  "pr-checks-watch",
+  "    if not isinstance(head, str):\n",
+  "    if False:\n"
+ ],
+ [
+  "pr-checks-watch",
+  "answered no string headRefOid: {answer.out.strip()}\")",
+  "answered no string headRefOid: {answer.out}\")"
+ ],
+ [
+  "pr-checks-watch",
+  "answered.get(\"headRefOid\")",
+  "answered.get(\"headRefOID\")"
+ ],
+ [
+  "pr-checks-watch",
+  "    if record is not None and (refused := keep(record, GhText(\"\"))) is not None:\n        return refused\n",
   ""
  ],
  [
   "pr-checks-watch",
-  "    lines.extend(Line(f\"ABSENT {context} (the ruleset requires it)\") for context in absent)\n",
-  ""
+  "        return refused\n    answer = gh(",
+  "        pass\n    answer = gh("
  ],
  [
   "pr-checks-watch",
-  "    red = [check.name for check in not_green if check.ended]\n",
-  "    red = [check.name for check in not_green]\n"
+  "    if record is not None and (refused := keep(record, GhText(answer.out + answer.err))) is not None:\n        return refused\n",
+  "    _ = record is not None and keep(record, GhText(answer.out + answer.err))\n"
  ],
  [
   "pr-checks-watch",
-  "        if entry.get(\"__typename\") != \"CheckRun\":\n",
-  "        if False:\n"
+  "    except OSError as exc:\n        return Line(f\"UNREAD: the record",
+  "    except FileNotFoundError as exc:\n        return Line(f\"UNREAD: the record"
  ],
  [
   "pr-checks-watch",
-  "        key = (entry.get(\"workflowName\") or \"\", entry.get(\"name\") or \"\")\n",
-  "        key = (entry.get(\"name\") or \"\",)\n"
+  "cannot be written: {exc.strerror}\")",
+  "cannot be written: {exc}\")"
  ],
  [
   "pr-checks-watch",
-  "        elif (entry.get(\"startedAt\") or \"\") >= (held.get(\"startedAt\") or \"\"):\n",
-  "        elif (entry.get(\"startedAt\") or \"\") > (held.get(\"startedAt\") or \"\"):\n"
+  "            _ = kept.write(text)\n",
+  "            pass\n"
  ],
  [
   "pr-checks-watch",
-  "        elif (entry.get(\"startedAt\") or \"\") >= (held.get(\"startedAt\") or \"\"):\n",
-  "        elif (entry.get(\"startedAt\") or \"\") <= (held.get(\"startedAt\") or \"\"):\n"
+  "        return Line(f\"UNREAD: the record {record} cannot be written: {exc.strerror}\")\n    return None\n",
+  "        return Line(f\"UNREAD: the record {record} cannot be written: {exc.strerror}\")\n    return Line(\"\")\n"
  ],
  [
   "pr-checks-watch",
-  "        else:\n            superseded.append(entry)\n",
-  "        else:\n            kept.append(entry)\n"
+  "        print(status)\n        return UNREAD\n",
+  "        print(status)\n        return RED\n"
  ],
  [
   "pr-checks-watch",
-  "            superseded.append(held)\n            latest[key] = entry\n",
-  "            latest[key] = entry\n"
+  "        print(status)\n",
+  "        pass\n"
  ],
  [
   "pr-checks-watch",
-  "    kept.extend(latest.values())\n",
-  "    kept.extend(superseded)\n    kept.extend(latest.values())\n"
+  "    if isinstance(status, str):\n",
+  "    if False:\n"
  ],
  [
   "pr-checks-watch",
-  "    return kept, notes\n",
-  "    return kept, []\n"
+  "    except OSError as exc:\n        return Line(f\"UNREAD: gh could not be started",
+  "    except FileNotFoundError as exc:\n        return Line(f\"UNREAD: gh could not be started"
  ],
  [
   "pr-checks-watch",
-  "    lines.extend(notes)\n",
-  "    pass\n"
+  "could not be started: {exc.strerror}\")",
+  "could not be started: {exc}\")"
  ],
  [
   "pr-checks-watch",
-  "    entries, notes = latest_runs(second.get(\"statusCheckRollup\", []))\n",
-  "    entries, notes = second.get(\"statusCheckRollup\", []), []\n"
+  "        return Line(f\"UNREAD: gh could not be started: {exc.strerror}\")\n",
+  "        raise\n"
+ ],
+ [
+  "pr-checks-watch",
+  "Arg(\"headRefOid\"))\n    if isinstance(answer, str):\n        return answer\n",
+  "Arg(\"headRefOid\"))\n"
+ ],
+ [
+  "pr-checks-watch",
+  "Arg(WATCH_INTERVAL))\n    if isinstance(answer, str):\n        return answer\n",
+  "Arg(WATCH_INTERVAL))\n"
+ ],
+ [
+  "pr-checks-watch",
+  "    if not head:\n",
+  "    if False:\n"
+ ],
+ [
+  "pr-checks-watch",
+  "open(record, \"w\", encoding",
+  "open(record, \"a\", encoding"
  ]
 ]

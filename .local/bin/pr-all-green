@@ -1,0 +1,1107 @@
+#!/home/nicolas/.local/bin/python3.14
+"""Say whether every CI check of a pull request's head is green, reading past the conclusions; merge it only then.
+
+Usage: pr-all-green PR --head SHA [--logs DIR] [--squash-with-body FILE] [--repo OWNER/NAME] [--ledger FILE]
+                    [--stops PATH]...
+
+  PR                      the pull request's number
+  --head SHA              the head the answer is about; a pull request whose head moved is INCOMPLETE
+  --logs DIR              keep every job's log there as <job id>.log (read in memory otherwise)
+  --squash-with-body FILE once every point holds, squash-merge with that body, `--match-head-commit SHA`
+  --repo OWNER/NAME       the repository (default: the one gh reads from the working directory)
+  --stops PATH            a workflow file this pull request stops running on itself (its pull_request trigger
+                          removed, the file renamed away or deleted), named so point 2 lets it through; repeatable
+  --ledger FILE           the investigated-run ledger point 3 reads (default: pr-all-green-github-side.yaml
+                          beside this script's resolved path): one key `failures`, a list of entries each holding
+                          exactly `repository` (OWNER/NAME), `run` and `attempt` (decimal) and `finding` (the
+                          prose that shows the failure was GitHub's), read with PyYAML's BaseLoader
+
+A green conclusion is where a red hides: a rollup grouped by check name keeps one of two checks sharing a
+name across workflows or events; a workflow that fails to start has no job and so no check; a run GitHub has
+not created yet is no check either; a run re-run green keeps its red attempt only in its attempts, and a red run
+sits beside a later green run of its workflow; a skipped job, a step concluded otherwise inside a green job, a
+bench that fails once and passes on its retry, an upload that finds no file, a sweep that skips a lane: each
+ends green. Every point below holds, or the answer names it:
+
+ 1. the pull request is OPEN at SHA with the merge state CLEAN (or HAS_HOOKS);
+ 2. every workflow whose file at the pull request's test merge commit (its `merge_commit_sha`, whose second
+    parent is SHA: the files GitHub runs) runs on this pull request (an `on: pull_request` trigger whose
+    `types`, `branches`, `branches-ignore`, `paths` and `paths-ignore` select it, read with PyYAML) has a
+    pull_request run on SHA whose `pull_requests` names this pull request, and no workflow that runs on its file
+    at that commit's first parent, the base it merged, stops running on the merge commit's file at its path, or
+    at the path the pull request's files rename it to (`status` renamed, `previous_filename` its path), or has no
+    file there (deleted, or renamed to a path holding none), unless `--stops` names its base path; a path `--stops`
+    names that does not stop so is red too; no merge commit, or one merging another commit, is unread;
+ 3. every attempt of every run on SHA, whatever its pull request or event, completed with the conclusion
+    success: one still running is incomplete and one concluded otherwise red, whatever attempt or run is green
+    after it. Two excuses cover an attempt, and neither takes one holding a step of ours, concluded other than
+    success, skipped or cancelled and not null (failure, timed_out or anything else): its line is red naming the
+    step. The cancelled excuse takes an attempt concluded cancelled whose jobs concluded success, skipped or
+    cancelled: its replacements are its run's later attempts and the runs of its workflow file and event created
+    after it started, a pull_request run only when its `pull_requests` names this pull request; it is incomplete
+    while one of them runs, superseded once the last started concluded success, and red when there is none or
+    that one concluded otherwise. The ledger excuse takes an attempt concluded failure that an entry of this
+    repository in the ledger names by its run and attempt, whose jobs concluded success, skipped, cancelled or
+    failure (a lost runner's job concludes failure; one concluded timed_out or otherwise is ours, and its line is
+    red naming the job): it is incomplete while its run's latest attempt runs, superseded once that attempt
+    concluded success, and red naming the remedy, a re-run of the run, when there is no later attempt or the
+    latest concluded otherwise; a later run does not replace it, and no entry excuses an attempt concluded
+    startup_failure, timed_out or cancelled. An attempt the cancelled excuse takes, whatever its answer, or that
+    the ledger excuse supersedes or waits on is covered: points 7 and 9 read it for a flake, since a bench that
+    retried before the cancel or the failure retried whatever replaces it. The red line of an attempt concluded
+    failure that no entry names, holding no step or job the ledger excuse refuses, whose run's latest attempt
+    concluded success, adds that a failure purely on GitHub's side is excused by an entry naming that run and
+    attempt with its finding;
+ 4. every job of the attempts the excuses do not cover concluded success (a skipped job is not green) and no
+    step concluded other than success or skipped;
+ 5. every check run on SHA that is no job of an attempt point 3 read concluded success, a github-actions one
+    too: a re-run keeps its run's check suite, so no suite is set aside; every check suite holding no check run
+    on SHA is printed; every commit status is success;
+ 6. every context the base branch's rules require is a green job of those attempts;
+ 7. no job's log carries an `##[error]` line, an `##[warning]` line from a bench that failed its first attempt
+    and was retried (one holding RETRIED: the runner drops the annotation's FLAKE-RETRY title, and the step's
+    script, echoed into the log, is no `##[warning]` line) or an `##[warning]` line from an upload that found
+    no file; every other `##[warning]` line is printed. A covered attempt's job that ran a step is read for the
+    retry line alone: its `##[error]` lines, such as a cancellation's `The operation was canceled.`, stay unjudged.
+    A job that ran no step has no log (GitHub answers 404 for it, as for the job a lost runner leaves) and is
+    judged by point 4 alone;
+ 8. each job named `tools/run_ci.py (<part>)` other than `(all gates)` (this repository's sweep) reads one
+    `Result: ALL N STEPS PASSED`, every step the same job of the base branch's latest green push run of the
+    workflow passed passes here too, but CONDITIONAL_STEPS, and it skips (`⊘ <lane> skipped`) no lane that job
+    did not skip;
+ 9. no artifact of those attempts' runs is empty or a first attempt's upload (a name holding `attempt1`, which
+    a bench uploads only when it retried), and no artifact of a covered attempt's run is a first attempt's upload.
+
+Every list a point reads whole is read on every page, the commit statuses and the branch rules included; a
+runs, check-runs, check-suites or statuses list yielding fewer entries than its total_count, or holding a page
+without one, is unread, and so is a list whose pages repeat an id: GitHub cuts each page at its offset into the
+list as it stands then, so an entry created or moved between two pages shifts the next, which repeats one entry
+and misses another.
+
+Exit 0 ALL GREEN (merged when asked), 1 RED (a point failed for good), 3 INCOMPLETE (nothing red, something
+still running, absent or moved), 2 when gh could not answer, listed fewer entries than it counts, a page without
+its count or a list that moved while it was read, a workflow file holds a filter this script cannot read, no
+test merge commit of SHA is there or the ledger is missing or holds anything but its shape, 4 on a usage error,
+5 when the merge GitHub was asked for did not land.
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import re
+import subprocess
+import sys
+from pathlib import Path
+from typing import TYPE_CHECKING, Literal, NamedTuple, NewType, NotRequired, TypedDict, cast
+
+import yaml
+
+if TYPE_CHECKING:
+    from collections.abc import Collection, Sequence
+
+# An argument of gh; what gh prints; a REST path; a commit hash; a workflow's, job's, step's, event's, branch's,
+# context's or artifact's name; a repository-relative path; a GitHub id; a state or conclusion as the REST API
+# spells it; a timestamp; a size in bytes; a line printed; a line of a job log; a filter pattern; a list's
+# total_count; the exit status.
+Arg = NewType("Arg", str)
+GhText = NewType("GhText", str)
+ApiPath = NewType("ApiPath", str)
+Sha = NewType("Sha", str)
+Name = NewType("Name", str)
+RepoPath = NewType("RepoPath", str)
+GitHubId = NewType("GitHubId", int)
+State = NewType("State", str)
+Stamp = NewType("Stamp", str)
+Bytes = NewType("Bytes", int)
+Prose = NewType("Prose", str)
+LogLine = NewType("LogLine", str)
+Pattern = NewType("Pattern", str)
+YamlText = NewType("YamlText", str)
+StepCount = NewType("StepCount", int)
+Total = NewType("Total", int)
+# A workflow file as BaseLoader reads it: every scalar a string. A name a filter pattern is matched against.
+type YamlNode = YamlText | list[YamlNode] | dict[YamlText, YamlNode]
+type Subject = RepoPath | Name
+ExitStatus = NewType("ExitStatus", int)
+ALL_GREEN, RED, UNREAD, INCOMPLETE, USAGE, NOT_MERGED = (ExitStatus(0), ExitStatus(1), ExitStatus(2), ExitStatus(3),
+                                                         ExitStatus(4), ExitStatus(5))
+Kind = Literal["red", "incomplete", "unread"]
+
+PULL_REQUEST = Name("pull_request")
+READY = frozenset({"CLEAN", "HAS_HOOKS"})
+WAITING = frozenset({"BLOCKED", "UNKNOWN"})
+GREEN_STEP = frozenset({"success", "skipped"})
+# The job conclusions point 3's cancelled excuse allows in an attempt concluded cancelled, those its ledger excuse
+# allows in an attempt concluded failure (a lost runner's job concludes failure), and the step conclusions either
+# allows: what a cancel leaves, and a step not concluded.
+EXCUSED_JOB = frozenset({"success", "skipped", "cancelled"})
+LEDGER_JOB = frozenset({"success", "skipped", "cancelled", "failure"})
+EXCUSED_STEP = frozenset({"success", "skipped", "cancelled", None})
+# The ledger's name beside this script, an entry's keys in the order an error names them, a repository as OWNER/NAME,
+# a run id or attempt number as the ledger writes it.
+LEDGER_NAME = "pr-all-green-github-side.yaml"
+type LedgerKey = Literal["repository", "run", "attempt", "finding"]
+LEDGER_KEYS: tuple[LedgerKey, ...] = ("repository", "run", "attempt", "finding")
+REPOSITORY = re.compile(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+")
+DECIMAL = re.compile(r"[0-9]+")
+DEFAULT_TYPES = frozenset({"opened", "synchronize", "reopened"})
+type FilterKey = Literal["types", "branches", "branches-ignore", "paths", "paths-ignore"]
+FILTER_KEYS: frozenset[FilterKey] = frozenset({"types", "branches", "branches-ignore", "paths", "paths-ignore"})
+# Steps the sweep registers only when the change can move what they check: `build staleness` runs on a pull
+# request only when a build-graph file changed, and always on a push to the base (`--build-staleness=always`).
+CONDITIONAL_STEPS = frozenset({Name("build staleness")})
+LOG_STAMP = re.compile(r"^\S+Z ")
+RESULT = re.compile(r"Result:\s+ALL (\d+) STEPS PASSED")
+PASSED_STEP = re.compile(r"✓ (.+) \(\d+s\)")
+SKIPPED_LANE = re.compile(r"⊘ (.+?) skipped \(.*\)")
+SWEEP_PART = re.compile(r"tools/run_ci\.py \((.*)\)")
+NO_FILES = "##[warning]No files were found"
+# This repository's retry warnings, as the runner logs them: `stability bench failed on attempt 1 ... retrying
+# once`, `<bench> gate failed on attempt 1 ... re-measuring once`, `could not preserve attempt-1 ...`.
+RETRIED = ("failed on attempt 1", "retrying once", "re-measuring once", "could not preserve attempt-1")
+FIRST_ATTEMPT = "attempt1"
+
+
+class PullRef(TypedDict):
+    """One end of a pull request."""
+
+    ref: Name
+    sha: Sha
+
+
+class Pull(TypedDict):
+    """`repos/R/pulls/N`: its test merge commit is null until GitHub has merged the head with the base."""
+
+    state: State
+    head: PullRef
+    base: PullRef
+    changed_files: GitHubId
+    merge_commit_sha: Sha | None
+
+
+class Parent(TypedDict):
+    """A parent of a commit."""
+
+    sha: Sha
+
+
+class Commit(TypedDict):
+    """`repos/R/commits/SHA`: a merge commit's first parent is the branch merged into."""
+
+    sha: Sha
+    parents: list[Parent]
+
+
+class PullView(TypedDict):
+    """`gh pr view N --json state,mergeStateStatus,headRefOid`."""
+
+    state: State
+    mergeStateStatus: State
+    headRefOid: Sha
+
+
+class MergeView(TypedDict):
+    """`gh pr view N --json state,mergeCommit` after a merge."""
+
+    state: State
+    mergeCommit: dict[Literal["oid"], Sha] | None
+
+
+class ChangedFile(TypedDict):
+    """A file of the pull request's diff, its status as GitHub spells it; a renamed one names where it was."""
+
+    filename: RepoPath
+    status: State
+    previous_filename: NotRequired[RepoPath]
+
+
+class ContentEntry(TypedDict):
+    """An entry of a directory listing at a ref."""
+
+    type: Name
+    path: RepoPath
+
+
+class PullNumber(TypedDict):
+    """A pull request a workflow run names."""
+
+    number: GitHubId
+
+
+class Run(TypedDict):
+    """A workflow run, as its latest attempt answers it or as `actions/runs/<id>/attempts/<n>` answers attempt n: a
+    re-run keeps its id, its check suite and its created_at, and moves run_attempt and run_started_at. A
+    pull_request run names the pull request it ran for, of those sharing its head; GitHub documents the list as
+    possibly null."""
+
+    id: GitHubId
+    name: Name
+    path: RepoPath
+    event: Name
+    status: State
+    conclusion: State | None
+    run_attempt: GitHubId
+    created_at: Stamp
+    run_started_at: Stamp
+    check_suite_id: GitHubId
+    pull_requests: list[PullNumber] | None
+
+
+class Step(TypedDict):
+    """A step of a job."""
+
+    name: Name
+    status: State
+    conclusion: State | None
+
+
+class Job(TypedDict):
+    """A job of a workflow run; its id is its check run's."""
+
+    id: GitHubId
+    name: Name
+    status: State
+    conclusion: State | None
+    steps: list[Step]
+
+
+class App(TypedDict):
+    """The app a check run belongs to."""
+
+    slug: Name
+
+
+class Suite(TypedDict):
+    """The check suite a check run belongs to."""
+
+    id: GitHubId
+
+
+class CheckRun(TypedDict):
+    """A check run on a commit."""
+
+    id: GitHubId
+    name: Name
+    status: State
+    conclusion: State | None
+    app: App
+    check_suite: Suite
+
+
+class CheckSuite(TypedDict):
+    """A check suite on a commit: an app's, with or without check runs."""
+
+    id: GitHubId
+    app: App
+    status: State
+    conclusion: State | None
+
+
+class StatusEntry(TypedDict):
+    """A commit status."""
+
+    context: Name
+    state: State
+
+
+class RequiredCheck(TypedDict):
+    """A context a ruleset requires."""
+
+    context: Name
+
+
+class RuleParameters(TypedDict, total=False):
+    """A rule's parameters; a required_status_checks rule carries the list."""
+
+    required_status_checks: list[RequiredCheck]
+
+
+class Rule(TypedDict):
+    """A rule that applies to a branch."""
+
+    type: Name
+    parameters: RuleParameters
+
+
+class Artifact(TypedDict):
+    """An artifact of a workflow run."""
+
+    name: Name
+    size_in_bytes: Bytes
+
+
+Listed = Literal["jobs", "artifacts"]
+Counted = Literal["workflow_runs", "check_runs", "check_suites", "statuses"]
+Item = Run | Job | CheckRun | CheckSuite | StatusEntry | Rule | Artifact | ChangedFile | ContentEntry
+
+
+class Page(TypedDict):
+    """A page of a list that carries its total_count, as `--jq '{total_count, items: .<key>}'` prints it: null on
+    a page that lacks it."""
+
+    total_count: Total | None
+    items: list[Item]
+
+
+class Identified(TypedDict):
+    """An entry of a list that carries its GitHub id."""
+
+    id: GitHubId
+
+
+class RunKey(NamedTuple):
+    """A workflow file and the event that ran it."""
+
+    path: RepoPath
+    event: Name
+
+
+class WorkflowJob(NamedTuple):
+    """A job and the attempt of the run it belongs to."""
+
+    run: Run
+    job: Job
+
+
+class Attempt(NamedTuple):
+    """An attempt of a workflow run, the run as that attempt answers it, and the attempt's jobs."""
+
+    run: Run
+    jobs: list[Job]
+
+
+class Held(NamedTuple):
+    """The attempts point 3's excuses cover, which points 4 to 9 read for a flake alone."""
+
+    covered: list[Attempt]
+
+
+class AttemptId(NamedTuple):
+    """A run and one of its attempts, as a ledger entry names them."""
+
+    run: GitHubId
+    attempt: GitHubId
+
+
+class Ledger(NamedTuple):
+    """The investigated-run ledger: where it was read, and the failed attempts of this repository it names as
+    GitHub's own failure, each with the finding that shows it."""
+
+    path: Path
+    failures: dict[AttemptId, Prose]
+
+
+class Problem(NamedTuple):
+    """A point that does not hold, and whether waiting can change it."""
+
+    kind: Kind
+    text: Prose
+
+
+class UnreadableFilter(Exception):
+    """A workflow file holds a trigger or filter this script cannot evaluate."""
+
+
+class GhError(Exception):
+    """gh could not answer."""
+
+
+class UnreadLedger(Exception):
+    """The ledger is missing or holds anything but its shape."""
+
+
+class Reader:
+    """The pull request's facts as gh answers them, and the problems found so far."""
+
+    repo: Name
+    pull: Arg
+    head: Sha
+    logs: Path | None
+    ledger: Ledger
+    problems: list[Problem]
+
+    def __init__(self, repo: Name, pull: Arg, head: Sha, logs: Path | None, ledger: Ledger,
+                 stops: frozenset[RepoPath] = frozenset()) -> None:
+        self.repo, self.pull, self.head, self.logs, self.ledger, self.stops = repo, pull, head, logs, ledger, stops
+        self.problems = []
+
+    def gh(self, *args: Arg) -> GhText:
+        """What gh prints for ``args``, or GhError."""
+        run = subprocess.run(["gh", *args], capture_output=True, text=True, check=False)
+        if run.returncode != 0:
+            raise GhError(f"gh {' '.join(args)}: exit {run.returncode}: {run.stderr.strip()}")
+        return GhText(run.stdout)
+
+    def api(self, path: ApiPath) -> GhText:
+        """One REST answer."""
+        return self.gh(Arg("api"), Arg(f"repos/{self.repo}/{path}"))
+
+    def listed(self, path: ApiPath, key: Listed | None) -> list[Item]:
+        """Every item of a paginated list endpoint, page after page; a list that moved while it was read is unread."""
+        out = self.gh(Arg("api"), Arg("--paginate"), Arg(f"repos/{self.repo}/{path}"), Arg("--jq"),
+                      Arg(f".{key}[]" if key else ".[]"))
+        items = [cast("Item", json.loads(line)) for line in out.splitlines() if line.strip()]
+        self.once(path, items)
+        return items
+
+    def counted(self, path: ApiPath, key: Counted) -> list[Item]:
+        """Every item of a paginated list endpoint that counts them on each page; fewer read than counted, a page
+        without its count or a list that moved while it was read is unread."""
+        out = self.gh(Arg("api"), Arg("--paginate"), Arg(f"repos/{self.repo}/{path}"), Arg("--jq"),
+                      Arg(f"{{total_count, items: .{key}}}"))
+        pages = [cast("Page", json.loads(line)) for line in out.splitlines() if line.strip()]
+        items = [item for page in pages for item in page["items"]]
+        counts = [page["total_count"] for page in pages if page["total_count"] is not None]
+        total = max(counts, default=Total(0))
+        if len(counts) < len(pages):
+            self.add("unread", Prose(f"{path.split('?')[0]} answered a page of {key} without total_count"))
+        elif len(items) < total:
+            self.add("unread", Prose(f"{path.split('?')[0]} counts {total} {key} and gh listed {len(items)}"))
+        self.once(path, items)
+        return items
+
+    def once(self, path: ApiPath, items: Sequence[Item]) -> None:
+        """Record the list at ``path`` unread when an id repeats across its pages: GitHub cuts each page at its offset
+        into the list as it stands then, so an entry created or moved between two pages shifts the next, which
+        repeats one entry and misses another."""
+        seen: set[GitHubId] = set()
+        for item in items:
+            if "id" not in item:
+                continue  # an entry that carries no id, such as a file of the diff or a rule
+            i = cast("Identified", item)["id"]
+            if i in seen:
+                self.add("unread", Prose(f"{path.split('?')[0]}: the list moved while it was read: id {i} is listed twice"))
+                return
+            seen.add(i)
+
+    def raw(self, path: RepoPath, ref: Sha) -> GhText:
+        """A file's bytes at ``ref``."""
+        return self.gh(Arg("api"), Arg("-H"), Arg("Accept: application/vnd.github.raw"),
+                       Arg(f"repos/{self.repo}/contents/{path}?ref={ref}"))
+
+    def add(self, kind: Kind, text: Prose) -> None:
+        """Record a point that does not hold."""
+        self.problems.append(Problem(kind, text))
+
+
+def glob_matches(pattern: Pattern, name: Subject) -> bool:
+    """Whether a filter pattern, read as GitHub reads it, matches ``name``: `*` within a directory, `**` across
+    them, every other character itself; `?`, `+`, `[`, `]`, `{`, `}` and `\\` mean something else to GitHub and
+    are refused."""
+    if any(c in pattern for c in "?+[]{}\\"):
+        raise UnreadableFilter(f"the pattern {pattern!r} holds a character whose meaning this script does not read")
+    out, i = "", 0
+    while i < len(pattern):
+        if pattern.startswith("**/", i):
+            out, i = out + "(?:.*/)?", i + 3
+        elif pattern.startswith("**", i):
+            out, i = out + ".*", i + 2
+        elif pattern[i] == "*":
+            out, i = out + "[^/]*", i + 1
+        else:
+            out, i = out + re.escape(pattern[i]), i + 1
+    return re.fullmatch(out, name) is not None
+
+
+def selected(name: Subject, patterns: Sequence[Pattern]) -> bool:
+    """Whether the ordered patterns select ``name``: a later `!pattern` deselects what an earlier one selected."""
+    chosen = False
+    for pattern in patterns:
+        if pattern.startswith("!"):
+            if glob_matches(Pattern(pattern[1:]), name):
+                chosen = False
+        elif glob_matches(pattern, name):
+            chosen = True
+    return chosen
+
+
+def patterns_of(value: YamlNode, where: Prose) -> list[Pattern]:
+    """A filter's patterns, one or a list of them, or UnreadableFilter."""
+    if isinstance(value, str):
+        return [Pattern(value)]
+    if isinstance(value, list) and all(isinstance(v, str) for v in value):
+        return [Pattern(cast("YamlText", v)) for v in value]
+    raise UnreadableFilter(f"{where} is not a list of patterns")
+
+
+def runs_on_pull(text: GhText, path: RepoPath, base: Name, files: Sequence[RepoPath]) -> bool:
+    """Whether the workflow file ``text`` runs on a pull request into ``base`` changing ``files``.
+
+    The file is read with PyYAML's BaseLoader, every scalar a string, so `on` stays the key `on` (YAML 1.1
+    would read it as true) and an empty `pull_request:` reads as the empty string."""
+    try:
+        doc = cast("YamlNode", yaml.load(text, Loader=yaml.BaseLoader))
+    except yaml.YAMLError as exc:
+        raise UnreadableFilter(f"{path} does not parse as YAML: {exc}") from exc
+    if not isinstance(doc, dict):
+        raise UnreadableFilter(f"{path} is not a mapping")
+    on = doc.get(YamlText("on"))
+    if isinstance(on, str):
+        events: dict[YamlText, YamlNode] = {YamlText(on): YamlText("")}
+    elif isinstance(on, list) and all(isinstance(e, str) for e in on):
+        events = {cast("YamlText", e): YamlText("") for e in on}
+    elif isinstance(on, dict):
+        events = on
+    else:
+        raise UnreadableFilter(f"{path} has no readable `on`")
+    if "pull_request_target" in events:
+        raise UnreadableFilter(f"{path} runs on pull_request_target, which this script does not evaluate")
+    if "pull_request" not in events:
+        return False
+    trigger = events[YamlText("pull_request")]
+    if trigger == "":
+        trigger = {}
+    if not isinstance(trigger, dict):
+        raise UnreadableFilter(f"{path}'s pull_request trigger is not a mapping")
+    filters = trigger
+    unknown = set(filters) - FILTER_KEYS
+    if unknown:
+        raise UnreadableFilter(f"{path}'s pull_request trigger holds {sorted(unknown)}, which this script does not read")
+    if "paths" in filters and "paths-ignore" in filters:
+        raise UnreadableFilter(f"{path} sets both paths and paths-ignore, which GitHub refuses")
+    if "branches" in filters and "branches-ignore" in filters:
+        raise UnreadableFilter(f"{path} sets both branches and branches-ignore, which GitHub refuses")
+    def of(key: FilterKey) -> list[Pattern]:
+        return patterns_of(filters[YamlText(key)], Prose(f"{path} {key}"))
+
+    types = frozenset(of("types")) if "types" in filters else DEFAULT_TYPES
+    if not types & DEFAULT_TYPES:
+        return False
+    if "branches" in filters and not selected(base, of("branches")):
+        return False
+    if "branches-ignore" in filters and selected(base, of("branches-ignore")):
+        return False
+    if "paths" in filters:
+        chosen = of("paths")
+        return any(selected(f, chosen) for f in files)
+    if "paths-ignore" in filters:
+        ignored = of("paths-ignore")
+        return any(not selected(f, ignored) for f in files)
+    return True
+
+
+def workflow_files(r: Reader, ref: Sha) -> dict[RepoPath, GhText]:
+    """Every workflow file at ``ref``, by path."""
+    try:
+        entries = cast("list[ContentEntry]", r.listed(ApiPath(f"contents/.github/workflows?ref={ref}"), None))
+    except GhError as exc:
+        if "HTTP 404" in str(exc):
+            return {}  # a ref with no workflow directory; any other failure is no answer
+        raise
+    return {e["path"]: r.raw(e["path"], ref) for e in entries
+            if e["type"] == "file" and e["path"].endswith((".yml", ".yaml"))}
+
+
+def expected_workflows(r: Reader, pull: Pull) -> set[RepoPath]:
+    """Point 2's set: the workflow files that run on this pull request at its test merge commit, the files GitHub
+    runs; one that runs at the commit's first parent, the base it merged, and not at the commit, at its path or at
+    the path the pull request renames it to, is red."""
+    files = cast("list[ChangedFile]", r.listed(ApiPath(f"pulls/{r.pull}/files?per_page=100"), None))
+    names = [f["filename"] for f in files] + [f["previous_filename"] for f in files if "previous_filename" in f]
+    renamed = {f["previous_filename"]: f["filename"] for f in files
+               if f["status"] == "renamed" and "previous_filename" in f}
+    if len(files) != pull["changed_files"]:
+        raise UnreadableFilter(f"the pull request changes {pull['changed_files']} files and gh listed {len(files)}")
+    merge = pull["merge_commit_sha"]
+    if merge is None:
+        r.add("unread", Prose(f"#{r.pull} has no test merge commit (merge_commit_sha is null): which workflows GitHub runs on it is unread"))
+        return set()
+    parents = [p["sha"] for p in cast("Commit", json.loads(r.api(ApiPath(f"commits/{merge}"))))["parents"]]
+    if parents[1:] != [r.head]:
+        r.add("unread", Prose(f"#{r.pull}'s test merge commit {merge} merges {', '.join(parents)}, not the base and {r.head}"))
+        return set()
+    base_ref = pull["base"]["ref"]
+    at_merge = workflow_files(r, merge)
+    at_base = workflow_files(r, parents[0])
+    expected = {p for p, text in at_merge.items() if runs_on_pull(text, p, base_ref, names)}
+    stopped: dict[RepoPath, Prose] = {}
+    for path, text in at_base.items():
+        now = renamed.get(path, path)
+        if not runs_on_pull(text, path, base_ref, names):
+            continue
+        if now not in at_merge:
+            stopped[path] = Prose("deleted at the test merge commit" if now == path
+                                  else f"renamed to {now}, which is no workflow file at the test merge commit")
+        elif now not in expected:
+            stopped[path] = Prose("not at the test merge commit" if now == path else f"not as {now} at the test merge commit")
+    for path, how in sorted(stopped.items()):
+        if path in r.stops:
+            print(f"stops running on itself, as --stops names: {path} runs on this pull request at the base and {how}")
+        else:
+            r.add("red", Prose(f"{path} runs on this pull request at the base and {how}: the change stops it running on "
+                               + f"itself; `--stops {path}` names it to merge it"))
+    for path in sorted(r.stops - stopped.keys()):
+        r.add("red", Prose(f"--stops names {path}, which runs on this pull request at the base and still runs at the "
+                           + "test merge commit, or never ran on it"))
+    print(f"expected on pull_request: {', '.join(sorted(expected))}")
+    return expected
+
+
+def read_ledger(path: Path, repo: Name) -> Ledger:
+    """The ledger at ``path``, read with PyYAML's BaseLoader: the one key `failures` holding a list of entries, each
+    a mapping of exactly repository, run, attempt and finding; an entry of another repository is read and set aside.
+    UnreadLedger, naming the file and the entry, for a missing file, a YAML error, another shape, a repository not
+    OWNER/NAME, a run or attempt not decimal or an empty finding."""
+    try:
+        data = path.read_bytes()
+    except OSError as exc:
+        raise UnreadLedger(f"{path}: {exc.strerror}") from exc
+    try:
+        doc = cast("YamlNode | None", yaml.load(data, Loader=yaml.BaseLoader))
+    except yaml.YAMLError as exc:
+        raise UnreadLedger(f"{path} does not parse as YAML: {exc}") from exc
+    if not isinstance(doc, dict) or set(doc) != {"failures"}:
+        raise UnreadLedger(f"{path} is not a mapping of the one key `failures`")
+    entries = doc[YamlText("failures")]
+    if not isinstance(entries, list):
+        raise UnreadLedger(f"{path}: `failures` is not a list")
+    failures: dict[AttemptId, Prose] = {}
+    for n, entry in enumerate(entries, 1):
+        where = f"{path} entry {n} {repr(entry)[:200]}"
+        if not isinstance(entry, dict):
+            raise UnreadLedger(f"{where} is not a mapping")
+        if set(entry) != set(LEDGER_KEYS):
+            raise UnreadLedger(f"{where} holds {sorted(entry)}, not exactly {', '.join(LEDGER_KEYS)}")
+        if not all(isinstance(v, str) for v in entry.values()):
+            raise UnreadLedger(f"{where} holds a value that is not a scalar")
+        repository, run, attempt, finding = (cast("YamlText", entry[YamlText(k)]) for k in LEDGER_KEYS)
+        if not REPOSITORY.fullmatch(repository):
+            raise UnreadLedger(f"{where}: the repository {repository!r} is not OWNER/NAME")
+        for key, number in (("run", run), ("attempt", attempt)):
+            if not DECIMAL.fullmatch(number):
+                raise UnreadLedger(f"{where}: the {key} {number!r} is not a decimal number")
+        if not finding.strip():
+            raise UnreadLedger(f"{where}: the finding is empty")
+        if repository == repo:
+            failures[AttemptId(GitHubId(int(run)), GitHubId(int(attempt)))] = Prose(finding)
+    return Ledger(path, failures)
+
+
+def attempts_of(r: Reader, runs: Sequence[Run]) -> list[Attempt]:
+    """Every attempt of every run, each with its jobs; a listed run is its latest attempt."""
+    found: list[Attempt] = []
+    for run in runs:
+        for n in range(1, run["run_attempt"] + 1):
+            at = run if n == run["run_attempt"] else cast("Run", json.loads(r.api(ApiPath(f"actions/runs/{run['id']}/attempts/{n}"))))
+            jobs = cast("list[Job]", r.listed(ApiPath(f"actions/runs/{run['id']}/attempts/{n}/jobs?per_page=100"), "jobs"))
+            found.append(Attempt(at, jobs))
+    return found
+
+
+def named(run: Run) -> Prose:
+    """An attempt and its verdict, as a problem names them."""
+    return Prose(f"run {run['id']} {run['name']} [{run['event']}] is {run['status']}/{run['conclusion']} at attempt {run['run_attempt']}")
+
+
+def later_attempts(a: Attempt, attempts: Sequence[Attempt]) -> list[Run]:
+    """The attempts of ``a``'s run after it, in the order attempts_of lists them, the latest last."""
+    return [b.run for b in attempts if b.run["id"] == a.run["id"] and b.run["run_attempt"] > a.run["run_attempt"]]
+
+
+def for_pull(r: Reader, run: Run) -> bool:
+    """Whether ``run`` counts for this pull request in points 2 and 3: a pull_request run only when its
+    `pull_requests` names it, since another pull request sharing the head runs on it too; a run of another event
+    whatever it names."""
+    return run["event"] != PULL_REQUEST or any(str(p["number"]) == r.pull for p in run["pull_requests"] or [])
+
+
+def replacements(r: Reader, a: Attempt, attempts: Sequence[Attempt], runs: Sequence[Run]) -> list[Run]:
+    """What replaces attempt ``a``, the last started last: its run's later attempts, and the runs of its workflow
+    file and event created after it started that count for this pull request, each as its latest attempt answers
+    it. GitHub's timestamps hold whole seconds, so a run created in the second ``a`` started counts when its id is
+    the greater and ``a`` is its run's first attempt (ids grow with creation; a later attempt's start has no id)."""
+    me = a.run
+    later = later_attempts(a, attempts)
+    others = [x for x in runs if RunKey(x["path"], x["event"]) == RunKey(me["path"], me["event"]) and for_pull(r, x)
+              and (x["created_at"] > me["run_started_at"] or (x["created_at"] == me["run_started_at"]
+                                                               and me["run_attempt"] == 1 and x["id"] > me["id"]))]
+    return sorted([*later, *others], key=lambda x: (x["run_started_at"], x["id"], x["run_attempt"]))
+
+
+def excuse(r: Reader, a: Attempt, after: Sequence[Run], held: Held) -> None:
+    """Point 3's cancelled excuse over attempt ``a``, concluded cancelled with no job concluded otherwise than
+    EXCUSED_JOB, and ``after``, what replaces it: red naming each step of ours failed_steps names; otherwise covered,
+    and incomplete while one of ``after`` runs, red when there is none or the last started concluded otherwise,
+    superseded once it concluded success."""
+    ours = failed_steps(a)
+    if ours:
+        r.add("red", Prose(f"{named(a.run)}: it was cancelled, and {', '.join(ours)}"))
+        return
+    held.covered.append(a)
+    waiting = [x for x in after if x["status"] != "completed"]
+    if waiting:
+        r.add("incomplete", Prose(f"{named(a.run)}, and {named(waiting[0])} replaces it"))
+        return
+    if not after:
+        r.add("red", Prose(f"{named(a.run)}, and no later attempt or run replaced it"))
+        return
+    if after[-1]["conclusion"] != "success":
+        r.add("red", Prose(f"{named(a.run)}, and its last replacement {named(after[-1])}"))
+        return
+    print(f"superseded {named(a.run)}, replaced by {named(after[-1])}")
+
+
+def github_side(r: Reader, a: Attempt, finding: Prose, later: Sequence[Run], held: Held) -> None:
+    """Point 3's ledger excuse over attempt ``a``, concluded failure and named by the ledger with ``finding``, and
+    ``later``, its run's later attempts: red naming each step and job of ours ledger_refuses names; covered and
+    incomplete while the latest runs; red naming the remedy when there is none or the latest concluded otherwise;
+    covered and superseded once the latest concluded success."""
+    ours = ledger_refuses(a)
+    if ours:
+        r.add("red", Prose(f"{named(a.run)}: the ledger names it, and {', '.join(ours)}"))
+        return
+    if later and later[-1]["status"] != "completed":
+        held.covered.append(a)
+        r.add("incomplete", Prose(f"{named(a.run)}, GitHub-side per the ledger, and {named(later[-1])} replaces it"))
+        return
+    if not later or later[-1]["conclusion"] != "success":
+        r.add("red", Prose(f"{named(a.run)}: GitHub-side per the ledger: re-run run {a.run['id']}"))
+        return
+    held.covered.append(a)
+    print(f"github-side run {a.run['id']} attempt {a.run['run_attempt']}: {finding}")
+
+
+def failed_steps(a: Attempt) -> list[Prose]:
+    """The steps of attempt ``a``'s jobs concluded otherwise than EXCUSED_STEP (failure, timed_out or anything else),
+    as `step <job> / <step> of ours concluded <conclusion>`: steps of ours, which neither excuse takes."""
+    return [Prose(f"step {j['name']} / {s['name']} of ours concluded {s['conclusion']}")
+            for j in a.jobs for s in j["steps"] if s["conclusion"] not in EXCUSED_STEP]
+
+
+def ledger_refuses(a: Attempt) -> list[Prose]:
+    """What of attempt ``a`` the ledger excuse refuses as ours: each step failed_steps names, and each job concluded
+    otherwise than LEDGER_JOB (timed_out, neutral or anything else), as `job <job> of ours concluded <conclusion>`."""
+    jobs = [Prose(f"job {j['name']} of ours concluded {j['conclusion']}") for j in a.jobs if j["conclusion"] not in LEDGER_JOB]
+    return [*failed_steps(a), *jobs]
+
+
+def ledger_hint(r: Reader, a: Attempt, later: Sequence[Run]) -> Prose:
+    """What the red line of attempt ``a`` adds when it concluded failure, no ledger entry names it, ledger_refuses
+    names nothing of it and the latest of ``later``, its run's later attempts, concluded success: that an entry
+    would excuse a failure purely on GitHub's side. Nothing otherwise."""
+    run = a.run
+    if run["conclusion"] != "failure" or ledger_refuses(a) or not later or later[-1]["conclusion"] != "success":
+        return Prose("")
+    return Prose(f"; a failure purely on GitHub's side is excused by an entry of the ledger {r.ledger.path} naming run "
+                 + f"{run['id']} attempt {run['run_attempt']} with its finding")
+
+
+def judge_runs(r: Reader, runs: Sequence[Run], attempts: Sequence[Attempt], expected: set[RepoPath]) -> Held:
+    """Points 2 and 3: every attempt of every run on the head, whatever its pull request or event; a run another
+    pull request sharing the head ran is judged too, and fills no expected run of this one."""
+    held = Held([])
+    for a in attempts:
+        run = a.run
+        print(f"run {run['id']} {run['name']} ({run['path']}) [{run['event']}] attempt {run['run_attempt']}: "
+              + f"{run['status']}/{run['conclusion']}")
+        finding = r.ledger.failures.get(AttemptId(run["id"], run["run_attempt"]))
+        later = later_attempts(a, attempts)
+        if run["status"] != "completed":
+            r.add("incomplete", named(run))
+        elif run["conclusion"] == "cancelled" and all(j["conclusion"] in EXCUSED_JOB for j in a.jobs):
+            excuse(r, a, replacements(r, a, attempts, runs), held)
+        elif run["conclusion"] == "failure" and finding is not None:
+            github_side(r, a, finding, later, held)
+        elif run["conclusion"] != "success":
+            r.add("red", Prose(named(run) + ledger_hint(r, a, later)))
+    ran = {RunKey(x["path"], x["event"]) for x in runs if for_pull(r, x)}
+    for path in sorted(expected):
+        if RunKey(path, PULL_REQUEST) not in ran:
+            r.add("incomplete", Prose(f"{path} runs on this pull request and has no pull_request run on {r.head[:8]}"))
+    return held
+
+
+def all_jobs(r: Reader, attempts: Sequence[Attempt]) -> dict[GitHubId, WorkflowJob]:
+    """Point 4: every job of ``attempts``."""
+    jobs: dict[GitHubId, WorkflowJob] = {}
+    for a in attempts:
+        for job in a.jobs:
+            jobs[job["id"]] = WorkflowJob(a.run, job)
+    for run, job in sorted(jobs.values(), key=lambda p: (p.run["name"], p.job["name"])):
+        label = f"{run['name']} / {job['name']}"
+        verdict = f"{job['status']}/{job['conclusion']}"
+        print(f"job {job['id']} {label}: {verdict}, {len(job['steps'])} steps")
+        if job["status"] != "completed":
+            r.add("incomplete", Prose(f"job {label} is {verdict}"))
+            continue
+        if job["conclusion"] != "success":
+            r.add("red", Prose(f"job {label} is {verdict}"))
+        bad = [f"{s['name']}={s['conclusion'] or s['status']}" for s in job["steps"] if s["conclusion"] not in GREEN_STEP]
+        if bad:
+            r.add("red", Prose(f"job {label} has steps {', '.join(bad)}"))
+    return jobs
+
+
+def other_checks(r: Reader, jobs: dict[GitHubId, WorkflowJob], attempts: Sequence[Attempt], base: Name) -> None:
+    """Points 5 and 6: the check runs outside the jobs, the check suites, the commit statuses, the required contexts."""
+    of_attempts = {j["id"] for a in attempts for j in a.jobs}
+    checks = cast("list[CheckRun]", r.counted(ApiPath(f"commits/{r.head}/check-runs?filter=all&per_page=100"), "check_runs"))
+    for check in checks:
+        if check["id"] in of_attempts:
+            continue  # a job of an attempt point 3 read is judged, covered or superseded with that attempt
+        verdict = f"{check['status']}/{check['conclusion']}"
+        print(f"other check {check['id']} {check['name']} ({check['app']['slug']}): {verdict}")
+        if check["status"] != "completed":
+            r.add("incomplete", Prose(f"check {check['name']} ({check['app']['slug']}) is {verdict}"))
+        elif check["conclusion"] != "success":
+            r.add("red", Prose(f"check {check['name']} ({check['app']['slug']}) is {verdict}"))
+    holding = {check["check_suite"]["id"] for check in checks}
+    for suite in cast("list[CheckSuite]", r.counted(ApiPath(f"commits/{r.head}/check-suites?per_page=100"), "check_suites")):
+        if suite["id"] not in holding:  # an app that never runs leaves a suite queued: it is no check, and no refusal
+            print(f"suite {suite['id']} ({suite['app']['slug']}) holds no check run: {suite['status']}/{suite['conclusion']}")
+    for entry in cast("list[StatusEntry]", r.counted(ApiPath(f"commits/{r.head}/status"), "statuses")):
+        print(f"status {entry['context']}: {entry['state']}")
+        if entry["state"] == "pending":
+            r.add("incomplete", Prose(f"status {entry['context']} is pending"))
+        elif entry["state"] != "success":
+            r.add("red", Prose(f"status {entry['context']} is {entry['state']}"))
+    rules = cast("list[Rule]", r.listed(ApiPath(f"rules/branches/{base}"), None))
+    required = [c["context"] for rule in rules if rule["type"] == "required_status_checks"
+                for c in rule["parameters"].get("required_status_checks", [])]
+    names = {p.job["name"] for p in jobs.values()}
+    print(f"required by {base}: {', '.join(required) or 'nothing'}")
+    for context in required:
+        if context not in names:  # a required job that is there and not green is named by point 4
+            r.add("incomplete", Prose(f"required context {context!r} is no job of the head's runs"))
+    if not required:
+        r.add("unread", Prose(f"the ruleset of {base} names no required context"))
+
+
+def log_lines(r: Reader, job: Job) -> list[LogLine]:
+    """A finished job's log, its timestamps cut, kept in --logs when given."""
+    text = r.api(ApiPath(f"actions/jobs/{job['id']}/logs"))
+    if r.logs is not None:
+        r.logs.mkdir(parents=True, exist_ok=True)
+        _ = (r.logs / f"{job['id']}.log").write_text(text, encoding="utf-8")
+    return [LogLine(LOG_STAMP.sub("", line, count=1)) for line in text.splitlines()]
+
+
+def read_logs(r: Reader, jobs: dict[GitHubId, WorkflowJob]) -> dict[GitHubId, list[LogLine]]:
+    """Point 7: every finished job's log read for errors, retries and uploads that found nothing."""
+    logs: dict[GitHubId, list[LogLine]] = {}
+    for run, job in sorted(jobs.values(), key=lambda p: (p.run["name"], p.job["name"])):
+        if job["status"] != "completed" or not job["steps"]:
+            continue  # a job that ran no step has no log, and point 4 judges its conclusion
+        lines = logs[job["id"]] = log_lines(r, job)
+        label = f"{run['name']} / {job['name']}"
+        for line in lines:
+            if line.startswith("##[error]"):
+                r.add("red", Prose(f"{label}: {line[:200]}"))
+            elif line.startswith("##[warning]"):
+                print(f"warning in {label}: {line[:200]}")
+                if any(marker in line for marker in RETRIED):
+                    r.add("red", Prose(f"{label} passed on a retry after a failed first attempt: {line[:200]}"))
+                elif line.startswith(NO_FILES):
+                    r.add("red", Prose(f"{label} uploaded nothing: {line[:200]}"))
+    return logs
+
+
+class Sweep(NamedTuple):
+    """What one part of the sweep reports in its log."""
+
+    results: list[StepCount]
+    passed: frozenset[Name]
+    skipped: frozenset[Name]
+
+
+def sweep_of(lines: Sequence[LogLine]) -> Sweep:
+    """The Result lines, passed steps and skipped lanes a sweep part's log reports."""
+    stripped = [line.strip() for line in lines]
+    return Sweep([StepCount(int(m[1])) for s in stripped if (m := RESULT.fullmatch(s))],
+                 frozenset(Name(m[1]) for s in stripped if (m := PASSED_STEP.fullmatch(s))),
+                 frozenset(Name(m[1]) for s in stripped if (m := SKIPPED_LANE.fullmatch(s))))
+
+
+def baseline_jobs(r: Reader, path: RepoPath, base: Name) -> dict[Name, Job] | None:
+    """The jobs of the base branch's latest green push run of ``path``, by name, or None when it has none."""
+    found = cast("dict[Literal['workflow_runs'], list[Run]]", json.loads(
+        r.api(ApiPath(f"actions/workflows/{Path(path).name}/runs?branch={base}&event=push&status=success&per_page=1"))))
+    if not found["workflow_runs"]:
+        return None
+    run = found["workflow_runs"][0]
+    jobs = cast("list[Job]", r.listed(ApiPath(f"actions/runs/{run['id']}/attempts/{run['run_attempt']}/jobs?per_page=100"),
+                                      "jobs"))
+    print(f"baseline for {path}: run {run['id']} on {base}")
+    return {j["name"]: j for j in jobs}
+
+
+def check_sweeps(r: Reader, jobs: dict[GitHubId, WorkflowJob], logs: dict[GitHubId, list[LogLine]], base: Name) -> None:
+    """Point 8: each sweep part against the same job of the base branch's latest green push run."""
+    baselines: dict[RepoPath, dict[Name, Job] | None] = {}
+    for run, job in sorted(jobs.values(), key=lambda p: (p.run["name"], p.job["name"])):
+        part = SWEEP_PART.fullmatch(job["name"])
+        if part is None or part[1] == "all gates" or job["id"] not in logs:
+            continue
+        if run["path"] not in baselines:
+            baselines[run["path"]] = baseline_jobs(r, run["path"], base)
+        found = baselines[run["path"]]
+        twin = found.get(job["name"]) if found else None
+        if twin is None:
+            r.add("unread", Prose(f"{job['name']}: no job of that name in a green push run of {run['path']} on {base}"))
+            continue
+        here, there = sweep_of(logs[job["id"]]), sweep_of(log_lines(r, twin))
+        missing = there.passed - here.passed - CONDITIONAL_STEPS
+        print(f"part {part[1]}: {here.results} passed; {len(here.passed)} steps (base {len(there.passed)}); "
+              + f"skipped {sorted(here.skipped)}; new steps {sorted(here.passed - there.passed)}")
+        if len(here.results) != 1:
+            r.add("red", Prose(f"part {part[1]} reads {len(here.results)} `ALL N STEPS PASSED` lines, not one"))
+        if missing:
+            r.add("red", Prose(f"part {part[1]} did not pass {sorted(missing)}, which {base}'s run passed"))
+        if here.skipped - there.skipped:
+            r.add("red", Prose(f"part {part[1]} skipped {sorted(here.skipped - there.skipped)}, which {base}'s run ran"))
+
+
+def artifacts_of(r: Reader, run: Run) -> list[Artifact]:
+    """Every artifact of ``run``."""
+    return cast("list[Artifact]", r.listed(ApiPath(f"actions/runs/{run['id']}/artifacts?per_page=100"), "artifacts"))
+
+
+def check_artifacts(r: Reader, runs: dict[GitHubId, Run]) -> None:
+    """Point 9: no artifact of ``runs`` is empty or a first attempt's upload."""
+    for run in runs.values():
+        for artifact in artifacts_of(r, run):
+            print(f"artifact {artifact['name']} of {run['name']}: {artifact['size_in_bytes']} bytes")
+            if artifact["size_in_bytes"] <= 0:
+                r.add("red", Prose(f"artifact {artifact['name']} of {run['name']} is empty"))
+            if FIRST_ATTEMPT in artifact["name"]:
+                r.add("red", Prose(f"artifact {artifact['name']} of {run['name']} is a first attempt's upload: a bench retried"))
+
+
+def read_covered(r: Reader, covered: Sequence[Attempt], judged: Collection[GitHubId]) -> None:
+    """Points 7 and 9 over the attempts point 3's excuses cover, for a flake alone: each job that ran a step is read
+    for a RETRIED warning, and each run no judged attempt belongs to for a first attempt's upload, which only a run
+    the cancelled excuse covers can be. Their `##[error]` lines, empty artifacts, steps, job conclusions and sweep
+    parts stay unjudged."""
+    for a in covered:
+        kind = "cancelled" if a.run["conclusion"] == "cancelled" else "github-side"
+        for job in a.jobs:
+            if not job["steps"]:
+                continue  # a job that ran no step has no log, and GitHub answers 404 for it
+            for line in log_lines(r, job):
+                if line.startswith("##[warning]") and any(marker in line for marker in RETRIED):
+                    r.add("red", Prose(f"{kind} run {a.run['id']} {a.run['name']} attempt {a.run['run_attempt']} / "
+                                       + f"{job['name']}: a bench failed its first attempt and retried: {line[:200]}"))
+    for run in {a.run["id"]: a.run for a in covered if a.run["id"] not in judged}.values():
+        for name in [x["name"] for x in artifacts_of(r, run) if FIRST_ATTEMPT in x["name"]]:
+            r.add("red", Prose(f"artifact {name} of cancelled run {run['id']} {run['name']} is a first attempt's upload: "
+                               + "a bench retried"))
+
+
+def verdict(r: Reader) -> ExitStatus:
+    """Print the problems and the verdict line; the exit status it stands for."""
+    kinds = {p.kind for p in r.problems}
+    word, status = (("RED", RED) if "red" in kinds else ("UNREAD", UNREAD) if "unread" in kinds
+                    else ("INCOMPLETE", INCOMPLETE) if kinds else ("ALL GREEN", ALL_GREEN))
+    print()
+    for p in r.problems:
+        print(f"  - [{p.kind}] {p.text}")
+    print(f"{word} at {r.head}: {len(r.problems)} problem(s)" if r.problems else f"{word} at {r.head}: every point holds")
+    return status
+
+
+def read(r: Reader) -> ExitStatus:
+    """Read every point."""
+    view = cast("PullView", json.loads(r.gh(Arg("pr"), Arg("view"), r.pull, Arg("--repo"), Arg(r.repo), Arg("--json"),
+                                            Arg("state,mergeStateStatus,headRefOid"))))
+    print(f"pull request #{r.pull}: {view['state']} {view['mergeStateStatus']} {view['headRefOid']}")
+    if view["state"] != "OPEN":
+        r.add("red", Prose(f"#{r.pull} is {view['state']}"))
+    if view["headRefOid"] != r.head:
+        r.add("incomplete", Prose(f"#{r.pull}'s head is {view['headRefOid']}, not {r.head}: the head moved"))
+        return verdict(r)
+    if view["mergeStateStatus"] in WAITING:
+        r.add("incomplete", Prose(f"#{r.pull}'s merge state is {view['mergeStateStatus']}"))
+    elif view["mergeStateStatus"] not in READY:
+        r.add("red", Prose(f"#{r.pull}'s merge state is {view['mergeStateStatus']}, not CLEAN"))
+    pull = cast("Pull", json.loads(r.api(ApiPath(f"pulls/{r.pull}"))))
+    base = pull["base"]["ref"]
+    try:
+        expected = expected_workflows(r, pull)
+    except UnreadableFilter as exc:
+        r.add("unread", Prose(f"which workflows run on this pull request cannot be read: {exc}"))
+        expected: set[RepoPath] = set()
+    runs = cast("list[Run]", r.counted(ApiPath(f"actions/runs?head_sha={r.head}&per_page=100"), "workflow_runs"))
+    attempts = attempts_of(r, runs)
+    held = judge_runs(r, runs, attempts, expected)
+    covered = {(a.run["id"], a.run["run_attempt"]) for a in held.covered}
+    judged = [a for a in attempts if (a.run["id"], a.run["run_attempt"]) not in covered]
+    jobs = all_jobs(r, judged)
+    other_checks(r, jobs, attempts, base)
+    logs = read_logs(r, jobs)
+    check_sweeps(r, jobs, logs, base)
+    check_artifacts(r, {a.run["id"]: a.run for a in judged})
+    read_covered(r, held.covered, {a.run["id"] for a in judged})
+    return verdict(r)
+
+
+def merge(r: Reader, body: Path) -> ExitStatus:
+    """Squash-merge at the head with ``body``, and say whether it landed."""
+    _ = r.gh(Arg("pr"), Arg("merge"), r.pull, Arg("--repo"), Arg(r.repo), Arg("--squash"), Arg("--match-head-commit"),
+         Arg(r.head), Arg("--body-file"), Arg(str(body)))
+    view = cast("MergeView", json.loads(r.gh(Arg("pr"), Arg("view"), r.pull, Arg("--repo"), Arg(r.repo), Arg("--json"),
+                                             Arg("state,mergeCommit"))))
+    commit = view["mergeCommit"]["oid"] if view["mergeCommit"] else None
+    if view["state"] != "MERGED" or commit is None:
+        print(f"NOT MERGED: #{r.pull} reads {view['state']} after the merge")
+        return NOT_MERGED
+    print(f"MERGED #{r.pull} as {commit}")
+    return ALL_GREEN
+
+
+class Options(argparse.Namespace):
+    """The command line, as parsed."""
+
+    pull: GitHubId = GitHubId(0)
+    head: Sha = Sha("")
+    logs: Path | None = None
+    body: Path | None = None
+    repo: Name | None = None
+    ledger: Path | None = None
+    stops: list[RepoPath] | None = None
+
+
+def parser() -> argparse.ArgumentParser:
+    """The command line's parser, which merge-dribble-guard.py's reading of a merge is held to."""
+    p = argparse.ArgumentParser(prog="pr-all-green", description=(__doc__ or "").split("\n\n")[0])
+    _ = p.add_argument("pull", type=int)
+    _ = p.add_argument("--head", required=True)
+    _ = p.add_argument("--logs", type=Path)
+    _ = p.add_argument("--squash-with-body", type=Path, dest="body")
+    _ = p.add_argument("--repo")
+    _ = p.add_argument("--ledger", type=Path)
+    _ = p.add_argument("--stops", action="append", type=RepoPath)
+    return p
+
+
+def main(argv: Sequence[Arg] | None = None) -> ExitStatus:
+    """Parse the command line, read every point, and merge when asked and every point holds."""
+    try:
+        args = parser().parse_args(argv, namespace=Options())
+    except SystemExit as exc:
+        return USAGE if exc.code else ALL_GREEN
+    if args.pull <= 0 or not re.fullmatch(r"[0-9a-f]{40}", args.head):
+        print("pr-all-green: PR is a positive number and --head a full 40-character commit hash", file=sys.stderr)
+        return USAGE
+    if args.body is not None and not args.body.is_file():
+        print(f"pr-all-green: --squash-with-body names {args.body}, which is no file", file=sys.stderr)
+        return USAGE
+    try:
+        repo = args.repo or Name(subprocess.run(["gh", "repo", "view", "--json", "nameWithOwner", "--jq", ".nameWithOwner"],
+                                                capture_output=True, text=True, check=True).stdout.strip())
+        ledger = read_ledger(args.ledger or Path(__file__).resolve().parent / LEDGER_NAME, repo)
+        r = Reader(repo, Arg(str(args.pull)), args.head, args.logs, ledger, frozenset(args.stops or []))
+        status = read(r)
+        if status != ALL_GREEN or args.body is None:
+            return status
+        return merge(r, args.body)
+    except UnreadLedger as exc:
+        print(f"the ledger cannot be read: {exc}")
+        return UNREAD
+    except (GhError, subprocess.CalledProcessError) as exc:
+        print(f"gh could not answer: {exc}")
+        return UNREAD
+
+
+if __name__ == "__main__":
+    sys.exit(main())
