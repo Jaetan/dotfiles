@@ -363,10 +363,10 @@ def over_limit_returns(directory: Path) -> bool:
 
 
 def limit_is_read(directory: Path) -> bool:
-    write(directory / "agent-a.jsonl", [call(MessageId("m1"), produced=Tokens(700_000))])
+    write(directory / "agent-a.jsonl", [call(MessageId("m1"), produced=Tokens(800_000))])
     write(directory / "agent-b.jsonl", [call(MessageId("m1"), produced=Tokens(600_000)),
                                         call(MessageId("m2"), written=Tokens(100_000))])
-    write(directory / "agent-c.jsonl", [call(MessageId("m1"), written=Tokens(600_001))])
+    write(directory / "agent-c.jsonl", [call(MessageId("m1"), written=Tokens(500_001))])
     ran = run_main([Argument(str(directory)), Argument("2000000")])
     small = run_main([Argument(str(directory)), Argument("2000002")])
     return ran is not None and small is not None and ran.status == 0 and small.status is None \
@@ -374,7 +374,7 @@ def limit_is_read(directory: Path) -> bool:
 
 
 def default_ceiling(directory: Path) -> bool:
-    for name, tokens in (("a", 700_000), ("b", 700_000), ("c", 600_001)):
+    for name, tokens in (("a", 800_000), ("b", 800_000), ("c", 400_001)):
         write(directory / f"agent-{name}.jsonl", [call(MessageId("m1"), produced=Tokens(tokens))])
     ran = run_main([Argument(str(directory))])
     return ran is not None and ran.status == 0 and "ceiling 2,000,000" in ran.out.text()
@@ -382,12 +382,12 @@ def default_ceiling(directory: Path) -> bool:
 
 def agent_over_returns(directory: Path) -> bool:
     write(directory / "agent-a.jsonl", [call(MessageId("m1"), produced=Tokens(5))])
-    write(directory / "agent-b.jsonl", [call(MessageId("m1"), produced=Tokens(350_000), reread=Tokens(9_000_000)),
+    write(directory / "agent-b.jsonl", [call(MessageId("m1"), produced=Tokens(400_000), reread=Tokens(9_000_000)),
                                         call(MessageId("m2"), produced=Tokens(999_999)),
-                                        call(MessageId("m2"), written=Tokens(350_001))])
+                                        call(MessageId("m2"), written=Tokens(400_001))])
     ran = run_main([Argument(str(directory))])
     return ran is not None and ran.status == 0 and ran.clock.slept == [] and ran.out.text() \
-        == "OVER LIMIT: agent-b.jsonl 700,001 new tokens, agent ceiling 700,000; stop the workflow\n"
+        == "OVER LIMIT: agent-b.jsonl 800,001 new tokens, agent ceiling 800,000; stop the workflow\n"
 
 
 def agents_under_keep_watching(directory: Path) -> bool:
@@ -407,12 +407,12 @@ def total_line_first(directory: Path) -> bool:
 
 
 def most_named(directory: Path) -> bool:
-    for name, tokens in (("a", 700_001), ("b", 700_003), ("c", 700_002)):
+    for name, tokens in (("a", 800_001), ("b", 800_003), ("c", 800_002)):
         write(directory / f"agent-{name}.jsonl", [call(MessageId("m1"), produced=Tokens(tokens))])
     tally = WATCH.Tally()
     limit = Tokens(3_000_000)
     return tally.report(tally.read(directory), limit) \
-        == "OVER LIMIT: agent-b.jsonl 700,003 new tokens, agent ceiling 700,000; stop the workflow"
+        == "OVER LIMIT: agent-b.jsonl 800,003 new tokens, agent ceiling 800,000; stop the workflow"
 
 
 def any_id_counts(directory: Path) -> bool:
@@ -484,12 +484,12 @@ CASES = [
     Case(CaseId("T23"), Prose("past the ceiling the loop returns 0 without sleeping"), over_limit_returns),
     Case(CaseId("T24"), Prose("its shebang is the kit's guards' interpreter line, and that interpreter exists"),
          runs_under_the_kits_python),
-    Case(CaseId("T26"), Prose("one agent past 700,000 under the ceiling is named OVER LIMIT, and the loop returns 0 "
+    Case(CaseId("T26"), Prose("one agent past 800,000 under the ceiling is named OVER LIMIT, and the loop returns 0 "
                               "without sleeping"), agent_over_returns),
-    Case(CaseId("T27"), Prose("agents at or under 700,000 each, past it together, keep the watch going"),
+    Case(CaseId("T27"), Prose("agents at or under 800,000 each, past it together, keep the watch going"),
          agents_under_keep_watching),
     Case(CaseId("T28"), Prose("past both ceilings at one read, the total's line alone is printed"), total_line_first),
-    Case(CaseId("T29"), Prose("of several agents past 700,000, the one with the most is named"), most_named),
+    Case(CaseId("T29"), Prose("of several agents past 800,000, the one with the most is named"), most_named),
     Case(CaseId("T30"), Prose("a call whose id is not text counts"), any_id_counts),
     Case(CaseId("T31"), Prose("the usage names both ceilings as the watcher holds them"), usage_names_both_ceilings),
 ]

@@ -216,13 +216,13 @@
  ],
  [
   "workflow-token-watch",
-  "AGENT_CEILING = Tokens(700_000)",
-  "AGENT_CEILING = Tokens(700_001)"
+  "AGENT_CEILING = Tokens(800_000)",
+  "AGENT_CEILING = Tokens(800_001)"
  ],
  [
   "workflow-token-watch",
-  "AGENT_CEILING = Tokens(700_000)",
-  "AGENT_CEILING = Tokens(699_999)"
+  "AGENT_CEILING = Tokens(800_000)",
+  "AGENT_CEILING = Tokens(799_999)"
  ],
  [
   "workflow-token-watch",

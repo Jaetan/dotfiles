@@ -6,7 +6,7 @@ Usage: workflow-token-watch TRANSCRIPT_DIR [LIMIT] [SECONDS]
 TRANSCRIPT_DIR is the workflow's transcript directory, which the Workflow tool
 names when it launches (it holds one agent-*.jsonl per agent). LIMIT, the
 workflow's ceiling, defaults to 2,000,000 tokens and SECONDS, the interval between
-reads, to 5. Each agent's own ceiling is 700,000 tokens, whatever LIMIT is.
+reads, to 5. Each agent's own ceiling is 800,000 tokens, whatever LIMIT is.
 
 What is counted: new tokens, the input, cache-write and output tokens of every
 model call any agent of the workflow made, each call counted once at its last
@@ -44,7 +44,7 @@ ExitStatus = NewType("ExitStatus", int)
 
 COUNTED = ("input_tokens", "cache_creation_input_tokens", "output_tokens")
 CEILING = Tokens(2_000_000)
-AGENT_CEILING = Tokens(700_000)
+AGENT_CEILING = Tokens(800_000)
 INTERVAL = Seconds(5.0)
 
 
