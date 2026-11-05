@@ -1,0 +1,38 @@
+# The SHAPEs a workflow brief may name, one table each: `definition` the work one agent of it does, on one line;
+# `retired`, where present, why no brief of it launches. workflow-launch-guard.py refuses a brief whose SHAPE names
+# no row or a retired one, and a SHAPE whose largest past agent passed the per-agent ceiling. A row is added, retired
+# or split only by the user's ruling.
+
+[dbc-reader-py]
+definition = "one Python DBC reply place's reader read through field_word, its refusal rows red first, its plants, the CHANGELOG line widened"
+
+[dbc-gate-row-py]
+definition = "one Python DBC reply place's gate row converted to a word-call row, its gate tests, its plants"
+
+[dbc-gate-handoff-py]
+definition = "a Python gate row taught a new reading shape (a word handed to a helper), its gate tests, its plants"
+
+[guard-change]
+definition = "a launch-guard rule with its cases red first and its mutants, in one agent"
+
+[guard-code]
+definition = "a launch-guard rule's code and its cases red first, no mutants"
+retired = "its pilot stopped at 800,087 new tokens on wf_88a603c2-0d4, past the 800,000 per-agent ceiling: 370,498 in its own calls and 429,589 in two advisor consultations, against the user's rule that a workflow agent does not consult the advisor; guard-rule-code, one refusal per agent, replaces it"
+
+[guard-mutants]
+definition = "the mutants of a launch-guard change appended, re-anchored, run and killed"
+
+[guard-suite-gaps]
+definition = "cases added to the launch-guard suite to kill surviving mutants, each red first under its mutation"
+
+[guard-rule-code]
+definition = "one refusal or one appended behaviour of the launch guard: its code and its cases red first, no mutants"
+
+[watch-rule-code]
+definition = "one appended behaviour of the token watch: its code and its cases red first, no mutants"
+
+[watch-mutants]
+definition = "the mutants of a token-watch change appended, re-anchored, run and killed"
+
+[watch-suite-gaps]
+definition = "cases added to the token-watch suite to kill surviving mutants, each red first under its mutation"

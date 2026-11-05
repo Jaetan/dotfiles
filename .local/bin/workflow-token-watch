@@ -16,17 +16,27 @@ part; the top-level counts leave the advisor's out. Cache reads, the context
 re-sent on each call, are not counted. A count that is not a whole number of 0 or
 more, a line that cannot be read and a file that cannot be opened are skipped.
 
-Meant to run under the Monitor tool: each line it prints is an event. After a
-read that reaches a new quarter of the ceiling it prints the total (one line
-however many quarters the read crossed), then OVER LIMIT once the total exceeds
-the ceiling or one agent's tokens the agent ceiling, naming that agent's
-transcript, and exits. It says once that the directory does not
-exist yet, and keeps reading it. The caller stops the workflow with TaskStop on
+Meant to run under the Monitor tool: each line it prints is an event. An agent
+consulted the advisor once an assistant line of its holds a server_tool_use
+block named advisor or a usage part of type advisor_message; it was launched
+from a brief when a user message before its first assistant line, a string or a
+text block, names a brief entry as a runner's prompt does (`Your task brief is
+the entry "<label>" of the JSON object in <briefs>`). After a read that reaches a
+new quarter of the ceiling it prints the total (one line however many quarters
+the read crossed), then OVER LIMIT, and exits, once an agent launched from a
+brief consulted the advisor, naming the transcript of least name among such
+agents and the new tokens of its advisor parts, else once the total exceeds the
+ceiling, else once one agent's tokens exceed the agent ceiling, naming that
+agent's transcript. For each other agent that consulted the advisor it prints
+once, before that read's total or OVER LIMIT line, a line starting ADVISOR:, and
+keeps reading. It says once that the directory does not exist yet,
+and keeps reading it. The caller stops the workflow with TaskStop on
 OVER LIMIT; this script stops nothing itself. workflow-watch-guard.py, in the
 Claude Code hook kit, holds every run the main thread launches to such a watch.
 """
 
 import json
+import re
 import sys
 import time
 from pathlib import Path
@@ -46,15 +56,26 @@ COUNTED = ("input_tokens", "cache_creation_input_tokens", "output_tokens")
 CEILING = Tokens(2_000_000)
 AGENT_CEILING = Tokens(800_000)
 INTERVAL = Seconds(5.0)
+# A runner's prompt naming a brief entry, as workflow-launch-guard.py's ENTRY matches it.
+ENTRY = re.compile(r'Your task brief is the entry "(.+?)" of the JSON object in (\S+)')
 
 
 class Usage(TypedDict, total=False):
     """A call's usage, or one part of it, as far as the watcher reads it."""
 
+    type: str
     input_tokens: Tokens
     cache_creation_input_tokens: Tokens
     output_tokens: Tokens
     iterations: list["Usage"]
+
+
+class Block(TypedDict, total=False):
+    """A content block of a message, as far as the watcher reads it."""
+
+    type: str
+    name: str
+    text: str
 
 
 def counted(usage: Usage) -> Tokens:
@@ -71,12 +92,41 @@ def tokens_of(usage: Usage) -> Tokens:
     return counted(usage)
 
 
+def advice_of(usage: Usage) -> Tokens | None:
+    """New tokens of one call's advisor parts, or None when it lists no such part."""
+    parts = usage.get("iterations")
+    advice = [part for part in parts if isinstance(part, dict) and part.get("type") == "advisor_message"] \
+        if isinstance(parts, list) else []
+    return Tokens(sum(counted(part) for part in advice)) if advice else None
+
+
+def calls_advisor(content: list[Block] | str | None) -> bool:
+    """Whether a message's content holds a server_tool_use block named advisor."""
+    return isinstance(content, list) and any(
+        isinstance(block, dict) and block.get("type") == "server_tool_use" and block.get("name") == "advisor"
+        for block in content)
+
+
+def texts_of(content: list[Block] | str | None) -> list[str]:
+    """A message's text: its content when that is a string, else the text of its blocks of type text."""
+    if isinstance(content, str):
+        return [content]
+    return [block["text"] for block in content if isinstance(block, dict) and block.get("type") == "text"
+            and isinstance(block.get("text"), str)] if isinstance(content, list) else []
+
+
 class Tally:
-    """The calls read so far, by agent, each at its last recorded usage, and the last quarter reported."""
+    """The calls read so far, by agent, each at its last recorded usage, the agents that consulted the advisor,
+    were launched from a brief or were said to have consulted it, and the last quarter reported."""
 
     def __init__(self) -> None:
         self.offsets: dict[Path, Offset] = {}
         self.usage: dict[AgentName, dict[CallId, Tokens]] = {}
+        self.advice: dict[AgentName, dict[CallId, Tokens]] = {}
+        self.advised: set[AgentName] = set()
+        self.answered: set[AgentName] = set()  # the agents whose first assistant line, ending the opening, is read
+        self.briefed: set[AgentName] = set()
+        self.noticed: set[AgentName] = set()
         self.quarter = 0
         self.missing_said = False
 
@@ -100,10 +150,23 @@ class Tally:
                 except (ValueError, RecursionError):
                     continue
                 message = entry.get("message") if isinstance(entry, dict) else None
-                usage = message.get("usage") if isinstance(message, dict) else None
-                if isinstance(usage, dict) and message.get("role") == "assistant" and message.get("id"):
-                    calls = self.usage.setdefault(AgentName(transcript.name), {})
-                    calls[CallId(str(message["id"]))] = tokens_of(usage)
+                if not isinstance(message, dict):
+                    continue
+                name = AgentName(transcript.name)
+                if message.get("role") == "user" and name not in self.answered:
+                    if any(ENTRY.search(text) for text in texts_of(message.get("content"))):
+                        self.briefed.add(name)
+                if message.get("role") != "assistant":
+                    continue
+                self.answered.add(name)
+                usage = message.get("usage")
+                advice = advice_of(usage) if isinstance(usage, dict) else None
+                if advice is not None or calls_advisor(message.get("content")):
+                    self.advised.add(name)
+                if isinstance(usage, dict) and message.get("id"):
+                    call = CallId(str(message["id"]))
+                    self.usage.setdefault(name, {})[call] = tokens_of(usage)
+                    self.advice.setdefault(name, {})[call] = advice or Tokens(0)
         return Tokens(sum(self.agents().values()))
 
     def agents(self) -> dict[AgentName, Tokens]:
@@ -117,8 +180,24 @@ class Tally:
         self.missing_said = True
         return Line(f"{directory} does not exist yet; reading it until it does")
 
+    def spent(self, name: AgentName) -> Tokens:
+        """The new tokens of an agent's advisor parts."""
+        return Tokens(sum(self.advice.get(name, {}).values()))
+
+    def notices(self) -> list[Line]:
+        """The line, once per advised agent not launched from a brief, that says the run goes on."""
+        unsaid = self.advised - self.briefed - self.noticed
+        self.noticed |= unsaid
+        return [Line(f"ADVISOR: {name} consulted the advisor ({self.spent(name):,} new tokens in its advisor parts "
+                     "so far); it was not launched from a brief, so the run goes on") for name in unsaid]
+
     def over(self, total: Tokens, limit: Tokens) -> Line | None:
-        """OVER LIMIT for a total past the ceiling, else for the agent with most tokens past the agent ceiling."""
+        """OVER LIMIT for the advised agent of least name launched from a brief, else for a total past the ceiling,
+        else for the agent with most tokens past the agent ceiling."""
+        if stopping := self.advised & self.briefed:
+            name = min(stopping)
+            return Line(f"OVER LIMIT: {name} consulted the advisor ({self.spent(name):,} new tokens in its advisor "
+                        "parts so far); stop the workflow")
         if total > limit:
             return Line(f"OVER LIMIT: {total:,} new tokens, ceiling {limit:,}; stop the workflow")
         tokens, name = max(((tokens, name) for name, tokens in self.agents().items()),
@@ -149,7 +228,7 @@ def main() -> ExitStatus:
     tally = Tally()
     while True:
         total = tally.read(directory)
-        for line in (tally.missing(directory), tally.report(total, limit)):
+        for line in (tally.missing(directory), *tally.notices(), tally.report(total, limit)):
             if line is not None:
                 print(line, flush=True)
         if tally.over(total, limit) is not None:

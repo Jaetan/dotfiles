@@ -231,18 +231,20 @@
  ],
  [
   "workflow-launch-guard.py",
-  "for line in lines if line.startswith(GOAL_LEAD)]",
-  "for line in lines if line.lstrip().startswith(GOAL_LEAD)]"
+  "for line in lines if line.startswith(lead)]",
+  "for line in lines if line.lstrip().startswith(lead)]"
  ],
  [
   "workflow-launch-guard.py",
-  "    if not goals:\n",
-  "    if False:\n"
+  "    if not found:\n",
+  "    if False:\n",
+  0
  ],
  [
   "workflow-launch-guard.py",
-  "    if len(goals) > 1:\n",
-  "    if len(goals) > 2:\n"
+  "    if len(found) > 1:\n",
+  "    if len(found) > 2:\n",
+  0
  ],
  [
   "workflow-launch-guard.py",
@@ -282,12 +284,14 @@
  [
   "workflow-launch-guard.py",
   "    if not found:\n",
-  "    if False:\n"
+  "    if False:\n",
+  1
  ],
  [
   "workflow-launch-guard.py",
   "    if len(found) > 1:\n",
-  "    if len(found) > 2:\n"
+  "    if len(found) > 2:\n",
+  1
  ],
  [
   "workflow-launch-guard.py",
@@ -301,18 +305,18 @@
  ],
  [
   "workflow-launch-guard.py",
-  "if len(significant) > len(str(MOST_ITEMS)) or not 1 <=",
+  "if len(significant) > len(str(most)) or not 1 <=",
   "if not 1 <="
  ],
  [
   "workflow-launch-guard.py",
-  "not 1 <= int(significant) <= MOST_ITEMS",
-  "not 1 <= int(significant) < MOST_ITEMS"
+  "not 1 <= int(significant) <= most",
+  "not 1 <= int(significant) < most"
  ],
  [
   "workflow-launch-guard.py",
-  "not 1 <= int(significant) <= MOST_ITEMS",
-  "not 1 < int(significant) <= MOST_ITEMS"
+  "not 1 <= int(significant) <= most",
+  "not 1 < int(significant) <= most"
  ],
  [
   "workflow-launch-guard.py",
@@ -336,8 +340,8 @@
  ],
  [
   "workflow-launch-guard.py",
-  "return goal_problems(lines) + items_problems(lines)",
-  "return goal_problems(lines) or items_problems(lines)"
+  "goal_problems(lines) + items_problems(lines) +",
+  "goal_problems(lines) or items_problems(lines) +"
  ],
  [
   "workflow-launch-guard.py",
@@ -347,22 +351,26 @@
  [
   "workflow-launch-guard.py",
   "except (OSError, ValueError, MemoryError, RecursionError) as exc:",
-  "except (ValueError, MemoryError, RecursionError) as exc:"
+  "except (ValueError, MemoryError, RecursionError) as exc:",
+  1
  ],
  [
   "workflow-launch-guard.py",
   "except (OSError, ValueError, MemoryError, RecursionError) as exc:",
-  "except (OSError, MemoryError, RecursionError) as exc:"
+  "except (OSError, MemoryError, RecursionError) as exc:",
+  1
  ],
  [
   "workflow-launch-guard.py",
   "except (OSError, ValueError, MemoryError, RecursionError) as exc:",
-  "except (OSError, ValueError, RecursionError) as exc:"
+  "except (OSError, ValueError, RecursionError) as exc:",
+  1
  ],
  [
   "workflow-launch-guard.py",
   "except (OSError, ValueError, MemoryError, RecursionError) as exc:",
-  "except (OSError, ValueError, MemoryError) as exc:"
+  "except (OSError, ValueError, MemoryError) as exc:",
+  1
  ],
  [
   "workflow-launch-guard.py",
@@ -426,8 +434,8 @@
  ],
  [
   "workflow-launch-guard.py",
-  "    if not isinstance(table, dict):\n        return [table]\n",
-  "    if False:\n        return [table]\n"
+  "    if not isinstance(table, dict):\n        return [table], []\n",
+  "    if False:\n        return [table], []\n"
  ],
  [
   "workflow-launch-guard.py",
@@ -477,12 +485,14 @@
  [
   "workflow-launch-guard.py",
   "except (ValueError, RecursionError) as exc:",
-  "except RecursionError as exc:"
+  "except RecursionError as exc:",
+  1
  ],
  [
   "workflow-launch-guard.py",
   "except (ValueError, RecursionError) as exc:",
-  "except ValueError as exc:"
+  "except ValueError as exc:",
+  1
  ],
  [
   "workflow-launch-guard.py",
@@ -856,7 +866,7 @@
  ],
  [
   "workflow-launch-guard.py",
-  "    if not isinstance(reference, Reference):\n        return [reference]\n",
+  "    if not isinstance(reference, Reference):\n        return [reference], []\n",
   ""
  ],
  [
@@ -883,5 +893,1397 @@
   "workflow-launch-guard.py",
   "its one brief in the launch's `description` by one token\n`briefs=/abs/path/briefs.json#<label>`.",
   "its one brief."
+ ],
+ [
+  "workflow-launch-guard.py",
+  "    if len(found) > 1:\n        return [Prose(f\"it has {len(found)} {lead",
+  "    if False:\n        return [Prose(f\"it has {len(found)} {lead"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "+ size_problems(lines, alone, None if barred or ledger_fault() else named) + decisions_problems(lines)",
+  "+ decisions_problems(lines)"
+ ],
+ [
+  "workflow-launch-guard.py",
+  " + decisions_problems(lines)",
+  ""
+ ],
+ [
+  "workflow-launch-guard.py",
+  "+ proof_problems(lines) + advisor_problems(lines))",
+  "+ advisor_problems(lines))"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "alone = len(labels) == 1",
+  "alone = True"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "alone = len(labels) == 1",
+  "alone = False"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "    if size == PILOT:\n",
+  "    if False:\n"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "        if not alone:\n",
+  "        if False:\n"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "SIZE_FORM = re.compile(r\"([0-9]+)k(?:",
+  "SIZE_FORM = re.compile(r\"([0-9]+)k?(?:"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "form = SIZE_FORM.fullmatch(size)",
+  "form = SIZE_FORM.match(size)"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "(?: from (\\S+))?\")",
+  "(?: from (.+))?\")"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "MOST_SIZE = Count(800)",
+  "MOST_SIZE = Count(799)"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "MOST_SIZE = Count(800)",
+  "MOST_SIZE = Count(801)"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "whole(Text(digits), MOST_SIZE)) is None",
+  "whole(Text(digits), MOST_ITEMS)) is None"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "RUN_ID = re.compile(r\"wf_[0-9A-Za-z_-]+\")",
+  "RUN_ID = re.compile(r\"wf_[0-9A-Za-z_-]*\")"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "RUN_ID.fullmatch(source) is None",
+  "RUN_ID.match(source) is None",
+  0
+ ],
+ [
+  "workflow-launch-guard.py",
+  " and not Path(source).is_absolute()",
+  ""
+ ],
+ [
+  "workflow-launch-guard.py",
+  "RUN_ID.fullmatch(source) is None and ",
+  ""
+ ],
+ [
+  "workflow-launch-guard.py",
+  "size = Text(stated.strip())",
+  "size = Text(stated)"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "path = Text(named.strip())",
+  "path = Text(named)"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "proof = Text(stated.strip())",
+  "proof = Text(stated)"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "if not Path(path).is_absolute() or ",
+  "if "
+ ],
+ [
+  "workflow-launch-guard.py",
+  " or not path.endswith(JOURNAL)",
+  ""
+ ],
+ [
+  "workflow-launch-guard.py",
+  "    if proof != MAIN_THREAD:\n",
+  "    if False:\n"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "    if proof != MAIN_THREAD:\n",
+  "    if not proof.startswith(MAIN_THREAD):\n"
+ ],
+ [
+  "workflow-launch-guard.py",
+  " Each brief also holds a line\n`SHAPE: <name>`, the kind of work its agent does in lower-case letters, digits\nand hyphens, a row of the kit's SHAPE registry that only the user's ruling adds\nto; a line `SIZE: <n>k`, n the thousands of new tokens, 1 to 800, at\nleast the most that any past agent whose brief carried the same SHAPE spent as\nworkflow-token-watch counts them, never the workflow's own subagent_tokens, and\nwhere ` from <source>` follows, naming a run by its `wf_<id>` or the absolute\npath of its run directory, at least that run's largest agent too; or else a line\n`SIZE: PILOT` for a SHAPE no past run measured, its launch then naming that\nbrief alone; a line\n`DECISIONS: <absolute path>.jsonl`, the file its agent appends each decision to\nas it takes it; a line `PROOF: main thread`, its agent running only its own\nfiles' tests and the one gate its claim names; and a line `ADVISOR: none`,\na workflow agent never consulting the advisor.",
+  ""
+ ],
+ [
+  "workflow-launch-guard.py",
+  " at\nleast the most that any past agent whose brief carried the same SHAPE spent as\nworkflow-token-watch counts them, never the workflow's own subagent_tokens,",
+  ""
+ ],
+ [
+  "workflow-launch-guard.py",
+  "    cited = [] if source is None else measured_problems(thousands, Text(source), watch)",
+  "    cited = []"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "if place.exists()), places[0])",
+  "if place.is_file()), places[0])"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "except (OSError, SyntaxError, ImportError) as exc:",
+  "except (SyntaxError, ImportError) as exc:"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "except (OSError, SyntaxError, ImportError) as exc:",
+  "except (OSError, ImportError) as exc:"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "except (OSError, SyntaxError, ImportError) as exc:",
+  "except (OSError, SyntaxError) as exc:"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "does not load: {type(exc).__name__}: {exc}\")",
+  "does not load: {exc}\")"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "    if isinstance(watch, str):\n",
+  "    if False:\n",
+  0
+ ],
+ [
+  "workflow-launch-guard.py",
+  "WATCH = Path(\".local\") / \"bin\" / \"workflow-token-watch\"",
+  "WATCH = Path(\".local\") / \"bin\" / \"workflow-token-watcher\""
+ ],
+ [
+  "workflow-launch-guard.py",
+  "    if RUN_ID.fullmatch(source) is None:\n        return [Path(source)]\n",
+  "    if False:\n        return [Path(source)]\n"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "    if RUN_ID.fullmatch(source) is None:\n        return [Path(source)]\n",
+  "    if True:\n        return [Path(source)]\n"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "SESSIONS = \"*/*/subagents/workflows\"",
+  "SESSIONS = \"*/subagents/workflows\""
+ ],
+ [
+  "workflow-launch-guard.py",
+  "PROJECTS = Path(\".claude\") / \"projects\"",
+  "PROJECTS = Path(\".claude\")"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "    if not directories:\n",
+  "    if False:\n"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "    for directory in directories:\n        tally.read(directory)\n",
+  "    for directory in directories[:1]:\n        tally.read(directory)\n"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "    for directory in directories:\n        tally.read(directory)\n",
+  "    for directory in directories:\n        tally = watch()\n        tally.read(directory)\n"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "    if not agents:\n",
+  "    if False:\n"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "name, tokens = max(agents.items(), key=lambda agent: agent[1])",
+  "name, tokens = min(agents.items(), key=lambda agent: agent[1])"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "name, tokens = max(agents.items(), key=lambda agent: agent[1])",
+  "name, tokens = max(agents.items(), key=lambda agent: agent[0])"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "    if thousands * THOUSAND >= measured.tokens:\n",
+  "    if thousands * THOUSAND > measured.tokens:\n",
+  1
+ ],
+ [
+  "workflow-launch-guard.py",
+  "    if thousands * THOUSAND >= measured.tokens:\n",
+  "    if thousands >= measured.tokens:\n",
+  1
+ ],
+ [
+  "workflow-launch-guard.py",
+  "THOUSAND = 1000  #",
+  "THOUSAND = 1024  #"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "THOUSAND = 1000  #",
+  "THOUSAND = 999  #"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "min(path for path in tally.offsets if path.name == name)",
+  "max(path for path in tally.offsets if path.name == name)"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "min(path for path in tally.offsets if path.name == name)",
+  "min(path for path in tally.offsets)"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "below the {measured.tokens:,} new tokens",
+  "below the {measured.tokens} new tokens",
+  1
+ ],
+ [
+  "workflow-launch-guard.py",
+  "Prose(f\"its SIZE line states {thousands}k, below",
+  "Prose(f\"its SIZE line states {thousands * THOUSAND}k, below",
+  1
+ ],
+ [
+  "workflow-launch-guard.py",
+  "SHAPE_LEAD = Text(\"SHAPE: \")",
+  "SHAPE_LEAD = Text(\"Shape: \")"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "SHAPE_NAME = re.compile(r\"[a-z0-9-]+\")",
+  "SHAPE_NAME = re.compile(r\"[A-Za-z0-9_-]+\")"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "SHAPE_NAME = re.compile(r\"[a-z0-9-]+\")",
+  "SHAPE_NAME = re.compile(r\"[a-z0-9-]*\")"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "SHAPE_NAME = re.compile(r\"[a-z0-9-]+\")",
+  "SHAPE_NAME = re.compile(r\"[a-z0-9]+\")"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "SIZED = Text(\"<n>k [from <source>]\")",
+  "SIZED = Text(\"<n>k from <source>\")"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "AGENTS = \"wf_*/agent-*.jsonl\"",
+  "AGENTS = \"wf_*/agent-*.json\""
+ ],
+ [
+  "workflow-launch-guard.py",
+  "ENTRY = re.compile(r'Your task brief is the entry",
+  "ENTRY = re.compile(r'Your task brief is entry"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "of the JSON object in (\\S+)')",
+  "of the JSON object in (\\S+?)')"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "of the JSON object in (\\S+)')",
+  "of the JSON object in (.+)')"
+ ],
+ [
+  "workflow-launch-guard.py",
+  " an ITEMS list of at most 10, a SHAPE, a SIZE measured on that SHAPE or",
+  " an ITEMS list of at most 10, a SIZE measured on that SHAPE or"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "`{SHAPE_LEAD}<name>`, the kind of work its agent does \"\n",
+  "`{SHAPE_LEAD}<name>`\"\n"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "Prose(\"one shape\")",
+  "Prose(\"one\")"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "    if isinstance(stated, list):\n        return stated\n    shape = Text(",
+  "    if isinstance(stated, list):\n        return []\n    shape = Text("
+ ],
+ [
+  "workflow-launch-guard.py",
+  "    shape = Text(stated.strip())\n",
+  "    shape = Text(stated)\n"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "    if SHAPE_NAME.fullmatch(shape) is None:\n",
+  "    if False:\n"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "SHAPE_NAME.fullmatch(shape)",
+  "SHAPE_NAME.match(shape)"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "`, no name of lower-case letters, digits and hyphens\")]",
+  "`\")]"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "    return Shape(shape)\n",
+  "    return Shape(\"x\")\n"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "it has no line `{SIZE_LEAD}{SIZED}` or",
+  "it has no line `{SIZE_LEAD}<n>k` or"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "        return pilot_problems(shape)\n",
+  "        return []\n"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "neither `{SIZED}` nor",
+  "neither `<n>k` nor"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "    if source is not None and RUN_ID.fullmatch(source) is None",
+  "    if RUN_ID.fullmatch(source) is None"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "        return [unchecked(watch)]\n    cited",
+  "        return []\n    cited"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "    return cited + ([] if shape is None else shape_problems(thousands, shape, watch))",
+  "    return cited"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "cannot be checked: {why}\")",
+  "cannot be checked\")"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "    if isinstance(watch, str):\n",
+  "    if False:\n",
+  1
+ ],
+ [
+  "workflow-launch-guard.py",
+  "        return [unchecked(watch)]\n    measured = shape_largest",
+  "        return []\n    measured = shape_largest"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "    if measured is None:\n        return []\n",
+  "    if True:\n        return []\n"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "where SHAPE `{shape}` was measured",
+  "where SHAPE was measured"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "f\"{measured.tokens:,} new tokens {measured.transcript} spent, the most",
+  "f\"{measured.tokens} new tokens {measured.transcript} spent, the most"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "f\"{measured.tokens:,} new tokens {measured.transcript} spent, the most",
+  "f\"{measured.tokens:,} new tokens spent, the most"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "    if measured is None:\n        return [Prose(f\"its SIZE line states {thousands}k, where no past run",
+  "    if measured is None:\n        return []\n        return [Prose(f\"its SIZE line states {thousands}k, where no past run"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "f\"SHAPE `{shape}`: a SHAPE never measured runs as `{SIZE_LEAD}{PILOT}`",
+  "f\"SHAPE `{shape}`: a SHAPE never measured runs as `{PILOT}`"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "f\"SHAPE `{shape}`: a SHAPE never measured",
+  "f\"SHAPE: a SHAPE never measured"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "    if thousands * THOUSAND >= measured.tokens:\n",
+  "    if thousands * THOUSAND > measured.tokens:\n",
+  0
+ ],
+ [
+  "workflow-launch-guard.py",
+  "    if thousands * THOUSAND >= measured.tokens:\n",
+  "    if thousands >= measured.tokens:\n",
+  0
+ ],
+ [
+  "workflow-launch-guard.py",
+  "below the {measured.tokens:,} new tokens",
+  "below the {measured.tokens} new tokens",
+  0
+ ],
+ [
+  "workflow-launch-guard.py",
+  "Prose(f\"its SIZE line states {thousands}k, below",
+  "Prose(f\"its SIZE line states {thousands * THOUSAND}k, below",
+  0
+ ],
+ [
+  "workflow-launch-guard.py",
+  "f\"spent on a brief of SHAPE `{shape}`, the most",
+  "f\"spent on a brief of SHAPE, the most"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "    except (OSError, MemoryError):\n",
+  "    except MemoryError:\n"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "                if role == \"assistant\":\n                    break",
+  "                if role == \"assistant\":\n                    continue"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "content = message.get(\"content\")",
+  "content = message.get(\"text\")"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "                    said.append(Text(content))\n                    continue",
+  "                    said.append(Text(content))\n                    break"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "                    said.append(Text(content))\n",
+  "                    said.append(Text(\"\"))\n"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "for block in (content if isinstance(content, list) else [])",
+  "for block in ([] if isinstance(content, list) else [])"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "    return Text(\"\\n\".join(said))",
+  "    return Text(\"\\n\".join(said[:1]))"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "    entries = list(ENTRY.finditer(request)) if request",
+  "    entries = list(ENTRY.finditer(request))[:1] if request"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "    if not entries or not Path(entries[-1].group(2)).is_absolute():",
+  "    if not entries:"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "[Label(entries[-1].group(1))])",
+  "[Label(entries[0].group(1))])"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "glob(f\"{SESSIONS}/{AGENTS}\")",
+  "glob(f\"{AGENTS}\")"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "run = Run(transcript.parent.name)",
+  "run = Run(transcript.name)"
+ ],
+ [
+  "workflow-launch-guard.py",
+  ".add(Transcript(transcript.name))",
+  ".add(Transcript(transcript.stem))"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "    for run, names in past_agents().get(shape, {}).items():\n        tally = watch()\n",
+  "    tally = watch()\n    for run, names in past_agents().get(shape, {}).items():\n"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "        for directory in run_directories(Text(run)):\n",
+  "        for directory in run_directories(Text(run))[:1]:\n"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "largest(tally, names)) is not None",
+  "largest(tally)) is not None"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "return max(measured, key=lambda found: found.tokens, default=None)",
+  "return measured[0] if measured else None"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "return max(measured, key=lambda found: found.tokens, default=None)",
+  "return measured[-1] if measured else None"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "return max(measured, key=lambda found: found.tokens, default=None)",
+  "return min(measured, key=lambda found: found.tokens, default=None)"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "if names is None or name in names}",
+  "if True}"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "if names is None or name in names}",
+  "if name in names}"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "    measured = largest(tally)\n",
+  "    measured = largest(tally, set())\n"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "    if measured is None:\n        return [Prose(f\"{unmeasured}",
+  "    if False:\n        return [Prose(f\"{unmeasured}"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "named, unnamed = (shape, []) if isinstance(shape, str) else (None, shape)",
+  "named, unnamed = (shape, []) if isinstance(shape, str) else (None, [])"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "named, unnamed = (shape, []) if isinstance(shape, str) else (None, shape)",
+  "named, unnamed = (None, []) if isinstance(shape, str) else (None, shape)"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "SHAPE_NAME = re.compile(r\"[a-z0-9-]+\")",
+  "SHAPE_NAME = re.compile(r\"[a-z-]+\")"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "the entry \"(.+?)\" of",
+  "the entry \"(.+)\" of"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "([] if shape is None else shape_problems(thousands, shape, watch))",
+  "(shape_problems(thousands, shape, watch))"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "    if shape is None:\n        return []\n    watch = token_watch()",
+  "    if False:\n        return []\n    watch = token_watch()"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "Reference(FilePath(entries[-1].group(2)), [Label(",
+  "Reference(FilePath(entries[0].group(2)), [Label("
+ ],
+ [
+  "workflow-launch-guard.py",
+  "                except (ValueError, RecursionError):\n                    continue",
+  "                except (ValueError, RecursionError):\n                    break",
+  0
+ ],
+ [
+  "workflow-launch-guard.py",
+  "                except (ValueError, RecursionError):\n",
+  "                except ValueError:\n",
+  0
+ ],
+ [
+  "workflow-launch-guard.py",
+  "message = entry.get(\"message\") if isinstance(entry, dict) else None",
+  "message = entry.get(\"message\")"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "role = message.get(\"role\") if isinstance(message, dict) else None",
+  "role = message.get(\"role\")"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "                if role != \"user\":\n                    continue",
+  "                if role != \"user\":\n                    break"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "                if role != \"user\":\n                    continue",
+  "                if False:\n                    continue"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "if isinstance(block, dict) and block.get(\"type\") == \"text\"",
+  "if isinstance(block, dict)"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "\n                            and isinstance(block.get(\"text\"), str))",
+  ")"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "    except (OSError, MemoryError):\n",
+  "    except OSError:\n"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "places = [folder / below for folder in Path(__file__).resolve().parents]",
+  "places = [folder / below for folder in Path(__file__).parents]"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "for folder in Path(__file__).resolve().parents]",
+  "for folder in reversed(Path(__file__).resolve().parents)]"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "if place.exists()), places[0])",
+  "if place.exists()), places[-1])"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "    return next((place for place in places if place.exists()), places[0])\n",
+  "    return places[0]\n"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "REGISTRY = Path(\".claude\") / \"workflows\" / \"shapes.toml\"",
+  "REGISTRY = Path(\".claude\") / \"workflows\" / \"shape.toml\""
+ ],
+ [
+  "workflow-launch-guard.py",
+  "    place = nearest(REGISTRY)\n",
+  "    place = nearest(WATCH)\n"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "with place.open(\"rb\") as handle:\n            table = tomllib.load(handle)",
+  "with place.open(\"r\") as handle:\n            table = tomllib.load(handle)"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "except (OSError, ValueError, MemoryError, RecursionError) as exc:\n        return Prose(f\"the SHAPE registry",
+  "except (ValueError, MemoryError, RecursionError) as exc:\n        return Prose(f\"the SHAPE registry"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "except (OSError, ValueError, MemoryError, RecursionError) as exc:\n        return Prose(f\"the SHAPE registry",
+  "except (OSError, MemoryError, RecursionError) as exc:\n        return Prose(f\"the SHAPE registry"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "except (OSError, ValueError, MemoryError, RecursionError) as exc:\n        return Prose(f\"the SHAPE registry",
+  "except (OSError, ValueError, RecursionError) as exc:\n        return Prose(f\"the SHAPE registry"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "except (OSError, ValueError, MemoryError, RecursionError) as exc:\n        return Prose(f\"the SHAPE registry",
+  "except (OSError, ValueError, MemoryError) as exc:\n        return Prose(f\"the SHAPE registry"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "the SHAPE registry {place} cannot be read: {type(exc).__name__}: {exc}",
+  "the SHAPE registry {place} cannot be read: {exc}"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "    for name, row in table.items():\n",
+  "    for name, row in list(table.items())[:1]:\n"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "        if SHAPE_NAME.fullmatch(name) is None:\n",
+  "        if False:\n"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "SHAPE_NAME.fullmatch(name) is None",
+  "SHAPE_NAME.match(name) is None"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "its row `{shown(Text(name))}`",
+  "its row `{name}`"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "        if not isinstance(row, dict):\n",
+  "        if False:\n"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "if unknown := sorted(set(row) - {DEFINITION, RETIRED}):",
+  "if unknown := []:"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "sorted(set(row) - {DEFINITION, RETIRED})",
+  "sorted(set(row) - {DEFINITION})"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "holds `{shown(Text(unknown[0]))}`",
+  "holds `{shown(Text(unknown[-1]))}`"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "definition, retired = row.get(DEFINITION), row.get(RETIRED)",
+  "definition, retired = row.get(RETIRED), row.get(DEFINITION)"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "if not isinstance(definition, str) or not one_line(Text(definition)):",
+  "if not one_line(Text(definition)):"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "if not isinstance(definition, str) or not one_line(Text(definition)):",
+  "if not isinstance(definition, str):"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "if retired is not None and (not isinstance(retired, str) or not one_line(Text(retired))):",
+  "if not isinstance(retired, str) or not one_line(Text(retired)):"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "(not isinstance(retired, str) or not one_line(Text(retired)))",
+  "(not one_line(Text(retired)))"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "(not isinstance(retired, str) or not one_line(Text(retired)))",
+  "(not isinstance(retired, str))"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "None if retired is None else Text(retired))",
+  "None)"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "return bool(text.strip()) and text.splitlines() == [text]",
+  "return text.splitlines() == [text]"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "return bool(text.strip()) and text.splitlines() == [text]",
+  "return bool(text.strip())"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "    rows = shape_registry()\n    return [rows] if isinstance(rows, str) else []\n",
+  "    rows = shape_registry()\n    return []\n"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "fault = registry_fault() + ledger_fault()",
+  "fault = ledger_fault()"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "    if isinstance(rows, str):\n        return []\n    row = rows.get(shape)",
+  "    if False:\n        return []\n    row = rows.get(shape)"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "    if isinstance(rows, str):\n        return []\n    row = rows.get(shape)",
+  "    if isinstance(rows, str):\n        return [rows]\n    row = rows.get(shape)"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "    if row is None:\n        return [Prose(f\"its SHAPE `{shape}` is no row",
+  "    if False:\n        return [Prose(f\"its SHAPE `{shape}` is no row"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "is no row of the SHAPE registry {nearest(REGISTRY)}:",
+  "is no row of the SHAPE registry {REGISTRY}:"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "\"to it only by the user's ruling\")]",
+  "\"to it\")]"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "    if row.retired is not None:\n",
+  "    if False:\n"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "is retired in the SHAPE registry {nearest(REGISTRY)}: {row.retired}",
+  "is retired in the SHAPE registry {nearest(REGISTRY)}"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "is retired in the SHAPE registry {nearest(REGISTRY)}",
+  "is retired in the SHAPE registry {REGISTRY}"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "    if measured.tokens <= CEILING:\n",
+  "    if measured.tokens < CEILING:\n"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "    if measured.tokens <= CEILING:\n",
+  "    if measured.tokens <= CEILING + 1:\n"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "    if measured.tokens <= CEILING:\n",
+  "    if True:\n"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "CEILING = Tokens(MOST_SIZE * THOUSAND)",
+  "CEILING = Tokens((MOST_SIZE + 1) * THOUSAND)"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "spent {measured.tokens:,} new \"\n",
+  "spent {measured.tokens} new \"\n"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "past the {CEILING:,} per-agent ceiling",
+  "past the {CEILING} per-agent ceiling"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "narrower SHAPEs of the registry {nearest(REGISTRY)} by",
+  "narrower SHAPEs of the registry {REGISTRY} by"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "overran one agent: {measured.transcript} spent",
+  "overran one agent: spent"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "    return overran(shape, measured) or [\n",
+  "    return [\n"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "    if over := overran(shape, measured):\n        return over\n",
+  ""
+ ],
+ [
+  "workflow-launch-guard.py",
+  "barred = [] if named is None else registry_problems(named)",
+  "barred = []"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "None if barred or ledger_fault() else named",
+  "None if ledger_fault() else named"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "+ unnamed + barred\n",
+  "+ unnamed\n"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "ADVISOR_LEAD = Text(\"ADVISOR: \")",
+  "ADVISOR_LEAD = Text(\"ADVISOR:\")"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "NO_ADVISOR = Text(\"none\")",
+  "NO_ADVISOR = Text(\"None\")"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "NEVER = Prose(\"a workflow agent never consulting the advisor\")",
+  "NEVER = Prose(\"\")"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "it has no line `{ADVISOR_LEAD}{NO_ADVISOR}`, {NEVER}\")",
+  "it has no line `{ADVISOR_LEAD}{NO_ADVISOR}`\")"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "Prose(f\"the one line `{ADVISOR_LEAD}{NO_ADVISOR}`, {NEVER}\"))",
+  "Prose(\"one advisor\"))"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "    if isinstance(stated, list):\n        return stated\n    advisor =",
+  "    if isinstance(stated, list):\n        return []\n    advisor ="
+ ],
+ [
+  "workflow-launch-guard.py",
+  "advisor = Text(stated.strip())",
+  "advisor = Text(stated)"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "    if advisor != NO_ADVISOR:\n",
+  "    if False:\n"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "    if advisor != NO_ADVISOR:\n",
+  "    if not advisor.startswith(NO_ADVISOR):\n"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "its ADVISOR line reads `{shown(advisor)}`",
+  "its ADVISOR line reads `{advisor}`"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "where it reads `{NO_ADVISOR}`, {NEVER}\")]",
+  "where it reads `{NO_ADVISOR}`\")]"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "+ proof_problems(lines) + advisor_problems(lines))",
+  "+ proof_problems(lines))"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "; and a line `ADVISOR: none`,\na workflow agent never consulting the advisor.",
+  "."
+ ],
+ [
+  "workflow-launch-guard.py",
+  "                    for brief in launched)",
+  "                    for brief in launched[:1])"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "                    for brief in launched)",
+  "                    for brief in launched[::-1])"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "time = Text(datetime.now(UTC).strftime(STAMP))",
+  "time = Text(datetime.now().strftime(STAMP))"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "time = Text(datetime.now(UTC).strftime(STAMP))",
+  "time = Text(datetime.now(UTC).strftime(\"%Y-%m-%dT%H:%M:%S\"))"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "\"briefs\": brief.briefs, \"label\": brief.label",
+  "\"briefs\": brief.label, \"label\": brief.label"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "\"briefs\": brief.briefs, \"label\": brief.label",
+  "\"briefs\": brief.briefs, \"label\": brief.briefs"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "\"shape\": brief.shape,",
+  "\"shape\": brief.label,"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "brief.text.encode(errors=\"surrogatepass\")",
+  "brief.text.encode(errors=\"replace\")"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "hashlib.sha256(brief.text",
+  "hashlib.sha1(brief.text"
+ ],
+ [
+  "workflow-launch-guard.py",
+  ".hexdigest()}) + \"\\n\"",
+  ".hexdigest()}) + \"\\r\\n\""
+ ],
+ [
+  "workflow-launch-guard.py",
+  "LEDGER.open(\"ab+\")",
+  "LEDGER.open(\"wb+\")"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "LEDGER.open(\"ab+\")",
+  "LEDGER.open(\"rb+\")"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "LEDGER.parent.mkdir(exist_ok=True)",
+  "LEDGER.parent.mkdir(parents=True, exist_ok=True)"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "LEDGER.parent.mkdir(exist_ok=True)",
+  "LEDGER.parent.mkdir(exist_ok=False)"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "LEDGER.parent.mkdir(exist_ok=True)",
+  "pass"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "    except OSError as exc:\n        return [Prose(f\"the launch ledger {LEDGER} cannot be appended to:",
+  "    except FileNotFoundError as exc:\n        return [Prose(f\"the launch ledger {LEDGER} cannot be appended to:"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "return [Prose(f\"the launch ledger {LEDGER} cannot be appended to: {type(exc).__name__}: {exc}\")]",
+  "return []"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "return [Prose(f\"the launch ledger {LEDGER} cannot be appended to: {type(exc).__name__}: {exc}\")]",
+  "return [Prose(f\"the launch ledger {LEDGER} cannot be appended to: {exc}\")]"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "    if not found:\n        found = record(launched)",
+  "    if not found:\n        record(launched)"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "    if not found:\n        found = record(launched)",
+  "    found += record(launched)"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "tail.decode(errors=\"backslashreplace\")",
+  "tail.decode(errors=\"replace\")"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "tail.decode(errors=\"backslashreplace\")",
+  "tail.decode(errors=\"surrogateescape\")"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "json.dumps({\"time\": time, \"torn\":",
+  "json.dumps({\"time\": \"\", \"torn\":"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "keep_torn(Ledgered(held[cut:]), time)",
+  "keep_torn(Ledgered(held[cut:]), STAMP)"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "tail.decode(errors=\"backslashreplace\")}) + \"\\n\")",
+  "tail.decode(errors=\"backslashreplace\")}))"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "TORN.open(\"a\", encoding=\"utf-8\")",
+  "TORN.open(\"w\", encoding=\"utf-8\")"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "TORN.open(\"a\", encoding=\"utf-8\")",
+  "TORN.open(\"a\", encoding=\"utf-16\")"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "TORN.open(\"a\", encoding=\"utf-8\")",
+  "TORN.with_suffix(\".tail\").open(\"a\", encoding=\"utf-8\")"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "    except OSError as exc:\n        return [Prose(f\"the torn tail",
+  "    except FileNotFoundError as exc:\n        return [Prose(f\"the torn tail"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "cannot be appended to {TORN}: ",
+  "cannot be appended to {LEDGER}: "
+ ],
+ [
+  "workflow-launch-guard.py",
+  "    return []\n\n\ndef record(",
+  "    return [Prose(\"kept\")]\n\n\ndef record("
+ ],
+ [
+  "workflow-launch-guard.py",
+  "ledger.seek(0)",
+  "ledger.seek(0, 2)"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "cut = held.rfind(b\"\\n\") + 1",
+  "cut = held.find(b\"\\n\") + 1"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "cut = held.rfind(b\"\\n\") + 1",
+  "cut = held.rfind(b\"\\n\")"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "if cut < len(held):",
+  "if cut <= len(held):"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "if cut < len(held):",
+  "if False:"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "keep_torn(Ledgered(held[cut:]), time)",
+  "keep_torn(Ledgered(held[cut + 1:]), time)"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "ledger.truncate(cut)",
+  "ledger.truncate(len(held))"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "                if fault := keep_torn(Ledgered(held[cut:]), time):\n                    return fault\n                ledger.truncate(cut)",
+  "                ledger.truncate(cut)\n                if fault := keep_torn(Ledgered(held[cut:]), time):\n                    return fault"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "                    return fault\n",
+  "                    pass\n"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "if isinstance(entry, dict) and \"timestamp\" in entry:",
+  "if isinstance(entry, dict):"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "                except (ValueError, RecursionError):\n                    continue",
+  "                except (ValueError, RecursionError):\n                    return None",
+  1
+ ],
+ [
+  "workflow-launch-guard.py",
+  "for line in handle:",
+  "for line in reversed(handle.readlines()):",
+  1
+ ],
+ [
+  "workflow-launch-guard.py",
+  "return time if time is not None and time.tzinfo is not None else None",
+  "return time if time is not None else None"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "    except (OSError, MemoryError, ValueError):",
+  "    except (OSError, MemoryError):"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "time = datetime.fromisoformat(stamp) if isinstance(stamp, str) else None",
+  "time = datetime.fromisoformat(stamp)"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "row = json.loads(line.decode())",
+  "row = json.loads(line.decode(errors=\"replace\"))"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "    except UnicodeDecodeError as exc:\n        return Prose(f\"the launch ledger {LEDGER} cannot be read: its line {number}: {type(exc).__name__}: {exc}\")\n",
+  ""
+ ],
+ [
+  "workflow-launch-guard.py",
+  "cannot be read: its line {number}: {type(exc).__name__}: {exc}",
+  "cannot be read: its line {number}: {exc}"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "    except (ValueError, RecursionError) as exc:\n        return Prose(f\"{malformed} is no JSON",
+  "    except ValueError as exc:\n        return Prose(f\"{malformed} is no JSON"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "if not isinstance(row, dict):",
+  "if not isinstance(row, (dict, list)):",
+  0
+ ],
+ [
+  "workflow-launch-guard.py",
+  "sorted(set(row) - {*ROW_KEYS, SEEDED})",
+  "sorted(set(row) - {*ROW_KEYS})"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "holds `{spelled(unknown[0])}`",
+  "holds `{unknown[0]}`"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "    for key in ROW_KEYS:\n        if key not in row:",
+  "    for key in ROW_KEYS[:-1]:\n        if key not in row:"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "if not isinstance(row[key], str):",
+  "if row[key] is None:"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "if SEEDED in row and row[SEEDED] is not True:",
+  "if SEEDED in row and not row[SEEDED]:"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "if SEEDED in row and row[SEEDED] is not True:",
+  "if row.get(SEEDED) is not True:"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "return time if time.strftime(STAMP) == text else None",
+  "return time"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "time = datetime.strptime(text, STAMP).replace(tzinfo=UTC)",
+  "time = datetime.strptime(text, STAMP)"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "has a `time` `{spelled(Text(row['time']))}`",
+  "has a `time` `{row['time']}`"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "FilePath(row[\"briefs\"]), Label(row[\"label\"])",
+  "FilePath(row[\"label\"]), Label(row[\"briefs\"])"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "Logged(time, Shape(row[\"shape\"]))",
+  "Logged(time, Shape(row[\"label\"]))"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "enumerate(ledger, start=1)",
+  "enumerate(ledger, start=0)"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "                if not line.endswith(b\"\\n\"):\n                    break\n",
+  ""
+ ],
+ [
+  "workflow-launch-guard.py",
+  "if isinstance(row, str):\n                    return row",
+  "if isinstance(row, str):\n                    continue"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "found.setdefault((briefs, label), []).append(logged)",
+  "found[(briefs, label)] = [logged]"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "found.setdefault((briefs, label), []).append(logged)",
+  "found.setdefault((briefs, label), []).insert(0, logged)"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "    except FileNotFoundError:\n        return {}",
+  "    except NotADirectoryError:\n        return {}"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "    except (OSError, MemoryError) as exc:\n        return Prose(f\"the launch ledger {LEDGER} cannot be read: {type(exc).__name__}",
+  "    except OSError as exc:\n        return Prose(f\"the launch ledger {LEDGER} cannot be read: {type(exc).__name__}"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "cannot be read: {type(exc).__name__}: {exc}\")\n    return found",
+  "cannot be read: {exc}\")\n    return found"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "return [rows] if isinstance(rows, str) else []",
+  "return []",
+  0
+ ],
+ [
+  "workflow-launch-guard.py",
+  "fault = registry_fault() + ledger_fault()",
+  "fault = registry_fault()"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "None if barred or ledger_fault() else named",
+  "None if barred else named"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "row.time <= start]",
+  "row.time < start]"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "if start is not None and row.time <= start]",
+  "if row.time <= start]"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "shape = max(bound, key=lambda row: row.time).shape",
+  "shape = bound[-1].shape"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "shape = max(bound, key=lambda row: row.time).shape",
+  "shape = bound[0].shape"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "for row in reversed(rows) if",
+  "for row in rows if"
+ ],
+ [
+  "workflow-launch-guard.py",
+  "        if bound:\n",
+  "        if rows:\n"
  ]
 ]

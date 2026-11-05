@@ -46,13 +46,13 @@
  ],
  [
   "workflow-token-watch",
-  "calls = self.usage.setdefault(AgentName(transcript.name), {})",
-  "calls = self.usage.setdefault(AgentName(\"\"), {})"
+  "self.usage.setdefault(name, {})[call] = tokens_of(usage)",
+  "self.usage.setdefault(AgentName(\"\"), {})[call] = tokens_of(usage)"
  ],
  [
   "workflow-token-watch",
-  "calls[CallId(str(message[\"id\"]))] = tokens_of(usage)",
-  "calls[CallId(str(len(calls)))] = tokens_of(usage)"
+  "call = CallId(str(message[\"id\"]))",
+  "call = CallId(str(len(self.usage.get(name, {}))))"
  ],
  [
   "workflow-token-watch",
@@ -86,18 +86,18 @@
  ],
  [
   "workflow-token-watch",
-  "if isinstance(usage, dict) and message.get(\"role\") == \"assistant\" and message.get(\"id\"):",
-  "if isinstance(usage, dict) and message.get(\"id\"):"
+  "                if message.get(\"role\") != \"assistant\":\n                    continue",
+  "                if False:\n                    continue"
  ],
  [
   "workflow-token-watch",
-  "if isinstance(usage, dict) and message.get(\"role\") == \"assistant\" and message.get(\"id\"):",
-  "if isinstance(usage, dict) and message.get(\"role\") == \"assistant\":"
+  "if isinstance(usage, dict) and message.get(\"id\"):",
+  "if isinstance(usage, dict):"
  ],
  [
   "workflow-token-watch",
-  "if isinstance(usage, dict) and message.get(\"role\") == \"assistant\" and message.get(\"id\"):",
-  "if usage and message.get(\"role\") == \"assistant\" and message.get(\"id\"):"
+  "if isinstance(usage, dict) and message.get(\"id\"):",
+  "if usage and message.get(\"id\"):"
  ],
  [
   "workflow-token-watch",
@@ -116,8 +116,8 @@
  ],
  [
   "workflow-token-watch",
-  "usage = message.get(\"usage\") if isinstance(message, dict) else None",
-  "usage = message.get(\"usage\")"
+  "                if not isinstance(message, dict):\n                    continue",
+  "                if False:\n                    continue"
  ],
  [
   "workflow-token-watch",
@@ -286,22 +286,237 @@
  ],
  [
   "workflow-token-watch",
-  "calls[CallId(str(message[\"id\"]))] = tokens_of(usage)",
-  "calls[message[\"id\"]] = tokens_of(usage)"
+  "call = CallId(str(message[\"id\"]))",
+  "call = CallId(message[\"id\"])"
  ],
  [
   "workflow-token-watch",
-  "calls = self.usage.setdefault(AgentName(transcript.name), {})",
-  "calls = self.usage[AgentName(transcript.name)] = {}"
+  "self.usage.setdefault(name, {})[call] = tokens_of(usage)",
+  "self.usage[name] = {call: tokens_of(usage)}"
  ],
  [
   "workflow-token-watch",
-  "calls = self.usage.setdefault(AgentName(transcript.name), {})",
-  "calls = self.usage.setdefault(AgentName(str(transcript)), {})"
+  "name = AgentName(transcript.name)",
+  "name = AgentName(str(transcript))"
  ],
  [
   "workflow-token-watch",
   "        if tally.over(total, limit) is not None:\n            return ExitStatus(0)",
   "        if total > limit:\n            return ExitStatus(0)"
+ ],
+ [
+  "workflow-token-watch",
+  "[part for part in parts if isinstance(part, dict) and part.get(\"type\") == \"advisor_message\"]",
+  "[part for part in parts if isinstance(part, dict)]"
+ ],
+ [
+  "workflow-token-watch",
+  "part.get(\"type\") == \"advisor_message\"]",
+  "part.get(\"type\") == \"advisor\"]"
+ ],
+ [
+  "workflow-token-watch",
+  "[part for part in parts if isinstance(part, dict) and part.get(\"type\") == \"advisor_message\"]",
+  "[part for part in parts if part.get(\"type\") == \"advisor_message\"]"
+ ],
+ [
+  "workflow-token-watch",
+  "        if isinstance(parts, list) else []\n",
+  "        if parts else []\n"
+ ],
+ [
+  "workflow-token-watch",
+  "    return Tokens(sum(counted(part) for part in advice)) if advice else None",
+  "    return Tokens(sum(counted(part) for part in advice))"
+ ],
+ [
+  "workflow-token-watch",
+  "    return Tokens(sum(counted(part) for part in advice)) if advice else None",
+  "    return Tokens(0) if advice else None"
+ ],
+ [
+  "workflow-token-watch",
+  "isinstance(block, dict) and block.get(\"type\") == \"server_tool_use\" and block.get(\"name\") == \"advisor\"",
+  "isinstance(block, dict) and block.get(\"name\") == \"advisor\""
+ ],
+ [
+  "workflow-token-watch",
+  "isinstance(block, dict) and block.get(\"type\") == \"server_tool_use\" and block.get(\"name\") == \"advisor\"",
+  "isinstance(block, dict) and block.get(\"type\") == \"server_tool_use\""
+ ],
+ [
+  "workflow-token-watch",
+  "isinstance(block, dict) and block.get(\"type\") == \"server_tool_use\" and block.get(\"name\") == \"advisor\"",
+  "block.get(\"type\") == \"server_tool_use\" and block.get(\"name\") == \"advisor\""
+ ],
+ [
+  "workflow-token-watch",
+  "    return isinstance(content, list) and any(\n",
+  "    return any(\n"
+ ],
+ [
+  "workflow-token-watch",
+  "    return isinstance(content, list) and any(\n",
+  "    return isinstance(content, list) and all(\n"
+ ],
+ [
+  "workflow-token-watch",
+  "    if isinstance(content, str):\n        return [content]\n",
+  "    if False:\n        return [content]\n"
+ ],
+ [
+  "workflow-token-watch",
+  "block.get(\"type\") == \"text\"\n            and isinstance(block.get(\"text\"), str)]",
+  "isinstance(block.get(\"text\"), str)]"
+ ],
+ [
+  "workflow-token-watch",
+  "block.get(\"type\") == \"text\"\n            and isinstance(block.get(\"text\"), str)]",
+  "block.get(\"type\") == \"text\"]"
+ ],
+ [
+  "workflow-token-watch",
+  "    return [block[\"text\"] for block in content if isinstance(block, dict) and block.get(\"type\") == \"text\"",
+  "    return [block[\"text\"] for block in content if block.get(\"type\") == \"text\""
+ ],
+ [
+  "workflow-token-watch",
+  "and isinstance(block.get(\"text\"), str)] if isinstance(content, list) else []",
+  "and isinstance(block.get(\"text\"), str)] if content else []"
+ ],
+ [
+  "workflow-token-watch",
+  "if message.get(\"role\") == \"user\" and name not in self.answered:",
+  "if message.get(\"role\") == \"user\":"
+ ],
+ [
+  "workflow-token-watch",
+  "if message.get(\"role\") == \"user\" and name not in self.answered:",
+  "if name not in self.answered:"
+ ],
+ [
+  "workflow-token-watch",
+  "                self.answered.add(name)\n",
+  ""
+ ],
+ [
+  "workflow-token-watch",
+  "if any(ENTRY.search(text) for text in texts_of(message.get(\"content\"))):",
+  "if any(ENTRY.match(text) for text in texts_of(message.get(\"content\"))):"
+ ],
+ [
+  "workflow-token-watch",
+  "if any(ENTRY.search(text) for text in texts_of(message.get(\"content\"))):",
+  "if all(ENTRY.search(text) for text in texts_of(message.get(\"content\"))):"
+ ],
+ [
+  "workflow-token-watch",
+  "                        self.briefed.add(name)\n",
+  "                        pass\n"
+ ],
+ [
+  "workflow-token-watch",
+  "                    self.advised.add(name)\n",
+  "                    pass\n"
+ ],
+ [
+  "workflow-token-watch",
+  "if advice is not None or calls_advisor(message.get(\"content\")):",
+  "if advice is not None:"
+ ],
+ [
+  "workflow-token-watch",
+  "if advice is not None or calls_advisor(message.get(\"content\")):",
+  "if calls_advisor(message.get(\"content\")):"
+ ],
+ [
+  "workflow-token-watch",
+  "advice = advice_of(usage) if isinstance(usage, dict) else None",
+  "advice = advice_of(usage) if usage else None"
+ ],
+ [
+  "workflow-token-watch",
+  "self.advice.setdefault(name, {})[call] = advice or Tokens(0)",
+  "self.advice.setdefault(name, {})[call] = tokens_of(usage)"
+ ],
+ [
+  "workflow-token-watch",
+  "self.advice.setdefault(name, {})[call] = advice or Tokens(0)",
+  "self.advice.setdefault(name, {})[CallId(str(len(self.advice.get(name, {}))))] = advice or Tokens(0)"
+ ],
+ [
+  "workflow-token-watch",
+  "self.advice.setdefault(name, {})[call] = advice or Tokens(0)",
+  "self.advice.setdefault(name, {})[call] = advice"
+ ],
+ [
+  "workflow-token-watch",
+  "return Tokens(sum(self.advice.get(name, {}).values()))",
+  "return Tokens(max(self.advice.get(name, {}).values(), default=0))"
+ ],
+ [
+  "workflow-token-watch",
+  "return Tokens(sum(self.advice.get(name, {}).values()))",
+  "return Tokens(sum(self.advice[name].values()))"
+ ],
+ [
+  "workflow-token-watch",
+  "unsaid = self.advised - self.briefed - self.noticed",
+  "unsaid = self.advised - self.briefed"
+ ],
+ [
+  "workflow-token-watch",
+  "unsaid = self.advised - self.briefed - self.noticed",
+  "unsaid = self.advised - self.noticed"
+ ],
+ [
+  "workflow-token-watch",
+  "        self.noticed |= unsaid\n",
+  ""
+ ],
+ [
+  "workflow-token-watch",
+  "Line(f\"ADVISOR: {name} consulted",
+  "Line(f\"NOTE: {name} consulted"
+ ],
+ [
+  "workflow-token-watch",
+  "Line(f\"ADVISOR: {name} consulted the advisor ({self.spent(name):,} new",
+  "Line(f\"ADVISOR: {name} consulted the advisor ({self.spent(name)} new"
+ ],
+ [
+  "workflow-token-watch",
+  "if stopping := self.advised & self.briefed:",
+  "if stopping := self.advised:"
+ ],
+ [
+  "workflow-token-watch",
+  "if stopping := self.advised & self.briefed:",
+  "if stopping := self.briefed:"
+ ],
+ [
+  "workflow-token-watch",
+  "            name = min(stopping)\n",
+  "            name = max(stopping)\n"
+ ],
+ [
+  "workflow-token-watch",
+  "OVER LIMIT: {name} consulted the advisor ({self.spent(name):,} new",
+  "OVER LIMIT: {name} consulted the advisor ({self.spent(min(self.advised)):,} new"
+ ],
+ [
+  "workflow-token-watch",
+  "        if stopping := self.advised & self.briefed:\n",
+  "        if total > limit:\n            return Line(f\"OVER LIMIT: {total:,} new tokens, ceiling {limit:,}; stop the workflow\")\n        if stopping := self.advised & self.briefed:\n"
+ ],
+ [
+  "workflow-token-watch",
+  "for line in (tally.missing(directory), *tally.notices(), tally.report(total, limit)):",
+  "for line in (tally.missing(directory), tally.report(total, limit), *tally.notices()):"
+ ],
+ [
+  "workflow-token-watch",
+  "for line in (tally.missing(directory), *tally.notices(), tally.report(total, limit)):",
+  "for line in (tally.missing(directory), tally.report(total, limit)):"
  ]
 ]

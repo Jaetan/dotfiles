@@ -64,9 +64,21 @@ class Usage(TypedDict, total=False):
     iterations: list[Part]
 
 
+class Block(TypedDict):
+    type: Literal["server_tool_use", "tool_use"]
+    name: Prose
+    input: dict[Prose, Prose]
+
+
+class Said(TypedDict):
+    type: Literal["text"]
+    text: Prose
+
+
 class Message(TypedDict, total=False):
     id: MessageId
     role: Literal["assistant", "user"]
+    content: list[Block | Said] | Prose
     usage: Usage
 
 
@@ -120,6 +132,13 @@ class Ran(NamedTuple):
     clock: Clock
 
 
+class Opening(NamedTuple):
+    """One agent's transcript: its raw tail, written first, then its lines."""
+
+    entries: list[Entry]
+    tail: RawText
+
+
 def load() -> ModuleType:
     sys.dont_write_bytecode = True  # no __pycache__ beside the watcher, which stow would link into ~/.local/bin
     loader = importlib.machinery.SourceFileLoader("workflow_token_watch", str(WATCHER))
@@ -138,6 +157,46 @@ def call(identity: MessageId, given: Tokens = Tokens(0), written: Tokens = Token
     return Entry(type="assistant", message=Message(id=identity, role="assistant", usage=Usage(
         input_tokens=given, cache_creation_input_tokens=written, cache_read_input_tokens=reread,
         output_tokens=produced)))
+
+
+def using(identity: MessageId, tool: Prose, kind: Literal["server_tool_use", "tool_use"] = "server_tool_use",
+          role: Literal["assistant", "user"] = "assistant") -> Entry:
+    """A call of one output token whose content holds one tool call, as a transcript line records it."""
+    entry = call(identity, produced=Tokens(1))
+    entry["type"] = entry["message"]["role"] = role
+    entry["message"]["content"] = [Block(type=kind, name=tool, input={})]
+    return entry
+
+
+def with_parts(entry: Entry, parts: list[Part]) -> Entry:
+    entry["message"]["usage"]["iterations"] = parts
+    return entry
+
+
+def advised(agent: Prose, advice: Prose) -> Prose:
+    return Prose(f"OVER LIMIT: {agent} consulted the advisor ({advice} new tokens in its advisor parts so far); "
+                 "stop the workflow")
+
+
+def noticed(agent: Prose, advice: Prose) -> Prose:
+    return Prose(f"ADVISOR: {agent} consulted the advisor ({advice} new tokens in its advisor parts so far); it was "
+                 "not launched from a brief, so the run goes on")
+
+
+def runner(label: Prose = Prose("impl-a")) -> Prose:
+    """A runner's prompt naming a brief entry, as the launch guard's ENTRY pattern reads one."""
+    return Prose(f'Your task brief is the entry "{label}" of the JSON object in /briefs/briefs.json (keys are labels, '
+                 "values are briefs). Read it first and then do exactly what it says.")
+
+
+def told(content: list[Block | Said] | Prose) -> Entry:
+    """A user line, its content a string or blocks, as an agent's opening turn records one."""
+    return Entry(type="user", message=Message(role="user", content=content))
+
+
+def briefed() -> Entry:
+    """The opening line of an agent launched from a brief."""
+    return told(runner())
 
 
 def write(path: Path, entries: list[Entry], tail: RawText = RawText(b"")) -> None:
@@ -243,8 +302,10 @@ def empty_parts_read_the_top(directory: Path) -> bool:
         output_tokens=Tokens(7))))
     write(directory / "agent-a.jsonl", [none, odd],
           RawText(b'{"message": {"role": "assistant", "id": "m3", "usage": {"output_tokens": 11, '
-                  b'"iterations": "parts"}}}\n'))
-    return WATCH.Tally().read(directory) == 5 + 7 + 11
+                  b'"iterations": "parts"}}}\n'
+                  b'{"message": {"role": "assistant", "id": "m4", "usage": {"output_tokens": 13, '
+                  b'"iterations": 5}}}\n'))
+    return WATCH.Tally().read(directory) == 5 + 7 + 11 + 13
 
 
 def agent_files_only(directory: Path) -> bool:
@@ -421,6 +482,162 @@ def any_id_counts(directory: Path) -> bool:
     return WATCH.Tally().read(directory) == 3
 
 
+# The advisor ---------------------------------------------------------------------
+
+def advisor_block_named(directory: Path) -> bool:
+    among = using(MessageId("m1"), Prose("advisor"))
+    among["message"]["content"] = [Said(type="text", text=Prose("Asking.")),
+                                   Block(type="server_tool_use", name=Prose("advisor"), input={}),
+                                   Block(type="tool_use", name=Prose("Read"), input={})]
+    write(directory / "agent-a.jsonl", [briefed(), among])
+    tally = WATCH.Tally()
+    total = tally.read(directory)
+    return total == 1 and tally.report(total, WATCH.CEILING) == advised(Prose("agent-a.jsonl"), Prose("0"))
+
+
+def advisor_part_named(directory: Path) -> bool:
+    write(directory / "agent-a.jsonl", [
+        briefed(),
+        with_parts(call(MessageId("m1")), [
+            Part(type="message", output_tokens=Tokens(10)),
+            Part(type="advisor_message", input_tokens=Tokens(92451), output_tokens=Tokens(3074),
+                 cache_read_input_tokens=Tokens(500_000))]),
+        with_parts(call(MessageId("m2")), [Part(type="advisor_message", output_tokens=Tokens(100))]),
+        with_parts(call(MessageId("m2")), [Part(type="advisor_message", output_tokens=Tokens(7)),
+                                           Part(type="message", output_tokens=Tokens(1))])])
+    tally = WATCH.Tally()
+    total = tally.read(directory)
+    return total == 10 + 92451 + 3074 + 7 + 1 \
+        and tally.report(total, WATCH.CEILING) == advised(Prose("agent-a.jsonl"), Prose("95,532"))
+
+
+def never_advised(directory: Path) -> bool:
+    write(directory / "agent-a.jsonl", [
+        briefed(),
+        using(MessageId("m1"), Prose("web_search")),
+        using(MessageId("m2"), Prose("advisor"), kind="tool_use"),
+        with_parts(call(MessageId("m3")), [Part(type="message", output_tokens=Tokens(4))]),
+        Entry(type="assistant", message=Message(id=MessageId("m4"), role="assistant", usage=Usage(
+            output_tokens=Tokens(1)), content=[]))])
+    write(directory / "agent-b.jsonl", [briefed(), using(MessageId("u1"), Prose("advisor"), role="user")])
+    tally = WATCH.Tally()
+    alone = tally.report(tally.read(directory), WATCH.CEILING)
+    write(directory / "agent-c.jsonl", [briefed(), using(MessageId("m1"), Prose("advisor"))])
+    beside = tally.report(tally.read(directory), WATCH.CEILING)
+    return alone is None and beside == advised(Prose("agent-c.jsonl"), Prose("0"))
+
+
+def advisor_ahead_of_ceilings(directory: Path) -> bool:
+    write(directory / "agent-a.jsonl", [call(MessageId("m1"), produced=Tokens(2_000_001))])
+    write(directory / "agent-c.jsonl", [briefed(), using(MessageId("m1"), Prose("advisor"))])
+    tally = WATCH.Tally()
+    first = tally.report(tally.read(directory), WATCH.CEILING)
+    write(directory / "agent-b.jsonl", [
+        briefed(), with_parts(call(MessageId("m1")), [Part(type="advisor_message", output_tokens=Tokens(12))])])
+    second = tally.over(tally.read(directory), WATCH.CEILING)
+    return first == advised(Prose("agent-c.jsonl"), Prose("0")) and second == advised(Prose("agent-b.jsonl"),
+                                                                                       Prose("12"))
+
+
+def advisor_returns(directory: Path) -> bool:
+    write(directory / "agent-a.jsonl", [briefed(), using(MessageId("m1"), Prose("advisor"))])
+    ran = run_main([Argument(str(directory))])
+    return ran is not None and ran.status == 0 and ran.clock.slept == [] \
+        and ran.out.text() == advised(Prose("agent-a.jsonl"), Prose("0")) + "\n"
+
+
+def only_a_brief_stops(directory: Path) -> bool:
+    advisor = using(MessageId("m9"), Prose("advisor"))
+    reminder = Said(type="text", text=Prose("<system-reminder>the instruction files</system-reminder>"))
+    asked = told(Prose("Do the task."))
+    late = [asked, call(MessageId("m1"), produced=Tokens(1)), briefed(), advisor]
+    spoken = Entry(type="assistant", message=Message(id=MessageId("m1"), role="assistant", usage=Usage(
+        output_tokens=Tokens(1)), content=[Said(type="text", text=runner()), Block(
+            type="server_tool_use", name=Prose("advisor"), input={})]))
+    odd = RawText(b'{"type": "user", "message": {"role": "user", "content": 5}}\n'
+                  b'{"type": "user", "message": {"role": "user", "content": [{"type": "text", "text": 7}, '
+                  + json.dumps({"type": "tool_result", "text": runner()}).encode() + b"]}}\n")
+    openings: dict[Prose, Opening] = {
+        Prose("string"): Opening([briefed(), advisor], RawText(b"")),
+        Prose("blocks"): Opening([told([reminder]), told([reminder, Said(type="text", text=runner())]), advisor],
+                                 RawText(b"")),
+        Prose("behind"): Opening([told(Prose("[Workflow harness: computed task] The computed task text follows:\n  "
+                                             + runner())), advisor], RawText(b"")),
+        Prose("late"): Opening(late, RawText(b"")),
+        Prose("unquoted"): Opening([told(Prose(runner().replace('"', ""))), advisor], RawText(b"")),
+        Prose("spoken"): Opening([spoken], RawText(b"")),
+        Prose("odd"): Opening([advisor], odd)}
+    said: dict[Prose, Prose | None] = {}
+    for name, (entries, tail) in openings.items():
+        (directory / name).mkdir()
+        write(directory / name / "agent-a.jsonl", [], tail)
+        write(directory / name / "agent-a.jsonl", entries)
+        tally = WATCH.Tally()
+        said[name] = tally.over(tally.read(directory / name), WATCH.CEILING)
+    stops = advised(Prose("agent-a.jsonl"), Prose("0"))
+    return said == {Prose("string"): stops, Prose("blocks"): stops, Prose("behind"): stops, Prose("late"): None,
+                    Prose("unquoted"): None, Prose("spoken"): None, Prose("odd"): None}
+
+
+def advisor_unbriefed_goes_on(directory: Path) -> bool:
+    reads, loop = directory / "reads", directory / "loop"
+    reads.mkdir()
+    loop.mkdir()
+    asked = told(Prose("Do the task."))
+    write(reads / "agent-a.jsonl", [asked, using(MessageId("m1"), Prose("advisor"))])
+    tally = WATCH.Tally()
+    total = tally.read(reads)
+    first = (tally.notices(), tally.over(total, WATCH.CEILING))
+    write(reads / "agent-a.jsonl", [with_parts(call(MessageId("m2")), [Part(type="advisor_message",
+                                                                             output_tokens=Tokens(5))])])
+    write(reads / "agent-b.jsonl", [
+        with_parts(call(MessageId("m1")), [Part(type="advisor_message", output_tokens=Tokens(12_345))])])
+    write(reads / "agent-c.jsonl", [asked, using(MessageId("m1"), Prose("advisor"))])
+    total = tally.read(reads)
+    second = (sorted(tally.notices()), tally.over(total, WATCH.CEILING))
+    third = tally.notices()
+    write(loop / "agent-a.jsonl", [asked, using(MessageId("m1"), Prose("advisor"))])
+    ran = run_main([Argument(str(loop))], stop_at=Count(2))
+    return first == ([noticed(Prose("agent-a.jsonl"), Prose("0"))], None) \
+        and second == ([noticed(Prose("agent-b.jsonl"), Prose("12,345")),
+                        noticed(Prose("agent-c.jsonl"), Prose("0"))], None) \
+        and third == [] and ran is not None and ran.status is None and ran.clock.slept == [5.0, 5.0] \
+        and ran.out.text() == noticed(Prose("agent-a.jsonl"), Prose("0")) + "\n"
+
+
+def both_stop_on_the_briefed(directory: Path) -> bool:
+    write(directory / "agent-a.jsonl", [told(Prose("Do the task.")), using(MessageId("m1"), Prose("advisor"))])
+    write(directory / "agent-b.jsonl", [
+        briefed(), with_parts(call(MessageId("m1")), [Part(type="advisor_message", output_tokens=Tokens(12))])])
+    ran = run_main([Argument(str(directory))])
+    return ran is not None and ran.status == 0 and ran.clock.slept == [] and ran.out.text() \
+        == noticed(Prose("agent-a.jsonl"), Prose("0")) + "\n" + advised(Prose("agent-b.jsonl"), Prose("12")) + "\n"
+
+
+def odd_blocks_read_past(directory: Path) -> bool:
+    opening = {"type": "user", "message": {"role": "user", "content": [5, "text", Said(type="text", text=runner())]}}
+    advisor = Block(type="server_tool_use", name=Prose("advisor"), input={})
+    asking = {"type": "assistant", "message": {"id": "m1", "role": "assistant", "usage": {"output_tokens": 1},
+                                               "content": [7, "advisor", advisor]}}
+    write(directory / "agent-a.jsonl", [], RawText(b"".join(json.dumps(line).encode() + b"\n"
+                                                            for line in (opening, asking))))
+    tally = WATCH.Tally()
+    total = tally.read(directory)
+    return total == 1 and tally.report(total, WATCH.CEILING) == advised(Prose("agent-a.jsonl"), Prose("0"))
+
+
+def advised_without_a_call(directory: Path) -> bool:
+    advisor = Block(type="server_tool_use", name=Prose("advisor"), input={})
+    write(directory / "agent-a.jsonl", [briefed(), Entry(type="assistant", message=Message(role="assistant",
+                                                                                         content=[advisor]))])
+    write(directory / "agent-b.jsonl", [told(Prose("Do the task.")), Entry(type="assistant", message=Message(
+        role="assistant", usage=Usage(output_tokens=Tokens(1)), content=[advisor]))])
+    tally = WATCH.Tally()
+    total = tally.read(directory)
+    return total == 0 and tally.notices() == [noticed(Prose("agent-b.jsonl"), Prose("0"))] \
+        and tally.over(total, WATCH.CEILING) == advised(Prose("agent-a.jsonl"), Prose("0"))
+
+
 # The command line ----------------------------------------------------------------
 
 def usage_without_arguments(directory: Path) -> bool:
@@ -492,6 +709,30 @@ CASES = [
     Case(CaseId("T29"), Prose("of several agents past 800,000, the one with the most is named"), most_named),
     Case(CaseId("T30"), Prose("a call whose id is not text counts"), any_id_counts),
     Case(CaseId("T31"), Prose("the usage names both ceilings as the watcher holds them"), usage_names_both_ceilings),
+    Case(CaseId("T32"), Prose("an assistant line holding a server_tool_use block named advisor among other blocks "
+                              "names its briefed agent OVER LIMIT at once"), advisor_block_named),
+    Case(CaseId("T33"), Prose("a call listing an advisor_message part names its briefed agent OVER LIMIT at once, with "
+                              "the new tokens of its advisor parts, each call at its last usage"), advisor_part_named),
+    Case(CaseId("T34"), Prose("another tool, a client tool, a user line, an empty content list or parts of type "
+                              "message name nobody for the advisor"), never_advised),
+    Case(CaseId("T35"), Prose("the advisor's line comes ahead of both ceilings and names the briefed advised agent "
+                              "with the least transcript name"), advisor_ahead_of_ceilings),
+    Case(CaseId("T36"), Prose("a briefed agent's advisor call prints its line once and the loop returns 0 without "
+                              "sleeping"), advisor_returns),
+    Case(CaseId("T37"), Prose("an advised agent stops the run only when a user message before its first assistant "
+                              "message, a string or a text block, names a brief entry as a runner's prompt does, "
+                              "anywhere in its text"),
+         only_a_brief_stops),
+    Case(CaseId("T38"), Prose("another advised agent is said once, by an ADVISOR line writing its advisor tokens as "
+                              "OVER LIMIT does and not OVER LIMIT, and the loop goes on"), advisor_unbriefed_goes_on),
+    Case(CaseId("T39"), Prose("advised agents of both kinds stop the run naming the briefed one, after the other's "
+                              "notice"), both_stop_on_the_briefed),
+    Case(CaseId("T40"), Prose("a content block that is not an object is read past: a brief after one in a user line "
+                              "and an advisor block after one in an assistant line still count"),
+         odd_blocks_read_past),
+    Case(CaseId("T41"), Prose("an advisor block on an assistant line that records no call, with no usage or no id, "
+                              "names its agent with 0 advisor tokens, by OVER LIMIT or by an ADVISOR line"),
+         advised_without_a_call),
 ]
 
 
