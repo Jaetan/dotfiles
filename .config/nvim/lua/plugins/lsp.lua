@@ -112,9 +112,13 @@ return {
 				},
 			})
 
-			-- C/C++: clangd
+			-- C/C++: clangd, through the project's ./tools/clangd-from-bazel.sh when it has one
 			setup_once("clangd", {
-				cmd = { "./tools/clangd-from-bazel.sh" },
+				cmd = function(dispatchers)
+					local bazel = "./tools/clangd-from-bazel.sh"
+					local program = vim.fn.executable(bazel) == 1 and bazel or "clangd"
+					return vim.lsp.rpc.start({ program }, dispatchers)
+				end,
 				capabilities = { offsetEncoding = { "utf-16" } },
 				single_file_support = true,
 			})

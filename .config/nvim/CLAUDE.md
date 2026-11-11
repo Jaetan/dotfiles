@@ -26,7 +26,7 @@ Custom Neovim configuration using **lazy.nvim** as plugin manager. All configura
 
 ## LSP Servers
 
-lua_ls, basedpyright, ruff, html, cssls, emmet_language_server, clangd (via `./tools/clangd-from-bazel.sh`)
+lua_ls, basedpyright, ruff, html, cssls, emmet_language_server, clangd (via `./tools/clangd-from-bazel.sh` when the project has it, else mason's `clangd`)
 
 ## Formatters (conform.nvim)
 
