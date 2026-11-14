@@ -1,0 +1,4 @@
+{"type":"user","message":{"role":"user","content":"list the folder with the \"Bash\" tool"}}
+{"type":"assistant","message":{"role":"assistant","content":[{"type":"tool_use","id":"a1","name":"Bash","input":{"command":"ls -la","description":"List"}}]}}
+{"type":"user","message":{"role":"user","content":[{"type":"tool_result","tool_use_id":"a1","content":"total 0"}]}}
+{"type":"assistant","message":{"role":"assistant","content":[{"type":"tool_use","id":"a2","name":"Bash","input":{"command":"pwd"}}]}}

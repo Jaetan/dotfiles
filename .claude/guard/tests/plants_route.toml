@@ -1,0 +1,244 @@
+# The plants that show state/route.py held by tests/test_route.py, one or more per line of the module:
+#   testing/plants.py tests/plants_route.toml --out DIR
+
+[[plant]]
+name = "the wrapper is not named bash"
+file = "state/route.py"
+old = 'WRAPPER = KIT / "bin" / "route" / "bash"'
+new = 'WRAPPER = KIT / "bin" / "route" / "zsh"'
+tests = ["tests.test_route.Route.test_the_wrapper_is_the_kits_bin_route_bash"]
+
+[[plant]]
+name = "the kit folder is the module's own folder"
+file = "state/route.py"
+old = 'KIT = Path(__file__).resolve().parents[1]'
+new = 'KIT = Path(__file__).resolve().parents[0]'
+tests = ["tests.test_route.Route.test_the_wrapper_is_the_kits_bin_route_bash"]
+
+[[plant]]
+name = "the ledger is a json file Session.records reads"
+file = "state/route.py"
+old = 'LEDGER = "ledger.jsonl"'
+new = 'LEDGER = "ledger.json"'
+tests = ["tests.test_route.Route.test_the_ledger_is_ledger_jsonl_in_the_process_folder",
+         "tests.test_route.Route.test_session_records_never_read_the_ledger"]
+
+[[plant]]
+name = "the ledger is outside the process folder"
+file = "state/route.py"
+old = 'return places.sessions / key.name / LEDGER'
+new = 'return places.sessions / LEDGER'
+tests = ["tests.test_route.Route.test_the_ledger_is_ledger_jsonl_in_the_process_folder"]
+
+[[plant]]
+name = "the poll is 50 ms"
+file = "state/route.py"
+old = 'POLL = Seconds(0.025)'
+new = 'POLL = Seconds(0.05)'
+tests = ["tests.test_route.Awaited.test_a_line_landing_during_the_wait_is_seen",
+         "tests.test_route.Awaited.test_no_line_once_the_clock_passes_the_bound"]
+
+[[plant]]
+name = "the bound is 2 s"
+file = "state/route.py"
+old = 'BOUND = Seconds(3.0)'
+new = 'BOUND = Seconds(2.0)'
+tests = ["tests.test_route.Awaited.test_no_line_once_the_clock_passes_the_bound"]
+
+[[plant]]
+name = "the bound is 4 s"
+file = "state/route.py"
+old = 'BOUND = Seconds(3.0)'
+new = 'BOUND = Seconds(4.0)'
+tests = ["tests.test_route.Awaited.test_no_line_once_the_clock_passes_the_bound"]
+
+[[plant]]
+name = "the pause is not time.sleep"
+file = "state/route.py"
+old = 'pause = time.sleep  #'
+new = 'pause = print  #'
+tests = ["tests.test_route.Route.test_the_pause_and_the_clock_are_time_sleep_and_time_monotonic"]
+
+[[plant]]
+name = "the clock is not time.monotonic"
+file = "state/route.py"
+old = 'clock = time.monotonic'
+new = 'clock = time.perf_counter'
+tests = ["tests.test_route.Route.test_the_pause_and_the_clock_are_time_sleep_and_time_monotonic"]
+
+[[plant]]
+name = "the digest is taken of latin-1 bytes"
+file = "state/route.py"
+old = 'text.encode("utf-8")'
+new = 'text.encode("latin-1")'
+tests = ["tests.test_route.Route.test_the_digest_is_the_sha256_of_the_utf8_text"]
+
+[[plant]]
+name = "the digest is in upper case"
+file = "state/route.py"
+old = '.hexdigest())'
+new = '.hexdigest().upper())'
+tests = ["tests.test_route.Route.test_the_digest_is_the_sha256_of_the_utf8_text"]
+
+[[plant]]
+name = "the digest is a sha512"
+file = "state/route.py"
+old = 'hashlib.sha256('
+new = 'hashlib.sha512('
+tests = ["tests.test_route.Route.test_the_digest_is_the_sha256_of_the_utf8_text"]
+
+[[plant]]
+name = "the line's key is not sha256"
+file = "state/route.py"
+old = 'json.dumps({"sha256": digest})'
+new = 'json.dumps({"sha": digest})'
+tests = ["tests.test_route.Route.test_a_line_is_the_digest_in_json_and_a_newline_read_back_by_seen"]
+
+[[plant]]
+name = "the line has no newline"
+file = "state/route.py"
+old = '(json.dumps({"sha256": digest}) + "\n")'
+new = '(json.dumps({"sha256": digest}) + "")'
+tests = ["tests.test_route.Route.test_a_line_is_the_digest_in_json_and_a_newline_read_back_by_seen"]
+
+[[plant]]
+name = "the end of a written ledger is 0"
+file = "state/route.py"
+old = 'return Offset(path.stat().st_size)'
+new = 'return Offset(0)'
+tests = ["tests.test_route.Route.test_the_end_of_a_missing_ledger_is_0_and_of_a_written_one_its_size"]
+
+[[plant]]
+name = "the end of a missing ledger is 1"
+file = "state/route.py"
+old = '''    except FileNotFoundError:
+        return Offset(0)'''
+new = '''    except FileNotFoundError:
+        return Offset(1)'''
+tests = ["tests.test_route.Route.test_the_end_of_a_missing_ledger_is_0_and_of_a_written_one_its_size"]
+
+[[plant]]
+name = "a ledger shorter than the offset is read past its end"
+file = "state/route.py"
+old = 'ledger_file.seek(offset if offset <= size else 0)'
+new = 'ledger_file.seek(offset)'
+tests = ["tests.test_route.Route.test_a_ledger_shorter_than_the_offset_is_read_from_its_start"]
+
+[[plant]]
+name = "every ledger is read from its start"
+file = "state/route.py"
+old = 'ledger_file.seek(offset if offset <= size else 0)'
+new = 'ledger_file.seek(0)'
+tests = ["tests.test_route.Route.test_a_line_past_the_offset_is_seen_and_one_before_it_is_not"]
+
+[[plant]]
+name = "a ledger as long as the offset is read from its start"
+file = "state/route.py"
+old = 'offset if offset <= size else 0'
+new = 'offset if offset < size else 0'
+tests = ["tests.test_route.Route.test_a_line_past_the_offset_is_seen_and_one_before_it_is_not"]
+
+[[plant]]
+name = "the ledger's size is taken as 0"
+file = "state/route.py"
+old = 'size = ledger_file.seek(0, os.SEEK_END)'
+new = 'size = 0'
+tests = ["tests.test_route.Route.test_a_line_past_the_offset_is_seen_and_one_before_it_is_not"]
+
+[[plant]]
+name = "a missing ledger holds the line"
+file = "state/route.py"
+old = '''    except FileNotFoundError:
+        return False'''
+new = '''    except FileNotFoundError:
+        return True'''
+tests = ["tests.test_route.Route.test_a_missing_ledger_holds_no_line"]
+
+[[plant]]
+name = "a missing ledger is a fault"
+file = "state/route.py"
+old = '''    except FileNotFoundError:
+        return False'''
+new = '''    except FileNotFoundError:
+        raise'''
+tests = ["tests.test_route.Route.test_a_missing_ledger_holds_no_line"]
+
+[[plant]]
+name = "the fault does not name the ledger"
+file = "state/route.py"
+old = 'f"the ledger {path} cannot be read: {fault}"'
+new = 'f"the ledger cannot be read: {fault}"'
+tests = ["tests.test_route.Route.test_an_unreadable_ledger_is_a_kit_fault_naming_it"]
+
+[[plant]]
+name = "an unreadable ledger holds no line"
+file = "state/route.py"
+old = 'raise KitFault(Prose(f"the ledger {path} cannot be read: {fault}")) from None'
+new = 'return False'
+tests = ["tests.test_route.Route.test_an_unreadable_ledger_is_a_kit_fault_naming_it"]
+
+[[plant]]
+name = "a last line without its newline is read"
+file = "state/route.py"
+old = 'tail.split(b"\n")[:-1]'
+new = 'tail.split(b"\n")'
+tests = ["tests.test_route.Route.test_a_last_line_without_its_newline_is_not_read"]
+
+[[plant]]
+name = "the line is matched anywhere in the ledger"
+file = "state/route.py"
+old = 'return line(digest) in [whole + b"\n" for whole in tail.split(b"\n")[:-1]]'
+new = 'return line(digest) in tail'
+tests = ["tests.test_route.Route.test_a_line_of_another_shape_or_digest_is_not_matched"]
+
+[[plant]]
+name = "a line is matched with its blanks stripped"
+file = "state/route.py"
+old = '[whole + b"\n" for whole'
+new = '[whole.strip() + b"\n" for whole'
+tests = ["tests.test_route.Route.test_a_line_of_another_shape_or_digest_is_not_matched"]
+
+[[plant]]
+name = "a seen line is not awaited"
+file = "state/route.py"
+old = '''        pause(POLL)
+    return True'''
+new = '''        pause(POLL)
+    return False'''
+tests = ["tests.test_route.Awaited.test_a_line_landing_during_the_wait_is_seen"]
+
+[[plant]]
+name = "the wait runs while the line is seen"
+file = "state/route.py"
+old = 'while not seen(path, offset, digest):'
+new = 'while seen(path, offset, digest):'
+tests = ["tests.test_route.Awaited.test_a_line_landing_during_the_wait_is_seen",
+         "tests.test_route.Awaited.test_no_line_once_the_clock_passes_the_bound"]
+
+[[plant]]
+name = "the wait runs on at the bound"
+file = "state/route.py"
+old = 'if clock() >= deadline:'
+new = 'if clock() > deadline:'
+tests = ["tests.test_route.Awaited.test_no_line_once_the_clock_passes_the_bound"]
+
+[[plant]]
+name = "the wait calls the real time.sleep"
+file = "state/route.py"
+old = '        pause(POLL)'
+new = '        time.sleep(POLL)'
+tests = ["tests.test_route.Awaited.test_a_line_landing_during_the_wait_is_seen"]
+
+[[plant]]
+name = "the deadline is BOUND whatever the clock"
+file = "state/route.py"
+old = 'deadline = clock() + BOUND'
+new = 'deadline = BOUND'
+tests = ["tests.test_route.Awaited.test_no_line_once_the_clock_passes_the_bound"]
+
+[[plant]]
+name = "the deadline is before the start"
+file = "state/route.py"
+old = 'deadline = clock() + BOUND'
+new = 'deadline = clock() - BOUND'
+tests = ["tests.test_route.Awaited.test_no_line_once_the_clock_passes_the_bound"]

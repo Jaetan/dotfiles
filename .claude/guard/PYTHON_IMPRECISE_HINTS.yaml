@@ -1,0 +1,5 @@
+# Every imprecise Python type hint the new guard kit holds, and the ratchet that keeps the list from growing.
+# A hint is universally quantified: `str`, `list[float]` or `dict[str, X]` claims the code handles any string, any
+# list of floats, any key. The precise-hints guard holds every Python file under this folder to this record, which
+# starts empty: each row added needs the user's approval and a `reason:`.
+hints: []

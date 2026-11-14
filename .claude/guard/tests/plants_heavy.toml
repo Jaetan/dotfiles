@@ -1,0 +1,1258 @@
+# The plants that show dispatcher/heavy.py, and the light_with rows of declarations/examples/aletheia.toml it
+# reads, held by tests/test_heavy.py, one for each line holding behaviour:
+#   testing/plants.py tests/plants_heavy.toml --out DIR
+
+[[plant]]
+name = '''the unknown answer is spelled otherwise'''
+file = "dispatcher/heavy.py"
+old = '''UNKNOWN: Unknown = "unknown"'''
+new = '''UNKNOWN: Unknown = "unknowable"'''
+tests = ["tests.test_heavy"]
+
+[[plant]]
+name = '''--help is no light flag'''
+file = "dispatcher/heavy.py"
+old = '''LIGHT_FLAGS = options(ShellText("--help -h --version -V"))'''
+new = '''LIGHT_FLAGS = options(ShellText("-h --version -V"))'''
+tests = ["tests.test_heavy"]
+
+[[plant]]
+name = '''-h is no light flag'''
+file = "dispatcher/heavy.py"
+old = '''LIGHT_FLAGS = options(ShellText("--help -h --version -V"))'''
+new = '''LIGHT_FLAGS = options(ShellText("--help --version -V"))'''
+tests = ["tests.test_heavy"]
+
+[[plant]]
+name = '''--version is no light flag'''
+file = "dispatcher/heavy.py"
+old = '''LIGHT_FLAGS = options(ShellText("--help -h --version -V"))'''
+new = '''LIGHT_FLAGS = options(ShellText("--help -h -V"))'''
+tests = ["tests.test_heavy"]
+
+[[plant]]
+name = '''-V is no light flag'''
+file = "dispatcher/heavy.py"
+old = '''LIGHT_FLAGS = options(ShellText("--help -h --version -V"))'''
+new = '''LIGHT_FLAGS = options(ShellText("--help -h --version"))'''
+tests = ["tests.test_heavy"]
+
+[[plant]]
+name = '''source reads no script'''
+file = "dispatcher/heavy.py"
+old = '''SOURCES = options(ShellText("source ."))'''
+new = '''SOURCES = options(ShellText("."))'''
+tests = ["tests.test_heavy"]
+
+[[plant]]
+name = '''. reads no script'''
+file = "dispatcher/heavy.py"
+old = '''SOURCES = options(ShellText("source ."))'''
+new = '''SOURCES = options(ShellText("source"))'''
+tests = ["tests.test_heavy"]
+
+[[plant]]
+name = '''a version holds no dot'''
+file = "dispatcher/heavy.py"
+old = '''VERSION = re.compile(r"[0-9]+(?:\.[0-9]+)*")'''
+new = '''VERSION = re.compile(r"[0-9]+")'''
+tests = ["tests.test_heavy"]
+
+[[plant]]
+name = '''a star is no glob character'''
+file = "dispatcher/heavy.py"
+old = '''GLOB = re.compile(r"[*?\[]")'''
+new = '''GLOB = re.compile(r"[?\[]")'''
+tests = ["tests.test_heavy"]
+
+[[plant]]
+name = '''a question mark is no glob character'''
+file = "dispatcher/heavy.py"
+old = '''GLOB = re.compile(r"[*?\[]")'''
+new = '''GLOB = re.compile(r"[*\[]")'''
+tests = ["tests.test_heavy"]
+
+[[plant]]
+name = '''a bracket is no glob character'''
+file = "dispatcher/heavy.py"
+old = '''GLOB = re.compile(r"[*?\[]")'''
+new = '''GLOB = re.compile(r"[*?]")'''
+tests = ["tests.test_heavy"]
+
+[[plant]]
+name = '''a written $ is literal'''
+file = "dispatcher/heavy.py"
+old = '''DYNAMIC = re.compile(r"[$`\\*?\[]")'''
+new = '''DYNAMIC = re.compile(r"[`\\*?\[]")'''
+tests = ["tests.test_heavy"]
+
+[[plant]]
+name = '''a written backtick is literal'''
+file = "dispatcher/heavy.py"
+old = '''DYNAMIC = re.compile(r"[$`\\*?\[]")'''
+new = '''DYNAMIC = re.compile(r"[$\\*?\[]")'''
+tests = ["tests.test_heavy"]
+
+[[plant]]
+name = '''a written backslash is literal'''
+file = "dispatcher/heavy.py"
+old = '''DYNAMIC = re.compile(r"[$`\\*?\[]")'''
+new = '''DYNAMIC = re.compile(r"[$`*?\[]")'''
+tests = ["tests.test_heavy"]
+
+[[plant]]
+name = '''a written star is literal'''
+file = "dispatcher/heavy.py"
+old = '''DYNAMIC = re.compile(r"[$`\\*?\[]")'''
+new = '''DYNAMIC = re.compile(r"[$`\\?\[]")'''
+tests = ["tests.test_heavy"]
+
+[[plant]]
+name = '''a written question mark is literal'''
+file = "dispatcher/heavy.py"
+old = '''DYNAMIC = re.compile(r"[$`\\*?\[]")'''
+new = '''DYNAMIC = re.compile(r"[$`\\*\[]")'''
+tests = ["tests.test_heavy"]
+
+[[plant]]
+name = '''a written bracket is literal'''
+file = "dispatcher/heavy.py"
+old = '''DYNAMIC = re.compile(r"[$`\\*?\[]")'''
+new = '''DYNAMIC = re.compile(r"[$`\\*?]")'''
+tests = ["tests.test_heavy"]
+
+[[plant]]
+name = '''a base name is the first component'''
+file = "dispatcher/heavy.py"
+old = '''return ShellText(path.rsplit("/", 1)[-1])'''
+new = '''return ShellText(path.rsplit("/", 1)[0])'''
+tests = ["tests.test_heavy"]
+
+[[plant]]
+name = '''a known name is read from the written text'''
+file = "dispatcher/heavy.py"
+old = '''    if word.value is not None:
+        return base(word.value)'''
+new = '''    if word.value is not None and False:
+        return base(word.value)'''
+tests = ["tests.test_heavy"]
+
+[[plant]]
+name = '''a known name is its whole value'''
+file = "dispatcher/heavy.py"
+old = '''        return base(word.value)
+'''
+new = '''        return word.value
+'''
+tests = ["tests.test_heavy"]
+
+[[plant]]
+name = '''a written name keeps its double quotes'''
+file = "dispatcher/heavy.py"
+old = '''word.text.replace('"', "").replace("'", "")'''
+new = '''word.text.replace("'", "")'''
+tests = ["tests.test_heavy"]
+
+[[plant]]
+name = '''a written name keeps its single quotes'''
+file = "dispatcher/heavy.py"
+old = '''word.text.replace('"', "").replace("'", "")'''
+new = '''word.text.replace('"', "")'''
+tests = ["tests.test_heavy"]
+
+[[plant]]
+name = '''a dynamic written name is a name'''
+file = "dispatcher/heavy.py"
+old = '''    return None if DYNAMIC.search(name) else name'''
+new = '''    return name'''
+tests = ["tests.test_heavy"]
+
+[[plant]]
+name = '''`+` leads no option'''
+file = "dispatcher/heavy.py"
+old = '''return value.startswith(("-", "+"))'''
+new = '''return value.startswith("-")'''
+tests = ["tests.test_heavy"]
+
+[[plant]]
+name = '''`-` leads no option'''
+file = "dispatcher/heavy.py"
+old = '''return value.startswith(("-", "+"))'''
+new = '''return value.startswith("+")'''
+tests = ["tests.test_heavy"]
+
+[[plant]]
+name = '''an unknown path is read as a known one'''
+file = "dispatcher/heavy.py"
+old = '''    if word.value is None:
+        return written(word) in'''
+new = '''    if word.value is None and False:
+        return written(word) in'''
+tests = ["tests.test_heavy"]
+
+[[plant]]
+name = '''an unknown path names every file'''
+file = "dispatcher/heavy.py"
+old = '''        return written(word) in (None, base(file))'''
+new = '''        return True'''
+tests = ["tests.test_heavy"]
+
+[[plant]]
+name = '''an unknown path's written base name is not read'''
+file = "dispatcher/heavy.py"
+old = '''        return written(word) in (None, base(file))'''
+new = '''        return written(word) is None'''
+tests = ["tests.test_heavy"]
+
+[[plant]]
+name = '''an unknown path of no written base name names none'''
+file = "dispatcher/heavy.py"
+old = '''        return written(word) in (None, base(file))'''
+new = '''        return written(word) == base(file)'''
+tests = ["tests.test_heavy"]
+
+[[plant]]
+name = '''a path ending in the file names none'''
+file = "dispatcher/heavy.py"
+old = '''    return word.value == file or word.value.endswith(f"/{file}")'''
+new = '''    return word.value == file'''
+tests = ["tests.test_heavy"]
+
+[[plant]]
+name = '''a path ending in the file's text names it'''
+file = "dispatcher/heavy.py"
+old = '''    return word.value == file or word.value.endswith(f"/{file}")'''
+new = '''    return word.value == file or word.value.endswith(file)'''
+tests = ["tests.test_heavy"]
+
+[[plant]]
+name = '''the file's own path names none'''
+file = "dispatcher/heavy.py"
+old = '''    return word.value == file or word.value.endswith(f"/{file}")'''
+new = '''    return word.value.endswith(f"/{file}")'''
+tests = ["tests.test_heavy"]
+
+[[plant]]
+name = '''a script row is read as a module row'''
+file = "dispatcher/heavy.py"
+old = '''    if row.script is None:
+        return names('''
+new = '''    if row.script is not None:
+        return names('''
+tests = ["tests.test_heavy"]
+
+[[plant]]
+name = '''a module's file keeps its dots'''
+file = "dispatcher/heavy.py"
+old = '''PathText(f"{str(row.module).replace('.', '/')}.py")'''
+new = '''PathText(f"{str(row.module)}.py")'''
+tests = ["tests.test_heavy"]
+
+[[plant]]
+name = '''an unknown path is placed'''
+file = "dispatcher/heavy.py"
+old = '''    placed = (word.value is not None and command.cwd is not None
+'''
+new = '''    placed = (command.cwd is not None
+'''
+tests = ["tests.test_heavy"]
+
+[[plant]]
+name = '''a path is placed from an unknown directory'''
+file = "dispatcher/heavy.py"
+old = '''    placed = (word.value is not None and command.cwd is not None
+'''
+new = '''    placed = (word.value is not None
+'''
+tests = ["tests.test_heavy"]
+
+[[plant]]
+name = '''a placed path is not normalised'''
+file = "dispatcher/heavy.py"
+old = '''and os.path.normpath(os.path.join(command.cwd, word.value)) == row.script)'''
+new = '''and os.path.join(command.cwd, word.value) == row.script)'''
+tests = ["tests.test_heavy"]
+
+[[plant]]
+name = '''no work root is known'''
+file = "dispatcher/heavy.py"
+old = '''    root = facts.work_root
+'''
+new = '''    root = None
+'''
+tests = ["tests.test_heavy"]
+
+[[plant]]
+name = '''a placed script is no run'''
+file = "dispatcher/heavy.py"
+old = '''    return placed or names(word, row.script if root'''
+new = '''    return names(word, row.script if root'''
+tests = ["tests.test_heavy"]
+
+[[plant]]
+name = '''a spelled script is no run'''
+file = "dispatcher/heavy.py"
+old = '''    return placed or names(word, row.script if root is None else PathText(os.path.relpath(row.script, root)))'''
+new = '''    return placed'''
+tests = ["tests.test_heavy"]
+
+[[plant]]
+name = '''an argv row's first word is an operand'''
+file = "dispatcher/heavy.py"
+old = '''    wanted = deque(row.argv[1:])'''
+new = '''    wanted = deque(row.argv)'''
+tests = ["tests.test_heavy"]
+
+[[plant]]
+name = '''an unknown word is read as known'''
+file = "dispatcher/heavy.py"
+old = '''        if wanted and (word.value is None or not option(word.value)):'''
+new = '''        if wanted and not option(word.value):'''
+tests = ["tests.test_heavy"]
+
+[[plant]]
+name = '''an operand is matched past argv's words'''
+file = "dispatcher/heavy.py"
+old = '''        if wanted and (word.value is None or not option(word.value)):'''
+new = '''        if word.value is None or not option(word.value):'''
+tests = ["tests.test_heavy"]
+
+[[plant]]
+name = '''an unknown operand matches no argv word'''
+file = "dispatcher/heavy.py"
+old = '''            if word.value not in (None, wanted.popleft()):'''
+new = '''            if word.value != wanted.popleft():'''
+tests = ["tests.test_heavy"]
+
+[[plant]]
+name = '''an argv word is read past the row's own'''
+file = "dispatcher/heavy.py"
+old = '''                return None
+            continue
+'''
+new = '''                return None
+'''
+tests = ["tests.test_heavy"]
+
+[[plant]]
+name = '''an option before argv's words is not read'''
+file = "dispatcher/heavy.py"
+old = '''        others.append(word)
+'''
+new = '''        pass
+'''
+tests = ["tests.test_heavy"]
+
+[[plant]]
+name = '''a valued option's value is an argv word'''
+file = "dispatcher/heavy.py"
+old = '''        if word.value in row.valued_options:
+            others'''
+new = '''        if False:
+            others'''
+tests = ["tests.test_heavy"]
+
+[[plant]]
+name = '''a valued option takes no word'''
+file = "dispatcher/heavy.py"
+old = '''            others.extend(islice(rest, 1))'''
+new = '''            others.extend(islice(rest, 0))'''
+tests = ["tests.test_heavy"]
+
+[[plant]]
+name = '''argv cut short runs its row'''
+file = "dispatcher/heavy.py"
+old = '''    return None if wanted else others'''
+new = '''    return others'''
+tests = ["tests.test_heavy"]
+
+[[plant]]
+name = '''an argv row is read as no row'''
+file = "dispatcher/heavy.py"
+old = '''    if row.argv:
+'''
+new = '''    if row.argv and False:
+'''
+tests = ["tests.test_heavy"]
+
+[[plant]]
+name = '''an argv row runs any name'''
+file = "dispatcher/heavy.py"
+old = '''        return leading(row, words) if name == row.argv[0] else None'''
+new = '''        return leading(row, words)'''
+tests = ["tests.test_heavy"]
+
+[[plant]]
+name = '''a program row is read as no row'''
+file = "dispatcher/heavy.py"
+old = '''    if row.program is not None:
+'''
+new = '''    if row.program is None:
+'''
+tests = ["tests.test_heavy"]
+
+[[plant]]
+name = '''a program row runs any name'''
+file = "dispatcher/heavy.py"
+old = '''        if versioned(name, row.program):
+            return words[1:]'''
+new = '''        if True:
+            return words[1:]'''
+tests = ["tests.test_heavy"]
+
+[[plant]]
+name = '''a module row is run by any name'''
+file = "dispatcher/heavy.py"
+old = '''    if row.module is not None and PYTHON_NAME.fullmatch(name):'''
+new = '''    if row.module is not None:'''
+tests = ["tests.test_heavy"]
+
+[[plant]]
+name = '''an interpreter runs nothing'''
+file = "dispatcher/heavy.py"
+old = '''        run = invoked([word.value for word in words])
+'''
+new = '''        run = None
+'''
+tests = ["tests.test_heavy"]
+
+[[plant]]
+name = '''-m runs no module'''
+file = "dispatcher/heavy.py"
+old = '''        if run is not None and run.kind == "module":'''
+new = '''        if run is not None and run.kind == "script":'''
+tests = ["tests.test_heavy"]
+
+[[plant]]
+name = '''a module is read from the written text'''
+file = "dispatcher/heavy.py"
+old = '''            value = words[run.index].value
+'''
+new = '''            value = words[run.index].text
+'''
+tests = ["tests.test_heavy"]
+
+[[plant]]
+name = '''a joined -m is read whole'''
+file = "dispatcher/heavy.py"
+old = '''if value is None or value[run.offset:] == row.module else None'''
+new = '''if value is None or value == row.module else None'''
+tests = ["tests.test_heavy"]
+
+[[plant]]
+name = '''an unknown module is read as known'''
+file = "dispatcher/heavy.py"
+old = '''if value is None or value[run.offset:] == row.module else None'''
+new = '''if value[run.offset:] == row.module else None'''
+tests = ["tests.test_heavy"]
+
+[[plant]]
+name = '''a module's own word is an operand'''
+file = "dispatcher/heavy.py"
+old = '''            return words[run.index + 1:] if value'''
+new = '''            return words[run.index:] if value'''
+tests = ["tests.test_heavy"]
+
+[[plant]]
+name = '''an interpreter's script runs no module file'''
+file = "dispatcher/heavy.py"
+old = '''        index = run.index if run is not None and run.kind == "script" else None'''
+new = '''        index = None'''
+tests = ["tests.test_heavy"]
+
+[[plant]]
+name = '''bash runs no script'''
+file = "dispatcher/heavy.py"
+old = '''    elif row.script is not None and name in CARRIERS:'''
+new = '''    elif row.script is not None and name in ():'''
+tests = ["tests.test_heavy"]
+
+[[plant]]
+name = '''source runs no script'''
+file = "dispatcher/heavy.py"
+old = '''    elif row.script is not None and name in SOURCES:'''
+new = '''    elif False:'''
+tests = ["tests.test_heavy"]
+
+[[plant]]
+name = '''source alone runs its operand'''
+file = "dispatcher/heavy.py"
+old = '''        index = Count(1) if len(words) > 1 else None'''
+new = '''        index = Count(1)'''
+tests = ["tests.test_heavy"]
+
+[[plant]]
+name = '''a bare name is run by its path'''
+file = "dispatcher/heavy.py"
+old = '''        index = Count(0) if "/" in words[0].spelled else None'''
+new = '''        index = Count(0)'''
+tests = ["tests.test_heavy"]
+
+[[plant]]
+name = '''a file's own word is an operand'''
+file = "dispatcher/heavy.py"
+old = '''    return words[index + 1:] if index is not None and ran('''
+new = '''    return words[index:] if index is not None and ran('''
+tests = ["tests.test_heavy"]
+
+[[plant]]
+name = '''any file runs a row'''
+file = "dispatcher/heavy.py"
+old = '''if index is not None and ran(row, words[index], command, facts) else None'''
+new = '''if index is not None else None'''
+tests = ["tests.test_heavy"]
+
+[[plant]]
+name = '''a version is never split off'''
+file = "dispatcher/heavy.py"
+old = '''    stem, _, version = name.rpartition("-")'''
+new = '''    stem, _, version = name, "", ""'''
+tests = ["tests.test_heavy"]
+
+[[plant]]
+name = '''a versioned program is not its program'''
+file = "dispatcher/heavy.py"
+old = '''    return name == program or (stem == program and VERSION.fullmatch(version) is not None)'''
+new = '''    return name == program'''
+tests = ["tests.test_heavy"]
+
+[[plant]]
+name = '''any suffix is a version'''
+file = "dispatcher/heavy.py"
+old = '''    return name == program or (stem == program and VERSION.fullmatch(version) is not None)'''
+new = '''    return name == program or stem == program'''
+tests = ["tests.test_heavy"]
+
+[[plant]]
+name = '''catch2-operands is read as another kind'''
+file = "dispatcher/heavy.py"
+old = '''    if kind == "catch2-operands":'''
+new = '''    if kind != "catch2-operands":'''
+tests = ["tests.test_heavy"]
+
+[[plant]]
+name = '''catch2-operands takes several'''
+file = "dispatcher/heavy.py"
+old = '''        return len(operands) == 1'''
+new = '''        return len(operands) >= 1'''
+tests = ["tests.test_heavy"]
+
+[[plant]]
+name = '''a glob character targets'''
+file = "dispatcher/heavy.py"
+old = '''    return all(GLOB.search(value) is None
+'''
+new = '''    return all(True
+'''
+tests = ["tests.test_heavy"]
+
+[[plant]]
+name = '''a Python file is no target'''
+file = "dispatcher/heavy.py"
+old = '''(value.endswith(".py") or (kind == "pytest-operands" and "::" in value))'''
+new = '''((kind == "pytest-operands" and "::" in value))'''
+tests = ["tests.test_heavy"]
+
+[[plant]]
+name = '''a test id targets every kind'''
+file = "dispatcher/heavy.py"
+old = '''(value.endswith(".py") or (kind == "pytest-operands" and "::" in value))'''
+new = '''(value.endswith(".py") or ("::" in value))'''
+tests = ["tests.test_heavy"]
+
+[[plant]]
+name = '''a test id is no target'''
+file = "dispatcher/heavy.py"
+old = '''(value.endswith(".py") or (kind == "pytest-operands" and "::" in value))'''
+new = '''(value.endswith(".py") or (kind == "pytest-operands" and "::" in ""))'''
+tests = ["tests.test_heavy"]
+
+[[plant]]
+name = '''a verbose flag is a light flag'''
+file = "dispatcher/heavy.py"
+old = '''    flags = frozenset(flag for flag in LIGHT_FLAGS if flag not in row.verbose_flags)'''
+new = '''    flags = LIGHT_FLAGS'''
+tests = ["tests.test_heavy"]
+
+[[plant]]
+name = '''a kind's valued options take no value'''
+file = "dispatcher/heavy.py"
+old = '''    takes = VALUED_BY[row.targeted_by] | frozenset(row.valued_options)'''
+new = '''    takes = frozenset(row.valued_options)'''
+tests = ["tests.test_heavy"]
+
+[[plant]]
+name = '''a row's valued options take no value'''
+file = "dispatcher/heavy.py"
+old = '''    takes = VALUED_BY[row.targeted_by] | frozenset(row.valued_options)'''
+new = '''    takes = VALUED_BY[row.targeted_by]'''
+tests = ["tests.test_heavy"]
+
+[[plant]]
+name = '''an unknown word is no unknown operand'''
+file = "dispatcher/heavy.py"
+old = '''            unknown = True
+'''
+new = '''            unknown = False
+'''
+tests = ["tests.test_heavy"]
+
+[[plant]]
+name = '''no valued option is read'''
+file = "dispatcher/heavy.py"
+old = '''        elif value in takes:
+'''
+new = '''        elif value in ():
+'''
+tests = ["tests.test_heavy"]
+
+[[plant]]
+name = '''a valued option takes no value word'''
+file = "dispatcher/heavy.py"
+old = '''            _ = next(rest, None)
+'''
+new = '''            _ = None
+'''
+tests = ["tests.test_heavy"]
+
+[[plant]]
+name = '''a light option takes no `=VALUE`'''
+file = "dispatcher/heavy.py"
+old = '''        elif value in flags or value.partition("=")[0] in row.light_with:'''
+new = '''        elif value in flags or value in row.light_with:'''
+tests = ["tests.test_heavy"]
+
+[[plant]]
+name = '''--help is read on no row'''
+file = "dispatcher/heavy.py"
+old = '''        elif value in flags or value.partition("=")[0] in row.light_with:'''
+new = '''        elif value.partition("=")[0] in row.light_with:'''
+tests = ["tests.test_heavy"]
+
+[[plant]]
+name = '''a light word makes no run light'''
+file = "dispatcher/heavy.py"
+old = '''            return True
+        elif not option(value):'''
+new = '''            return False
+        elif not option(value):'''
+tests = ["tests.test_heavy"]
+
+[[plant]]
+name = '''an option is an operand'''
+file = "dispatcher/heavy.py"
+old = '''        elif not option(value):
+'''
+new = '''        elif True:
+'''
+tests = ["tests.test_heavy"]
+
+[[plant]]
+name = '''an operand is not kept'''
+file = "dispatcher/heavy.py"
+old = '''            operands.append(value)
+'''
+new = '''            pass
+'''
+tests = ["tests.test_heavy"]
+
+[[plant]]
+name = '''an unknown operand makes a run light'''
+file = "dispatcher/heavy.py"
+old = '''    if unknown or not operands:
+'''
+new = '''    if not operands:
+'''
+tests = ["tests.test_heavy"]
+
+[[plant]]
+name = '''a run of no operand is light by its targets'''
+file = "dispatcher/heavy.py"
+old = '''    if unknown or not operands:
+'''
+new = '''    if unknown:
+'''
+tests = ["tests.test_heavy"]
+
+[[plant]]
+name = '''a run of no known operands is light'''
+file = "dispatcher/heavy.py"
+old = '''        return False
+    if all(value in row.light_targets'''
+new = '''        return True
+    if all(value in row.light_targets'''
+tests = ["tests.test_heavy"]
+
+[[plant]]
+name = '''light_targets is not read'''
+file = "dispatcher/heavy.py"
+old = '''    if all(value in row.light_targets for value in operands):
+'''
+new = '''    if False:
+'''
+tests = ["tests.test_heavy"]
+
+[[plant]]
+name = '''light targets make no run light'''
+file = "dispatcher/heavy.py"
+old = '''        return True
+    return row.targeted_by is not None'''
+new = '''        return False
+    return row.targeted_by is not None'''
+tests = ["tests.test_heavy"]
+
+[[plant]]
+name = '''a row of no kind is targeted'''
+file = "dispatcher/heavy.py"
+old = '''    return row.targeted_by is not None and targeted(row.targeted_by, operands)'''
+new = '''    return targeted(row.targeted_by, operands)'''
+tests = ["tests.test_heavy"]
+
+[[plant]]
+name = '''a kind is light whatever its operands'''
+file = "dispatcher/heavy.py"
+old = '''    return row.targeted_by is not None and targeted(row.targeted_by, operands)'''
+new = '''    return row.targeted_by is not None'''
+tests = ["tests.test_heavy"]
+
+[[plant]]
+name = '''a command of no words is read'''
+file = "dispatcher/heavy.py"
+old = '''    if not command.words:
+'''
+new = '''    if False:
+'''
+tests = ["tests.test_heavy"]
+
+[[plant]]
+name = '''a command of no words is unknown'''
+file = "dispatcher/heavy.py"
+old = '''        return None
+    if (name := written('''
+new = '''        return UNKNOWN
+    if (name := written('''
+tests = ["tests.test_heavy"]
+
+[[plant]]
+name = '''an unknown name is read'''
+file = "dispatcher/heavy.py"
+old = '''    if (name := written(command.words[0])) is None:
+'''
+new = '''    if (name := written(command.words[0])) is None and False:
+'''
+tests = ["tests.test_heavy"]
+
+[[plant]]
+name = '''an unknown name runs no row'''
+file = "dispatcher/heavy.py"
+old = '''        return None if any(word.value in LIGHT_FLAGS for word in command.words[1:]) else UNKNOWN
+'''
+new = '''        return None
+'''
+tests = ["tests.test_heavy"]
+
+[[plant]]
+name = '''the kit's rows come first'''
+file = "dispatcher/heavy.py"
+old = '''for row in (*facts.project.heavy, *KIT_ROWS)'''
+new = '''for row in (*KIT_ROWS, *facts.project.heavy)'''
+tests = ["tests.test_heavy"]
+
+[[plant]]
+name = '''a row runs what it does not read'''
+file = "dispatcher/heavy.py"
+old = '''if (rest := reads(row, command, facts, name)) is not None]'''
+new = '''if (rest := reads(row, command, facts, name)) is None]'''
+tests = ["tests.test_heavy"]
+
+[[plant]]
+name = '''no row found is read'''
+file = "dispatcher/heavy.py"
+old = '''    if not found:
+        return None
+'''
+new = '''    if False:
+        return None
+'''
+tests = ["tests.test_heavy"]
+
+[[plant]]
+name = '''a program row has no word of its own'''
+file = "dispatcher/heavy.py"
+old = '''    row, rest = max(found, key=lambda run: len(run[0].argv) or 1)'''
+new = '''    row, rest = max(found, key=lambda run: len(run[0].argv) or 0)'''
+tests = ["tests.test_heavy"]
+
+[[plant]]
+name = '''the row of fewer words decides'''
+file = "dispatcher/heavy.py"
+old = '''    row, rest = max(found, key=lambda run: len(run[0].argv) or 1)'''
+new = '''    row, rest = min(found, key=lambda run: len(run[0].argv) or 1)'''
+tests = ["tests.test_heavy"]
+
+[[plant]]
+name = '''a light run is heavy'''
+file = "dispatcher/heavy.py"
+old = '''    return None if light(row, rest) else row'''
+new = '''    return row'''
+tests = ["tests.test_heavy"]
+
+[[plant]]
+name = '''a row targeted by nothing has no valued options'''
+file = "dispatcher/heavy.py"
+old = '''    None: frozenset(), "catch2-operands": options(ShellText('''
+new = '''    "catch2-operands": options(ShellText('''
+tests = ["tests.test_heavy"]
+
+[[plant]]
+name = '''Catch2's -r takes no value'''
+file = "dispatcher/heavy.py"
+old = '''"--order --rng-seed -r --reporter'''
+new = '''"--order --rng-seed --reporter'''
+tests = ["tests.test_heavy"]
+
+[[plant]]
+name = '''Catch2's --shard-count takes no value'''
+file = "dispatcher/heavy.py"
+old = '''--benchmark-warmup-time --shard-count "'''
+new = '''--benchmark-warmup-time "'''
+tests = ["tests.test_heavy"]
+
+[[plant]]
+name = '''Catch2's --min-duration takes no value'''
+file = "dispatcher/heavy.py"
+old = '''"--shard-index --wait-for-keypress --min-duration"'''
+new = '''"--shard-index --wait-for-keypress"'''
+tests = ["tests.test_heavy"]
+
+[[plant]]
+name = '''unit_tests --list-tests is not light'''
+file = "declarations/examples/aletheia.toml"
+old = '''program = "unit_tests"
+targeted_by = "catch2-operands"
+light_with = ["--list-tests", '''
+new = '''program = "unit_tests"
+targeted_by = "catch2-operands"
+light_with = ['''
+tests = ["tests.test_heavy"]
+
+[[plant]]
+name = '''excel_tests --list-tags is not light'''
+file = "declarations/examples/aletheia.toml"
+old = '''program = "excel_tests"
+targeted_by = "catch2-operands"
+light_with = ["--list-tests", "--list-tags", '''
+new = '''program = "excel_tests"
+targeted_by = "catch2-operands"
+light_with = ["--list-tests", '''
+tests = ["tests.test_heavy"]
+
+[[plant]]
+name = '''yaml_tests --list-reporters is not light'''
+file = "declarations/examples/aletheia.toml"
+old = '''program = "yaml_tests"
+targeted_by = "catch2-operands"
+light_with = ["--list-tests", "--list-tags", "--list-reporters", '''
+new = '''program = "yaml_tests"
+targeted_by = "catch2-operands"
+light_with = ["--list-tests", "--list-tags", '''
+tests = ["tests.test_heavy"]
+
+[[plant]]
+name = '''integration_tests --list-listeners is not light'''
+file = "declarations/examples/aletheia.toml"
+old = '''program = "integration_tests"
+targeted_by = "catch2-operands"
+light_with = ["--list-tests", "--list-tags", "--list-reporters", "--list-listeners"]'''
+new = '''program = "integration_tests"
+targeted_by = "catch2-operands"
+light_with = ["--list-tests", "--list-tags", "--list-reporters"]'''
+tests = ["tests.test_heavy"]
+
+[[plant]]
+name = '''benchmark --list-tests is not light'''
+file = "declarations/examples/aletheia.toml"
+old = '''"--bench", "--json"]
+light_with = ["--list-tests", "--list-tags", "--list-reporters", "--list-listeners"]
+# replaces: _commands.py:585, the last'''
+new = '''"--bench", "--json"]
+light_with = ["--list-tags", "--list-reporters", "--list-listeners"]
+# replaces: _commands.py:585, the last'''
+tests = ["tests.test_heavy"]
+
+[[plant]]
+name = '''stability_bench --list-tags is not light'''
+file = "declarations/examples/aletheia.toml"
+old = '''"--bench", "--json"]
+light_with = ["--list-tests", "--list-tags", "--list-reporters", "--list-listeners"]
+# replaces: _commands.py:585, :586'''
+new = '''"--bench", "--json"]
+light_with = ["--list-tests", "--list-reporters", "--list-listeners"]
+# replaces: _commands.py:585, :586'''
+tests = ["tests.test_heavy"]
+
+[[plant]]
+name = '''pytest's --assert takes no value'''
+file = "dispatcher/heavy.py"
+old = '''    "--assert --basetemp -c --cache-show --capture --code-highlight --color --confcutdir --config-file --cov "'''
+new = '''    "--basetemp -c --cache-show --capture --code-highlight --color --confcutdir --config-file --cov "'''
+tests = ["tests.test_heavy.Matching.test_row_scope"]
+
+[[plant]]
+name = '''pytest's --cov-config takes no value'''
+file = "dispatcher/heavy.py"
+old = '''    "--cov-config --cov-context --cov-fail-under --cov-precision --cov-report --debug --deselect --doctest-glob "'''
+new = '''    "--cov-context --cov-fail-under --cov-precision --cov-report --debug --deselect --doctest-glob "'''
+tests = ["tests.test_heavy.Matching.test_row_scope"]
+
+[[plant]]
+name = '''pytest's --doctest-report takes no value'''
+file = "dispatcher/heavy.py"
+old = '''    "--doctest-report --durations --durations-min --hypothesis-profile --hypothesis-seed --hypothesis-verbosity "'''
+new = '''    "--durations --durations-min --hypothesis-profile --hypothesis-seed --hypothesis-verbosity "'''
+tests = ["tests.test_heavy.Matching.test_row_scope"]
+
+[[plant]]
+name = '''pytest's --ignore takes no value'''
+file = "dispatcher/heavy.py"
+old = '''    "--ignore --ignore-glob --import-mode --junit-prefix --junit-xml --junitprefix --junitxml -k "'''
+new = '''    "--ignore-glob --import-mode --junit-prefix --junit-xml --junitprefix --junitxml -k "'''
+tests = ["tests.test_heavy.Matching.test_row_scope"]
+
+[[plant]]
+name = '''pytest's --last-failed-no-failures takes no value'''
+file = "dispatcher/heavy.py"
+old = '''    "--last-failed-no-failures --lfnf --log-auto-indent --log-cli-date-format --log-cli-format --log-cli-level "'''
+new = '''    "--lfnf --log-auto-indent --log-cli-date-format --log-cli-format --log-cli-level "'''
+tests = ["tests.test_heavy.Matching.test_row_scope"]
+
+[[plant]]
+name = '''pytest's --log-date-format takes no value'''
+file = "dispatcher/heavy.py"
+old = '''    "--log-date-format --log-disable --log-file --log-file-date-format --log-file-format --log-file-level "'''
+new = '''    "--log-disable --log-file --log-file-date-format --log-file-format --log-file-level "'''
+tests = ["tests.test_heavy.Matching.test_row_scope"]
+
+[[plant]]
+name = '''pytest's --log-file-mode takes no value'''
+file = "dispatcher/heavy.py"
+old = '''    "--log-file-mode --log-format --log-level -m --markdown-docs-syntax --max-warnings --maxfail -o --override-ini "'''
+new = '''    "--log-format --log-level -m --markdown-docs-syntax --max-warnings --maxfail -o --override-ini "'''
+tests = ["tests.test_heavy.Matching.test_row_scope"]
+
+[[plant]]
+name = '''pytest's -p takes no value'''
+file = "dispatcher/heavy.py"
+old = '''    "-p --pastebin --pdbcls --pythonwarnings -r --random-order-bucket --random-order-seed --report-chars --rootdir "'''
+new = '''    "--pastebin --pdbcls --pythonwarnings -r --random-order-bucket --random-order-seed --report-chars --rootdir "'''
+tests = ["tests.test_heavy.Matching.test_row_scope"]
+
+[[plant]]
+name = '''pytest's --show-capture takes no value'''
+file = "dispatcher/heavy.py"
+old = '''    "--show-capture --tb --verbosity -W"'''
+new = '''    "--tb --verbosity -W"'''
+tests = ["tests.test_heavy.Matching.test_row_scope"]
+
+[[plant]]
+name = '''a linter's --additional-builtins takes no value'''
+file = "dispatcher/heavy.py"
+old = '''    "--additional-builtins --allow-any-import-level --allow-global-unused-variables --allow-reexport-from-package "'''
+new = '''    "--allow-any-import-level --allow-global-unused-variables --allow-reexport-from-package "'''
+tests = ["tests.test_heavy.Matching.test_row_scope"]
+
+[[plant]]
+name = '''a linter's --allow-wildcard-with-all takes no value'''
+file = "dispatcher/heavy.py"
+old = '''    "--allow-wildcard-with-all --allowed-redefined-builtins --analyse-fallback-blocks --argument-naming-style "'''
+new = '''    "--allowed-redefined-builtins --analyse-fallback-blocks --argument-naming-style "'''
+tests = ["tests.test_heavy.Matching.test_row_scope"]
+
+[[plant]]
+name = '''a linter's --argument-rgx takes no value'''
+file = "dispatcher/heavy.py"
+old = '''    "--argument-rgx --attr-naming-style --attr-rgx --bad-names --bad-names-rgxs --callbacks "'''
+new = '''    "--attr-naming-style --attr-rgx --bad-names --bad-names-rgxs --callbacks "'''
+tests = ["tests.test_heavy.Matching.test_row_scope"]
+
+[[plant]]
+name = '''a linter's --check-fixme-in-docstring takes no value'''
+file = "dispatcher/heavy.py"
+old = '''    "--check-fixme-in-docstring --check-protected-access-in-special-methods --check-quote-consistency "'''
+new = '''    "--check-protected-access-in-special-methods --check-quote-consistency "'''
+tests = ["tests.test_heavy.Matching.test_row_scope"]
+
+[[plant]]
+name = '''a linter's --check-str-concat-over-line-jumps takes no value'''
+file = "dispatcher/heavy.py"
+old = '''    "--check-str-concat-over-line-jumps --class-attribute-naming-style --class-attribute-rgx "'''
+new = '''    "--class-attribute-naming-style --class-attribute-rgx "'''
+tests = ["tests.test_heavy.Matching.test_row_scope"]
+
+[[plant]]
+name = '''a linter's --class-const-naming-style takes no value'''
+file = "dispatcher/heavy.py"
+old = '''    "--class-const-naming-style --class-const-rgx --class-naming-style --class-rgx --clear-cache-post-run "'''
+new = '''    "--class-const-rgx --class-naming-style --class-rgx --clear-cache-post-run "'''
+tests = ["tests.test_heavy.Matching.test_row_scope"]
+
+[[plant]]
+name = '''a linter's --confidence takes no value'''
+file = "dispatcher/heavy.py"
+old = '''    "--confidence --const-naming-style --const-rgx --contextmanager-decorators -d --defining-attr-methods "'''
+new = '''    "--const-naming-style --const-rgx --contextmanager-decorators -d --defining-attr-methods "'''
+tests = ["tests.test_heavy.Matching.test_row_scope"]
+
+[[plant]]
+name = '''a linter's --deprecated-modules takes no value'''
+file = "dispatcher/heavy.py"
+old = '''    "--deprecated-modules --disable --docstring-min-length --dummy-variables-rgx -e --enable "'''
+new = '''    "--disable --docstring-min-length --dummy-variables-rgx -e --enable "'''
+tests = ["tests.test_heavy.Matching.test_row_scope"]
+
+[[plant]]
+name = '''a linter's --evaluation takes no value'''
+file = "dispatcher/heavy.py"
+old = '''    "--evaluation --exclude-protected --exclude-too-few-public-methods "'''
+new = '''    "--exclude-protected --exclude-too-few-public-methods "'''
+tests = ["tests.test_heavy.Matching.test_row_scope"]
+
+[[plant]]
+name = '''a linter's --expected-line-ending-format takes no value'''
+file = "dispatcher/heavy.py"
+old = '''    "--expected-line-ending-format --ext-import-graph --extension-pkg-allow-list --extension-pkg-whitelist -f "'''
+new = '''    "--ext-import-graph --extension-pkg-allow-list --extension-pkg-whitelist -f "'''
+tests = ["tests.test_heavy.Matching.test_row_scope"]
+
+[[plant]]
+name = '''a linter's --fail-on takes no value'''
+file = "dispatcher/heavy.py"
+old = '''    "--fail-on --fail-under --function-naming-style --function-rgx --generated-members --good-names "'''
+new = '''    "--fail-under --function-naming-style --function-rgx --generated-members --good-names "'''
+tests = ["tests.test_heavy.Matching.test_row_scope"]
+
+[[plant]]
+name = '''a linter's --good-names-rgxs takes no value'''
+file = "dispatcher/heavy.py"
+old = '''    "--good-names-rgxs --help-msg --ignore --ignore-comments --ignore-docstrings --ignore-imports "'''
+new = '''    "--help-msg --ignore --ignore-comments --ignore-docstrings --ignore-imports "'''
+tests = ["tests.test_heavy.Matching.test_row_scope"]
+
+[[plant]]
+name = '''a linter's --ignore-long-lines takes no value'''
+file = "dispatcher/heavy.py"
+old = '''    "--ignore-long-lines --ignore-mixin-members --ignore-none --ignore-on-opaque-inference --ignore-paths "'''
+new = '''    "--ignore-mixin-members --ignore-none --ignore-on-opaque-inference --ignore-paths "'''
+tests = ["tests.test_heavy.Matching.test_row_scope"]
+
+[[plant]]
+name = '''a linter's --ignore-pattern-in-long-lines takes no value'''
+file = "dispatcher/heavy.py"
+old = '''    "--ignore-pattern-in-long-lines --ignore-patterns --ignore-signatures --ignored-argument-names "'''
+new = '''    "--ignore-patterns --ignore-signatures --ignored-argument-names "'''
+tests = ["tests.test_heavy.Matching.test_row_scope"]
+
+[[plant]]
+name = '''a linter's --ignored-checks-for-mixins takes no value'''
+file = "dispatcher/heavy.py"
+old = '''    "--ignored-checks-for-mixins --ignored-classes --ignored-modules --ignored-parents --import-graph "'''
+new = '''    "--ignored-classes --ignored-modules --ignored-parents --import-graph "'''
+tests = ["tests.test_heavy.Matching.test_row_scope"]
+
+[[plant]]
+name = '''a linter's --include-naming-hint takes no value'''
+file = "dispatcher/heavy.py"
+old = '''    "--include-naming-hint --indent-after-paren --indent-string --init-hook --init-import --inlinevar-naming-style "'''
+new = '''    "--indent-after-paren --indent-string --init-hook --init-import --inlinevar-naming-style "'''
+tests = ["tests.test_heavy.Matching.test_row_scope"]
+
+[[plant]]
+name = '''a linter's --inlinevar-rgx takes no value'''
+file = "dispatcher/heavy.py"
+old = '''    "--inlinevar-rgx --int-import-graph -j --jobs --known-first-party --known-side-effects-only-functions "'''
+new = '''    "--int-import-graph -j --jobs --known-first-party --known-side-effects-only-functions "'''
+tests = ["tests.test_heavy.Matching.test_row_scope"]
+
+[[plant]]
+name = '''a linter's --known-standard-library takes no value'''
+file = "dispatcher/heavy.py"
+old = '''    "--known-standard-library --known-third-party --limit-inference-results --load-plugins --logging-format-style "'''
+new = '''    "--known-third-party --limit-inference-results --load-plugins --logging-format-style "'''
+tests = ["tests.test_heavy.Matching.test_row_scope"]
+
+[[plant]]
+name = '''a linter's --logging-modules takes no value'''
+file = "dispatcher/heavy.py"
+old = '''    "--logging-modules --max-args --max-attributes --max-bool-expr --max-branches --max-line-length --max-locals "'''
+new = '''    "--max-args --max-attributes --max-bool-expr --max-branches --max-line-length --max-locals "'''
+tests = ["tests.test_heavy.Matching.test_row_scope"]
+
+[[plant]]
+name = '''a linter's --max-module-lines takes no value'''
+file = "dispatcher/heavy.py"
+old = '''    "--max-module-lines --max-nested-blocks --max-parents --max-positional-arguments --max-public-methods "'''
+new = '''    "--max-nested-blocks --max-parents --max-positional-arguments --max-public-methods "'''
+tests = ["tests.test_heavy.Matching.test_row_scope"]
+
+[[plant]]
+name = '''a linter's --max-returns takes no value'''
+file = "dispatcher/heavy.py"
+old = '''    "--max-returns --max-spelling-suggestions --max-statements --method-naming-style --method-rgx "'''
+new = '''    "--max-spelling-suggestions --max-statements --method-naming-style --method-rgx "'''
+tests = ["tests.test_heavy.Matching.test_row_scope"]
+
+[[plant]]
+name = '''a linter's --min-public-methods takes no value'''
+file = "dispatcher/heavy.py"
+old = '''    "--min-public-methods --min-similarity-lines --missing-member-hint --missing-member-hint-distance "'''
+new = '''    "--min-similarity-lines --missing-member-hint --missing-member-hint-distance "'''
+tests = ["tests.test_heavy.Matching.test_row_scope"]
+
+[[plant]]
+name = '''a linter's --missing-member-max-choices takes no value'''
+file = "dispatcher/heavy.py"
+old = '''    "--missing-member-max-choices --mixin-class-rgx --module-naming-style --module-rgx --msg-template --name-group "'''
+new = '''    "--mixin-class-rgx --module-naming-style --module-rgx --msg-template --name-group "'''
+tests = ["tests.test_heavy.Matching.test_row_scope"]
+
+[[plant]]
+name = '''a linter's --never-returning-functions takes no value'''
+file = "dispatcher/heavy.py"
+old = '''    "--never-returning-functions --no-docstring-rgx --notes --notes-rgx --output --output-format "'''
+new = '''    "--no-docstring-rgx --notes --notes-rgx --output --output-format "'''
+tests = ["tests.test_heavy.Matching.test_row_scope"]
+
+[[plant]]
+name = '''a linter's --overgeneral-exceptions takes no value'''
+file = "dispatcher/heavy.py"
+old = '''    "--overgeneral-exceptions --paramspec-rgx --persistent --prefer-stubs --preferred-modules --property-classes "'''
+new = '''    "--paramspec-rgx --persistent --prefer-stubs --preferred-modules --property-classes "'''
+tests = ["tests.test_heavy.Matching.test_row_scope"]
+
+[[plant]]
+name = '''a linter's --py-version takes no value'''
+file = "dispatcher/heavy.py"
+old = '''    "--py-version -r --rcfile --recursive --redefining-builtins-modules --reports -s --score --signature-mutators "'''
+new = '''    "-r --rcfile --recursive --redefining-builtins-modules --reports -s --score --signature-mutators "'''
+tests = ["tests.test_heavy.Matching.test_row_scope"]
+
+[[plant]]
+name = '''a linter's --single-line-class-stmt takes no value'''
+file = "dispatcher/heavy.py"
+old = '''    "--single-line-class-stmt --single-line-if-stmt --source-roots --spelling-dict "'''
+new = '''    "--single-line-if-stmt --source-roots --spelling-dict "'''
+tests = ["tests.test_heavy.Matching.test_row_scope"]
+
+[[plant]]
+name = '''a linter's --spelling-ignore-comment-directives takes no value'''
+file = "dispatcher/heavy.py"
+old = '''    "--spelling-ignore-comment-directives --spelling-ignore-words --spelling-private-dict-file "'''
+new = '''    "--spelling-ignore-words --spelling-private-dict-file "'''
+tests = ["tests.test_heavy.Matching.test_row_scope"]
+
+[[plant]]
+name = '''a linter's --spelling-store-unknown-words takes no value'''
+file = "dispatcher/heavy.py"
+old = '''    "--spelling-store-unknown-words --suggest-join-with-non-empty-separator --timeout-methods --typealias-rgx "'''
+new = '''    "--suggest-join-with-non-empty-separator --timeout-methods --typealias-rgx "'''
+tests = ["tests.test_heavy.Matching.test_row_scope"]
+
+[[plant]]
+name = '''a linter's --typevar-rgx takes no value'''
+file = "dispatcher/heavy.py"
+old = '''    "--typevar-rgx --typevartuple-rgx --valid-classmethod-first-arg --valid-metaclass-classmethod-first-arg "'''
+new = '''    "--typevartuple-rgx --valid-classmethod-first-arg --valid-metaclass-classmethod-first-arg "'''
+tests = ["tests.test_heavy.Matching.test_row_scope"]
+
+[[plant]]
+name = '''a linter's --variable-naming-style takes no value'''
+file = "dispatcher/heavy.py"
+old = '''    "--variable-naming-style --variable-rgx"'''
+new = '''    "--variable-rgx"'''
+tests = ["tests.test_heavy.Matching.test_row_scope"]
+
+[[plant]]
+name = '''a linter's --enable-all-extensions takes a value'''
+file = "dispatcher/heavy.py"
+old = '''    "--evaluation --exclude-protected --exclude-too-few-public-methods "'''
+new = '''    "--enable-all-extensions --evaluation --exclude-protected --exclude-too-few-public-methods "'''
+tests = ["tests.test_heavy.Matching.test_row_scope"]
+
+[[plant]]
+name = '''a program row reads the script of any command'''
+file = "dispatcher/heavy.py"
+old = '''        run = invoked([word.value for word in words]) if PYTHON_NAME.fullmatch(name) else None'''
+new = '''        run = invoked([word.value for word in words])'''
+tests = ["tests.test_heavy"]
+
+[[plant]]
+name = '''a program row reads an interpreter's module as its script'''
+file = "dispatcher/heavy.py"
+old = '''        if run is None or run.kind != "script":'''
+new = '''        if run is None:'''
+tests = ["tests.test_heavy"]
+
+[[plant]]
+name = '''a program row runs every interpreter that runs no script'''
+file = "dispatcher/heavy.py"
+old = '''        if run is None or run.kind != "script":
+            return None'''
+new = '''        if run is None or run.kind != "script":
+            return words[1:]'''
+tests = ["tests.test_heavy"]
+
+[[plant]]
+name = '''an interpreter's script is never known'''
+file = "dispatcher/heavy.py"
+old = '''        script = written(words[run.index])'''
+new = '''        script = None'''
+tests = ["tests.test_heavy"]
+
+[[plant]]
+name = '''an unknown script runs no program row'''
+file = "dispatcher/heavy.py"
+old = '''        return words[run.index + 1:] if script is None or versioned(script, row.program) else None'''
+new = '''        return words[run.index + 1:] if script is not None and versioned(script, row.program) else None'''
+tests = ["tests.test_heavy"]
+
+[[plant]]
+name = '''an interpreter's script runs its program row unversioned only'''
+file = "dispatcher/heavy.py"
+old = '''        return words[run.index + 1:] if script is None or versioned(script, row.program) else None'''
+new = '''        return words[run.index + 1:] if script is None or script == row.program else None'''
+tests = ["tests.test_heavy"]
+
+[[plant]]
+name = '''an unknown name asking its version is unknown'''
+file = "dispatcher/heavy.py"
+old = '''        return None if any(word.value in LIGHT_FLAGS for word in command.words[1:]) else UNKNOWN'''
+new = '''        return UNKNOWN'''
+tests = ["tests.test_heavy.Matching.test_unknown_words"]
+
+[[plant]]
+name = '''an unknown name reads only its first word for a light flag'''
+file = "dispatcher/heavy.py"
+old = '''command.words[1:]) else UNKNOWN'''
+new = '''command.words[1:2]) else UNKNOWN'''
+tests = ["tests.test_heavy.Matching.test_unknown_words"]
+
+[[plant]]
+name = '''an unknown name's light flag may carry a value'''
+file = "dispatcher/heavy.py"
+old = '''any(word.value in LIGHT_FLAGS for'''
+new = '''any((word.value or "").partition("=")[0] in LIGHT_FLAGS for'''
+tests = ["tests.test_heavy.Matching.test_unknown_words"]
+
+[[plant]]
+name = '''any option makes an unknown name light'''
+file = "dispatcher/heavy.py"
+old = '''any(word.value in LIGHT_FLAGS for'''
+new = '''any((word.value or "").startswith("-") for'''
+tests = ["tests.test_heavy.Matching.test_unknown_words"]
+
+[[plant]]
+name = '''an unknown word makes an unknown name light'''
+file = "dispatcher/heavy.py"
+old = '''any(word.value in LIGHT_FLAGS for'''
+new = '''any(word.value is None or word.value in LIGHT_FLAGS for'''
+tests = ["tests.test_heavy.Matching.test_unknown_words"]

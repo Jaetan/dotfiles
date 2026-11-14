@@ -1,0 +1,17 @@
+{
+ "index": {
+  "proj/s1.jsonl": {"kind": "main", "bad_lines": 1,
+                    "calls": [["t1", "ls -la"], ["t4", "make all"], ["t1", "ls -la"], ["t4", "cd /p && make all"]]},
+  "proj/s1/subagents/agent-a1.jsonl": {"kind": "agent", "bad_lines": 0, "calls": [["a1", "ls -la"]]},
+  "proj/s1/subagents/workflows/w1/agent-b1.jsonl": {"kind": "agent", "bad_lines": 0, "calls": [["b1", "git status"]]},
+  "proj/s2.jsonl": {"kind": "main", "bad_lines": 0, "calls": []},
+  "zproj/s9.jsonl": {"kind": "main", "bad_lines": 0, "calls": [["z1", "echo hi"]]}
+ },
+ "corpus": [
+  {"n": 2, "cmd": "ls -la"},
+  {"n": 1, "cmd": "git status"},
+  {"n": 1, "cmd": "make all"},
+  {"n": 1, "cmd": "cd /p && make all"},
+  {"n": 1, "cmd": "echo hi"}
+ ]
+}

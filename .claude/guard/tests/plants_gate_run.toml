@@ -1,0 +1,739 @@
+# The plants that show dispatcher/gate_run.py held by tests/test_gate_run.py and the two gate rules' tests, one or more
+# per line of the module:
+#   testing/plants.py tests/plants_gate_run.toml --out DIR
+
+[[plant]]
+name = "the gate's time limit is not 2 s"
+file = "dispatcher/gate_run.py"
+old = 'GATE_TIMEOUT = Seconds(2.0)'
+new = 'GATE_TIMEOUT = Seconds(20.0)'
+tests = ["tests.test_gate_run.Run.test_the_limits_are_as_decided"]
+
+[[plant]]
+name = "the output is cut at 128 KiB"
+file = "dispatcher/gate_run.py"
+old = 'OUTPUT_LIMIT = Count(64 << 10)'
+new = 'OUTPUT_LIMIT = Count(128 << 10)'
+tests = ["tests.test_gate_run.Run.test_the_limits_are_as_decided", "tests.test_gate_run.Run.test_a_long_output_is_cut_at_64_kib"]
+
+[[plant]]
+name = "a rule hands five files"
+file = "dispatcher/gate_run.py"
+old = 'FILES_PER_RULE = Count(4)'
+new = 'FILES_PER_RULE = Count(5)'
+tests = ["tests.test_gate_run.Limits"]
+
+[[plant]]
+name = "exit 0 reads as a finding"
+file = "dispatcher/gate_run.py"
+old = 'ExitCode(0): "clean"'
+new = 'ExitCode(0): "finding"'
+tests = ["tests.test_gate_run.Run.test_exit_0_is_clean"]
+
+[[plant]]
+name = "exit 1 reads as unreadable"
+file = "dispatcher/gate_run.py"
+old = 'ExitCode(1): "finding"'
+new = 'ExitCode(1): "unreadable"'
+tests = ["tests.test_gate_run.Run.test_exit_1_is_a_finding_with_the_gates_text"]
+
+[[plant]]
+name = "exit 2 reads as a finding"
+file = "dispatcher/gate_run.py"
+old = 'ExitCode(2): "unreadable"'
+new = 'ExitCode(2): "finding"'
+tests = ["tests.test_gate_run.Run.test_exit_2_is_unreadable_with_the_gates_text"]
+
+[[plant]]
+name = "MultiEdit is no edit tool"
+file = "dispatcher/gate_run.py"
+old = ', ToolName("MultiEdit")})'
+new = '})'
+tests = ["tests.test_gate_run.Changed.test_an_edit_write_or_multiedit_gives_its_file_path"]
+
+[[plant]]
+name = "the gate is named by its first word alone when it outruns its limit"
+file = "dispatcher/gate_run.py"
+old = 'named = " ".join(gate.run)'
+new = 'named = gate.run[0]'
+tests = ["tests.test_gate_run.Run.test_a_gate_that_never_ends_is_a_kit_fault"]
+
+[[plant]]
+name = "the gate's words are dropped"
+file = "dispatcher/gate_run.py"
+old = 'subprocess.run([*gate.run, *words], cwd'
+new = 'subprocess.run([*gate.run], cwd'
+tests = ["tests.test_gate_run.Run.test_the_file_and_its_rel_follow_the_absolute_command_in_its_cwd_with_stdin_empty"]
+
+[[plant]]
+name = "the gate runs in the dispatcher's cwd"
+file = "dispatcher/gate_run.py"
+old = 'cwd=gate.cwd, '
+new = 'cwd=None, '
+tests = ["tests.test_gate_run.Run.test_the_file_and_its_rel_follow_the_absolute_command_in_its_cwd_with_stdin_empty"]
+
+[[plant]]
+name = "the gate reads the dispatcher's stdin"
+file = "dispatcher/gate_run.py"
+old = 'stdin=subprocess.DEVNULL, '
+new = 'stdin=None, '
+tests = ["tests.test_gate_run.Run.test_the_file_and_its_rel_follow_the_absolute_command_in_its_cwd_with_stdin_empty"]
+
+[[plant]]
+name = "the gate's stderr is dropped"
+file = "dispatcher/gate_run.py"
+old = 'stderr=subprocess.STDOUT'
+new = 'stderr=subprocess.DEVNULL'
+tests = ["tests.test_gate_run.Run.test_the_text_holds_stderr_with_stdout"]
+
+[[plant]]
+name = "the gate runs four times its limit"
+file = "dispatcher/gate_run.py"
+old = 'stderr=subprocess.STDOUT, timeout=GATE_TIMEOUT,'
+new = 'stderr=subprocess.STDOUT, timeout=GATE_TIMEOUT * 4,'
+tests = ["tests.test_gate_run.Run.test_a_gate_that_never_ends_is_a_kit_fault"]
+
+[[plant]]
+name = "a gate past its limit is not named as such"
+file = "dispatcher/gate_run.py"
+old = 'f"the gate {named} outran its {GATE_TIMEOUT:g} s limit"'
+new = 'f"the gate {named} failed"'
+tests = ["tests.test_gate_run.Run.test_a_gate_that_never_ends_is_a_kit_fault"]
+
+[[plant]]
+name = "a gate that cannot start is not a kit fault"
+file = "dispatcher/gate_run.py"
+old = '''    except OSError as fault:
+        raise KitFault(Prose(f"the gate {named} cannot start'''
+new = '''    except ValueError as fault:
+        raise KitFault(Prose(f"the gate {named} cannot start'''
+tests = ["tests.test_gate_run.Run.test_a_gate_that_cannot_start_is_a_kit_fault"]
+
+[[plant]]
+name = "a gate that cannot start is named without its reason"
+file = "dispatcher/gate_run.py"
+old = 'cannot start: {fault.strerror}'
+new = 'cannot start: {fault}'
+tests = ["tests.test_gate_run.Run.test_a_gate_that_cannot_start_is_a_kit_fault"]
+
+[[plant]]
+name = "the output is kept whole"
+file = "dispatcher/gate_run.py"
+old = 'text = done.stdout[:OUTPUT_LIMIT].decode'
+new = 'text = done.stdout.decode'
+tests = ["tests.test_gate_run.Run.test_a_long_output_is_cut_at_64_kib"]
+
+[[plant]]
+name = "a character cut in two breaks the reading"
+file = "dispatcher/gate_run.py"
+old = '''.decode("utf-8", "replace")
+    if len(done.stdout)'''
+new = '''.decode("utf-8")
+    if len(done.stdout)'''
+tests = ["tests.test_gate_run.Run.test_a_cut_through_a_character_is_replaced"]
+
+[[plant]]
+name = "an output of exactly 64 KiB is said to be cut"
+file = "dispatcher/gate_run.py"
+old = 'if len(done.stdout) > OUTPUT_LIMIT:'
+new = 'if len(done.stdout) >= OUTPUT_LIMIT:'
+tests = ["tests.test_gate_run.Run.test_an_output_of_64_kib_is_whole"]
+
+[[plant]]
+name = "the cut is not said"
+file = "dispatcher/gate_run.py"
+old = '''        text += f"\n(the gate's output is cut here, at {OUTPUT_LIMIT >> 10} KiB)"'''
+new = '''        pass'''
+tests = ["tests.test_gate_run.Run.test_a_long_output_is_cut_at_64_kib"]
+
+[[plant]]
+name = "every exit reads as 0"
+file = "dispatcher/gate_run.py"
+old = 'return ExitCode(done.returncode), Prose(text)'
+new = 'return ExitCode(0), Prose(text)'
+tests = ["tests.test_gate_run.Run.test_exit_1_is_a_finding_with_the_gates_text"]
+
+[[plant]]
+name = "another exit names no text of the gate"
+file = "dispatcher/gate_run.py"
+old = "{said.splitlines()[0] if said else 'silent'}"
+new = "{'silent'}"
+tests = ["tests.test_gate_run.Run.test_any_other_exit_is_a_kit_fault_naming_the_command"]
+
+[[plant]]
+name = "a silent other exit breaks the fault"
+file = "dispatcher/gate_run.py"
+old = "{said.splitlines()[0] if said else 'silent'}"
+new = "{said.splitlines()[0]}"
+tests = ["tests.test_gate_run.Run.test_a_silent_other_exit_is_named_silent"]
+
+[[plant]]
+name = "the text is not stripped before its first line is named"
+file = "dispatcher/gate_run.py"
+old = '    said = text.strip()'
+new = '    said = text'
+tests = ["tests.test_gate_run.Run.test_a_silent_other_exit_is_named_silent"]
+
+[[plant]]
+name = "another exit names the gate by its first word"
+file = "dispatcher/gate_run.py"
+old = '''f"the gate {' '.join(gate.run)} exited'''
+new = '''f"the gate {gate.run[0]} exited'''
+tests = ["tests.test_gate_run.Run.test_any_other_exit_is_a_kit_fault_naming_the_command"]
+
+[[plant]]
+name = "the file is handed without its REL"
+file = "dispatcher/gate_run.py"
+old = 'answered(gate, ("--file", str(path), "--as", rel))'
+new = 'answered(gate, ("--file", str(path)))'
+tests = ["tests.test_gate_run.Run.test_the_file_and_its_rel_follow_the_absolute_command_in_its_cwd_with_stdin_empty"]
+
+[[plant]]
+name = "another exit of a file's run is no fault"
+file = "dispatcher/gate_run.py"
+old = '''    if code not in ANSWERS:
+        raise exited(gate, code, text)'''
+new = '''    if code not in ANSWERS:
+        return Answer("clean", text)'''
+tests = ["tests.test_gate_run.Run.test_any_other_exit_is_a_kit_fault_naming_the_command"]
+
+[[plant]]
+name = "the tests are asked under another option"
+file = "dispatcher/gate_run.py"
+old = '''("--is-test", *asked.values())'''
+new = '''("--tests", *asked.values())'''
+tests = ["tests.test_gate_run.Tests.test_the_gate_runs_once_with_every_path"]
+
+[[plant]]
+name = "exit 1 of the tests' question is a fault"
+file = "dispatcher/gate_run.py"
+old = '''    if code == 1:
+        return ()'''
+new = '''    if code == 9:
+        return ()'''
+tests = ["tests.test_gate_run.Tests.test_exit_1_answers_none_whatever_it_printed"]
+
+[[plant]]
+name = "another exit of the tests' question is no fault"
+file = "dispatcher/gate_run.py"
+old = '''    if code != 0:
+        raise exited(gate, code, text)
+    printed'''
+new = '''    if code == 9:
+        raise exited(gate, code, text)
+    printed'''
+tests = ["tests.test_gate_run.Tests.test_any_other_exit_is_a_kit_fault"]
+
+[[plant]]
+name = "every asked path is a test"
+file = "dispatcher/gate_run.py"
+old = '''return tuple(path for path, as_rel in asked.items() if as_rel in printed)'''
+new = '''return tuple(asked)'''
+tests = ["tests.test_gate_run.Tests.test_exit_0_answers_the_asked_paths_it_printed_in_the_order_asked"]
+
+[[plant]]
+name = "the tests are given in the gate's order"
+file = "dispatcher/gate_run.py"
+old = '''return tuple(path for path, as_rel in asked.items() if as_rel in printed)'''
+new = '''return tuple(path for line in text.splitlines() for path, as_rel in asked.items() if as_rel == line)'''
+tests = ["tests.test_gate_run.Tests.test_exit_0_answers_the_asked_paths_it_printed_in_the_order_asked"]
+
+[[plant]]
+name = "a determinism gate takes only the suffixes"
+file = "dispatcher/gate_run.py"
+old = 'if gate.protocol == "hints-1" and not'
+new = 'if True and not'
+tests = ["tests.test_gate_run.Rel.test_a_determinism_gate_takes_every_suffix"]
+
+[[plant]]
+name = "a hints gate takes every suffix"
+file = "dispatcher/gate_run.py"
+old = 'and not path.name.endswith(gate.suffixes):'
+new = 'and False:'
+tests = ["tests.test_gate_run.Rel.test_a_hints_gate_takes_only_its_suffixes"]
+
+[[plant]]
+name = "a path outside as_from is handed"
+file = "dispatcher/gate_run.py"
+old = 'if path.is_relative_to(gate.as_from) else None'
+new = 'if True else None'
+tests = ["tests.test_gate_run.Rel.test_a_path_outside_as_from_is_none"]
+
+[[plant]]
+name = "REL is relative to the cwd"
+file = "dispatcher/gate_run.py"
+old = 'RelPath(str(path.relative_to(gate.as_from)))'
+new = 'RelPath(str(path.relative_to(gate.cwd, walk_up=True)))'
+tests = ["tests.test_gate_run.Rel.test_a_path_inside_as_from_is_relative_to_it"]
+
+[[plant]]
+name = "git reads the environment's git dir"
+file = "dispatcher/gate_run.py"
+old = 'if name not in CLEARED}'
+new = 'if name not in ()}'
+tests = ["tests.test_gate_run.Changed.test_more_files_reads_no_git_dir_from_the_environment"]
+
+[[plant]]
+name = "git runs in the dispatcher's environment"
+file = "dispatcher/gate_run.py"
+old = 'capture_output=True, env=environ, timeout'
+new = 'capture_output=True, timeout'
+tests = ["tests.test_gate_run.Changed.test_more_files_reads_no_git_dir_from_the_environment"]
+
+[[plant]]
+name = "git lists no untracked file"
+file = "dispatcher/gate_run.py"
+old = '"--untracked-files=all"'
+new = '"--untracked-files=no"'
+tests = ["tests.test_gate_run.Changed.test_more_files_lists_the_work_tree_changes_but_the_deleted_a_rename_by_its_new_path"]
+
+[[plant]]
+name = "git lists the changes of the dispatcher's cwd"
+file = "dispatcher/gate_run.py"
+old = '["git", "-C", str(root), "status"'
+new = '["git", "status"'
+tests = ["tests.test_gate_run.Changed.test_more_files_reads_the_work_tree_of_a_cwd_below_its_root"]
+
+[[plant]]
+name = "git runs without a time limit"
+file = "dispatcher/gate_run.py"
+old = 'env=environ, timeout=GATE_TIMEOUT, check=False)'
+new = 'env=environ, timeout=None, check=False)'
+tests = ["tests.test_gate_run.Changed.test_git_failing_is_a_kit_fault"]
+
+[[plant]]
+name = "git past its limit is not named as such"
+file = "dispatcher/gate_run.py"
+old = 'f"git outran its {GATE_TIMEOUT:g} s limit listing the changes of {root}"'
+new = 'f"git failed for {root}"'
+tests = ["tests.test_gate_run.Changed.test_git_past_its_limit_is_a_kit_fault"]
+
+[[plant]]
+name = "git that cannot run is named without its reason"
+file = "dispatcher/gate_run.py"
+old = 'f"git cannot run: {fault.strerror}"'
+new = 'f"git cannot run: {fault}"'
+tests = ["tests.test_gate_run.Changed.test_git_that_cannot_run_is_a_kit_fault"]
+
+[[plant]]
+name = "git failing is no fault"
+file = "dispatcher/gate_run.py"
+old = 'if done.returncode != 0:'
+new = 'if done.returncode == 9:'
+tests = ["tests.test_gate_run.Changed.test_git_failing_is_a_kit_fault"]
+
+[[plant]]
+name = "git failing names no reason"
+file = "dispatcher/gate_run.py"
+old = "{why[0] if why else 'no answer'}"
+new = "{'no answer'}"
+tests = ["tests.test_gate_run.Changed.test_git_failing_is_a_kit_fault"]
+
+[[plant]]
+name = "a rename's old path is read as an entry"
+file = "dispatcher/gate_run.py"
+old = '            _ = next(fields, None)'
+new = '            pass'
+tests = ["tests.test_gate_run.Changed.test_more_files_lists_the_work_tree_changes_but_the_deleted_a_rename_by_its_new_path"]
+
+[[plant]]
+name = "a copy's old path is read as an entry"
+file = "dispatcher/gate_run.py"
+old = 'if "R" in status or "C" in status:'
+new = 'if "R" in status:'
+tests = ["tests.test_gate_run.Changed.test_more_files_lists_a_copy_by_its_new_path"]
+
+[[plant]]
+name = "a rename's old path is read as an entry, copies kept"
+file = "dispatcher/gate_run.py"
+old = 'if "R" in status or "C" in status:'
+new = 'if "C" in status:'
+tests = ["tests.test_gate_run.Changed.test_more_files_lists_the_work_tree_changes_but_the_deleted_a_rename_by_its_new_path"]
+
+[[plant]]
+name = "the name keeps the separator"
+file = "dispatcher/gate_run.py"
+old = 'status, name = entry[:2], entry[3:]'
+new = 'status, name = entry[:2], entry[2:]'
+tests = ["tests.test_gate_run.Changed.test_more_files_lists_the_work_tree_changes_but_the_deleted_a_rename_by_its_new_path"]
+
+[[plant]]
+name = "a deleted file is listed"
+file = "dispatcher/gate_run.py"
+old = 'if name and "D" not in status:'
+new = 'if name:'
+tests = ["tests.test_gate_run.Changed.test_more_files_lists_the_work_tree_changes_but_the_deleted_a_rename_by_its_new_path"]
+
+[[plant]]
+name = "the empty field after the last entry is listed as the root"
+file = "dispatcher/gate_run.py"
+old = 'if name and "D" not in status:'
+new = 'if "D" not in status:'
+tests = ["tests.test_gate_run.Changed.test_more_files_lists_the_work_tree_changes_but_the_deleted_a_rename_by_its_new_path"]
+
+[[plant]]
+name = "an edit's tool_input of another shape is read"
+file = "dispatcher/gate_run.py"
+old = 'given.get("file_path") if isinstance(given, dict) else None'
+new = 'given.get("file_path")'
+tests = ["tests.test_gate_run.Changed.test_an_edit_without_an_absolute_file_path_gives_none"]
+
+[[plant]]
+name = "an edit's relative file_path is given"
+file = "dispatcher/gate_run.py"
+old = 'if isinstance(path, str) and os.path.isabs(path) else ()'
+new = 'if isinstance(path, str) else ()'
+tests = ["tests.test_gate_run.Changed.test_an_edit_without_an_absolute_file_path_gives_none"]
+
+[[plant]]
+name = "an edit's file_path of another type is read"
+file = "dispatcher/gate_run.py"
+old = 'if isinstance(path, str) and os.path.isabs(path) else ()'
+new = 'if os.path.isabs(path) else ()'
+tests = ["tests.test_gate_run.Changed.test_an_edit_without_an_absolute_file_path_gives_none"]
+
+[[plant]]
+name = "a response of another shape is read"
+file = "dispatcher/gate_run.py"
+old = 'response.get("bashEditDiff") if isinstance(response, dict) else None'
+new = 'response.get("bashEditDiff")'
+tests = ["tests.test_gate_run.Changed.test_a_bash_call_that_changed_nothing_gives_none"]
+
+[[plant]]
+name = "a call of another tool gives its diff"
+file = "dispatcher/gate_run.py"
+old = 'if event.tool != "Bash" or not isinstance(diff, dict):'
+new = 'if not isinstance(diff, dict):'
+tests = ["tests.test_gate_run.Changed.test_another_tool_gives_none"]
+
+[[plant]]
+name = "a diff of another shape is read"
+file = "dispatcher/gate_run.py"
+old = 'if event.tool != "Bash" or not isinstance(diff, dict):'
+new = 'if event.tool != "Bash" or diff is None:'
+tests = ["tests.test_gate_run.Changed.test_fields_of_the_wrong_type_read_as_none"]
+
+[[plant]]
+name = "changedFiles of another shape is read"
+file = "dispatcher/gate_run.py"
+old = 'texts = files if isinstance(files, list) else []'
+new = 'texts = files or []'
+tests = ["tests.test_gate_run.Changed.test_fields_of_the_wrong_type_read_as_none"]
+
+[[plant]]
+name = "a changed file of another type is read"
+file = "dispatcher/gate_run.py"
+old = 'if isinstance(text, str) and os.path.isabs(text)]'
+new = 'if os.path.isabs(text)]'
+tests = ["tests.test_gate_run.Changed.test_a_bash_call_gives_its_changed_files_each_once_strings_and_absolute_only"]
+
+[[plant]]
+name = "a relative changed file is given"
+file = "dispatcher/gate_run.py"
+old = 'if isinstance(text, str) and os.path.isabs(text)]'
+new = 'if isinstance(text, str)]'
+tests = ["tests.test_gate_run.Changed.test_a_bash_call_gives_its_changed_files_each_once_strings_and_absolute_only"]
+
+[[plant]]
+name = "a moreFiles of another type is read"
+file = "dispatcher/gate_run.py"
+old = 'if isinstance(more, int) and not isinstance(more, bool) and more > 0'
+new = 'if not isinstance(more, bool) and more > 0'
+tests = ["tests.test_gate_run.Changed.test_fields_of_the_wrong_type_read_as_none"]
+
+[[plant]]
+name = "a moreFiles of true is read as one"
+file = "dispatcher/gate_run.py"
+old = 'if isinstance(more, int) and not isinstance(more, bool) and more > 0'
+new = 'if isinstance(more, int) and more > 0'
+tests = ["tests.test_gate_run.Changed.test_fields_of_the_wrong_type_read_as_none"]
+
+[[plant]]
+name = "a moreFiles of 0 lists the work tree"
+file = "dispatcher/gate_run.py"
+old = 'and more > 0 and event.cwd'
+new = 'and more >= 0 and event.cwd'
+tests = ["tests.test_gate_run.Changed.test_a_bash_call_that_changed_nothing_gives_none"]
+
+[[plant]]
+name = "an event without a cwd is asked its declaration"
+file = "dispatcher/gate_run.py"
+old = 'and more > 0 and event.cwd is not None:'
+new = 'and more > 0:'
+tests = ["tests.test_gate_run.Changed.test_more_files_without_a_cwd_lists_nothing_more"]
+
+[[plant]]
+name = "a cwd outside every repository is listed"
+file = "dispatcher/gate_run.py"
+old = '''        if root is not None:
+            paths += listed(root)'''
+new = '''        paths += listed(root)'''
+tests = ["tests.test_gate_run.Changed.test_more_files_outside_every_repository_lists_nothing_more"]
+
+[[plant]]
+name = "a path is given twice"
+file = "dispatcher/gate_run.py"
+old = 'return tuple(dict.fromkeys(paths))'
+new = 'return tuple(paths)'
+tests = ["tests.test_gate_run.Changed.test_a_bash_call_gives_its_changed_files_each_once_strings_and_absolute_only"]
+
+[[plant]]
+name = "a rule hands one file fewer"
+file = "dispatcher/gate_run.py"
+old = 'tuple(paths[:FILES_PER_RULE])'
+new = 'tuple(paths[:FILES_PER_RULE - 1])'
+tests = ["tests.test_gate_run.Limits"]
+
+[[plant]]
+name = "the rest loses its first path"
+file = "dispatcher/gate_run.py"
+old = 'tuple(paths[FILES_PER_RULE:])'
+new = 'tuple(paths[FILES_PER_RULE + 1:])'
+tests = ["tests.test_gate_run.Limits"]
+
+[[plant]]
+name = "eleven unchecked named"
+file = "dispatcher/gate_run.py"
+old = '''NAMED = Count(10)'''
+new = '''NAMED = Count(11)'''
+tests = ["tests.test_gate_run.Refusals.test_the_unchecked_are_counted_against_the_bound_and_the_first_ten_named", "tests.test_precise_hints.Writes.test_the_first_ten_unchecked_files_are_named", "tests.test_test_determinism.Writes.test_the_first_ten_unchecked_tests_are_named"]
+
+[[plant]]
+name = "the gate's text indented less"
+file = "dispatcher/gate_run.py"
+old = '''INDENT = "      "'''
+new = '''INDENT = "     "'''
+tests = ["tests.test_gate_run.Refusals.test_a_finding_is_said_in_the_rules_words_with_the_gate_its_rule_and_its_text", "tests.test_precise_hints.Edits.test_a_finding_refuses_naming_the_file_the_gate_its_rule_and_its_text", "tests.test_test_determinism.Writes.test_a_written_test_is_refused_on_a_finding_or_an_unreadable_answer_with_its_text"]
+
+[[plant]]
+name = "the unchecked count is the named count"
+file = "dispatcher/gate_run.py"
+old = '''{count} more {noun}'''
+new = '''{named} more {noun}'''
+tests = ["tests.test_gate_run.Refusals.test_the_unchecked_are_counted_against_the_bound_and_the_first_ten_named", "tests.test_precise_hints.Writes.test_five_changed_files_refuse_the_fifth_as_unchecked"]
+
+[[plant]]
+name = "the bound named is the unchecked count"
+file = "dispatcher/gate_run.py"
+old = '''past the {bound} a call'''
+new = '''past the {count} a call'''
+tests = ["tests.test_gate_run.Refusals.test_the_unchecked_are_counted_against_the_bound_and_the_first_ten_named", "tests.test_precise_hints.Writes.test_five_changed_files_refuse_the_fifth_as_unchecked"]
+
+[[plant]]
+name = "the unchecked line's count of named cut"
+file = "dispatcher/gate_run.py"
+old = '''the first {named} here:'''
+new = '''the first here:'''
+tests = ["tests.test_gate_run.Refusals.test_the_unchecked_are_counted_against_the_bound_and_the_first_ten_named", "tests.test_test_determinism.Writes.test_five_changed_tests_refuse_the_fifth_as_unchecked"]
+
+[[plant]]
+name = "the unchecked item unmarked"
+file = "dispatcher/gate_run.py"
+old = '''"""  * {count} more'''
+new = '''"""{count} more'''
+tests = ["tests.test_gate_run.Refusals.test_the_unchecked_are_counted_against_the_bound_and_the_first_ten_named", "tests.test_precise_hints.Writes.test_five_changed_files_refuse_the_fifth_as_unchecked", "tests.test_test_determinism.Writes.test_five_changed_tests_refuse_the_fifth_as_unchecked"]
+
+[[plant]]
+name = "the rule's noun ignored"
+file = "dispatcher/gate_run.py"
+old = '''noun=noun,'''
+new = '''noun="files",'''
+tests = ["tests.test_gate_run.Refusals.test_the_unchecked_are_counted_against_the_bound_and_the_first_ten_named", "tests.test_test_determinism.Writes.test_five_changed_tests_refuse_the_fifth_as_unchecked"]
+
+[[plant]]
+name = "a project with no gate is asked its REL"
+file = "dispatcher/gate_run.py"
+old = '''as_rel = None if gate is None else rel(gate, path)'''
+new = '''as_rel = rel(gate, path)'''
+tests = ["tests.test_gate_run.Handing.test_a_file_of_a_project_with_no_gate_is_not_handed", "tests.test_precise_hints.Writes.test_a_project_with_no_gate_passes", "tests.test_test_determinism.Reads.test_a_project_with_no_gate_is_silent"]
+
+[[plant]]
+name = "a file is handed as its name wherever it stands"
+file = "dispatcher/gate_run.py"
+old = '''else rel(gate, path)'''
+new = '''else RelPath(path.name)'''
+tests = ["tests.test_gate_run.Handing.test_a_file_is_handed_to_the_gate_as_its_rel", "tests.test_precise_hints.Edits.test_each_edit_is_handed_the_text_after_it_as_its_rel", "tests.test_precise_hints.Edits.test_a_file_outside_as_from_or_of_another_suffix_is_not_handed"]
+
+[[plant]]
+name = "no file is handed"
+file = "dispatcher/gate_run.py"
+old = '''return None if gate is None or as_rel is None else (gate, as_rel)'''
+new = '''return None'''
+tests = ["tests.test_gate_run.Handing.test_a_file_is_handed_to_the_gate_as_its_rel", "tests.test_precise_hints.Edits.test_each_edit_is_handed_the_text_after_it_as_its_rel", "tests.test_precise_hints.Writes.test_a_calls_changed_files_are_handed_where_they_stand"]
+
+[[plant]]
+name = "a path rel() leaves out handed"
+file = "dispatcher/gate_run.py"
+old = '''return None if gate is None or as_rel is None else (gate, as_rel)'''
+new = '''return None if gate is None else (gate, as_rel)'''
+tests = ["tests.test_gate_run.Handing.test_a_file_outside_as_from_is_not_handed", "tests.test_test_determinism.Writes.test_a_deleted_test_and_one_outside_as_from_are_not_asked"]
+
+[[plant]]
+name = "the verbs of a finding and an unreadable answer swap"
+file = "dispatcher/gate_run.py"
+old = '''if answer.kind == "finding" else "cannot read it"'''
+new = '''if answer.kind == "unreadable" else "cannot read it"'''
+tests = ["tests.test_gate_run.Refusals.test_a_finding_is_said_in_the_rules_words_with_the_gate_its_rule_and_its_text", "tests.test_gate_run.Refusals.test_an_unreadable_answer_is_said_as_the_gate_that_cannot_read_it", "tests.test_precise_hints.Edits.test_a_finding_refuses_naming_the_file_the_gate_its_rule_and_its_text", "tests.test_precise_hints.Edits.test_an_unreadable_answer_refuses", "tests.test_test_determinism.Writes.test_a_written_test_is_refused_on_a_finding_or_an_unreadable_answer_with_its_text"]
+
+[[plant]]
+name = "the rule's finding words ignored"
+file = "dispatcher/gate_run.py"
+old = '''verb = finding if'''
+new = '''verb = "refuses a hint" if'''
+tests = ["tests.test_gate_run.Refusals.test_a_finding_is_said_in_the_rules_words_with_the_gate_its_rule_and_its_text", "tests.test_test_determinism.Writes.test_a_written_test_is_refused_on_a_finding_or_an_unreadable_answer_with_its_text"]
+
+[[plant]]
+name = "an unreadable answer said otherwise"
+file = "dispatcher/gate_run.py"
+old = '''else "cannot read it"'''
+new = '''else "cannot read"'''
+tests = ["tests.test_gate_run.Refusals.test_an_unreadable_answer_is_said_as_the_gate_that_cannot_read_it", "tests.test_precise_hints.Edits.test_an_unreadable_answer_refuses"]
+
+[[plant]]
+name = "the refusal names the gate's first word alone"
+file = "dispatcher/gate_run.py"
+old = '''the gate {shlex.join(gate.run)} {verb}'''
+new = '''the gate {gate.run[0]} {verb}'''
+tests = ["tests.test_gate_run.Refusals.test_a_finding_is_said_in_the_rules_words_with_the_gate_its_rule_and_its_text", "tests.test_precise_hints.Edits.test_a_finding_refuses_naming_the_file_the_gate_its_rule_and_its_text", "tests.test_test_determinism.Writes.test_a_written_test_is_refused_on_a_finding_or_an_unreadable_answer_with_its_text"]
+
+[[plant]]
+name = "the refusal names the gate's cwd as its rule"
+file = "dispatcher/gate_run.py"
+old = '''its rule at {gate.rule_source}'''
+new = '''its rule at {gate.cwd}'''
+tests = ["tests.test_gate_run.Refusals.test_a_finding_is_said_in_the_rules_words_with_the_gate_its_rule_and_its_text", "tests.test_precise_hints.Edits.test_a_finding_refuses_naming_the_file_the_gate_its_rule_and_its_text", "tests.test_test_determinism.Writes.test_a_written_test_is_refused_on_a_finding_or_an_unreadable_answer_with_its_text"]
+
+[[plant]]
+name = "the refusal names the file's name alone"
+file = "dispatcher/gate_run.py"
+old = '''f"  * {path}: the gate'''
+new = '''f"  * {path.name}: the gate'''
+tests = ["tests.test_gate_run.Refusals.test_a_finding_is_said_in_the_rules_words_with_the_gate_its_rule_and_its_text", "tests.test_precise_hints.Edits.test_a_finding_refuses_naming_the_file_the_gate_its_rule_and_its_text", "tests.test_test_determinism.Writes.test_a_written_test_is_refused_on_a_finding_or_an_unreadable_answer_with_its_text"]
+
+[[plant]]
+name = "the gate's text keeps its last newline"
+file = "dispatcher/gate_run.py"
+old = '''answer.text.rstrip(), INDENT'''
+new = '''answer.text, INDENT'''
+tests = ["tests.test_gate_run.Refusals.test_a_finding_is_said_in_the_rules_words_with_the_gate_its_rule_and_its_text", "tests.test_precise_hints.Edits.test_a_finding_refuses_naming_the_file_the_gate_its_rule_and_its_text", "tests.test_test_determinism.Writes.test_a_written_test_is_refused_on_a_finding_or_an_unreadable_answer_with_its_text"]
+
+[[plant]]
+name = "the gate's text is not indented"
+file = "dispatcher/gate_run.py"
+old = '''+ textwrap.indent(answer.text.rstrip(), INDENT))'''
+new = '''+ answer.text.rstrip())'''
+tests = ["tests.test_gate_run.Refusals.test_a_finding_is_said_in_the_rules_words_with_the_gate_its_rule_and_its_text", "tests.test_precise_hints.Edits.test_a_finding_refuses_naming_the_file_the_gate_its_rule_and_its_text"]
+
+[[plant]]
+name = "an unchecked file's command hands it under another option"
+file = "dispatcher/gate_run.py"
+old = '''"--file", str(path), "--as", as_rel'''
+new = '''"--path", str(path), "--as", as_rel'''
+tests = ["tests.test_gate_run.Refusals.test_a_command_quotes_a_cwd_and_a_path_holding_a_space", "tests.test_precise_hints.Writes.test_five_changed_files_refuse_the_fifth_as_unchecked"]
+
+[[plant]]
+name = "an unchecked file's command hands it as its own path"
+file = "dispatcher/gate_run.py"
+old = '''str(path), "--as", as_rel]'''
+new = '''str(path), "--as", str(path)]'''
+tests = ["tests.test_gate_run.Refusals.test_a_command_quotes_a_cwd_and_a_path_holding_a_space", "tests.test_precise_hints.Writes.test_five_changed_files_refuse_the_fifth_as_unchecked"]
+
+[[plant]]
+name = "the unchecked command without its REL"
+file = "dispatcher/gate_run.py"
+old = '''"--file", str(path), "--as", as_rel])'''
+new = '''"--file", str(path)])'''
+tests = ["tests.test_gate_run.Refusals.test_a_command_quotes_a_cwd_and_a_path_holding_a_space", "tests.test_test_determinism.Writes.test_five_changed_tests_refuse_the_fifth_as_unchecked"]
+
+[[plant]]
+name = "an unchecked file's command runs in as_from"
+file = "dispatcher/gate_run.py"
+old = '''shlex.quote(str(gate.cwd))'''
+new = '''shlex.quote(str(gate.as_from))'''
+tests = ["tests.test_gate_run.Refusals.test_a_command_quotes_a_cwd_and_a_path_holding_a_space", "tests.test_precise_hints.Writes.test_five_changed_files_refuse_the_fifth_as_unchecked", "tests.test_test_determinism.Writes.test_five_changed_tests_refuse_the_fifth_as_unchecked"]
+
+[[plant]]
+name = "a command's cwd unquoted"
+file = "dispatcher/gate_run.py"
+old = '''shlex.quote(str(gate.cwd))'''
+new = '''str(gate.cwd)'''
+tests = ["tests.test_gate_run.Refusals.test_a_command_quotes_a_cwd_and_a_path_holding_a_space"]
+
+[[plant]]
+name = "a command's words unquoted"
+file = "dispatcher/gate_run.py"
+old = '''words = shlex.join(['''
+new = '''words = " ".join(['''
+tests = ["tests.test_gate_run.Refusals.test_a_command_quotes_a_cwd_and_a_path_holding_a_space"]
+
+[[plant]]
+name = "every unchecked file is named"
+file = "dispatcher/gate_run.py"
+old = '''for path in rest[:NAMED])'''
+new = '''for path in rest)'''
+tests = ["tests.test_gate_run.Refusals.test_the_unchecked_are_counted_against_the_bound_and_the_first_ten_named", "tests.test_precise_hints.Writes.test_the_first_ten_unchecked_files_are_named", "tests.test_test_determinism.Writes.test_the_first_ten_unchecked_tests_are_named"]
+
+[[plant]]
+name = "an unchecked file's command is not indented"
+file = "dispatcher/gate_run.py"
+old = '''"\n".join(INDENT + command('''
+new = '''"\n".join(command('''
+tests = ["tests.test_gate_run.Refusals.test_the_unchecked_are_counted_against_the_bound_and_the_first_ten_named", "tests.test_precise_hints.Writes.test_five_changed_files_refuse_the_fifth_as_unchecked"]
+
+[[plant]]
+name = "each unchecked file handed as the first"
+file = "dispatcher/gate_run.py"
+old = '''command(path, handed_of[path])'''
+new = '''command(path, handed_of[rest[0]])'''
+tests = ["tests.test_gate_run.Refusals.test_the_unchecked_are_counted_against_the_bound_and_the_first_ten_named"]
+
+[[plant]]
+name = "the unchecked count is every file handed"
+file = "dispatcher/gate_run.py"
+old = '''count=len(rest)'''
+new = '''count=len(handed_of)'''
+tests = ["tests.test_gate_run.Refusals.test_the_unchecked_are_counted_against_the_bound_and_the_first_ten_named", "tests.test_precise_hints.Writes.test_five_changed_files_refuse_the_fifth_as_unchecked", "tests.test_test_determinism.Writes.test_five_changed_tests_refuse_the_fifth_as_unchecked"]
+
+[[plant]]
+name = "the bound named as the count named"
+file = "dispatcher/gate_run.py"
+old = '''bound=FILES_PER_RULE'''
+new = '''bound=NAMED'''
+tests = ["tests.test_gate_run.Refusals.test_the_unchecked_are_counted_against_the_bound_and_the_first_ten_named", "tests.test_test_determinism.Writes.test_five_changed_tests_refuse_the_fifth_as_unchecked"]
+
+[[plant]]
+name = "the unchecked files' commands run on from the heading"
+file = "dispatcher/gate_run.py"
+old = '''named=NAMED) + "\n" + named'''
+new = '''named=NAMED) + named'''
+tests = ["tests.test_gate_run.Refusals.test_the_unchecked_are_counted_against_the_bound_and_the_first_ten_named", "tests.test_precise_hints.Writes.test_five_changed_files_refuse_the_fifth_as_unchecked"]
+
+[[plant]]
+name = "a path is asked whole"
+file = "dispatcher/gate_run.py"
+old = '''("--is-test", *asked.values())'''
+new = '''("--is-test", *map(str, asked))'''
+tests = ["tests.test_gate_run.Tests.test_the_gate_runs_once_with_every_path", "tests.test_gate_run.Tests.test_exit_0_answers_the_asked_paths_it_printed_in_the_order_asked"]
+
+[[plant]]
+name = "a path rel() leaves out is asked"
+file = "dispatcher/gate_run.py"
+old = '''asked = {path: as_rel for path in paths if (as_rel := rel(gate, path)) is not None}'''
+new = '''asked = {path: rel(gate, path) or str(path) for path in paths}'''
+tests = ["tests.test_gate_run.Tests.test_a_path_outside_as_from_is_not_asked"]
+
+[[plant]]
+name = "a gate runs with no path to ask"
+file = "dispatcher/gate_run.py"
+old = '''    if not asked:
+        return ()
+    code, text = answered(gate, ("--is-test"'''
+new = '''    code, text = answered(gate, ("--is-test"'''
+tests = ["tests.test_gate_run.Tests.test_no_path_to_ask_runs_no_gate"]
+
+[[plant]]
+name = "a path printed whole names a test"
+file = "dispatcher/gate_run.py"
+old = '''if as_rel in printed)'''
+new = '''if as_rel in printed or str(path) in printed)'''
+tests = ["tests.test_gate_run.Tests.test_a_path_printed_whole_names_no_test"]

@@ -1,0 +1,22 @@
+# What this machine would declare in ~/.config/claude-guard/machine.toml. Each entry names, in a `replaces` line,
+# the hard-coded fact of today's kit (~/dotfiles/.claude/hooks, ~/.local/bin) it stands for. Every table is
+# required; [memory] declares its facts absent, since today's kit caps no call.
+
+schema = 1
+
+[cpus]
+agents = "0-19"
+# replaces: heavy-run-guard.py:187 (ALLOWED_CPUS) and :969 (JOB_BOUND, 1 to 20, now the count of agents);
+# claude-call:395 (the taskset fallback); session-limits:15 (cpus)
+
+[slice]
+name = "claude.slice"
+# replaces: claude-call:66 (SLICE); session-limits:14 (slice); _commands.py:116 (_CLAUDE_SLICE)
+
+[memory]
+absent = "today's kit caps no call, and the two tiers wait for values taken from measured peaks"
+
+[records]
+paths = ["~/dev/logs"]
+# replaces: claude-call:62 (ROOT, where its call logs, views and conflicts are kept), which no search refusal of
+# today's kit holds

@@ -1,0 +1,388 @@
+# The plants that show rules/bytecode_plants.py held by tests/test_bytecode_plants.py, one or more per line of
+# the rule:
+#   testing/plants.py tests/plants_bytecode_plants.toml --out DIR
+
+[[plant]]
+name = "the rule judges another event"
+file = "rules/bytecode_plants.py"
+old = 'frozenset({"PreToolUse"})'
+new = 'frozenset({"PostToolUse"})'
+tests = ["tests.test_bytecode_plants.Rule.test_a_shell_write_and_a_test_run"]
+
+[[plant]]
+name = "a Monitor call is not judged"
+file = "rules/bytecode_plants.py"
+old = 'TOOLS = frozenset({ToolName("Bash"), ToolName("Monitor")})'
+new = 'TOOLS = frozenset({ToolName("Bash")})'
+tests = ["tests.test_bytecode_plants.Rule.test_a_monitor_call"]
+
+[[plant]]
+name = "a Python file has another suffix"
+file = "rules/bytecode_plants.py"
+old = 'PY = ".py"'
+new = 'PY = ".pyc"'
+tests = ["tests.test_bytecode_plants.Rule.test_a_shell_write_and_a_test_run"]
+
+[[plant]]
+name = "pytest is no test runner"
+file = "rules/bytecode_plants.py"
+old = 'RUNNERS = frozenset({ShellText("pytest"), ShellText("py.test")})'
+new = 'RUNNERS = frozenset({ShellText("py.test")})'
+tests = ["tests.test_bytecode_plants.Rule.test_a_shell_write_and_a_test_run"]
+
+[[plant]]
+name = "py.test is no test runner"
+file = "rules/bytecode_plants.py"
+old = 'RUNNERS = frozenset({ShellText("pytest"), ShellText("py.test")})'
+new = 'RUNNERS = frozenset({ShellText("pytest")})'
+tests = ["tests.test_bytecode_plants.Rule.test_a_shell_write_and_a_test_run"]
+
+[[plant]]
+name = "-m pytest is no test run"
+file = "rules/bytecode_plants.py"
+old = 'MODULES = frozenset({ShellText("pytest"), ShellText("unittest")})'
+new = 'MODULES = frozenset({ShellText("unittest")})'
+tests = ["tests.test_bytecode_plants.Rule.test_a_shell_write_and_a_test_run"]
+
+[[plant]]
+name = "-m unittest is no test run"
+file = "rules/bytecode_plants.py"
+old = 'MODULES = frozenset({ShellText("pytest"), ShellText("unittest")})'
+new = 'MODULES = frozenset({ShellText("pytest")})'
+tests = ["tests.test_bytecode_plants.Rule.test_a_shell_write_and_a_test_run"]
+
+[[plant]]
+name = "runner.py is no test name"
+file = "rules/bytecode_plants.py"
+old = 'TESTS = ("runner.py", "test_*.py")'
+new = 'TESTS = ("test_*.py",)'
+tests = ["tests.test_bytecode_plants.Rule.test_a_shell_write_and_a_test_run"]
+
+[[plant]]
+name = "test_*.py is no test name"
+file = "rules/bytecode_plants.py"
+old = 'TESTS = ("runner.py", "test_*.py")'
+new = 'TESTS = ("runner.py", "tests_*.py")'
+tests = ["tests.test_bytecode_plants.Rule.test_a_shell_write_and_a_test_run"]
+
+[[plant]]
+name = "a run past the words reads a word"
+file = "rules/bytecode_plants.py"
+old = 'value = values[run.index] if run.index < len(values) else None'
+new = 'value = values[run.index] if run.index <= len(values) else None'
+tests = ["tests.test_bytecode_plants.Rule.test_the_python_code_the_call_carries", "tests.test_bytecode_plants.Rule.test_what_passes"]
+
+[[plant]]
+name = "an attached -c loses a character"
+file = "rules/bytecode_plants.py"
+old = 'ShellText(value[run.offset:])'
+new = 'ShellText(value[run.offset + 1:])'
+tests = ["tests.test_bytecode_plants.Rule.test_a_shell_write_and_a_test_run"]
+
+[[plant]]
+name = "a command of no words is a test run"
+file = "rules/bytecode_plants.py"
+old = "        return False\n    name = base(command.name)"
+new = "        return True\n    name = base(command.name)"
+tests = ["tests.test_bytecode_plants.Rule.test_what_passes"]
+
+[[plant]]
+name = "a runner must be both named and a test name"
+file = "rules/bytecode_plants.py"
+old = "if name in RUNNERS or named_test(name):"
+new = "if name in RUNNERS and named_test(name):"
+tests = ["tests.test_bytecode_plants.Rule.test_a_shell_write_and_a_test_run"]
+
+[[plant]]
+name = "any command but an interpreter is a test run"
+file = "rules/bytecode_plants.py"
+old = "if run is None or run.value is None:\n        return False"
+new = "if run is None or run.value is None:\n        return True"
+tests = ["tests.test_bytecode_plants.Rule.test_what_passes"]
+
+[[plant]]
+name = "a test module must be both"
+file = "rules/bytecode_plants.py"
+old = "return run.value in MODULES or named_test("
+new = "return run.value in MODULES and named_test("
+tests = ["tests.test_bytecode_plants.Rule.test_a_shell_write_and_a_test_run"]
+
+[[plant]]
+name = "a module is named by its first part"
+file = "rules/bytecode_plants.py"
+old = 'run.value.rsplit(".", 1)[-1] + PY'
+new = 'run.value.rsplit(".", 1)[0] + PY'
+tests = ["tests.test_bytecode_plants.Rule.test_a_shell_write_and_a_test_run"]
+
+[[plant]]
+name = "any script is a test run"
+file = "rules/bytecode_plants.py"
+old = 'return run.kind == "script" and named_test(base(run.value))'
+new = 'return run.kind == "script" or named_test(base(run.value))'
+tests = ["tests.test_bytecode_plants.Rule.test_what_passes"]
+
+[[plant]]
+name = "a script is matched by its whole path"
+file = "rules/bytecode_plants.py"
+old = 'return run.kind == "script" and named_test(base(run.value))'
+new = 'return run.kind == "script" and named_test(run.value)'
+tests = ["tests.test_bytecode_plants.Rule.test_a_shell_write_and_a_test_run"]
+
+[[plant]]
+name = "the carried code's writes are not named"
+file = "rules/bytecode_plants.py"
+old = 'for spelled in planted(code.text) if code.carried else ():'
+new = 'for spelled in ():'
+tests = ["tests.test_bytecode_plants.Rule.test_the_python_code_the_call_carries"]
+
+[[plant]]
+name = "a write ending .py is not one"
+file = "rules/bytecode_plants.py"
+old = 'if (write.word.value or "").endswith(PY):'
+new = 'if (write.word.value or "").startswith(PY):'
+tests = ["tests.test_bytecode_plants.Rule.test_a_shell_write_and_a_test_run"]
+
+[[plant]]
+name = "a test run is named otherwise"
+file = "rules/bytecode_plants.py"
+old = 'runs = [Prose(f"`{command.text}` runs Python tests")'
+new = 'runs = [Prose(f"`{command.text}` tests")'
+tests = ["tests.test_bytecode_plants.Rule.test_a_shell_write_and_a_test_run"]
+
+[[plant]]
+name = "an unspelled start is no test run"
+file = "rules/bytecode_plants.py"
+old = "runs += [UNSPELLED] if call.unspelled else []"
+new = "runs += []"
+tests = ["tests.test_bytecode_plants.Rule.test_the_python_code_the_call_carries"]
+
+[[plant]]
+name = "writes are looked for only without a run"
+file = "rules/bytecode_plants.py"
+old = "found = list(dict.fromkeys(python_writes(call))) if runs else []"
+new = "found = list(dict.fromkeys(python_writes(call))) if not runs else []"
+tests = ["tests.test_bytecode_plants.Rule.test_a_shell_write_and_a_test_run"]
+
+[[plant]]
+name = "the shell form gives no value"
+file = "rules/bytecode_plants.py"
+old = '''GIVEN = re.compile(r"PYTHONPYCACHEPREFIX=|[\"']PYTHONPYCACHEPREFIX[\"']")'''
+new = '''GIVEN = re.compile(r"[\"']PYTHONPYCACHEPREFIX[\"']")'''
+tests = ["tests.test_bytecode_plants.Rule.test_a_fresh_cache_named"]
+
+[[plant]]
+name = "the quoted name gives no value"
+file = "rules/bytecode_plants.py"
+old = '''GIVEN = re.compile(r"PYTHONPYCACHEPREFIX=|[\"']PYTHONPYCACHEPREFIX[\"']")'''
+new = 'GIVEN = re.compile(r"PYTHONPYCACHEPREFIX=")'
+tests = ["tests.test_bytecode_plants.Rule.test_a_fresh_cache_named", "tests.test_bytecode_plants.Rule.test_a_cache_the_call_keeps"]
+
+[[plant]]
+name = "a mention gives a value"
+file = "rules/bytecode_plants.py"
+old = 'GIVEN = re.compile(r"PYTHONPYCACHEPREFIX=|'
+new = 'GIVEN = re.compile(r"PYTHONPYCACHEPREFIX|'
+tests = ["tests.test_bytecode_plants.Rule.test_the_python_code_the_call_carries", "tests.test_bytecode_plants.Rule.test_what_passes"]
+
+[[plant]]
+name = "an unquoted inline value is not inline"
+file = "rules/bytecode_plants.py"
+old = '''INLINE = re.compile(r'PYTHONPYCACHEPREFIX="?\$\(')'''
+new = '''INLINE = re.compile(r'PYTHONPYCACHEPREFIX="\$\(')'''
+tests = ["tests.test_bytecode_plants.Rule.test_a_cache_the_call_keeps"]
+
+[[plant]]
+name = "mktemp is not what makes"
+file = "rules/bytecode_plants.py"
+old = 'MAKES = ShellText("mktemp")'
+new = 'MAKES = ShellText("mkdir")'
+tests = ["tests.test_bytecode_plants.Rule.test_a_fresh_cache_named"]
+
+[[plant]]
+name = "rm is not what removes"
+file = "rules/bytecode_plants.py"
+old = 'REMOVES = ShellText("rm")'
+new = 'REMOVES = ShellText("rmdir")'
+tests = ["tests.test_bytecode_plants.Rule.test_a_fresh_cache_named"]
+
+[[plant]]
+name = "--recursive is spelled otherwise"
+file = "rules/bytecode_plants.py"
+old = 'RECURSIVE = ShellText("--recursive")'
+new = 'RECURSIVE = ShellText("--recurse")'
+tests = ["tests.test_bytecode_plants.Rule.test_what_passes"]
+
+[[plant]]
+name = "TemporaryDirectory is spelled otherwise"
+file = "rules/bytecode_plants.py"
+old = 'TEMPORARY = ShellText("TemporaryDirectory")'
+new = 'TEMPORARY = ShellText("TemporaryFile")'
+tests = ["tests.test_bytecode_plants.Rule.test_a_fresh_cache_named"]
+
+[[plant]]
+name = "mkdtemp alone makes and removes"
+file = "rules/bytecode_plants.py"
+old = 'PYTHON_MADE = (ShellText("mkdtemp"), ShellText("rmtree"))'
+new = 'PYTHON_MADE = (ShellText("mkdtemp"),)'
+tests = ["tests.test_bytecode_plants.Rule.test_a_cache_the_call_keeps"]
+
+[[plant]]
+name = "the not-made line says another thing"
+file = "rules/bytecode_plants.py"
+old = 'UNMADE = Prose("the call gives PYTHONPYCACHEPREFIX a folder it does not make with mktemp")'
+new = 'UNMADE = Prose("the call gives PYTHONPYCACHEPREFIX a folder")'
+tests = ["tests.test_bytecode_plants.Rule.test_a_cache_the_call_keeps"]
+
+[[plant]]
+name = "the not-removed line says another thing"
+file = "rules/bytecode_plants.py"
+old = 'UNREMOVED = Prose("the call gives PYTHONPYCACHEPREFIX a folder it does not remove with rm -r")'
+new = 'UNREMOVED = Prose("the call gives PYTHONPYCACHEPREFIX a folder")'
+tests = ["tests.test_bytecode_plants.Rule.test_a_cache_the_call_keeps"]
+
+[[plant]]
+name = "the headline says another thing"
+file = "rules/bytecode_plants.py"
+old = 'ADVICE = """this call writes a Python file and starts a Python test run without'
+new = 'ADVICE = """this call writes a Python file and begins a Python test run without'
+tests = ["tests.test_bytecode_plants.Rule.test_a_shell_write_and_a_test_run"]
+
+[[plant]]
+name = "the advice names another form"
+file = "rules/bytecode_plants.py"
+old = '  P="$(mktemp -d)"; PYTHONPYCACHEPREFIX="$P" <test run>; rm -rf "$P"'
+new = '  PYTHONPYCACHEPREFIX="$(mktemp -d)" <test run>'
+tests = ["tests.test_bytecode_plants.Rule.test_a_shell_write_and_a_test_run"]
+
+[[plant]]
+name = "--recursive is no removal"
+file = "rules/bytecode_plants.py"
+old = 'return value == RECURSIVE or ('
+new = 'return False or ('
+tests = ["tests.test_bytecode_plants.Rule.test_what_passes"]
+
+[[plant]]
+name = "a word not an option removes"
+file = "rules/bytecode_plants.py"
+old = 'value.startswith("-") and not value.startswith("--") and'
+new = 'not value.startswith("--") and'
+tests = ["tests.test_bytecode_plants.Rule.test_a_cache_the_call_keeps"]
+
+[[plant]]
+name = "a long option holding r removes"
+file = "rules/bytecode_plants.py"
+old = 'value.startswith("-") and not value.startswith("--") and'
+new = 'value.startswith("-") and'
+tests = ["tests.test_bytecode_plants.Rule.test_a_cache_the_call_keeps"]
+
+[[plant]]
+name = "R removes nothing"
+file = "rules/bytecode_plants.py"
+old = 'bool({"r", "R"} & set(value))'
+new = 'bool({"r"} & set(value))'
+tests = ["tests.test_bytecode_plants.Rule.test_what_passes"]
+
+[[plant]]
+name = "an inline value is not looked for"
+file = "rules/bytecode_plants.py"
+old = 'inline = [text for text in texts if INLINE.search(text)]'
+new = 'inline = []'
+tests = ["tests.test_bytecode_plants.Rule.test_a_cache_the_call_keeps"]
+
+[[plant]]
+name = "the inline line says another thing"
+file = "rules/bytecode_plants.py"
+old = '"to remove it")]'
+new = '"")]'
+tests = ["tests.test_bytecode_plants.Rule.test_a_cache_the_call_keeps"]
+
+[[plant]]
+name = "TemporaryDirectory is not read"
+file = "rules/bytecode_plants.py"
+old = 'python = TEMPORARY in code or'
+new = 'python = False or'
+tests = ["tests.test_bytecode_plants.Rule.test_a_fresh_cache_named"]
+
+[[plant]]
+name = "mkdtemp or rmtree alone makes and removes"
+file = "rules/bytecode_plants.py"
+old = 'all(name in code for name in PYTHON_MADE)'
+new = 'any(name in code for name in PYTHON_MADE)'
+tests = ["tests.test_bytecode_plants.Rule.test_a_cache_the_call_keeps"]
+
+[[plant]]
+name = "an rm is not looked for"
+file = "rules/bytecode_plants.py"
+old = 'if command.name is not None and base(command.name) == REMOVES for word'
+new = 'if command.name is not None and base(command.name) != REMOVES for word'
+tests = ["tests.test_bytecode_plants.Rule.test_a_fresh_cache_named"]
+
+[[plant]]
+name = "Python code making the folder is a fault"
+file = "rules/bytecode_plants.py"
+old = 'return [] if python else [line'
+new = 'return [] if not python else [line'
+tests = ["tests.test_bytecode_plants.Rule.test_a_fresh_cache_named", "tests.test_bytecode_plants.Rule.test_a_cache_the_call_keeps"]
+
+[[plant]]
+name = "an unmade folder is no fault"
+file = "rules/bytecode_plants.py"
+old = '((UNMADE, MAKES in names), (UNREMOVED, removed))'
+new = '((UNMADE, True), (UNREMOVED, removed))'
+tests = ["tests.test_bytecode_plants.Rule.test_a_cache_the_call_keeps"]
+
+[[plant]]
+name = "an unremoved folder is no fault"
+file = "rules/bytecode_plants.py"
+old = '((UNMADE, MAKES in names), (UNREMOVED, removed))'
+new = '((UNMADE, MAKES in names), (UNREMOVED, True))'
+tests = ["tests.test_bytecode_plants.Rule.test_a_cache_the_call_keeps"]
+
+[[plant]]
+name = "a script's commands give no value"
+file = "rules/bytecode_plants.py"
+old = 'texts = [*(command.text for command in call.commands), call.text]'
+new = 'texts = [call.text]'
+tests = ["tests.test_bytecode_plants.Rule.test_a_fresh_cache_named"]
+
+[[plant]]
+name = "a value given is not looked for"
+file = "rules/bytecode_plants.py"
+old = 'if any(GIVEN.search(text) for text in texts):'
+new = 'if False:'
+tests = ["tests.test_bytecode_plants.Rule.test_a_fresh_cache_named", "tests.test_bytecode_plants.Rule.test_a_cache_the_call_keeps"]
+
+[[plant]]
+name = "a run without a write refuses"
+file = "rules/bytecode_plants.py"
+old = 'lines = [*found, *runs] if found else []'
+new = 'lines = [*found, *runs]'
+tests = ["tests.test_bytecode_plants.Rule.test_what_passes"]
+
+[[plant]]
+name = "the Python code read is not looked in"
+file = "rules/bytecode_plants.py"
+old = 'code = "\n".join([call.text, *(read.text for read in call.python)])'
+new = 'code = "\n".join([call.text])'
+tests = ["tests.test_bytecode_plants.Rule.test_a_fresh_cache_named"]
+
+[[plant]]
+name = "the Python code read is not looked for writes"
+file = "rules/bytecode_plants.py"
+old = 'for code in call.python:'
+new = 'for code in call.python[:0]:'
+tests = ["tests.test_bytecode_plants.Rule.test_the_python_code_the_call_carries"]
+
+[[plant]]
+name = "a Python file on disk is read for writes"
+file = "rules/bytecode_plants.py"
+old = 'planted(code.text) if code.carried else ()'
+new = 'planted(code.text)'
+tests = ["tests.test_bytecode_plants.Rule.test_a_fresh_cache_named"]
+
+[[plant]]
+name = "the call's text is not looked in for removal"
+file = "rules/bytecode_plants.py"
+old = 'code = "\n".join([call.text, *(read.text for read in call.python)])'
+new = 'code = "\n".join([*(read.text for read in call.python)])'
+tests = ["tests.test_bytecode_plants.Rule.test_what_passes"]

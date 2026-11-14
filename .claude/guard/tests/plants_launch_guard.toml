@@ -1,0 +1,240 @@
+# The plants that show rules/launch_guard.py held by tests/test_launch_guard.py, one or more per line of the rule:
+#   testing/plants.py tests/plants_launch_guard.toml --out DIR
+
+[[plant]]
+name = "the rule judges PostToolUse instead"
+file = "rules/launch_guard.py"
+old = 'frozenset({"PreToolUse"})'
+new = 'frozenset({"PostToolUse"})'
+tests = ["tests.test_launch_guard.Answered.test_exit_2_refuses_with_the_guards_text_whole"]
+
+[[plant]]
+name = "the rule judges PostToolUse too"
+file = "rules/launch_guard.py"
+old = 'frozenset({"PreToolUse"})'
+new = 'frozenset({"PreToolUse", "PostToolUse"})'
+tests = ["tests.test_launch_guard.Judged.test_a_bash_call_and_a_post_tool_use_of_workflow_are_not_judged"]
+
+[[plant]]
+name = "the rule judges Bash calls too"
+file = "rules/launch_guard.py"
+old = 'TOOLS = frozenset({ToolName("Workflow")})'
+new = 'TOOLS = frozenset({ToolName("Workflow"), ToolName("Bash")})'
+tests = ["tests.test_launch_guard.Judged.test_a_bash_call_and_a_post_tool_use_of_workflow_are_not_judged"]
+
+[[plant]]
+name = "the rule judges another tool"
+file = "rules/launch_guard.py"
+old = 'TOOLS = frozenset({ToolName("Workflow")})'
+new = 'TOOLS = frozenset({ToolName("Agent")})'
+tests = ["tests.test_launch_guard.Answered.test_exit_2_refuses_with_the_guards_text_whole"]
+
+[[plant]]
+name = "the interpreter names no file"
+file = "rules/launch_guard.py"
+old = 'INTERPRETER = Path("/home/nicolas/.local/bin/python3.14")'
+new = 'INTERPRETER = Path("/home/nicolas/.local/bin/python3.99")'
+tests = ["tests.test_launch_guard.Constants.test_the_guard_and_its_interpreter_are_executable_files_here"]
+
+[[plant]]
+name = "the guard names no file"
+file = "rules/launch_guard.py"
+old = 'LAUNCH_GUARD = Path("/home/nicolas/dotfiles/.claude/hooks/workflow-launch-guard.py")'
+new = 'LAUNCH_GUARD = Path("/home/nicolas/dotfiles/.claude/hooks/workflow-launch-guard")'
+tests = ["tests.test_launch_guard.Constants.test_the_guard_and_its_interpreter_are_executable_files_here"]
+
+[[plant]]
+name = "the limit is ten times longer"
+file = "rules/launch_guard.py"
+old = 'LAUNCH_TIMEOUT = Seconds(6.0)'
+new = 'LAUNCH_TIMEOUT = Seconds(60.0)'
+tests = ["tests.test_launch_guard.Constants.test_the_guard_runs_for_six_seconds_at_most"]
+
+[[plant]]
+name = "the kit's folder is the rules folder"
+file = "rules/launch_guard.py"
+old = 'KIT = Path(__file__).resolve().parents[1]'
+new = 'KIT = Path(__file__).resolve().parents[0]'
+tests = ["tests.test_launch_guard.Handed.test_an_event_naming_no_cwd_runs_the_guard_in_the_kits_folder"]
+
+[[plant]]
+name = "a fault names the guard without its interpreter"
+file = "rules/launch_guard.py"
+old = 'named = f"{INTERPRETER} {LAUNCH_GUARD}"'
+new = 'named = f"{LAUNCH_GUARD}"'
+tests = ["tests.test_launch_guard.Answered.test_exit_1_and_exit_3_are_faults_naming_the_guard"]
+
+[[plant]]
+name = "the interpreter runs something else than the guard"
+file = "rules/launch_guard.py"
+old = 'subprocess.run([INTERPRETER, LAUNCH_GUARD],'
+new = 'subprocess.run([INTERPRETER, "-c", "pass"],'
+tests = ["tests.test_launch_guard.Answered.test_exit_2_refuses_with_the_guards_text_whole"]
+
+[[plant]]
+name = "the guard is handed an empty object"
+file = "rules/launch_guard.py"
+old = 'input=json.dumps(event.payload).encode()'
+new = 'input=b"{}"'
+tests = ["tests.test_launch_guard.Handed.test_the_payload_arrives_as_the_events_json"]
+
+[[plant]]
+name = "the guard's stdout is the hook's"
+file = "rules/launch_guard.py"
+old = 'stdout=subprocess.DEVNULL'
+new = 'stdout=None'
+tests = ["tests.test_launch_guard.Handed.test_the_guards_stdout_never_reaches_the_hooks_stdout"]
+
+[[plant]]
+name = "the guard's stderr is not read"
+file = "rules/launch_guard.py"
+old = 'stderr=subprocess.PIPE'
+new = 'stderr=subprocess.DEVNULL'
+tests = ["tests.test_launch_guard.Answered.test_exit_2_refuses_with_the_guards_text_whole"]
+
+[[plant]]
+name = "the guard always runs in the kit's folder"
+file = "rules/launch_guard.py"
+old = 'cwd=event.cwd or KIT'
+new = 'cwd=KIT'
+tests = ["tests.test_launch_guard.Handed.test_the_guard_runs_in_the_events_cwd"]
+
+[[plant]]
+name = "an event naming no cwd runs the guard in the dispatcher's folder"
+file = "rules/launch_guard.py"
+old = 'cwd=event.cwd or KIT'
+new = 'cwd=event.cwd'
+tests = ["tests.test_launch_guard.Handed.test_an_event_naming_no_cwd_runs_the_guard_in_the_kits_folder"]
+
+[[plant]]
+name = "the guard inherits the process's environment"
+file = "rules/launch_guard.py"
+old = 'env=dict(event.reading.env)'
+new = 'env=None'
+tests = ["tests.test_launch_guard.Handed.test_the_guard_gets_the_dispatchers_environment"]
+
+[[plant]]
+name = "the run's limit is a fixed number"
+file = "rules/launch_guard.py"
+old = 'timeout=LAUNCH_TIMEOUT'
+new = 'timeout=Seconds(6.0)'
+tests = ["tests.test_launch_guard.Answered.test_a_guard_that_never_ends_is_a_fault"]
+
+[[plant]]
+name = "a non-zero exit raises"
+file = "rules/launch_guard.py"
+old = 'check=False'
+new = 'check=True'
+tests = ["tests.test_launch_guard.Answered.test_exit_2_refuses_with_the_guards_text_whole"]
+
+[[plant]]
+name = "a run past the limit is not caught"
+file = "rules/launch_guard.py"
+old = 'except subprocess.TimeoutExpired:'
+new = 'except subprocess.CalledProcessError:'
+tests = ["tests.test_launch_guard.Answered.test_a_guard_that_never_ends_is_a_fault"]
+
+[[plant]]
+name = "a run past the limit is named otherwise"
+file = "rules/launch_guard.py"
+old = 'outran its {LAUNCH_TIMEOUT:g} s limit'
+new = 'ran past its {LAUNCH_TIMEOUT:g} s limit'
+tests = ["tests.test_launch_guard.Answered.test_a_guard_that_never_ends_is_a_fault"]
+
+[[plant]]
+name = "only a missing interpreter is caught"
+file = "rules/launch_guard.py"
+old = 'except OSError as fault:'
+new = 'except FileNotFoundError as fault:'
+tests = ["tests.test_launch_guard.Answered.test_a_guard_that_cannot_start_is_a_fault"]
+
+[[plant]]
+name = "a start that fails is named by its whole exception"
+file = "rules/launch_guard.py"
+old = 'cannot start: {fault.strerror}'
+new = 'cannot start: {fault}'
+tests = ["tests.test_launch_guard.Answered.test_a_guard_that_cannot_start_is_a_fault"]
+
+[[plant]]
+name = "the text is read as Latin-1"
+file = "rules/launch_guard.py"
+old = '.decode("utf-8", "replace")'
+new = '.decode("latin-1", "replace")'
+tests = ["tests.test_launch_guard.Answered.test_exit_2_refuses_with_the_guards_text_whole"]
+
+[[plant]]
+name = "a bad byte raises"
+file = "rules/launch_guard.py"
+old = '.decode("utf-8", "replace")'
+new = '.decode("utf-8")'
+tests = ["tests.test_launch_guard.Answered.test_a_text_that_is_not_utf_8_refuses_with_each_bad_byte_replaced"]
+
+[[plant]]
+name = "the trailing newline is kept"
+file = "rules/launch_guard.py"
+old = '.decode("utf-8", "replace").rstrip("\n")'
+new = '.decode("utf-8", "replace")'
+tests = ["tests.test_launch_guard.Answered.test_exit_2_refuses_with_the_guards_text_whole"]
+
+[[plant]]
+name = "the text is cut a byte late"
+file = "rules/launch_guard.py"
+old = 'done.stderr[:OUTPUT_LIMIT]'
+new = 'done.stderr[:OUTPUT_LIMIT + 1]'
+tests = ["tests.test_launch_guard.Answered.test_the_text_is_cut_past_64_kib_with_a_line_saying_so"]
+
+[[plant]]
+name = "a text of exactly the limit is said to be cut"
+file = "rules/launch_guard.py"
+old = 'if len(done.stderr) > OUTPUT_LIMIT:'
+new = 'if len(done.stderr) >= OUTPUT_LIMIT:'
+tests = ["tests.test_launch_guard.Answered.test_the_text_is_cut_past_64_kib_with_a_line_saying_so"]
+
+[[plant]]
+name = "the cut line names another size"
+file = "rules/launch_guard.py"
+old = 'at {OUTPUT_LIMIT >> 10} KiB'
+new = 'at {OUTPUT_LIMIT >> 9} KiB'
+tests = ["tests.test_launch_guard.Answered.test_the_text_is_cut_past_64_kib_with_a_line_saying_so"]
+
+[[plant]]
+name = "an exit 0 reads as 2"
+file = "rules/launch_guard.py"
+old = 'code = ExitCode(done.returncode)'
+new = 'code = ExitCode(done.returncode or 2)'
+tests = ["tests.test_launch_guard.Answered.test_exit_0_passes"]
+
+[[plant]]
+name = "an exit 1 passes"
+file = "rules/launch_guard.py"
+old = 'if code == 0:'
+new = 'if code in (0, 1):'
+tests = ["tests.test_launch_guard.Answered.test_exit_1_and_exit_3_are_faults_naming_the_guard"]
+
+[[plant]]
+name = "an exit 0 does not pass"
+file = "rules/launch_guard.py"
+old = 'return None'
+new = 'pass'
+tests = ["tests.test_launch_guard.Answered.test_exit_0_passes"]
+
+[[plant]]
+name = "an exit 3 refuses as the guard's verdict"
+file = "rules/launch_guard.py"
+old = 'if code == 2:'
+new = 'if code in (2, 3):'
+tests = ["tests.test_launch_guard.Answered.test_exit_1_and_exit_3_are_faults_naming_the_guard"]
+
+[[plant]]
+name = "the refusal changes the guard's words"
+file = "rules/launch_guard.py"
+old = 'return refuse(Prose(text))'
+new = 'return refuse(Prose(text.upper()))'
+tests = ["tests.test_launch_guard.Answered.test_exit_2_refuses_with_the_guards_text_whole"]
+
+[[plant]]
+name = "a silent fault says nothing"
+file = "rules/launch_guard.py"
+old = "exited {code}: {text.strip() or 'silent'}"
+new = "exited {code}: {text.strip()}"
+tests = ["tests.test_launch_guard.Answered.test_exit_1_and_exit_3_are_faults_naming_the_guard"]

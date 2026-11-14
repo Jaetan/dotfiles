@@ -1,0 +1,966 @@
+# The plants that show the declarations module's tests hold its code: run
+#   testing/plants.py tests/plants_declarations.toml --out DIR
+# Every plant is killed when each line of declarations/ they break is held by a test.
+
+[[plant]]
+name = "symbolic links are not resolved"
+file = "declarations/lookup.py"
+old = '''real = Path(os.path.realpath(path))'''
+new = '''real = Path(os.path.normpath(path))'''
+tests = ["tests.test_declarations.Lookups.test_a_symbolic_link_is_followed"]
+
+[[plant]]
+name = "a path inside .git is looked up there"
+file = "declarations/lookup.py"
+old = '''if ".git" in real.parts:'''
+new = '''if False:'''
+tests = ["tests.test_declarations.Lookups.test_a_path_inside_the_git_folder"]
+
+[[plant]]
+name = "a file is looked up as a folder"
+file = "declarations/lookup.py"
+old = '''while not real.is_dir():'''
+new = '''while not real.exists():'''
+tests = ["tests.test_declarations.Lookups.test_a_subfolder_a_file_and_a_path_not_yet_made"]
+
+[[plant]]
+name = "every folder is taken as inside a repository"
+file = "declarations/lookup.py"
+old = '''inside = any('''
+new = '''inside = True or any('''
+tests = ["tests.test_declarations.Lookups.test_a_path_outside_every_repository"]
+
+[[plant]]
+name = "the main tree is the work tree"
+file = "declarations/lookup.py"
+old = '''common.parent if common.name == ".git" else work'''
+new = '''work if common.name == ".git" else work'''
+tests = ["tests.test_declarations.Lookups.test_a_linked_worktree_inside_its_tree", "tests.test_declarations.Lookups.test_a_linked_worktree_outside_its_tree"]
+
+[[plant]]
+name = "the main tree is always the common dir's parent"
+file = "declarations/lookup.py"
+old = '''common.parent if common.name == ".git" else work'''
+new = '''common.parent'''
+tests = ["tests.test_declarations.Lookups.test_a_worktree_of_a_bare_repository_is_its_own_main_tree"]
+
+[[plant]]
+name = "the main tree's declaration wins over a worktree's own"
+file = "declarations/lookup.py"
+old = '''dict.fromkeys((tree.work / DECLARATION, tree.main / DECLARATION))'''
+new = '''dict.fromkeys((tree.main / DECLARATION, tree.work / DECLARATION))'''
+tests = ["tests.test_declarations.Lookups.test_a_linked_worktree_with_a_declaration_of_its_own"]
+
+[[plant]]
+name = "a linked worktree does not reach the main tree's declaration"
+file = "declarations/lookup.py"
+old = '''dict.fromkeys((tree.work / DECLARATION, tree.main / DECLARATION))'''
+new = '''dict.fromkeys((tree.work / DECLARATION,))'''
+tests = ["tests.test_declarations.Lookups.test_a_linked_worktree_inside_its_tree", "tests.test_declarations.Lookups.test_a_linked_worktree_outside_its_tree"]
+
+[[plant]]
+name = "records resolve against the work tree"
+file = "declarations/lookup.py"
+old = '''tuple(placed(path, tree.main, home) for path in entries.records)'''
+new = '''tuple(placed(path, tree.work, home) for path in entries.records)'''
+tests = ["tests.test_declarations.Lookups.test_a_linked_worktree_inside_its_tree"]
+
+[[plant]]
+name = "bulk resolves against the main tree"
+file = "declarations/lookup.py"
+old = '''tuple(placed(path, tree.work, home) for path in entries.bulk)'''
+new = '''tuple(placed(path, tree.main, home) for path in entries.bulk)'''
+tests = ["tests.test_declarations.Lookups.test_a_linked_worktree_inside_its_tree"]
+
+[[plant]]
+name = "a heavy script resolves against the main tree"
+file = "declarations/lookup.py"
+old = '''placed(command.script, tree.work, home)'''
+new = '''placed(command.script, tree.main, home)'''
+tests = ["tests.test_declarations.Lookups.test_a_linked_worktree_inside_its_tree"]
+
+[[plant]]
+name = "a gate runs in the main work tree"
+file = "declarations/lookup.py"
+old = '''cwd = tree.work if entry.cwd is None'''
+new = '''cwd = tree.main if entry.cwd is None'''
+tests = ["tests.test_declarations.Lookups.test_a_linked_worktree_inside_its_tree", "tests.test_declarations.Lookups.test_a_file_of_a_linked_worktree_is_handed_to_its_own_gate"]
+
+[[plant]]
+name = "a gate's declared cwd resolves against the main work tree"
+file = "declarations/lookup.py"
+old = '''else placed(entry.cwd, tree.work, home)'''
+new = '''else placed(entry.cwd, tree.main, home)'''
+tests = ["tests.test_declarations.Lookups.test_a_linked_worktree_inside_its_tree"]
+
+[[plant]]
+name = "a gate's first word is left relative"
+file = "declarations/lookup.py"
+old = '''Word(str(placed(PathText(first), cwd, home))) if "/" in first else first'''
+new = '''first'''
+tests = ["tests.test_declarations.Lookups.test_the_calls_folder", "tests.test_declarations.Examples.test_the_aletheia_example"]
+
+[[plant]]
+name = "a ~/ path is not expanded"
+file = "declarations/schema.py"
+old = '''return Path(path) if path.startswith("/") else home / path.removeprefix("~").lstrip("/")'''
+new = '''return Path(path)'''
+tests = ["tests.test_declarations.Lookups.test_the_calls_folder", "tests.test_declarations.Machines.test_the_example"]
+
+[[plant]]
+name = "a ~/ path is read as relative"
+file = "declarations/schema.py"
+old = '''if path.startswith(("/", "~/")) or path == "~":'''
+new = '''if path.startswith("/") or path == "~":'''
+tests = ["tests.test_declarations.Lookups.test_the_calls_folder", "tests.test_declarations.Refusals.test_path_forms"]
+
+[[plant]]
+name = "~ alone is read as relative"
+file = "declarations/schema.py"
+old = '''if path.startswith(("/", "~/")) or path == "~":'''
+new = '''if path.startswith(("/", "~/")):'''
+tests = ["tests.test_declarations.Machines.test_a_home_record"]
+
+[[plant]]
+name = "paths are not normalised"
+file = "declarations/lookup.py"
+old = '''return Path(os.path.normpath(at_home'''
+new = '''return Path((at_home'''
+tests = ["tests.test_declarations.Lookups.test_the_calls_folder"]
+
+[[plant]]
+name = "the declaration is read again"
+file = "declarations/lookup.py"
+old = '''if file not in self.entries:'''
+new = '''if True:'''
+tests = ["tests.test_declarations.ReadOnce.test_a_declaration_is_read_once"]
+
+[[plant]]
+name = "the machine file is read again"
+file = "declarations/lookup.py"
+old = '''if self.read_machine is None:'''
+new = '''if True:'''
+tests = ["tests.test_declarations.ReadOnce.test_the_machine_file_is_read_once"]
+
+[[plant]]
+name = "git is asked again for a folder"
+file = "declarations/lookup.py"
+old = '''if folder not in self.trees:'''
+new = '''if True:'''
+tests = ["tests.test_declarations.ReadOnce.test_git_is_asked_once_per_folder"]
+
+[[plant]]
+name = "a relative path is looked up"
+file = "declarations/lookup.py"
+old = '''if not path.is_absolute():'''
+new = '''if False:'''
+tests = ["tests.test_declarations.Lookups.test_a_relative_path_is_a_fault"]
+
+[[plant]]
+name = "a missing file is a fault"
+file = "declarations/lookup.py"
+old = '''except (FileNotFoundError, NotADirectoryError):'''
+new = '''except NotADirectoryError:'''
+tests = ["tests.test_declarations.Lookups.test_a_fresh_clone_of_an_untracked_declaration_has_none", "tests.test_declarations.Machines.test_a_missing_machine_file_is_a_fault"]
+
+[[plant]]
+name = "a .claude file is a fault"
+file = "declarations/lookup.py"
+old = '''except (FileNotFoundError, NotADirectoryError):'''
+new = '''except FileNotFoundError:'''
+tests = ["tests.test_declarations.Lookups.test_a_nested_repository_without_one"]
+
+[[plant]]
+name = "an unreadable declaration escapes as an OSError"
+file = "declarations/lookup.py"
+old = '''except OSError as fault:
+        raise KitFault(Prose(f"the declaration {file} cannot be read'''
+new = '''except ValueError as fault:
+        raise KitFault(Prose(f"the declaration {file} cannot be read'''
+tests = ["tests.test_declarations.Refusals.test_a_file_that_cannot_be_read"]
+
+[[plant]]
+name = "a declaration is read as Latin-1"
+file = "declarations/lookup.py"
+old = '''data.decode("utf-8")'''
+new = '''data.decode("latin-1")'''
+tests = ["tests.test_declarations.Refusals.test_a_file_that_cannot_be_read"]
+
+[[plant]]
+name = "a TOML error escapes"
+file = "declarations/lookup.py"
+old = '''except tomllib.TOMLDecodeError as fault:'''
+new = '''except KeyError as fault:'''
+tests = ["tests.test_declarations.Refusals.test_a_file_that_cannot_be_read", "tests.test_declarations.Dispatcher.test_a_broken_declaration_refuses_the_call"]
+
+[[plant]]
+name = "the hook's GIT_DIR reaches git"
+file = "declarations/lookup.py"
+old = '''if name not in CLEARED}'''
+new = '''if name}'''
+tests = ["tests.test_declarations.Lookups.test_the_hooks_git_environment_is_ignored"]
+
+[[plant]]
+name = "git runs without a time limit"
+file = "declarations/lookup.py"
+old = '''timeout=GIT_TIMEOUT, check=False)'''
+new = '''check=False)'''
+tests = ["tests.test_declarations.GitFaults.test_git_fails"]
+
+[[plant]]
+name = "git's timeout escapes"
+file = "declarations/lookup.py"
+old = '''except subprocess.TimeoutExpired:
+        raise KitFault(Prose(f"git outran'''
+new = '''except ZeroDivisionError:
+        raise KitFault(Prose(f"git outran'''
+tests = ["tests.test_declarations.GitFaults.test_git_outruns_its_limit"]
+
+[[plant]]
+name = "git that cannot run escapes"
+file = "declarations/lookup.py"
+old = '''except OSError as fault:
+        raise KitFault(Prose(f"git cannot run'''
+new = '''except ZeroDivisionError as fault:
+        raise KitFault(Prose(f"git cannot run'''
+tests = ["tests.test_declarations.GitFaults.test_git_cannot_run"]
+
+[[plant]]
+name = "a failing git is believed"
+file = "declarations/lookup.py"
+old = '''if done.returncode != 0 or len(said) != 2:'''
+new = '''if len(said) != 2:'''
+tests = ["tests.test_declarations.GitFaults.test_git_fails"]
+
+[[plant]]
+name = "a one-line answer is believed"
+file = "declarations/lookup.py"
+old = '''if done.returncode != 0 or len(said) != 2:'''
+new = '''if done.returncode != 0:'''
+tests = ["tests.test_declarations.GitFaults.test_git_answers_one_line"]
+
+[[plant]]
+name = "records put the project's first"
+file = "declarations/lookup.py"
+old = '''return (*self.machine.records, *self.project.records)'''
+new = '''return (*self.project.records, *self.machine.records)'''
+tests = ["tests.test_declarations.Lookups.test_records_are_the_machines_then_the_projects"]
+
+[[plant]]
+name = "the declaration sits elsewhere"
+file = "declarations/lookup.py"
+old = '''DECLARATION = Path(".claude") / "guard.toml"'''
+new = '''DECLARATION = Path(".claude") / "guard-kit.toml"'''
+tests = ["tests.test_declarations.Lookups.test_the_calls_folder", "tests.test_declarations.Lookups.test_a_nested_repository_with_its_own", "tests.test_declarations.Lookups.test_a_fresh_clone_carries_a_committed_declaration"]
+
+[[plant]]
+name = "the machine file sits elsewhere under home"
+file = "declarations/lookup.py"
+old = '''MACHINE_FILE = Path(".config") / "claude-guard" / "machine.toml"'''
+new = '''MACHINE_FILE = Path(".config") / "guard" / "machine.toml"'''
+tests = ["tests.test_declarations.Machines.test_the_machine_file_sits_under_the_home_folder"]
+
+[[plant]]
+name = "unknown keys pass"
+file = "declarations/schema.py"
+old = '''unknown = sorted(set(raw) - known)'''
+new = '''unknown = []'''
+tests = ["tests.test_declarations.Refusals.test_unknown_keys", "tests.test_declarations.Refusals.test_misspellings"]
+
+[[plant]]
+name = "a table of another type passes"
+file = "declarations/schema.py"
+old = '''if not isinstance(raw, dict):
+            raise self.fault(key, Prose("it must be a table"))'''
+new = '''if False:
+            raise self.fault(key, Prose("it must be a table"))'''
+tests = ["tests.test_declarations.Refusals.test_types"]
+
+[[plant]]
+name = "a schema of true or 1.0 passes"
+file = "declarations/schema.py"
+old = '''if type(value) is not int or value != SCHEMA:'''
+new = '''if value != SCHEMA:'''
+tests = ["tests.test_declarations.Refusals.test_the_schema_version"]
+
+[[plant]]
+name = "any integer schema passes"
+file = "declarations/schema.py"
+old = '''if type(value) is not int or value != SCHEMA:'''
+new = '''if type(value) is not int:'''
+tests = ["tests.test_declarations.Refusals.test_the_schema_version"]
+
+[[plant]]
+name = "a project file's schema is not checked"
+file = "declarations/schema.py"
+old = '''frozenset(TomlKey(key) for key in PROJECT_KEYS))
+    reading.version(top)'''
+new = '''frozenset(TomlKey(key) for key in PROJECT_KEYS))'''
+tests = ["tests.test_declarations.Refusals.test_the_schema_version"]
+
+[[plant]]
+name = "the machine file's schema is not checked"
+file = "declarations/schema.py"
+old = '''MACHINE_KEYS)
+    reading.version(top)'''
+new = '''MACHINE_KEYS)'''
+tests = ["tests.test_declarations.Refusals.test_the_schema_version"]
+
+[[plant]]
+name = "a list holding a non-string passes"
+file = "declarations/schema.py"
+old = '''if not isinstance(value, list) or not all(isinstance(item, str) and item for item in value):'''
+new = '''if not isinstance(value, list):'''
+tests = ["tests.test_declarations.Refusals.test_types"]
+
+[[plant]]
+name = "an empty string in a list passes"
+file = "declarations/schema.py"
+old = '''not all(isinstance(item, str) and item for item in value)'''
+new = '''not all(isinstance(item, str) for item in value)'''
+tests = ["tests.test_declarations.Refusals.test_types"]
+
+[[plant]]
+name = "a string passes as a list"
+file = "declarations/schema.py"
+old = '''if not isinstance(value, list) or not all('''
+new = '''if not isinstance(value, (list, str)) or not all('''
+tests = ["tests.test_declarations.Refusals.test_types"]
+
+[[plant]]
+name = "a text of another type passes"
+file = "declarations/schema.py"
+old = '''if value is not None and not (isinstance(value, str) and value):'''
+new = '''if False:'''
+tests = ["tests.test_declarations.Refusals.test_types", "tests.test_declarations.Refusals.test_gates"]
+
+[[plant]]
+name = "a path's form is not checked"
+file = "declarations/schema.py"
+old = '''if anchor_of(path) not in anchors:'''
+new = '''if False:'''
+tests = ["tests.test_declarations.Refusals.test_path_forms"]
+
+[[plant]]
+name = "a heavy entry with no matcher passes"
+file = "declarations/schema.py"
+old = '''if len(named) != 1:'''
+new = '''if len(named) > 1:'''
+tests = ["tests.test_declarations.Refusals.test_heavy_matchers"]
+
+[[plant]]
+name = "a heavy entry with two matchers passes"
+file = "declarations/schema.py"
+old = '''if len(named) != 1:'''
+new = '''if len(named) < 1:'''
+tests = ["tests.test_declarations.Refusals.test_heavy_matchers"]
+
+[[plant]]
+name = "an absolute heavy script passes"
+file = "declarations/schema.py"
+old = '''if script is not None and anchor_of(PathText(script)) != "relative":'''
+new = '''if False:'''
+tests = ["tests.test_declarations.Refusals.test_path_forms"]
+
+[[plant]]
+name = "an empty argv passes"
+file = "declarations/schema.py"
+old = '''if "argv" in entry and not argv:'''
+new = '''if False:'''
+tests = ["tests.test_declarations.Refusals.test_heavy_matchers"]
+
+[[plant]]
+name = "writes may be any value"
+file = "declarations/schema.py"
+old = '''if not isinstance(writes, bool):'''
+new = '''if False:'''
+tests = ["tests.test_declarations.Refusals.test_types"]
+
+[[plant]]
+name = "an unknown targeted_by passes"
+file = "declarations/schema.py"
+old = '''if targeted is not None and targeted not in TARGETED_BY:'''
+new = '''if False:'''
+tests = ["tests.test_declarations.Refusals.test_types"]
+
+[[plant]]
+name = "heavy that is not an array passes"
+file = "declarations/schema.py"
+old = '''if not isinstance(heavy, list):'''
+new = '''if False:'''
+tests = ["tests.test_declarations.Refusals.test_types"]
+
+[[plant]]
+name = "a test gate takes suffixes"
+file = "declarations/schema.py"
+old = '''keys = GATE_KEYS if name == "precise_hints" else GATE_KEYS - {"suffixes"}'''
+new = '''keys = GATE_KEYS'''
+tests = ["tests.test_declarations.Refusals.test_unknown_keys"]
+
+[[plant]]
+name = "a gate without a command passes"
+file = "declarations/schema.py"
+old = '''if not run:'''
+new = '''if False:'''
+tests = ["tests.test_declarations.Refusals.test_gates"]
+
+[[plant]]
+name = "any protocol passes"
+file = "declarations/schema.py"
+old = '''if protocol != PROTOCOLS[name]:'''
+new = '''if False:'''
+tests = ["tests.test_declarations.Refusals.test_gates"]
+
+[[plant]]
+name = "a gate's cwd is dropped"
+file = "declarations/schema.py"
+old = '''return GateEntry(run, PathText(cwd) if cwd else None,'''
+new = '''return GateEntry(run, None,'''
+tests = ["tests.test_declarations.Lookups.test_the_calls_folder"]
+
+[[plant]]
+name = "a gate's rule source is dropped"
+file = "declarations/schema.py"
+old = '''Prose(source or "")'''
+new = '''Prose("")'''
+tests = ["tests.test_declarations.Lookups.test_the_calls_folder"]
+
+[[plant]]
+name = "a gate's suffixes are dropped"
+file = "declarations/schema.py"
+old = '''tuple(Suffix(word) for word in reading.words(entry, TomlKey("suffixes"), where)))'''
+new = '''())'''
+tests = ["tests.test_declarations.Lookups.test_the_calls_folder"]
+
+[[plant]]
+name = "a heavy module is dropped"
+file = "declarations/schema.py"
+old = '''ModuleName(module) if module else None'''
+new = '''None'''
+tests = ["tests.test_declarations.Lookups.test_the_calls_folder", "tests.test_declarations.Examples.test_the_aletheia_example"]
+
+[[plant]]
+name = "a heavy program is dropped"
+file = "declarations/schema.py"
+old = '''ProgramName(program) if program else None'''
+new = '''None'''
+tests = ["tests.test_declarations.Examples.test_the_aletheia_example"]
+
+[[plant]]
+name = "a heavy command never writes"
+file = "declarations/schema.py"
+old = '''ProgramName(program) if program else None, writes,'''
+new = '''ProgramName(program) if program else None, False,'''
+tests = ["tests.test_declarations.Lookups.test_the_calls_folder"]
+
+[[plant]]
+name = "light_with is dropped"
+file = "declarations/schema.py"
+old = '''reading.words(entry, TomlKey("light_with"), where)'''
+new = '''()'''
+tests = ["tests.test_declarations.Examples.test_the_aletheia_example"]
+
+[[plant]]
+name = "light_targets is dropped"
+file = "declarations/schema.py"
+old = '''reading.words(entry, TomlKey("light_targets"), where)'''
+new = '''()'''
+tests = ["tests.test_declarations.Examples.test_the_aletheia_example"]
+
+[[plant]]
+name = "verbose_flags is dropped"
+file = "declarations/schema.py"
+old = '''reading.words(entry, TomlKey("verbose_flags"), where)'''
+new = '''()'''
+tests = ["tests.test_declarations.Examples.test_the_aletheia_example"]
+
+[[plant]]
+name = "valued_options is dropped"
+file = "declarations/schema.py"
+old = '''reading.words(entry, TomlKey("valued_options"), where))'''
+new = '''())'''
+tests = ["tests.test_declarations.Examples.test_the_aletheia_example"]
+
+[[plant]]
+name = "targeted_by is dropped"
+file = "declarations/schema.py"
+old = '''targeted if targeted in TARGETED_BY else None'''
+new = '''None'''
+tests = ["tests.test_declarations.Examples.test_the_aletheia_example"]
+
+[[plant]]
+name = "a CPU list's low end is not checked"
+file = "declarations/schema.py"
+old = '''if not low.isdecimal() or (dash and not high.isdecimal()) or (dash and int(high) < int(low)):'''
+new = '''if (dash and not high.isdecimal()) or (dash and int(high) < int(low)):'''
+tests = ["tests.test_declarations.Refusals.test_cpu_lists"]
+
+[[plant]]
+name = "a CPU list's high end is not checked"
+file = "declarations/schema.py"
+old = '''if not low.isdecimal() or (dash and not high.isdecimal()) or (dash and int(high) < int(low)):'''
+new = '''if not low.isdecimal() or (dash and int(high) < int(low)):'''
+tests = ["tests.test_declarations.Refusals.test_cpu_lists"]
+
+[[plant]]
+name = "a reversed CPU range passes"
+file = "declarations/schema.py"
+old = '''if not low.isdecimal() or (dash and not high.isdecimal()) or (dash and int(high) < int(low)):'''
+new = '''if not low.isdecimal() or (dash and not high.isdecimal()):'''
+tests = ["tests.test_declarations.Refusals.test_cpu_lists"]
+
+[[plant]]
+name = "a CPU range leaves out its high end"
+file = "declarations/schema.py"
+old = '''int(high if dash else low) + 1)'''
+new = '''int(high if dash else low))'''
+tests = ["tests.test_declarations.Machines.test_cpu_lists", "tests.test_declarations.Machines.test_the_example"]
+
+[[plant]]
+name = "any slice name passes"
+file = "declarations/schema.py"
+old = '''if name is not None and not name.endswith(".slice"):'''
+new = '''if False:'''
+tests = ["tests.test_declarations.Refusals.test_slice_and_sizes"]
+
+[[plant]]
+name = "a zero size passes"
+file = "declarations/schema.py"
+old = '''if not digits.isdecimal() or not int(digits):'''
+new = '''if not digits.isdecimal():'''
+tests = ["tests.test_declarations.Refusals.test_slice_and_sizes"]
+
+[[plant]]
+name = "a size's digits are not checked"
+file = "declarations/schema.py"
+old = '''if not digits.isdecimal() or not int(digits):'''
+new = '''if not int(digits or 1):'''
+tests = ["tests.test_declarations.Refusals.test_slice_and_sizes"]
+
+[[plant]]
+name = "a G is a mebibyte"
+file = "declarations/schema.py"
+old = '''"G": 1 << 30'''
+new = '''"G": 1 << 20'''
+tests = ["tests.test_declarations.Machines.test_sizes_and_tiers"]
+
+[[plant]]
+name = "a size's unit is ignored"
+file = "declarations/schema.py"
+old = '''int(digits) * SIZE_UNITS[unit]'''
+new = '''int(digits)'''
+tests = ["tests.test_declarations.Machines.test_sizes_and_tiers"]
+
+[[plant]]
+name = "heavy_max may sit below call_max"
+file = "declarations/schema.py"
+old = '''if call is not None and heavy is not None and heavy < call:'''
+new = '''if False:'''
+tests = ["tests.test_declarations.Refusals.test_slice_and_sizes"]
+
+[[plant]]
+name = "heavy_max does not default to call_max"
+file = "declarations/schema.py"
+old = '''call if heavy is None else heavy'''
+new = '''heavy'''
+tests = ["tests.test_declarations.Machines.test_sizes_and_tiers"]
+
+[[plant]]
+name = "a machine record may be relative"
+file = "declarations/schema.py"
+old = '''TomlKey("records"), frozenset({"home"}))'''
+new = '''TomlKey("records"), frozenset({"relative", "home"}))'''
+tests = ["tests.test_declarations.Refusals.test_path_forms"]
+
+[[plant]]
+name = "the job bound is one short"
+file = "declarations/schema.py"
+old = '''Count(len(self.agent_cpus))'''
+new = '''Count(len(self.agent_cpus) - 1)'''
+tests = ["tests.test_declarations.Machines.test_the_example", "tests.test_declarations.Machines.test_cpu_lists"]
+
+[[plant]]
+name = "a job bound without agents"
+file = "declarations/schema.py"
+old = '''return None if self.agent_cpus is None else'''
+new = '''return Count(0) if self.agent_cpus is None else'''
+tests = ["tests.test_declarations.Machines.test_each_table_declares_its_facts_absent"]
+
+[[plant]]
+name = "a machine without its file gets no facts"
+file = "declarations/lookup.py"
+old = '''if raw is None:
+                raise KitFault(missing_machine(self.machine_file, self.home))'''
+new = '''if raw is None:
+                return Machine(None, frozenset(), None, None, None, ())'''
+tests = ["tests.test_declarations.Machines.test_a_missing_machine_file_is_a_fault", "tests.test_declarations.Dispatcher.test_a_machine_without_its_file_refuses_every_call_until_the_switch", "tests.test_job_count.Machines.test_no_agents_cpus", "tests.test_unit_slice.Machines.test_no_slice"]
+
+[[plant]]
+name = "the missing machine's fault names another switch"
+file = "declarations/lookup.py"
+old = '''KIT_SWITCH = Path(".config") / "claude-guard" / "off" / "all"'''
+new = '''KIT_SWITCH = Path(".config") / "claude-guard" / "off" / "kit"'''
+tests = ["tests.test_declarations.Machines.test_a_missing_machine_file_is_a_fault", "tests.test_declarations.Dispatcher.test_a_machine_without_its_file_refuses_every_call_until_the_switch"]
+
+[[plant]]
+name = "the missing machine's fault names no table"
+file = "declarations/lookup.py"
+old = '''tables = ", ".join(f"[{key}] ({facts.named})" for key, facts in MACHINE_TABLES.items())'''
+new = '''tables = ""'''
+tests = ["tests.test_declarations.Machines.test_a_missing_machine_file_is_a_fault"]
+
+[[plant]]
+name = "the missing machine's fault names another example"
+file = "declarations/lookup.py"
+old = '''EXAMPLE = Path(__file__).resolve().parent / "examples" / "machine.toml"'''
+new = '''EXAMPLE = Path(__file__).resolve().parent / "examples" / "aletheia.toml"'''
+tests = ["tests.test_declarations.Machines.test_a_missing_machine_file_is_a_fault"]
+
+[[plant]]
+name = "a table names no optional fact"
+file = "declarations/schema.py"
+old = '''"".join(f", optionally {key}" for key in self.optional)'''
+new = '''""'''
+tests = ["tests.test_declarations.Machines.test_a_missing_machine_file_is_a_fault", "tests.test_declarations.Refusals.test_a_missing_table"]
+
+[[plant]]
+name = "a machine table missing whole reads as absent"
+file = "declarations/schema.py"
+old = '''    if key not in top:
+        raise reading.fault(key,'''
+new = '''    if key not in top:
+        return {}
+    if False:
+        raise reading.fault(key,'''
+tests = ["tests.test_declarations.Refusals.test_a_missing_table", "tests.test_declarations.Dispatcher.test_a_machine_file_missing_a_table_refuses_the_call"]
+
+[[plant]]
+name = "a required fact may be left out"
+file = "declarations/schema.py"
+old = '''            if name not in table:
+                raise'''
+new = '''            if False:
+                raise'''
+tests = ["tests.test_declarations.Refusals.test_a_missing_fact"]
+
+[[plant]]
+name = "an empty machine record list passes"
+file = "declarations/schema.py"
+old = '''    if records and not paths:'''
+new = '''    if False:'''
+tests = ["tests.test_declarations.Refusals.test_a_missing_fact"]
+
+[[plant]]
+name = "absent beside a fact passes"
+file = "declarations/schema.py"
+old = '''    if beside:'''
+new = '''    if False:'''
+tests = ["tests.test_declarations.Refusals.test_absent_forms"]
+
+[[plant]]
+name = "an empty reason passes"
+file = "declarations/schema.py"
+old = '''not isinstance(reason, str) or not reason.strip()'''
+new = '''not isinstance(reason, str)'''
+tests = ["tests.test_declarations.Refusals.test_absent_forms"]
+
+[[plant]]
+name = "a reason of spaces passes"
+file = "declarations/schema.py"
+old = '''not reason.strip()'''
+new = '''not reason'''
+tests = ["tests.test_declarations.Refusals.test_absent_forms"]
+
+[[plant]]
+name = "a reason of another type passes"
+file = "declarations/schema.py"
+old = '''not isinstance(reason, str) or not reason.strip()'''
+new = '''not reason'''
+tests = ["tests.test_declarations.Refusals.test_absent_forms"]
+
+[[plant]]
+name = "an absent table is read as its facts"
+file = "declarations/schema.py"
+old = '''Prose("it must be a string naming why this machine has none"))
+    return {}'''
+new = '''Prose("it must be a string naming why this machine has none"))
+    return table'''
+tests = ["tests.test_declarations.Machines.test_each_table_declares_its_facts_absent"]
+
+[[plant]]
+name = "absent is no key of a machine table"
+file = "declarations/schema.py"
+old = '''frozenset({*facts.required, *facts.optional, ABSENT})'''
+new = '''frozenset({*facts.required, *facts.optional})'''
+tests = ["tests.test_declarations.Machines.test_each_table_declares_its_facts_absent"]
+
+[[plant]]
+name = "a table's optional facts are refused"
+file = "declarations/schema.py"
+old = '''frozenset({*facts.required, *facts.optional, ABSENT})'''
+new = '''frozenset({*facts.required, ABSENT})'''
+tests = ["tests.test_declarations.Lookups.test_the_calls_folder", "tests.test_declarations.Machines.test_cpu_lists"]
+
+[[plant]]
+name = "the user's CPUs are required"
+file = "declarations/schema.py"
+old = '''TomlKey("cpus"): FactTable((TomlKey("agents"),), ())'''
+new = '''TomlKey("cpus"): FactTable((TomlKey("agents"), TomlKey("user")), ())'''
+tests = ["tests.test_declarations.Machines.test_cpu_lists"]
+
+[[plant]]
+name = "heavy_max is required"
+file = "declarations/schema.py"
+old = '''FactTable((TomlKey("call_max"),), (TomlKey("heavy_max"),))'''
+new = '''FactTable((TomlKey("call_max"), TomlKey("heavy_max")), ())'''
+tests = ["tests.test_declarations.Machines.test_sizes_and_tiers"]
+
+[[plant]]
+name = "a path's facts read the machine file"
+file = "declarations/lookup.py"
+old = '''        tree = self.tree_of(start_of(path))'''
+new = '''        tree = self.machine() and self.tree_of(start_of(path))'''
+tests = ["tests.test_declarations.Machines.test_a_paths_project_facts_never_read_the_machine_file",
+         "tests.test_dispatcher.MachineFile.test_a_missing_or_incomplete_machine_file"]
+
+[[plant]]
+name = "the facts' machine is not the machine file's"
+file = "declarations/lookup.py"
+old = '''        return self.machine_of()'''
+new = '''        return Machine(None, frozenset(), None, None, None, ())'''
+tests = ["tests.test_declarations.Lookups.test_records_are_the_machines_then_the_projects",
+         "tests.test_declarations.Machines.test_a_missing_machine_file_is_a_fault"]
+
+[[plant]]
+name = "the facts compare their machine reader"
+file = "declarations/lookup.py"
+old = 'field(compare=False)'
+new = 'field()'
+tests = ["tests.test_declarations.Lookups.test_the_calls_folder",
+         "tests.test_declarations.Machines.test_a_paths_project_facts_never_read_the_machine_file"]
+
+[[plant]]
+name = "pytest-operands is no kind"
+file = "declarations/schema.py"
+old = '''("catch2-operands", "pytest-operands", "python-files")'''
+new = '''("catch2-operands", "python-files")'''
+tests = ["tests.test_declarations.Examples.test_the_row_scope", "tests.test_declarations.Refusals.test_types"]
+
+[[plant]]
+name = "python-files is no kind"
+file = "declarations/schema.py"
+old = '''("catch2-operands", "pytest-operands", "python-files")'''
+new = '''("catch2-operands", "pytest-operands")'''
+tests = ["tests.test_declarations.Examples.test_the_row_scope", "tests.test_declarations.Refusals.test_types"]
+
+[[plant]]
+name = "option_marks is a key again"
+file = "declarations/schema.py"
+old = '''"valued_options"})'''
+new = '''"valued_options", "option_marks"})'''
+tests = ["tests.test_declarations.Refusals.test_a_retired_key_is_no_key"]
+
+[[plant]]
+name = "needs_one_of is a key again"
+file = "declarations/schema.py"
+old = '''"valued_options"})'''
+new = '''"valued_options", "needs_one_of"})'''
+tests = ["tests.test_declarations.Refusals.test_a_retired_key_is_no_key"]
+
+[[plant]]
+name = "light_values is a key again"
+file = "declarations/schema.py"
+old = '''"valued_options"})'''
+new = '''"valued_options", "light_values"})'''
+tests = ["tests.test_declarations.Refusals.test_a_retired_key_is_no_key"]
+
+[[plant]]
+name = "heavy_operands is a key again"
+file = "declarations/schema.py"
+old = '''"valued_options"})'''
+new = '''"valued_options", "heavy_operands"})'''
+tests = ["tests.test_declarations.Refusals.test_a_retired_key_is_no_key"]
+
+[[plant]]
+name = "heavy_with is a key again"
+file = "declarations/schema.py"
+old = '''"valued_options"})'''
+new = '''"valued_options", "heavy_with"})'''
+tests = ["tests.test_declarations.Refusals.test_a_retired_key_is_no_key"]
+
+[[plant]]
+name = "several_valued is a key again"
+file = "declarations/schema.py"
+old = '''"valued_options"})'''
+new = '''"valued_options", "several_valued"})'''
+tests = ["tests.test_declarations.Refusals.test_a_retired_key_is_no_key"]
+
+[[plant]]
+name = "a path outside every repository gets a work tree"
+file = "declarations/lookup.py"
+old = '''return Facts(self.machine, NO_PROJECT, None, None)'''
+new = '''return Facts(self.machine, NO_PROJECT, None, Path("/"))'''
+tests = ["tests.test_declarations.Lookups.test_a_path_outside_every_repository",
+         "tests.test_declarations.Machines.test_a_paths_project_facts_never_read_the_machine_file"]
+
+[[plant]]
+name = "a declared work tree is the main tree"
+file = "declarations/lookup.py"
+old = '''return Facts(self.machine, resolved(entries, tree, self.home), file, tree.work)'''
+new = '''return Facts(self.machine, resolved(entries, tree, self.home), file, tree.main)'''
+tests = ["tests.test_declarations.Lookups.test_a_linked_worktree_with_a_declaration_of_its_own"]
+
+[[plant]]
+name = "an undeclared repository has no work tree"
+file = "declarations/lookup.py"
+old = '''return Facts(self.machine, NO_PROJECT, None, tree.work)'''
+new = '''return Facts(self.machine, NO_PROJECT, None, None)'''
+tests = ["tests.test_declarations.Lookups.test_a_nested_repository_without_one",
+         "tests.test_declarations.Lookups.test_a_fresh_clone_of_an_untracked_declaration_has_none"]
+
+[[plant]]
+name = "the cpus table takes the user's CPUs again"
+file = "declarations/schema.py"
+old = '''TomlKey("cpus"): FactTable((TomlKey("agents"),), ()),'''
+new = '''TomlKey("cpus"): FactTable((TomlKey("agents"),), (TomlKey("user"),)),'''
+tests = ["tests.test_declarations.Refusals.test_a_missing_table"]
+
+[[plant]]
+name = "the agents' CPUs are dropped from the facts"
+file = "declarations/schema.py"
+old = '''return Machine(agents, SliceName(name) if name else None,'''
+new = '''return Machine(None, SliceName(name) if name else None,'''
+tests = ["tests.test_declarations.Machines.test_the_example", "tests.test_declarations.Machines.test_cpu_lists"]
+
+[[plant]]
+name = "the example declares the user's CPUs again"
+file = "declarations/examples/machine.toml"
+old = '''agents = "0-19"
+'''
+new = '''agents = "0-19"
+user = "20-23"
+'''
+tests = ["tests.test_declarations.Machines.test_the_example"]
+
+[[plant]]
+name = "probes is no project key"
+file = "declarations/schema.py"
+old = '''"bulk", "probes", "heavy"'''
+new = '''"bulk", "heavy"'''
+tests = ["tests.test_declarations.Refusals.test_the_probe_record", "tests.test_declarations.Lookups.test_the_calls_folder"]
+
+[[plant]]
+name = "as_from is no gate key"
+file = "declarations/schema.py"
+old = '''"cwd", "as_from", "protocol"'''
+new = '''"cwd", "protocol"'''
+tests = ["tests.test_declarations.FolderKeys.test_as_from_and_the_probe_record", "tests.test_declarations.Lookups.test_the_calls_folder"]
+
+[[plant]]
+name = "as_from's type is not checked"
+file = "declarations/schema.py"
+old = '''as_from = reading.text(entry, TomlKey("as_from"), where)'''
+new = '''as_from = entry.get("as_from")'''
+tests = ["tests.test_declarations.Refusals.test_gates"]
+
+[[plant]]
+name = "a declared as_from is dropped"
+file = "declarations/schema.py"
+old = '''PathText(as_from) if as_from else None'''
+new = '''None'''
+tests = ["tests.test_declarations.FolderKeys.test_as_from_and_the_probe_record", "tests.test_declarations.Lookups.test_the_calls_folder"]
+
+[[plant]]
+name = "GateEntry carries no as_from"
+file = "declarations/schema.py"
+old = '''    cwd: PathText | None
+    as_from: PathText | None
+'''
+new = '''    cwd: PathText | None
+'''
+tests = ["tests.test_declarations.FolderKeys.test_as_from_and_the_probe_record"]
+
+[[plant]]
+name = "an unknown key in [probes] passes"
+file = "declarations/schema.py"
+old = '''TomlKey("probes"), frozenset({TomlKey("record")}))'''
+new = '''TomlKey("probes"), frozenset({TomlKey("record"), TomlKey("records")}))'''
+tests = ["tests.test_declarations.Refusals.test_the_probe_record"]
+
+[[plant]]
+name = "[probes] is not checked as a table"
+file = "declarations/schema.py"
+old = '''probes = reading.table(top.get(TomlKey("probes"), {}), TomlKey("probes"), frozenset({TomlKey("record")}))'''
+new = '''probes = top.get(TomlKey("probes"), {})
+    probes = probes if isinstance(probes, dict) else {}'''
+tests = ["tests.test_declarations.Refusals.test_the_probe_record"]
+
+[[plant]]
+name = "the record's type is not checked"
+file = "declarations/schema.py"
+old = '''record = reading.text(probes, TomlKey("record"), TomlKey("probes"))'''
+new = '''record = probes.get(TomlKey("record"))'''
+tests = ["tests.test_declarations.Refusals.test_the_probe_record"]
+
+[[plant]]
+name = "a declared record is dropped"
+file = "declarations/schema.py"
+old = '''PathText(record) if record else None)'''
+new = '''None)'''
+tests = ["tests.test_declarations.FolderKeys.test_as_from_and_the_probe_record", "tests.test_declarations.Examples.test_the_aletheia_example"]
+
+[[plant]]
+name = "an undeclared as_from defaults to the gate's cwd"
+file = "declarations/lookup.py"
+old = '''as_from = tree.work if entry.as_from is None'''
+new = '''as_from = cwd if entry.as_from is None'''
+tests = ["tests.test_declarations.FolderKeys.test_as_from_and_the_probe_record"]
+
+[[plant]]
+name = "a relative as_from is read from the gate's cwd"
+file = "declarations/lookup.py"
+old = '''placed(entry.as_from, tree.work, home)'''
+new = '''placed(entry.as_from, cwd, home)'''
+tests = ["tests.test_declarations.FolderKeys.test_as_from_and_the_probe_record", "tests.test_declarations.Lookups.test_the_calls_folder"]
+
+[[plant]]
+name = "a relative as_from is read from the main work tree"
+file = "declarations/lookup.py"
+old = '''placed(entry.as_from, tree.work, home)'''
+new = '''placed(entry.as_from, tree.main, home)'''
+tests = ["tests.test_declarations.Lookups.test_a_linked_worktree_inside_its_tree", "tests.test_declarations.Lookups.test_a_linked_worktree_outside_its_tree"]
+
+[[plant]]
+name = "the gate carries its cwd as its as_from"
+file = "declarations/lookup.py"
+old = '''return Gate(run, cwd, as_from,'''
+new = '''return Gate(run, cwd, cwd,'''
+tests = ["tests.test_declarations.FolderKeys.test_as_from_and_the_probe_record", "tests.test_declarations.Lookups.test_the_calls_folder"]
+
+[[plant]]
+name = "a relative record is read from the linked work tree"
+file = "declarations/lookup.py"
+old = '''placed(entries.probe_record, tree.main, home)'''
+new = '''placed(entries.probe_record, tree.work, home)'''
+tests = ["tests.test_declarations.Lookups.test_a_linked_worktree_inside_its_tree", "tests.test_declarations.Lookups.test_a_linked_worktree_outside_its_tree"]
+
+[[plant]]
+name = "the project's facts drop the record"
+file = "declarations/lookup.py"
+old = '''None if entries.probe_record is None else placed(entries.probe_record, tree.main, home))'''
+new = '''None)'''
+tests = ["tests.test_declarations.FolderKeys.test_as_from_and_the_probe_record", "tests.test_declarations.Examples.test_the_aletheia_example"]
+
+[[plant]]
+name = "a project declaring no record carries one"
+file = "declarations/lookup.py"
+old = '''probe_record: Path | None = None'''
+new = '''probe_record: Path | None = Path("/x")'''
+tests = ["tests.test_declarations.Lookups.test_a_linked_worktree_with_a_declaration_of_its_own", "tests.test_declarations.Lookups.test_a_nested_repository_with_its_own"]
+
+[[plant]]
+name = "the aletheia example names the record of the probes folder itself"
+file = "declarations/examples/aletheia.toml"
+old = '''probes/aletheia/timings.tsv'''
+new = '''probes/timings.tsv'''
+tests = ["tests.test_declarations.Examples.test_the_aletheia_example"]

@@ -1,0 +1,515 @@
+# The plants that show rules/job_count.py held by tests/test_job_count.py:
+#   testing/plants.py tests/plants_job_count.toml --out DIR
+
+[[plant]]
+name = "no hook event is judged"
+file = "rules/job_count.py"
+old = '''EVENTS: frozenset[HookEvent] = frozenset({"PreToolUse"})'''
+new = '''EVENTS: frozenset[HookEvent] = frozenset({"PostToolUse"})'''
+tests = ["tests.test_job_count.OldCases.test_refused"]
+
+[[plant]]
+name = "Monitor is not judged"
+file = "rules/job_count.py"
+old = '''TOOLS = frozenset({ToolName("Bash"), ToolName("Monitor")})'''
+new = '''TOOLS = frozenset({ToolName("Bash")})'''
+tests = ["tests.test_job_count.Reach.test_monitor"]
+
+[[plant]]
+name = "a versioned run-clang-tidy is not named"
+file = "rules/job_count.py"
+old = '''RUN_CLANG_TIDY = re.compile(r"run-clang-tidy(-[0-9]+)?(\.py)?")'''
+new = '''RUN_CLANG_TIDY = re.compile(r"run-clang-tidy(\.py)?")'''
+tests = ["tests.test_job_count.OldCases.test_refused"]
+
+[[plant]]
+name = "the lead names no bound"
+file = "rules/job_count.py"
+old = '''from 1 to the agents' {bound} CPUs.'''
+new = '''from 1 to the agents' CPUs.'''
+tests = ["tests.test_job_count.Refusal.test_the_lead_names_the_bound"]
+
+[[plant]]
+name = "the refusal lists no command"
+file = "rules/job_count.py"
+old = '''
+
+{problems}
+'''
+new = '''
+
+problems
+'''
+tests = ["tests.test_job_count.Refusal.test_lines"]
+
+[[plant]]
+name = "the closing names no affinity"
+file = "rules/job_count.py"
+old = '''not how many jobs a tool starts. Write each'''
+new = '''nor how many jobs a tool starts. Write each'''
+tests = ["tests.test_job_count.Refusal.test_the_lead_names_the_bound"]
+
+[[plant]]
+name = "the closing names a fixed bound"
+file = "rules/job_count.py"
+old = '''N a number from 1 to {bound} shared'''
+new = '''N a number from 1 to 24 shared'''
+tests = ["tests.test_job_count.Refusal.test_the_lead_names_the_bound"]
+
+[[plant]]
+name = "a list is one word"
+file = "rules/job_count.py"
+old = '''    return tuple(ShellText(word) for word in spelled.split())'''
+new = '''    return tuple(ShellText(word) for word in spelled.split(","))'''
+tests = ["tests.test_job_count.Table.test_each_form_passes"]
+
+[[plant]]
+name = "the joined forms are the apart ones"
+file = "rules/job_count.py"
+old = '''    return Forms(spellings(apart), spellings(joined), spellings(no_job), one_job)'''
+new = '''    return Forms(spellings(apart), spellings(apart), spellings(no_job), one_job)'''
+tests = ["tests.test_job_count.Table.test_each_form_passes"]
+
+[[plant]]
+name = "-h is no help"
+file = "rules/job_count.py"
+old = '''no_job: ShellText = ShellText("-h --help"), one_job: bool = False) -> Forms:'''
+new = '''no_job: ShellText = ShellText("--help"), one_job: bool = False) -> Forms:'''
+tests = ["tests.test_job_count.StartsNoJob.test_help"]
+
+[[plant]]
+name = "make reads no --jobs N"
+file = "rules/job_count.py"
+old = '''MAKE = forms(ShellText("-j --jobs"), ShellText("-j --jobs="), one_job=True)'''
+new = '''MAKE = forms(ShellText("-j"), ShellText("-j --jobs="), one_job=True)'''
+tests = ["tests.test_job_count.Table.test_each_form_passes"]
+
+[[plant]]
+name = "run-clang-tidy reads no -j=N"
+file = "rules/job_count.py"
+old = '''forms(ShellText("-j"), ShellText("-j= -j")),'''
+new = '''forms(ShellText("-j"), ShellText("-j")),'''
+tests = ["tests.test_job_count.Table.test_each_form_passes"]
+
+[[plant]]
+name = "mutmut reads no --max-children=N"
+file = "rules/job_count.py"
+old = '''forms(ShellText("--max-children"), ShellText("--max-children=")),'''
+new = '''forms(ShellText("--max-children"), ShellText("--max-children")),'''
+tests = ["tests.test_job_count.Table.test_each_form_passes"]
+
+[[plant]]
+name = "ctest reads no --parallel N"
+file = "rules/job_count.py"
+old = '''forms(ShellText("-j --parallel"), ShellText("-j= -j --parallel="), one_job=True),'''
+new = '''forms(ShellText("-j"), ShellText("-j= -j --parallel="), one_job=True),'''
+tests = ["tests.test_job_count.Table.test_each_form_passes"]
+
+[[plant]]
+name = "make is not in the table"
+file = "rules/job_count.py"
+old = '''    ShellText("make"): MAKE,'''
+new = '''    ShellText("cmake"): MAKE,'''
+tests = ["tests.test_job_count.Make.test_refused"]
+
+[[plant]]
+name = "gmake is not in the table"
+file = "rules/job_count.py"
+old = '''    ShellText("gmake"): MAKE,'''
+new = '''    ShellText("gmak"): MAKE,'''
+tests = ["tests.test_job_count.Table.test_no_count_refused"]
+
+[[plant]]
+name = "ninja's -t starts a job"
+file = "rules/job_count.py"
+old = '''ShellText("-h --help -t --version")'''
+new = '''ShellText("-h --help --version")'''
+tests = ["tests.test_job_count.StartsNoJob.test_ninja_subtool_and_version"]
+
+[[plant]]
+name = "a path is no base name"
+file = "rules/job_count.py"
+old = '''    return ShellText((word.value or "").rsplit("/", 1)[-1])'''
+new = '''    return ShellText(word.value or "")'''
+tests = ["tests.test_job_count.Reach.test_wrappers_and_carriers"]
+
+[[plant]]
+name = "only python3 is an interpreter"
+file = "rules/job_count.py"
+old = '''if words and PYTHON_NAME.fullmatch(base(words[0])) else None'''
+new = '''if words and base(words[0]) == "python3" else None'''
+tests = ["tests.test_job_count.Mutmut.test_refused"]
+
+[[plant]]
+name = "a -m module is not run"
+file = "rules/job_count.py"
+old = '''    if run is None or run.kind not in ("script", "module"):'''
+new = '''    if run is None or run.kind not in ("script",):'''
+tests = ["tests.test_job_count.Mutmut.test_refused"]
+
+[[plant]]
+name = "a command runs past its name"
+file = "rules/job_count.py"
+old = '''        return words
+    head = words[run.index]'''
+new = '''        return words[1:]
+    head = words[run.index]'''
+tests = ["tests.test_job_count.Make.test_refused"]
+
+[[plant]]
+name = "the interpreter is the program"
+file = "rules/job_count.py"
+old = '''    head = words[run.index]
+'''
+new = '''    head = words[0]
+'''
+tests = ["tests.test_job_count.OldCases.test_refused"]
+
+[[plant]]
+name = "a joined -m module is not cut"
+file = "rules/job_count.py"
+old = '''    if head.value is not None and run.offset:'''
+new = '''    if False:'''
+tests = ["tests.test_job_count.Mutmut.test_refused"]
+
+[[plant]]
+name = "a joined -m module loses its first letter"
+file = "rules/job_count.py"
+old = '''        module = ShellText(head.value[run.offset:])'''
+new = '''        module = ShellText(head.value[run.offset + 1:])'''
+tests = ["tests.test_job_count.Mutmut.test_refused"]
+
+[[plant]]
+name = "a joined -m module is not known"
+file = "rules/job_count.py"
+old = '''        head = Word(module, module, module)'''
+new = '''        head = Word(module, None, module)'''
+tests = ["tests.test_job_count.Mutmut.test_refused"]
+
+[[plant]]
+name = "the program loses its first argument"
+file = "rules/job_count.py"
+old = '''    return (head, *words[run.index + 1:])'''
+new = '''    return (head, *words[run.index + 2:])'''
+tests = ["tests.test_job_count.Mutmut.test_refused"]
+
+[[plant]]
+name = "a one-word command runs no tool"
+file = "rules/job_count.py"
+old = '''    name = base(words[0]) if words else ShellText("")'''
+new = '''    name = base(words[0]) if len(words) > 1 else ShellText("")'''
+tests = ["tests.test_job_count.Table.test_no_count_refused"]
+
+[[plant]]
+name = "run-clang-tidy is named as written"
+file = "rules/job_count.py"
+old = '''    name = ShellText("run-clang-tidy") if RUN_CLANG_TIDY'''
+new = '''    name = ShellText("run-clang-tidy-23") if RUN_CLANG_TIDY'''
+tests = ["tests.test_job_count.OldCases.test_refused"]
+
+[[plant]]
+name = "every mutmut command is mutmut run"
+file = "rules/job_count.py"
+old = '''    if name == "mutmut" and all(word.value != "run" for word in words[1:]):'''
+new = '''    if name == "mutmut" and False:'''
+tests = ["tests.test_job_count.Mutmut.test_passed"]
+
+[[plant]]
+name = "a mutmut command but run is make"
+file = "rules/job_count.py"
+old = '''        return None
+    return TABLE.get(name)'''
+new = '''        return TABLE.get(ShellText("make"))
+    return TABLE.get(name)'''
+tests = ["tests.test_job_count.Mutmut.test_passed"]
+
+[[plant]]
+name = "ninja is not in the table"
+file = "rules/job_count.py"
+old = '''    return TABLE.get(name)
+'''
+new = '''    return TABLE.get(name) if name != "ninja" else None
+'''
+tests = ["tests.test_job_count.Ninja.test_refused"]
+
+[[plant]]
+name = "a count is any digits"
+file = "rules/job_count.py"
+old = '''value is not None and value.isascii() and value.isdigit() else None'''
+new = '''value is not None and value.isdigit() else None'''
+tests = ["tests.test_job_count.Make.test_refused"]
+
+[[plant]]
+name = "a command starts named with a count"
+file = "rules/job_count.py"
+old = '''    found: Named | None = None
+'''
+new = '''    found: Named | None = Named(ShellText("-j 4"), Count(4))
+'''
+tests = ["tests.test_job_count.Table.test_no_count_refused"]
+
+[[plant]]
+name = "the last word is not read"
+file = "rules/job_count.py"
+old = '''    for index, word in enumerate(words):'''
+new = '''    for index, word in enumerate(words[:-1]):'''
+tests = ["tests.test_job_count.Table.test_each_form_passes"]
+
+[[plant]]
+name = "the apart forms are the joined ones"
+file = "rules/job_count.py"
+old = '''        if word.value in tool.apart:'''
+new = '''        if word.value in tool.joined:'''
+tests = ["tests.test_job_count.Table.test_each_form_passes"]
+
+[[plant]]
+name = "a last apart option has no count"
+file = "rules/job_count.py"
+old = '''if index + 1 < len(words) else None'''
+new = '''if index + 2 < len(words) else None'''
+tests = ["tests.test_job_count.Table.test_each_form_passes"]
+
+[[plant]]
+name = "the refusal quotes no count word"
+file = "rules/job_count.py"
+old = '''        spelled = word.value if after is None else'''
+new = '''        spelled = word.value if True else'''
+tests = ["tests.test_job_count.Refusal.test_lines"]
+
+[[plant]]
+name = "every apart count is 4"
+file = "rules/job_count.py"
+old = '''found = Named(spelled, None if after is None else literal(after.value))'''
+new = '''found = Named(spelled, None if after is None else Count(4))'''
+tests = ["tests.test_job_count.OldCases.test_refused"]
+
+[[plant]]
+name = "an apart option is read as joined too"
+file = "rules/job_count.py"
+old = '''            continue
+'''
+new = '''            pass
+'''
+tests = ["tests.test_job_count.Table.test_each_form_passes"]
+
+[[plant]]
+name = "an unknown joined word is no option"
+file = "rules/job_count.py"
+old = '''        known = word.value if word.value is not None else word.prefix or ""'''
+new = '''        known = word.value or ""'''
+tests = ["tests.test_job_count.Table.test_a_literal_count"]
+
+[[plant]]
+name = "a joined form is its whole word"
+file = "rules/job_count.py"
+old = '''for start in tool.joined if known.startswith(start)), None)'''
+new = '''for start in tool.joined if known == start), None)'''
+tests = ["tests.test_job_count.Table.test_each_form_passes"]
+
+[[plant]]
+name = "the first joined word decides"
+file = "rules/job_count.py"
+old = '''        if start is not None:'''
+new = '''        if start is not None and found is None:'''
+tests = ["tests.test_job_count.OldCases.test_the_last_j_counts"]
+
+[[plant]]
+name = "an unknown joined count is 4"
+file = "rules/job_count.py"
+old = '''found = Named(word.spelled, None if word.value is None else literal('''
+new = '''found = Named(word.spelled, Count(4) if word.value is None else literal('''
+tests = ["tests.test_job_count.Table.test_a_literal_count"]
+
+[[plant]]
+name = "no word is ever found"
+file = "rules/job_count.py"
+old = '''    return found
+'''
+new = '''    return None
+'''
+tests = ["tests.test_job_count.OldCases.test_passed"]
+
+[[plant]]
+name = "the first argument gives no help"
+file = "rules/job_count.py"
+old = '''    if any(word.value in tool.no_job for word in words[1:]):'''
+new = '''    if any(word.value in tool.no_job for word in words[2:]):'''
+tests = ["tests.test_job_count.StartsNoJob.test_help"]
+
+[[plant]]
+name = "a command is read with make's forms"
+file = "rules/job_count.py"
+old = '''    named = last_named(words, tool)'''
+new = '''    named = last_named(words, TABLE[ShellText("make")])'''
+tests = ["tests.test_job_count.Table.test_each_form_passes"]
+
+[[plant]]
+name = "a count of 0 passes"
+file = "rules/job_count.py"
+old = '''named.count is not None and 1 <= named.count <= bound:'''
+new = '''named.count is not None and named.count <= bound:'''
+tests = ["tests.test_job_count.OldCases.test_refused"]
+
+[[plant]]
+name = "the refusal quotes no word"
+file = "rules/job_count.py"
+old = '''    said = "with no job count" if named is None else f"with `{named.spelled}`"'''
+new = '''    said = "with no job count"'''
+tests = ["tests.test_job_count.Refusal.test_lines"]
+
+[[plant]]
+name = "the refusal names the last form"
+file = "rules/job_count.py"
+old = '''name `{tool.apart[0]} N`'''
+new = '''name `{tool.apart[-1]} N`'''
+tests = ["tests.test_job_count.Refusal.test_lines"]
+
+[[plant]]
+name = "only the first command is judged"
+file = "rules/job_count.py"
+old = '''for command in event.call().commands
+'''
+new = '''for command in event.call().commands[:1]
+'''
+tests = ["tests.test_job_count.Refusal.test_lines"]
+
+[[plant]]
+name = "a Python interpreter's program is not read"
+file = "rules/job_count.py"
+old = '''if (tool := tool_of(words := program(command.words))) is not None
+'''
+new = '''if (tool := tool_of(words := command.words)) is not None
+'''
+tests = ["tests.test_job_count.OldCases.test_refused"]
+
+[[plant]]
+name = "the bound is fixed at 20"
+file = "rules/job_count.py"
+old = '''    bound = event.declaration(Path("/")).machine.job_bound
+'''
+new = '''    bound = event.declaration(Path("/")).machine.job_bound and Count(20)
+'''
+tests = ["tests.test_job_count.Machines.test_a_narrower_set"]
+
+[[plant]]
+name = "an undeclared machine is bounded at 20"
+file = "rules/job_count.py"
+old = '''    if bound is None:
+        return None'''
+new = '''    if bound is None:
+        bound = Count(20)'''
+tests = ["tests.test_job_count.Machines.test_no_agents_cpus"]
+
+[[plant]]
+name = "the refusal holds its first line alone"
+file = "rules/job_count.py"
+old = '''problem(words, tool, bound)) is not None]'''
+new = '''problem(words, tool, bound)) is not None][:1]'''
+tests = ["tests.test_job_count.Refusal.test_lines"]
+
+[[plant]]
+name = "an empty list is refused"
+file = "rules/job_count.py"
+old = '''    if not lines:'''
+new = '''    if False:'''
+tests = ["tests.test_job_count.OldCases.test_passed"]
+
+[[plant]]
+name = "the rule refuses nothing"
+file = "rules/job_count.py"
+old = '''    return refuse(Prose(ADVICE.format(bound=bound, problems="\n".join(lines))))'''
+new = '''    return None'''
+tests = ["tests.test_job_count.OldCases.test_refused"]
+
+[[plant]]
+name = '''a tool runs one job by default'''
+file = "rules/job_count.py"
+old = '''no_job: ShellText = ShellText("-h --help"), one_job: bool = False) -> Forms:'''
+new = '''no_job: ShellText = ShellText("-h --help"), one_job: bool = True) -> Forms:'''
+tests = ["tests.test_job_count"]
+
+[[plant]]
+name = '''the one-job flag is always set'''
+file = "rules/job_count.py"
+old = '''    return Forms(spellings(apart), spellings(joined), spellings(no_job), one_job)'''
+new = '''    return Forms(spellings(apart), spellings(joined), spellings(no_job), True)'''
+tests = ["tests.test_job_count"]
+
+[[plant]]
+name = '''make needs a count'''
+file = "rules/job_count.py"
+old = '''MAKE = forms(ShellText("-j --jobs"), ShellText("-j --jobs="), one_job=True)'''
+new = '''MAKE = forms(ShellText("-j --jobs"), ShellText("-j --jobs="), one_job=False)'''
+tests = ["tests.test_job_count"]
+
+[[plant]]
+name = '''ctest needs a count'''
+file = "rules/job_count.py"
+old = '''ShellText("-j= -j --parallel="), one_job=True),'''
+new = '''ShellText("-j= -j --parallel="), one_job=False),'''
+tests = ["tests.test_job_count"]
+
+[[plant]]
+name = '''an unknown word's known start is not read'''
+file = "rules/job_count.py"
+old = '''    the call does not make its start known."""
+    known = word.value if word.value is not None else word.prefix or ""'''
+new = '''    the call does not make its start known."""
+    known = word.value or ""'''
+tests = ["tests.test_job_count"]
+
+[[plant]]
+name = '''a word of unknown start names no job option'''
+file = "rules/job_count.py"
+old = '''    return (not known or known.startswith(("--jobs", "--parallel"))'''
+new = '''    return (known.startswith(("--jobs", "--parallel"))'''
+tests = ["tests.test_job_count"]
+
+[[plant]]
+name = '''--jobs is no job option'''
+file = "rules/job_count.py"
+old = '''known.startswith(("--jobs", "--parallel"))'''
+new = '''known.startswith(("--parallel",))'''
+tests = ["tests.test_job_count"]
+
+[[plant]]
+name = '''--parallel is no job option'''
+file = "rules/job_count.py"
+old = '''known.startswith(("--jobs", "--parallel"))'''
+new = '''known.startswith(("--jobs",))'''
+tests = ["tests.test_job_count"]
+
+[[plant]]
+name = '''any single-dash word may count'''
+file = "rules/job_count.py"
+old = '''or (known.startswith("-") and not known.startswith("--") and "j" in known))'''
+new = '''or (known.startswith("-") and not known.startswith("--")))'''
+tests = ["tests.test_job_count"]
+
+[[plant]]
+name = '''a long option holding j may count'''
+file = "rules/job_count.py"
+old = '''or (known.startswith("-") and not known.startswith("--") and "j" in known))'''
+new = '''or (known.startswith("-") and "j" in known))'''
+tests = ["tests.test_job_count"]
+
+[[plant]]
+name = '''a word holding j may count'''
+file = "rules/job_count.py"
+old = '''or (known.startswith("-") and not known.startswith("--") and "j" in known))'''
+new = '''or (not known.startswith("--") and "j" in known))'''
+tests = ["tests.test_job_count"]
+
+[[plant]]
+name = '''a tool with a job word runs one job'''
+file = "rules/job_count.py"
+old = '''    if tool.one_job and not any(may_count(word) for word in words[1:]):'''
+new = '''    if tool.one_job:'''
+tests = ["tests.test_job_count"]
+
+[[plant]]
+name = '''every tool runs one job by default'''
+file = "rules/job_count.py"
+old = '''    if tool.one_job and not any(may_count(word) for word in words[1:]):'''
+new = '''    if not any(may_count(word) for word in words[1:]):'''
+tests = ["tests.test_job_count"]

@@ -1,0 +1,249 @@
+# The plants that show rules/bytecode_left.py held by tests/test_bytecode_left.py, one or more per line of the rule:
+#   testing/plants.py tests/plants_bytecode_left.toml --out DIR
+
+[[plant]]
+name = "the rule judges another event"
+file = "rules/bytecode_left.py"
+old = 'frozenset({"PostToolUse"})'
+new = 'frozenset({"PreToolUse"})'
+tests = ["tests.test_bytecode_left.Refused.test_a_planted_entry_left_is_refused_naming_the_file"]
+
+[[plant]]
+name = "the rule judges PostToolUseFailure too"
+file = "rules/bytecode_left.py"
+old = 'frozenset({"PostToolUse"})'
+new = 'frozenset({"PostToolUse", "PostToolUseFailure"})'
+tests = ["tests.test_bytecode_left.Passed.test_another_event_is_not_judged"]
+
+[[plant]]
+name = "a Bash call is not judged"
+file = "rules/bytecode_left.py"
+old = 'TOOLS = frozenset({ToolName("Bash")})'
+new = 'TOOLS = frozenset({ToolName("Monitor")})'
+tests = ["tests.test_bytecode_left.Refused.test_a_planted_entry_left_is_refused_naming_the_file"]
+
+[[plant]]
+name = "the header is read big-endian"
+file = "rules/bytecode_left.py"
+old = 'HEADER = struct.Struct("<4sIII")'
+new = 'HEADER = struct.Struct(">4sIII")'
+tests = ["tests.test_bytecode_left.Refused.test_a_planted_entry_left_is_refused_naming_the_file"]
+
+[[plant]]
+name = "the stamp is kept past 32 bits"
+file = "rules/bytecode_left.py"
+old = 'MASK = 0xFFFFFFFF'
+new = 'MASK = 0xFFFFFFFFF'
+tests = ["tests.test_bytecode_left.Refused.test_an_mtime_past_2106_is_compared_as_cpython_records_it"]
+
+[[plant]]
+name = "the entry is looked for in another folder"
+file = "rules/bytecode_left.py"
+old = 'CACHE = "__pycache__"'
+new = 'CACHE = "__pycache"'
+tests = ["tests.test_bytecode_left.Refused.test_a_planted_entry_left_is_refused_naming_the_file"]
+
+[[plant]]
+name = "git is given no time"
+file = "rules/bytecode_left.py"
+old = 'GIT_SECONDS = 30.0'
+new = 'GIT_SECONDS = 0.0'
+tests = ["tests.test_bytecode_left.Passed.test_no_entry_passes"]
+
+[[plant]]
+name = "the refusal states another headline"
+file = "rules/bytecode_left.py"
+old = 'this call wrote a Python file and ran Python tests, and left'
+new = 'this call left'
+tests = ["tests.test_bytecode_left.Refused.test_a_planted_entry_left_is_refused_naming_the_file"]
+
+[[plant]]
+name = "the refusal gives another form"
+file = "rules/bytecode_left.py"
+old = '  rm {entries}"""'
+new = '  rm -f {entries}"""'
+tests = ["tests.test_bytecode_left.Refused.test_the_refusal_names_the_entry_to_delete"]
+
+[[plant]]
+name = "the entry is named without the cache tag"
+file = "rules/bytecode_left.py"
+old = 'return source.parent / CACHE / Path(cache_from_source(str(source))).name'
+new = 'return source.parent / CACHE / (source.name + "c")'
+tests = ["tests.test_bytecode_left.Refused.test_a_planted_entry_left_is_refused_naming_the_file"]
+
+[[plant]]
+name = "a missing entry is stale"
+file = "rules/bytecode_left.py"
+old = '''    except OSError:
+        return False'''
+new = '''    except OSError:
+        return True'''
+tests = ["tests.test_bytecode_left.Passed.test_no_entry_passes"]
+
+[[plant]]
+name = "another magic number is expected"
+file = "rules/bytecode_left.py"
+old = 'HEADER.pack(MAGIC_NUMBER, 0,'
+new = 'HEADER.pack(bytes(4), 0,'
+tests = ["tests.test_bytecode_left.Refused.test_a_planted_entry_left_is_refused_naming_the_file"]
+
+[[plant]]
+name = "the flags are not compared"
+file = "rules/bytecode_left.py"
+old = 'HEADER.pack(MAGIC_NUMBER, 0,'
+new = 'HEADER.pack(MAGIC_NUMBER, int.from_bytes(data[4:8], "little"),'
+tests = ["tests.test_bytecode_left.Passed.test_a_hash_based_entry_passes_though_it_reads_as_the_sources_stamp"]
+
+[[plant]]
+name = "the mtime is not compared"
+file = "rules/bytecode_left.py"
+old = 'int(state.st_mtime) & MASK,'
+new = 'int.from_bytes(data[8:12], "little"),'
+tests = ["tests.test_bytecode_left.Passed.test_an_entry_recording_another_mtime_passes"]
+
+[[plant]]
+name = "the size is not compared"
+file = "rules/bytecode_left.py"
+old = 'state.st_size & MASK):'
+new = 'int.from_bytes(data[12:16], "little")):'
+tests = ["tests.test_bytecode_left.Passed.test_an_entry_recording_another_size_passes"]
+
+[[plant]]
+name = "a header CPython recompiles still has its code compared"
+file = "rules/bytecode_left.py"
+old = '''state.st_size & MASK):
+        return False'''
+new = '''state.st_size & MASK):
+        pass'''
+tests = ["tests.test_bytecode_left.Passed.test_an_entry_recording_another_mtime_passes"]
+
+[[plant]]
+name = "an entry holding the source's code is stale"
+file = "rules/bytecode_left.py"
+old = 'return marshal.loads(data[HEADER.size:]) != compile('
+new = 'return marshal.loads(data[HEADER.size:]) == compile('
+tests = ["tests.test_bytecode_left.Passed.test_a_fresh_entry_passes",
+         "tests.test_bytecode_left.Refused.test_a_planted_entry_left_is_refused_naming_the_file"]
+
+[[plant]]
+name = "a corrupt entry is not caught"
+file = "rules/bytecode_left.py"
+old = 'except (ValueError, EOFError, SyntaxError, OSError):'
+new = 'except (EOFError, SyntaxError, OSError):'
+tests = ["tests.test_bytecode_left.Refused.test_an_entry_or_source_that_cannot_be_compiled_is_refused"]
+
+[[plant]]
+name = "a truncated entry is not caught"
+file = "rules/bytecode_left.py"
+old = 'except (ValueError, EOFError, SyntaxError, OSError):'
+new = 'except (ValueError, SyntaxError, OSError):'
+tests = ["tests.test_bytecode_left.Refused.test_an_entry_or_source_that_cannot_be_compiled_is_refused"]
+
+[[plant]]
+name = "an unparsable source is not caught"
+file = "rules/bytecode_left.py"
+old = 'except (ValueError, EOFError, SyntaxError, OSError):'
+new = 'except (ValueError, EOFError, OSError):'
+tests = ["tests.test_bytecode_left.Refused.test_an_entry_or_source_that_cannot_be_compiled_is_refused"]
+
+[[plant]]
+name = "an unreadable source is not caught"
+file = "rules/bytecode_left.py"
+old = 'except (ValueError, EOFError, SyntaxError, OSError):'
+new = 'except (ValueError, EOFError, SyntaxError):'
+tests = ["tests.test_bytecode_left.Refused.test_an_entry_or_source_that_cannot_be_compiled_is_refused"]
+
+[[plant]]
+name = "code that cannot be compared passes"
+file = "rules/bytecode_left.py"
+old = '''SyntaxError, OSError):
+        return True'''
+new = '''SyntaxError, OSError):
+        return False'''
+tests = ["tests.test_bytecode_left.Refused.test_an_entry_or_source_that_cannot_be_compiled_is_refused"]
+
+[[plant]]
+name = "a tree git cannot list passes"
+file = "rules/bytecode_left.py"
+old = 'timeout=GIT_SECONDS, check=True)'
+new = 'timeout=GIT_SECONDS, check=False)'
+tests = ["tests.test_bytecode_left.Refused.test_a_tree_git_cannot_list_is_refused"]
+
+[[plant]]
+name = "git lists another suffix"
+file = "rules/bytecode_left.py"
+old = '"--", f"*{PY}"]'
+new = '"--", f"*{PY}c"]'
+tests = ["tests.test_bytecode_left.Refused.test_a_planted_entry_left_is_refused_naming_the_file"]
+
+[[plant]]
+name = "git's names are read as lines"
+file = "rules/bytecode_left.py"
+old = '"ls-files", "-z", "--"'
+new = '"ls-files", "--"'
+tests = ["tests.test_bytecode_left.Refused.test_a_planted_entry_left_is_refused_naming_the_file"]
+
+[[plant]]
+name = "a command's directory is not reached"
+file = "rules/bytecode_left.py"
+old = '''        if command.cwd is not None:
+            yield Path(command.cwd)'''
+new = '''        if command.cwd is not None:
+            pass'''
+tests = ["tests.test_bytecode_left.Refused.test_a_tree_a_command_runs_in_is_scanned"]
+
+[[plant]]
+name = "a shell write's folder is not reached"
+file = "rules/bytecode_left.py"
+old = 'if write.path is not None and write.path.endswith(PY))'
+new = 'if write.path is not None and write.path.endswith(".txt"))'
+tests = ["tests.test_bytecode_left.Refused.test_a_tree_a_shell_write_names_is_scanned"]
+
+[[plant]]
+name = "an unspelled process start is no test run"
+file = "rules/bytecode_left.py"
+old = 'if not (call.unspelled or any(map(tested, call.commands)))'
+new = 'if not (any(map(tested, call.commands)))'
+tests = ["tests.test_bytecode_left.Refused.test_a_python_write_and_an_unspelled_test_run_are_read_as_bytecode_plants_reads_them"]
+
+[[plant]]
+name = "every call starts a test run"
+file = "rules/bytecode_left.py"
+old = 'if not (call.unspelled or any(map(tested, call.commands)))'
+new = 'if not (call.unspelled or True)'
+tests = ["tests.test_bytecode_left.Passed.test_a_call_starting_no_test_run_scans_nothing"]
+
+[[plant]]
+name = "every call writes a Python file"
+file = "rules/bytecode_left.py"
+old = 'or next(python_writes(call), None) is None:'
+new = 'or False:'
+tests = ["tests.test_bytecode_left.Passed.test_a_call_writing_no_python_file_scans_nothing"]
+
+[[plant]]
+name = "a folder outside every work tree is listed"
+file = "rules/bytecode_left.py"
+old = 'for root in map(tree, reached(call)) if (root / ".git").exists()}'
+new = 'for root in map(tree, reached(call))}'
+tests = ["tests.test_bytecode_left.Refused.test_a_tree_a_shell_write_names_is_scanned"]
+
+[[plant]]
+name = "the refusal names another line"
+file = "rules/bytecode_left.py"
+old = 'f"  * {source} runs {entry(source)}"'
+new = 'f"  * {source}"'
+tests = ["tests.test_bytecode_left.Refused.test_a_planted_entry_left_is_refused_naming_the_file"]
+
+[[plant]]
+name = "the form leaves a path unquoted"
+file = "rules/bytecode_left.py"
+old = 'entries=join(map(str, map(entry, found)))'
+new = 'entries=" ".join(map(str, map(entry, found)))'
+tests = ["tests.test_bytecode_left.Refused.test_the_refusal_names_the_entry_to_delete"]
+
+[[plant]]
+name = "a call with nothing found is refused"
+file = "rules/bytecode_left.py"
+old = 'entries=join(map(str, map(entry, found)))))) if found else None'
+new = 'entries=join(map(str, map(entry, found)))))) if True else None'
+tests = ["tests.test_bytecode_left.Passed.test_no_entry_passes"]

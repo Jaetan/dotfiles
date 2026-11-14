@@ -1,0 +1,1016 @@
+# The plants that show what a command writes are held by tests/test_writes.py: run
+#   testing/plants.py tests/plants_writes.toml --out DIR
+# Every plant is killed when each line of dispatcher/writes.py and each row field of dispatcher/write_table.py is
+# held by a test.
+
+[[plant]]
+name = "a stream opened for appending appends"
+file = "dispatcher/writes.py"
+old = '"append": "appended"'
+new = '"append": "created"'
+tests = ["tests.test_writes.Streams.test_streams"]
+
+[[plant]]
+name = "an assignment's name is any identifier"
+file = "dispatcher/writes.py"
+old = 'r"[A-Za-z_][A-Za-z0-9_]*="'
+new = 'r"[A-Z_][A-Za-z0-9_]*="'
+tests = ["tests.test_writes.Rows.test_gawk"]
+
+[[plant]]
+name = "an output process substitution writes no file"
+file = "dispatcher/writes.py"
+old = 'SUBSTITUTION = ("<(", ">(")'
+new = 'SUBSTITUTION = ("<(",)'
+tests = ["tests.test_writes.Streams.test_redirections"]
+
+[[plant]]
+name = "each write is given once"
+file = "dispatcher/writes.py"
+old = 'return tuple(dict.fromkeys((*streamed(command), *redirected(command), *worded(command))))'
+new = 'return tuple((*streamed(command), *redirected(command), *worded(command)))'
+tests = ["tests.test_writes.Streams.test_streams"]
+
+[[plant]]
+name = "a path is placed by its value"
+file = "dispatcher/writes.py"
+old = '''
+    value = word.value
+'''
+new = '''
+    value = word.prefix
+'''
+tests = ["tests.test_writes.Old.test_carried", "tests.test_writes.Rows.test_reading"]
+
+[[plant]]
+name = "a relative path with no directory is not placed"
+file = "dispatcher/writes.py"
+old = '(cwd is None and not value.startswith("/"))'
+new = '(cwd is None and value.startswith("/"))'
+tests = ["tests.test_writes.Streams.test_placement"]
+
+[[plant]]
+name = "a path not made known has none"
+file = "dispatcher/writes.py"
+old = 'return Write(word, None, kind)'
+new = 'return Write(word, FilePath(""), kind)'
+tests = ["tests.test_writes.Streams.test_streams", "tests.test_writes.Rows.test_reading"]
+
+[[plant]]
+name = "a placed path is normalised"
+file = "dispatcher/writes.py"
+old = 'FilePath(normpath(join(cwd or "/", value)))'
+new = 'FilePath(join(cwd or "/", value))'
+tests = ["tests.test_writes.Streams.test_placement", "tests.test_writes.Old.test_carried"]
+
+[[plant]]
+name = "every stream is read"
+file = "dispatcher/writes.py"
+old = 'for end in command.streams:'
+new = 'for end in command.streams[:1]:'
+tests = ["tests.test_writes.Streams.test_streams"]
+
+[[plant]]
+name = "a stream's opening gives its kind"
+file = "dispatcher/writes.py"
+old = 'kind = None if end.opening is None else OPENED.get(end.opening)'
+new = 'kind = None if end.opening is not None else OPENED.get(end.opening)'
+tests = ["tests.test_writes.Streams.test_streams"]
+
+[[plant]]
+name = "a stream writes only where it opens for writing"
+file = "dispatcher/writes.py"
+old = 'if end.file is not None and kind is not None:'
+new = 'if end.file is not None and kind is None:'
+tests = ["tests.test_writes.Streams.test_streams"]
+
+[[plant]]
+name = "a stream's file is placed from the command's directory"
+file = "dispatcher/writes.py"
+old = 'yield write_of(end.file, kind, command.cwd)'
+new = 'yield write_of(end.file, kind, None)'
+tests = ["tests.test_writes.Streams.test_streams"]
+
+[[plant]]
+name = "a >& is read by its word's value"
+file = "dispatcher/writes.py"
+old = 'value = redir.target.value'
+new = 'value = redir.target.text'
+tests = ["tests.test_writes.Streams.test_redirections"]
+
+[[plant]]
+name = "a bare >& to a file opens it"
+file = "dispatcher/writes.py"
+old = 'if redir.op == ">&":'
+new = 'if redir.op == "<&":'
+tests = ["tests.test_writes.Streams.test_redirections"]
+
+[[plant]]
+name = ">&- closes, writing nothing"
+file = "dispatcher/writes.py"
+old = 'value is None or value == "-" or DESCRIPTOR'
+new = 'value is None or DESCRIPTOR'
+tests = ["tests.test_writes.Streams.test_redirections"]
+
+[[plant]]
+name = ">&N copies, writing nothing"
+file = "dispatcher/writes.py"
+old = '''
+ or DESCRIPTOR.fullmatch(value) is not None
+'''
+new = '''
+
+'''
+tests = ["tests.test_writes.Streams.test_redirections"]
+
+[[plant]]
+name = "a >& of a descriptor of its own opens no file"
+file = "dispatcher/writes.py"
+old = 'return None if redir.fd is not None or copied'
+new = 'return None if copied'
+tests = ["tests.test_writes.Streams.test_redirections"]
+
+[[plant]]
+name = ">&N- moves, writing nothing"
+file = "dispatcher/writes.py"
+old = ' or MOVED.fullmatch(value) is not None else "created"'
+new = ' else "created"'
+tests = ["tests.test_writes.Streams.test_redirections"]
+
+[[plant]]
+name = "<> edits"
+file = "dispatcher/writes.py"
+old = '"edited" if redir.op == "<>"'
+new = '"edited" if redir.op == "<"'
+tests = ["tests.test_writes.Streams.test_redirections"]
+
+[[plant]]
+name = ">> appends"
+file = "dispatcher/writes.py"
+old = 'return "appended" if redir.op in APPENDS'
+new = 'return "created" if redir.op in APPENDS'
+tests = ["tests.test_writes.Streams.test_redirections"]
+
+[[plant]]
+name = "every own redirection is read"
+file = "dispatcher/writes.py"
+old = 'for redir in command.redirs:'
+new = 'for redir in command.redirs[1:]:'
+tests = ["tests.test_writes.Streams.test_redirections"]
+
+[[plant]]
+name = "a redirection's operator gives its kind"
+file = "dispatcher/writes.py"
+old = 'kind = opens(redir)'
+new = 'kind = opens(redir) or "created"'
+tests = ["tests.test_writes.Streams.test_streams", "tests.test_writes.Streams.test_redirections"]
+
+[[plant]]
+name = "a process substitution's word opens no file"
+file = "dispatcher/writes.py"
+old = 'if kind is None or redir.target.text.startswith(SUBSTITUTION):'
+new = 'if kind is None:'
+tests = ["tests.test_writes.Streams.test_redirections"]
+
+[[plant]]
+name = "a redirection that opens nothing is passed"
+file = "dispatcher/writes.py"
+old = '''
+            continue
+'''
+new = '''
+            pass
+'''
+tests = ["tests.test_writes.Streams.test_streams"]
+
+[[plant]]
+name = "a redirection's file is placed from the command's directory"
+file = "dispatcher/writes.py"
+old = 'write = write_of(redir.target, kind, command.cwd)'
+new = 'write = write_of(redir.target, kind, None)'
+tests = ["tests.test_writes.Streams.test_redirections"]
+
+[[plant]]
+name = "a redirection's path not made known is kept"
+file = "dispatcher/writes.py"
+old = 'if write.path is None or (write.path'
+new = 'if (write.path'
+tests = ["tests.test_writes.Streams.test_streams"]
+
+[[plant]]
+name = "/dev/null is no file written"
+file = "dispatcher/writes.py"
+old = 'write.path != "/dev/null"'
+new = 'write.path != "/dev/nul"'
+tests = ["tests.test_writes.Streams.test_redirections"]
+
+[[plant]]
+name = "a path naming a descriptor is no file written"
+file = "dispatcher/writes.py"
+old = ' and named_descriptor(ScriptPath(write.path)) is None)'
+new = ')'
+tests = ["tests.test_writes.Streams.test_redirections"]
+
+[[plant]]
+name = "a redirection's write keeps its kind"
+file = "dispatcher/writes.py"
+old = '''
+            yield write
+
+
+def worded'''
+new = '''
+            yield write._replace(kind="appended")
+
+
+def worded'''
+tests = ["tests.test_writes.Streams.test_redirections"]
+
+[[plant]]
+name = "a pathed name finds its row by its last part"
+file = "dispatcher/writes.py"
+old = 'WRITERS.get(ShellText(command.name.rsplit("/", 1)[-1]))'
+new = 'WRITERS.get(command.name)'
+tests = ["tests.test_writes.Rows.test_reading"]
+
+[[plant]]
+name = "a command with a row writes by its words"
+file = "dispatcher/writes.py"
+old = '''
+    if row is not None:
+'''
+new = '''
+    if row is None:
+'''
+tests = ["tests.test_writes.Rows.test_rm", "tests.test_writes.Rows.test_reading"]
+
+[[plant]]
+name = "the words are read past the name"
+file = "dispatcher/writes.py"
+old = 'read(row, command.words[1:])'
+new = 'read(row, command.words[2:])'
+tests = ["tests.test_writes.Rows.test_touch", "tests.test_writes.Rows.test_rm"]
+
+[[plant]]
+name = "a word's path is placed from the command's directory"
+file = "dispatcher/writes.py"
+old = 'yield write_of(word, kind, command.cwd)'
+new = 'yield write_of(word, kind, None)'
+tests = ["tests.test_writes.Rows.test_rm"]
+
+[[plant]]
+name = "a cut word's value is cut where it begins"
+file = "dispatcher/writes.py"
+old = 'ShellText(word.value[count:])'
+new = 'ShellText(word.value[count + 1:])'
+tests = ["tests.test_writes.Rows.test_cp", "tests.test_writes.Streams.test_placement"]
+
+[[plant]]
+name = "a cut word's prefix is cut too"
+file = "dispatcher/writes.py"
+old = 'ShellText(word.prefix[count:])'
+new = 'ShellText(word.prefix)'
+tests = ["tests.test_writes.Streams.test_placement"]
+
+[[plant]]
+name = "a target option takes a value"
+file = "dispatcher/writes.py"
+old = 'taking = row.valued | row.targets'
+new = 'taking = row.valued'
+tests = ["tests.test_writes.Rows.test_cp"]
+
+[[plant]]
+name = "the options begin empty"
+file = "dispatcher/writes.py"
+old = 'options: list[Option] = []'
+new = 'options: list[Option] = [Option(ShellText("-i"), None)]'
+tests = ["tests.test_writes.Rows.test_sed"]
+
+[[plant]]
+name = "the operands begin empty"
+file = "dispatcher/writes.py"
+old = 'operands: list[Word] = []'
+new = 'operands: list[Word] = [Word(ShellText("x"), ShellText("x"), ShellText("x"))]'
+tests = ["tests.test_writes.Rows.test_rm"]
+
+[[plant]]
+name = "every word is read"
+file = "dispatcher/writes.py"
+old = 'rest = iter(words)'
+new = 'rest = iter(words[1:])'
+tests = ["tests.test_writes.Rows.test_touch"]
+
+[[plant]]
+name = "the options are open at first"
+file = "dispatcher/writes.py"
+old = '''
+    ended = False
+'''
+new = '''
+    ended = True
+'''
+tests = ["tests.test_writes.Rows.test_rm"]
+
+[[plant]]
+name = "an option's next word is taken from the same words"
+file = "dispatcher/writes.py"
+old = 'for word in rest:'
+new = 'for word in tuple(rest):'
+tests = ["tests.test_writes.Rows.test_cp"]
+
+[[plant]]
+name = "a word is read by its prefix"
+file = "dispatcher/writes.py"
+old = 'known = word.prefix or ""'
+new = 'known = word.value or ""'
+tests = ["tests.test_writes.Rows.test_reading"]
+
+[[plant]]
+name = "a lone - is an operand"
+file = "dispatcher/writes.py"
+old = ' or word.value == "-":'
+new = ':'
+tests = ["tests.test_writes.Rows.test_reading"]
+
+[[plant]]
+name = "operands keep their order"
+file = "dispatcher/writes.py"
+old = 'operands.append(word)'
+new = 'operands.insert(0, word)'
+tests = ["tests.test_writes.Rows.test_cp"]
+
+[[plant]]
+name = "an ordered row's options end at its first operand"
+file = "dispatcher/writes.py"
+old = 'ended = ended or row.ordered'
+new = 'ended = ended'
+tests = ["tests.test_writes.Rows.test_perl"]
+
+[[plant]]
+name = "-- is read"
+file = "dispatcher/writes.py"
+old = 'elif word.value == "--":'
+new = 'elif word.value == "---":'
+tests = ["tests.test_writes.Rows.test_rm"]
+
+[[plant]]
+name = "-- ends the options"
+file = "dispatcher/writes.py"
+old = '''
+            ended = True
+'''
+new = '''
+            ended = False
+'''
+tests = ["tests.test_writes.Rows.test_rm", "tests.test_writes.Rows.test_sed"]
+
+[[plant]]
+name = "two dashes begin a long option"
+file = "dispatcher/writes.py"
+old = 'elif known.startswith("--"):'
+new = 'elif known.startswith("---"):'
+tests = ["tests.test_writes.Rows.test_cp"]
+
+[[plant]]
+name = "a long option is named up to its ="
+file = "dispatcher/writes.py"
+old = 'known.partition("=")'
+new = 'known.partition(":")'
+tests = ["tests.test_writes.Rows.test_cp"]
+
+[[plant]]
+name = "a long option's = gives its value"
+file = "dispatcher/writes.py"
+old = '''
+            if equals:
+'''
+new = '''
+            if not equals:
+'''
+tests = ["tests.test_writes.Rows.test_cp"]
+
+[[plant]]
+name = "a long option's value begins after its ="
+file = "dispatcher/writes.py"
+old = 'cut(word, Count(len(name) + 1))'
+new = 'cut(word, Count(len(name)))'
+tests = ["tests.test_writes.Rows.test_cp"]
+
+[[plant]]
+name = "a long option known whole is read"
+file = "dispatcher/writes.py"
+old = '''
+            elif word.value is not None:
+'''
+new = '''
+            elif word.value is None:
+'''
+tests = ["tests.test_writes.Rows.test_cp"]
+
+[[plant]]
+name = "a long option taking a value takes the next word"
+file = "dispatcher/writes.py"
+old = 'next(rest, None) if name in taking else None'
+new = 'next(rest, None) if name not in taking else None'
+tests = ["tests.test_writes.Rows.test_cp"]
+
+[[plant]]
+name = "a cluster's letters begin after its dash"
+file = "dispatcher/writes.py"
+old = 'enumerate(known[1:], start=2)'
+new = 'enumerate(known[1:], start=1)'
+tests = ["tests.test_writes.Rows.test_cp"]
+
+[[plant]]
+name = "a short letter is named with a dash"
+file = "dispatcher/writes.py"
+old = 'name = ShellText("-" + letter)'
+new = 'name = ShellText("+" + letter)'
+tests = ["tests.test_writes.Rows.test_tee", "tests.test_writes.Rows.test_cp"]
+
+[[plant]]
+name = "an optional letter ends its cluster"
+file = "dispatcher/writes.py"
+old = 'if name in taking or name in row.optional:'
+new = 'if name in taking:'
+tests = ["tests.test_writes.Rows.test_sed"]
+
+[[plant]]
+name = "a letter with no rest takes the next word"
+file = "dispatcher/writes.py"
+old = 'attached = at < len(known)'
+new = 'attached = at <= len(known)'
+tests = ["tests.test_writes.Rows.test_cp"]
+
+[[plant]]
+name = "a letter whose rest is not made known takes that rest"
+file = "dispatcher/writes.py"
+old = 'attached = at < len(known) or word.value is None or'
+new = 'attached = at < len(known) or'
+tests = ["tests.test_writes.Rows.test_reading"]
+
+[[plant]]
+name = "an optional letter takes only its rest"
+file = "dispatcher/writes.py"
+old = '''
+or word.value is None or name in row.optional
+'''
+new = '''
+or word.value is None
+'''
+tests = ["tests.test_writes.Rows.test_sed"]
+
+[[plant]]
+name = "an attached value begins after its letter"
+file = "dispatcher/writes.py"
+old = 'cut(word, Count(at)) if attached'
+new = 'cut(word, Count(at - 1)) if attached'
+tests = ["tests.test_writes.Rows.test_cp"]
+
+[[plant]]
+name = "a value ends its cluster"
+file = "dispatcher/writes.py"
+old = '''
+                    break
+'''
+new = '''
+                    continue
+'''
+tests = ["tests.test_writes.Rows.test_sed"]
+
+[[plant]]
+name = "a flag is kept among the options"
+file = "dispatcher/writes.py"
+old = '''
+                options.append(Option(name, None))
+'''
+new = '''
+                pass
+'''
+tests = ["tests.test_writes.Rows.test_tee"]
+
+[[plant]]
+name = "every operand is kept"
+file = "dispatcher/writes.py"
+old = 'return Reading(tuple(options), tuple(operands))'
+new = 'return Reading(tuple(options), tuple(operands[:-1]))'
+tests = ["tests.test_writes.Rows.test_rm"]
+
+[[plant]]
+name = "every option is counted as given"
+file = "dispatcher/writes.py"
+old = 'given = {option.name for option in reading.options}'
+new = 'given = {option.name for option in reading.options[1:]}'
+tests = ["tests.test_writes.Old.test_carried", "tests.test_writes.Rows.test_sed"]
+
+[[plant]]
+name = "the program is one operand"
+file = "dispatcher/writes.py"
+old = 'files = reading.operands[1:] if'
+new = 'files = reading.operands[2:] if'
+tests = ["tests.test_writes.Rows.test_sed"]
+
+[[plant]]
+name = "an assignment is read by its prefix"
+file = "dispatcher/writes.py"
+old = 'ASSIGNMENT.match(word.prefix or "")'
+new = 'ASSIGNMENT.match(word.value or "")'
+tests = ["tests.test_writes.Rows.test_gawk"]
+
+[[plant]]
+name = "every operand is read for a key"
+file = "dispatcher/writes.py"
+old = '''
+    for word in files:
+'''
+new = '''
+    for word in files[1:]:
+'''
+tests = ["tests.test_writes.Rows.test_dd"]
+
+[[plant]]
+name = "every key is read"
+file = "dispatcher/writes.py"
+old = 'for key, kind in row.keyed.items():'
+new = 'for key, kind in list(row.keyed.items())[1:]:'
+tests = ["tests.test_writes.Rows.test_dd"]
+
+[[plant]]
+name = "a key is read by the prefix"
+file = "dispatcher/writes.py"
+old = 'if (word.prefix or "").startswith(key):'
+new = 'if (word.value or "").startswith(key):'
+tests = ["tests.test_writes.Rows.test_dd"]
+
+[[plant]]
+name = "a key's path begins after its ="
+file = "dispatcher/writes.py"
+old = 'yield cut(word, Count(len(key))), kind'
+new = 'yield cut(word, Count(len(key) - 1)), kind'
+tests = ["tests.test_writes.Rows.test_dd"]
+
+[[plant]]
+name = "a switch gives its own kind"
+file = "dispatcher/writes.py"
+old = 'switched = [switch.kind for option'
+new = 'switched = ["edited" for option'
+tests = ["tests.test_writes.Rows.test_tee"]
+
+[[plant]]
+name = "a switch needing a value turns on only at it"
+file = "dispatcher/writes.py"
+old = '(switch.value is None or (option.value is not None and option.value.value == switch.value))'
+new = '(switch.value is None or option.value is not None)'
+tests = ["tests.test_writes.Rows.test_gawk"]
+
+[[plant]]
+name = "only a target option names the destination"
+file = "dispatcher/writes.py"
+old = 'if option.name in row.targets and option.value'
+new = 'if option.name not in row.targets and option.value'
+tests = ["tests.test_writes.Rows.test_cp"]
+
+[[plant]]
+name = "a switch makes the row write"
+file = "dispatcher/writes.py"
+old = '''
+    if switched:
+'''
+new = '''
+    if not switched:
+'''
+tests = ["tests.test_writes.Rows.test_sed"]
+
+[[plant]]
+name = "a switch writes every file"
+file = "dispatcher/writes.py"
+old = 'yield from ((word, switched[-1]) for word in files)'
+new = 'yield from ((word, switched[-1]) for word in files[1:])'
+tests = ["tests.test_writes.Rows.test_sed"]
+
+[[plant]]
+name = "two operands give a destination"
+file = "dispatcher/writes.py"
+old = 'len(files) > 1'
+new = 'len(files) > 2'
+tests = ["tests.test_writes.Rows.test_cp"]
+
+[[plant]]
+name = "the last operand is the destination"
+file = "dispatcher/writes.py"
+old = '(files[-1], files[:-1])'
+new = '(files[0], files[1:])'
+tests = ["tests.test_writes.Rows.test_cp"]
+
+[[plant]]
+name = "the destination is written as one"
+file = "dispatcher/writes.py"
+old = 'yield destination, "destination"'
+new = 'yield destination, "moved"'
+tests = ["tests.test_writes.Rows.test_cp"]
+
+[[plant]]
+name = "only a row that moves moves its sources"
+file = "dispatcher/writes.py"
+old = 'for word in sources if row.moves)'
+new = 'for word in sources if not row.moves)'
+tests = ["tests.test_writes.Rows.test_mv", "tests.test_writes.Rows.test_cp"]
+
+[[plant]]
+name = "a row's kind writes its files"
+file = "dispatcher/writes.py"
+old = '''
+    elif row.kind is not None:
+'''
+new = '''
+    elif row.kind is None:
+'''
+tests = ["tests.test_writes.Rows.test_rm"]
+
+[[plant]]
+name = "a row's kind writes every file"
+file = "dispatcher/writes.py"
+old = 'yield from ((word, row.kind) for word in files)'
+new = 'yield from ((word, row.kind) for word in files[:-1])'
+tests = ["tests.test_writes.Rows.test_rm"]
+
+[[plant]]
+name = "a switch with no value turns on at any"
+file = "dispatcher/write_table.py"
+old = '''
+    value: ShellText | None = None
+'''
+new = '''
+    value: ShellText | None = ShellText("inplace")
+'''
+tests = ["tests.test_writes.Rows.test_sed"]
+
+[[plant]]
+name = "switching names every option"
+file = "dispatcher/write_table.py"
+old = 'return dict.fromkeys(named(spelled), switch)'
+new = 'return {}'
+tests = ["tests.test_writes.Rows.test_sed", "tests.test_writes.Rows.test_tee"]
+
+[[plant]]
+name = "a row writes nothing by default"
+file = "dispatcher/write_table.py"
+old = '''
+    kind: Kind | None = None
+'''
+new = '''
+    kind: Kind | None = "created"
+'''
+tests = ["tests.test_writes.Rows.test_sed", "tests.test_writes.Rows.test_perl"]
+
+[[plant]]
+name = "a row's options are read anywhere by default"
+file = "dispatcher/write_table.py"
+old = '''
+    ordered: bool = False
+'''
+new = '''
+    ordered: bool = True
+'''
+tests = ["tests.test_writes.Rows.test_cp", "tests.test_writes.Rows.test_sed"]
+
+[[plant]]
+name = "a row moves nothing by default"
+file = "dispatcher/write_table.py"
+old = '''
+    moves: bool = False
+'''
+new = '''
+    moves: bool = True
+'''
+tests = ["tests.test_writes.Rows.test_cp"]
+
+[[plant]]
+name = "a row reads no assignment by default"
+file = "dispatcher/write_table.py"
+old = '''
+    assigns: bool = False
+'''
+new = '''
+    assigns: bool = True
+'''
+tests = ["tests.test_writes.Rows.test_dd"]
+
+[[plant]]
+name = "a row has no program by default"
+file = "dispatcher/write_table.py"
+old = '''
+    programs: frozenset[ShellText] | None = None
+'''
+new = '''
+    programs: frozenset[ShellText] | None = frozenset()
+'''
+tests = ["tests.test_writes.Rows.test_rm"]
+
+[[plant]]
+name = "sed and perl -i edit"
+file = "dispatcher/write_table.py"
+old = 'EDITED = Switch("edited")'
+new = 'EDITED = Switch("appended")'
+tests = ["tests.test_writes.Rows.test_sed", "tests.test_writes.Rows.test_perl"]
+
+[[plant]]
+name = "sed --file gives the program"
+file = "dispatcher/write_table.py"
+old = 'named(ShellText("-e --expression -f --file"))'
+new = 'named(ShellText("-e --expression -f"))'
+tests = ["tests.test_writes.Rows.test_sed"]
+
+[[plant]]
+name = "perl -E gives the program"
+file = "dispatcher/write_table.py"
+old = 'PERL_PROGRAMS = named(ShellText("-e -E"))'
+new = 'PERL_PROGRAMS = named(ShellText("-e"))'
+tests = ["tests.test_writes.Rows.test_perl"]
+
+[[plant]]
+name = "gawk --exec gives the program"
+file = "dispatcher/write_table.py"
+old = 'named(ShellText("-f --file -e --source -E --exec"))'
+new = 'named(ShellText("-f --file -e --source -E"))'
+tests = ["tests.test_writes.Rows.test_gawk"]
+
+[[plant]]
+name = "--target-directory names the destination"
+file = "dispatcher/write_table.py"
+old = 'TARGETS = named(ShellText("-t --target-directory"))'
+new = 'TARGETS = named(ShellText("-t"))'
+tests = ["tests.test_writes.Rows.test_cp", "tests.test_writes.Rows.test_mv"]
+
+[[plant]]
+name = "--suffix takes a value"
+file = "dispatcher/write_table.py"
+old = 'SUFFIX = named(ShellText("-S --suffix"))'
+new = 'SUFFIX = named(ShellText("-S"))'
+tests = ["tests.test_writes.Rows.test_cp", "tests.test_writes.Rows.test_mv", "tests.test_writes.Rows.test_install"]
+
+[[plant]]
+name = "gawk row: valued"
+file = "dispatcher/write_table.py"
+old = 'GAWK = Writer(valued=GAWK_PROGRAMS | named(ShellText("-F --field-separator -v --assign -i --include -l --load")),'
+new = 'GAWK = Writer(valued=GAWK_PROGRAMS | named(ShellText("-i --include")),'
+tests = ["tests.test_writes.Rows.test_gawk"]
+
+[[plant]]
+name = "gawk row: optional"
+file = "dispatcher/write_table.py"
+old = 'optional=named(ShellText("-d -D -L -o -p"))'
+new = 'optional=frozenset()'
+tests = ["tests.test_writes.Rows.test_gawk"]
+
+[[plant]]
+name = "gawk row: switches"
+file = "dispatcher/write_table.py"
+old = 'Switch("edited", ShellText("inplace"))'
+new = 'Switch("edited", ShellText("other"))'
+tests = ["tests.test_writes.Rows.test_gawk"]
+
+[[plant]]
+name = "gawk row: programs"
+file = "dispatcher/write_table.py"
+old = 'programs=GAWK_PROGRAMS, ordered=True, assigns=True)'
+new = 'programs=None, ordered=True, assigns=True)'
+tests = ["tests.test_writes.Rows.test_gawk"]
+
+[[plant]]
+name = "gawk row: ordered"
+file = "dispatcher/write_table.py"
+old = 'programs=GAWK_PROGRAMS, ordered=True, assigns=True)'
+new = 'programs=GAWK_PROGRAMS, ordered=False, assigns=True)'
+tests = ["tests.test_writes.Rows.test_gawk"]
+
+[[plant]]
+name = "gawk row: assigns"
+file = "dispatcher/write_table.py"
+old = 'programs=GAWK_PROGRAMS, ordered=True, assigns=True)'
+new = 'programs=GAWK_PROGRAMS, ordered=True, assigns=False)'
+tests = ["tests.test_writes.Rows.test_gawk"]
+
+[[plant]]
+name = "awk reads gawk's row"
+file = "dispatcher/write_table.py"
+old = 'ShellText("awk"): GAWK,'
+new = 'ShellText("nawk"): GAWK,'
+tests = ["tests.test_writes.Rows.test_awk"]
+
+[[plant]]
+name = "sed row: valued"
+file = "dispatcher/write_table.py"
+old = 'Writer(valued=SED_PROGRAMS | named(ShellText("-l --line-length")),'
+new = 'Writer(valued=SED_PROGRAMS,'
+tests = ["tests.test_writes.Rows.test_sed"]
+
+[[plant]]
+name = "sed row: optional"
+file = "dispatcher/write_table.py"
+old = 'optional=named(ShellText("-i")),'
+new = 'optional=frozenset(),'
+tests = ["tests.test_writes.Rows.test_sed"]
+
+[[plant]]
+name = "sed row: switches"
+file = "dispatcher/write_table.py"
+old = 'switching(ShellText("-i --in-place"), EDITED)'
+new = 'switching(ShellText("--in-place"), EDITED)'
+tests = ["tests.test_writes.Rows.test_sed"]
+
+[[plant]]
+name = "sed row: programs"
+file = "dispatcher/write_table.py"
+old = 'programs=SED_PROGRAMS)'
+new = 'programs=None)'
+tests = ["tests.test_writes.Rows.test_sed"]
+
+[[plant]]
+name = "perl row: valued"
+file = "dispatcher/write_table.py"
+old = 'Writer(valued=PERL_PROGRAMS | named(ShellText("-I")),'
+new = 'Writer(valued=PERL_PROGRAMS,'
+tests = ["tests.test_writes.Rows.test_perl"]
+
+[[plant]]
+name = "perl row: optional"
+file = "dispatcher/write_table.py"
+old = 'optional=named(ShellText("-0 -C -d -D -F -i -l -m -M -V -x"))'
+new = 'optional=named(ShellText("-i"))'
+tests = ["tests.test_writes.Rows.test_perl"]
+
+[[plant]]
+name = "perl row: switches"
+file = "dispatcher/write_table.py"
+old = 'switches=switching(ShellText("-i"), EDITED)'
+new = 'switches={}'
+tests = ["tests.test_writes.Rows.test_perl"]
+
+[[plant]]
+name = "perl row: programs"
+file = "dispatcher/write_table.py"
+old = 'programs=PERL_PROGRAMS, ordered=True)'
+new = 'programs=None, ordered=True)'
+tests = ["tests.test_writes.Rows.test_perl"]
+
+[[plant]]
+name = "perl row: ordered"
+file = "dispatcher/write_table.py"
+old = 'programs=PERL_PROGRAMS, ordered=True)'
+new = 'programs=PERL_PROGRAMS, ordered=False)'
+tests = ["tests.test_writes.Rows.test_perl"]
+
+[[plant]]
+name = "tee row: kind"
+file = "dispatcher/write_table.py"
+old = 'ShellText("tee"): Writer("created",'
+new = 'ShellText("tee"): Writer("removed",'
+tests = ["tests.test_writes.Rows.test_tee"]
+
+[[plant]]
+name = "tee row: switches"
+file = "dispatcher/write_table.py"
+old = 'Switch("appended")'
+new = 'Switch("created")'
+tests = ["tests.test_writes.Rows.test_tee"]
+
+[[plant]]
+name = "cp row: valued"
+file = "dispatcher/write_table.py"
+old = 'Writer(valued=SUFFIX | named(ShellText("--no-preserve --sparse")), targets=TARGETS)'
+new = 'Writer(valued=SUFFIX, targets=TARGETS)'
+tests = ["tests.test_writes.Rows.test_cp"]
+
+[[plant]]
+name = "cp row: targets"
+file = "dispatcher/write_table.py"
+old = 'named(ShellText("--no-preserve --sparse")), targets=TARGETS)'
+new = 'named(ShellText("--no-preserve --sparse")))'
+tests = ["tests.test_writes.Rows.test_cp"]
+
+[[plant]]
+name = "mv row: valued"
+file = "dispatcher/write_table.py"
+old = 'ShellText("mv"): Writer(valued=SUFFIX, targets=TARGETS, moves=True)'
+new = 'ShellText("mv"): Writer(targets=TARGETS, moves=True)'
+tests = ["tests.test_writes.Rows.test_mv"]
+
+[[plant]]
+name = "mv row: targets"
+file = "dispatcher/write_table.py"
+old = 'ShellText("mv"): Writer(valued=SUFFIX, targets=TARGETS, moves=True)'
+new = 'ShellText("mv"): Writer(valued=SUFFIX, moves=True)'
+tests = ["tests.test_writes.Rows.test_mv"]
+
+[[plant]]
+name = "mv row: moves"
+file = "dispatcher/write_table.py"
+old = 'ShellText("mv"): Writer(valued=SUFFIX, targets=TARGETS, moves=True)'
+new = 'ShellText("mv"): Writer(valued=SUFFIX, targets=TARGETS)'
+tests = ["tests.test_writes.Rows.test_mv"]
+
+[[plant]]
+name = "install row: valued"
+file = "dispatcher/write_table.py"
+old = 'named(ShellText("-g --group -m --mode -o --owner --strip-program"))'
+new = 'frozenset()'
+tests = ["tests.test_writes.Rows.test_install"]
+
+[[plant]]
+name = "install row: switches"
+file = "dispatcher/write_table.py"
+old = 'switches=switching(ShellText("-d --directory"), Switch("created")), targets=TARGETS)'
+new = 'targets=TARGETS)'
+tests = ["tests.test_writes.Rows.test_install"]
+
+[[plant]]
+name = "install row: targets"
+file = "dispatcher/write_table.py"
+old = 'switching(ShellText("-d --directory"), Switch("created")), targets=TARGETS)'
+new = 'switching(ShellText("-d --directory"), Switch("created")))'
+tests = ["tests.test_writes.Rows.test_install"]
+
+[[plant]]
+name = "rm row: kind"
+file = "dispatcher/write_table.py"
+old = 'ShellText("rm"): Writer("removed"),'
+new = 'ShellText("rm"): Writer("created"),'
+tests = ["tests.test_writes.Rows.test_rm"]
+
+[[plant]]
+name = "unlink row: kind"
+file = "dispatcher/write_table.py"
+old = 'ShellText("unlink"): Writer("removed"),'
+new = 'ShellText("unlink"): Writer("created"),'
+tests = ["tests.test_writes.Rows.test_unlink"]
+
+[[plant]]
+name = "shred row: kind"
+file = "dispatcher/write_table.py"
+old = 'ShellText("shred"): Writer("edited",'
+new = 'ShellText("shred"): Writer("created",'
+tests = ["tests.test_writes.Rows.test_shred"]
+
+[[plant]]
+name = "shred row: valued"
+file = "dispatcher/write_table.py"
+old = 'named(ShellText("-n --iterations --random-source -s --size"))'
+new = 'frozenset()'
+tests = ["tests.test_writes.Rows.test_shred"]
+
+[[plant]]
+name = "shred row: switches"
+file = "dispatcher/write_table.py"
+old = 'switching(ShellText("-u --remove"), Switch("removed"))'
+new = 'switching(ShellText("-u --remove"), Switch("edited"))'
+tests = ["tests.test_writes.Rows.test_shred"]
+
+[[plant]]
+name = "touch row: kind"
+file = "dispatcher/write_table.py"
+old = 'ShellText("touch"): Writer("created",'
+new = 'ShellText("touch"): Writer("removed",'
+tests = ["tests.test_writes.Rows.test_touch"]
+
+[[plant]]
+name = "touch row: valued"
+file = "dispatcher/write_table.py"
+old = 'named(ShellText("-d --date -r --reference -t --time"))'
+new = 'frozenset()'
+tests = ["tests.test_writes.Rows.test_touch"]
+
+[[plant]]
+name = "mkdir row: kind"
+file = "dispatcher/write_table.py"
+old = 'ShellText("mkdir"): Writer("created",'
+new = 'ShellText("mkdir"): Writer("removed",'
+tests = ["tests.test_writes.Rows.test_mkdir"]
+
+[[plant]]
+name = "mkdir row: valued"
+file = "dispatcher/write_table.py"
+old = 'Writer("created", named(ShellText("-m --mode")))'
+new = 'Writer("created")'
+tests = ["tests.test_writes.Rows.test_mkdir"]
+
+[[plant]]
+name = "truncate row: kind"
+file = "dispatcher/write_table.py"
+old = 'ShellText("truncate"): Writer("created",'
+new = 'ShellText("truncate"): Writer("removed",'
+tests = ["tests.test_writes.Rows.test_truncate"]
+
+[[plant]]
+name = "truncate row: valued"
+file = "dispatcher/write_table.py"
+old = 'named(ShellText("-r --reference -s --size"))'
+new = 'frozenset()'
+tests = ["tests.test_writes.Rows.test_truncate"]
+
+[[plant]]
+name = "dd row: keyed"
+file = "dispatcher/write_table.py"
+old = 'keyed={ShellText("of="): "created"}'
+new = 'keyed={ShellText("of="): "appended"}'
+tests = ["tests.test_writes.Rows.test_dd"]

@@ -1,0 +1,1139 @@
+# The plants that show the call model's descriptor ends are held by tests/test_model.py: run
+#   testing/plants.py tests/plants_streams.toml --out DIR
+# Every plant is killed when each line of dispatcher/model.py that reads where a descriptor ends is held by a test.
+
+[[plant]]
+name = "a descriptor of two digits is read"
+file = "dispatcher/model.py"
+old = 'DESCRIPTOR = re.compile(r"[0-9]+")'
+new = 'DESCRIPTOR = re.compile(r"[0-9]")'
+tests = ["tests.test_model.Streams.test_copies_and_closes"]
+
+[[plant]]
+name = "a moved descriptor is read"
+file = "dispatcher/model.py"
+old = 'MOVED = re.compile(r"([0-9]+)-")'
+new = 'MOVED = re.compile(r"([0-9]+)")'
+tests = ["tests.test_model.Streams.test_copies_and_closes"]
+
+[[plant]]
+name = "/dev/fd/N names a descriptor"
+file = "dispatcher/model.py"
+old = 'DEVICE = re.compile(r"/dev/fd/([0-9]+)")'
+new = 'DEVICE = re.compile(r"/dev/fdx/([0-9]+)")'
+tests = ["tests.test_model.Streams.test_devices_and_substitutions_as_targets"]
+
+[[plant]]
+name = "the descriptors are 0, 1 and 2 in that order"
+file = "dispatcher/model.py"
+old = 'Descriptor(0), Descriptor(1), Descriptor(2)'
+new = 'Descriptor(0), Descriptor(2), Descriptor(1)'
+tests = ["tests.test_model.Streams.test_own_redirections"]
+
+[[plant]]
+name = "/dev/null ends in null"
+file = "dispatcher/model.py"
+old = 'NULL = End("null")'
+new = 'NULL = End("unknown")'
+tests = ["tests.test_model.Streams.test_devices_and_substitutions_as_targets"]
+
+[[plant]]
+name = "the call's own descriptors are the call's"
+file = "dispatcher/model.py"
+old = 'CALLED = End("call")'
+new = 'CALLED = End("unknown")'
+tests = ["tests.test_model.Streams.test_own_redirections"]
+
+[[plant]]
+name = "a substitution's end is a substitution"
+file = "dispatcher/model.py"
+old = 'SUBSTITUTED = End("substitution")'
+new = 'SUBSTITUTED = End("pipe")'
+tests = ["tests.test_model.Streams.test_substitutions"]
+
+[[plant]]
+name = "a heredoc's end is text"
+file = "dispatcher/model.py"
+old = 'TEXT = End("text")'
+new = 'TEXT = End("call")'
+tests = ["tests.test_model.Streams.test_own_redirections"]
+
+[[plant]]
+name = "a closed descriptor is closed"
+file = "dispatcher/model.py"
+old = 'CLOSED = End("closed")'
+new = 'CLOSED = End("unknown")'
+tests = ["tests.test_model.Streams.test_copies_and_closes"]
+
+[[plant]]
+name = "an unknown end is unknown"
+file = "dispatcher/model.py"
+old = 'UNKNOWN = End("unknown")'
+new = 'UNKNOWN = End("closed")'
+tests = ["tests.test_model.Streams.test_copies_and_closes"]
+
+[[plant]]
+name = "a coprocess's ends are pipes"
+file = "dispatcher/model.py"
+old = 'COPROCESS = End("pipe")'
+new = 'COPROCESS = End("call")'
+tests = ["tests.test_model.Streams.test_jobs"]
+
+[[plant]]
+name = "the call's errors are the call's"
+file = "dispatcher/model.py"
+old = 'OUTPUT: CALLED, ERRORS: CALLED})'
+new = 'OUTPUT: CALLED, ERRORS: UNKNOWN})'
+tests = ["tests.test_model.Streams.test_own_redirections"]
+
+[[plant]]
+name = "/dev/stdin names descriptor 0"
+file = "dispatcher/model.py"
+old = '{ShellText("/dev/stdin"): INPUT,'
+new = '{ShellText("/dev/stdin"): OUTPUT,'
+tests = ["tests.test_model.Streams.test_devices_and_substitutions_as_targets"]
+
+[[plant]]
+name = "/dev/stdout names descriptor 1"
+file = "dispatcher/model.py"
+old = 'ShellText("/dev/stdout"): OUTPUT,'
+new = 'ShellText("/dev/stdout"): ERRORS,'
+tests = ["tests.test_model.Streams.test_devices_and_substitutions_as_targets"]
+
+[[plant]]
+name = "/dev/stderr names descriptor 2"
+file = "dispatcher/model.py"
+old = 'ShellText("/dev/stderr"): ERRORS}'
+new = 'ShellText("/dev/stderr"): OUTPUT}'
+tests = ["tests.test_model.Streams.test_devices_and_substitutions_as_targets"]
+
+[[plant]]
+name = "an end names no file by default"
+file = "dispatcher/model.py"
+old = '''    reach: Reach
+    file: Word | None = None
+'''
+new = '''    reach: Reach
+    file: Word | None = Word(ShellText("x"), None, None)
+'''
+tests = ["tests.test_model.Streams.test_an_end_holds_only_what_its_reach_has"]
+
+[[plant]]
+name = "an end has no opening by default"
+file = "dispatcher/model.py"
+old = '''    opening: Opening | None = None
+'''
+new = '''    opening: Opening | None = "write"
+'''
+tests = ["tests.test_model.Streams.test_an_end_holds_only_what_its_reach_has"]
+
+[[plant]]
+name = "an end has no pipeline by default"
+file = "dispatcher/model.py"
+old = '''    pipeline: PipelineId | None = None
+'''
+new = '''    pipeline: PipelineId | None = PipelineId(0)
+'''
+tests = ["tests.test_model.Streams.test_an_end_holds_only_what_its_reach_has"]
+
+[[plant]]
+name = "the streams are input then output"
+file = "dispatcher/model.py"
+old = '''    input: End
+    output: End
+'''
+new = '''    output: End
+    input: End
+'''
+tests = ["tests.test_model.Streams.test_own_redirections"]
+
+[[plant]]
+name = "the streams are output then errors"
+file = "dispatcher/model.py"
+old = '''    output: End
+    errors: End
+'''
+new = '''    errors: End
+    output: End
+'''
+tests = ["tests.test_model.Streams.test_own_redirections"]
+
+[[plant]]
+name = "a command carries its streams"
+file = "dispatcher/model.py"
+old = "    loops: tuple[Loop, ...]\n    streams: Streams\n"
+new = "    loops: tuple[Loop, ...]\n"
+tests = ["tests.test_model.Streams.test_own_redirections"]
+
+[[plant]]
+name = "the call's shell receives the call's descriptors"
+file = "dispatcher/model.py"
+old = '''    ends: Mapping[Descriptor, End] = CALL_ENDS
+'''
+new = '''    ends: Mapping[Descriptor, End] = MappingProxyType({})
+'''
+tests = ["tests.test_model.Streams.test_own_redirections"]
+
+[[plant]]
+name = "a shell state holds its ends"
+file = "dispatcher/model.py"
+old = '__slots__ = ("ends",)'
+new = '__slots__ = ()'
+tests = ["tests.test_model.Streams.test_own_redirections"]
+
+[[plant]]
+name = "a shell state keeps its parameters"
+file = "dispatcher/model.py"
+old = '''        super().__init__(cwd, names)
+'''
+new = '''        super().__init__(cwd)
+'''
+tests = ["tests.test_model.Directories",
+         "tests.test_model.Environments",
+         "tests.test_model.Scripts"]
+
+[[plant]]
+name = "a shell starts with no ends of its own"
+file = "dispatcher/model.py"
+old = '        self.ends: dict[Descriptor, End] = {}'
+new = '        self.ends: dict[Descriptor, End] = {OUTPUT: NULL}'
+tests = ["tests.test_model.Streams.test_own_redirections"]
+
+[[plant]]
+name = "a copy keeps the parameters"
+file = "dispatcher/model.py"
+old = '        state = ShellState(self.cwd, self.names)'
+new = '        state = ShellState(self.cwd)'
+tests = ["tests.test_model.Streams.test_enclosing_statements",
+         "tests.test_model.Directories",
+         "tests.test_model.Environments",
+         "tests.test_model.Scripts"]
+
+[[plant]]
+name = "a copy's ends are its own"
+file = "dispatcher/model.py"
+old = '        state.ends = dict(self.ends)'
+new = '        state.ends = self.ends'
+tests = ["tests.test_model.Streams.test_exec_keeps_its_redirections"]
+
+[[plant]]
+name = "a hold saves what each descriptor held"
+file = "dispatcher/model.py"
+old = '        saved = {fd: self.ends.get(fd) for fd in ends}'
+new = '        saved = {}'
+tests = ["tests.test_model.Streams.test_enclosing_statements"]
+
+[[plant]]
+name = "a hold gives the ends"
+file = "dispatcher/model.py"
+old = '''        self.ends.update(ends)
+        return saved'''
+new = '        return saved'
+tests = ["tests.test_model.Streams.test_own_redirections"]
+
+[[plant]]
+name = "a hold returns what it saved"
+file = "dispatcher/model.py"
+old = '''        return saved
+'''
+new = '''        return dict.fromkeys(saved)
+'''
+tests = ["tests.test_model.Streams.test_exec_keeps_its_redirections"]
+
+[[plant]]
+name = "a restore gives back every descriptor"
+file = "dispatcher/model.py"
+old = 'for fd, end in saved.items():'
+new = 'for fd, end in list(saved.items())[:0]:'
+tests = ["tests.test_model.Streams.test_enclosing_statements"]
+
+[[plant]]
+name = "a restore drops what the process held"
+file = "dispatcher/model.py"
+old = '''            if end is None:
+                _ = self.ends.pop'''
+new = '''            if end is not None:
+                _ = self.ends.pop'''
+tests = ["tests.test_model.Streams.test_enclosing_statements"]
+
+[[plant]]
+name = "a restore pops the end held"
+file = "dispatcher/model.py"
+old = '_ = self.ends.pop(fd, None)'
+new = '_ = self.ends.get(fd, None)'
+tests = ["tests.test_model.Streams.test_enclosing_statements"]
+
+[[plant]]
+name = "a restore gives back a shell's own end"
+file = "dispatcher/model.py"
+old = '''                self.ends[fd] = end
+'''
+new = '''                pass
+'''
+tests = ["tests.test_model.Streams.test_exec_keeps_its_redirections"]
+
+[[plant]]
+name = "a join reads every path"
+file = "dispatcher/model.py"
+old = '{state.ends.get(fd, UNKNOWN) for state in states}'
+new = '{state.ends.get(fd, UNKNOWN) for state in states[:1]}'
+tests = ["tests.test_model.Streams.test_paths_joined"]
+
+[[plant]]
+name = "a join joins the parameters"
+file = "dispatcher/model.py"
+old = '        self.become(joined(states))'
+new = '        self.become(states[0])'
+tests = ["tests.test_model.Directories",
+         "tests.test_model.Environments",
+         "tests.test_model.Scripts"]
+
+[[plant]]
+name = "paths that agree keep their end"
+file = "dispatcher/model.py"
+old = '{fd: ends.pop() if len(ends) == 1 else UNKNOWN'
+new = '{fd: ends.pop() if len(ends) == 2 else UNKNOWN'
+tests = ["tests.test_model.Streams.test_paths_joined"]
+
+[[plant]]
+name = "a job reads /dev/null"
+file = "dispatcher/model.py"
+old = '''            if stmt.get("background"):
+                state.ends'''
+new = '''            if not stmt.get("background"):
+                state.ends'''
+tests = ["tests.test_model.Streams.test_jobs"]
+
+[[plant]]
+name = "a job's input is /dev/null"
+file = "dispatcher/model.py"
+old = '                state.ends[INPUT] = NULL'
+new = '                state.ends[OUTPUT] = NULL'
+tests = ["tests.test_model.Streams.test_jobs"]
+
+[[plant]]
+name = "a statement joins no errors by default"
+file = "dispatcher/model.py"
+old = 'place: Place, errors: bool = False) -> None:'
+new = 'place: Place, errors: bool = True) -> None:'
+tests = ["tests.test_model.Streams.test_own_redirections"]
+
+[[plant]]
+name = "a simple element of |& joins its errors"
+file = "dispatcher/model.py"
+old = 'self.call(command, redirs, state, place, errors)'
+new = 'self.call(command, redirs, state, place, False)'
+tests = ["tests.test_model.Streams.test_pipeline_seats"]
+
+[[plant]]
+name = "a compound element of |& joins its errors"
+file = "dispatcher/model.py"
+old = '''            saved = state.holds(self.opened(redirs, state, place, errors))
+            self.compound'''
+new = '''            saved = state.holds(self.opened(redirs, state, place, False))
+            self.compound'''
+tests = ["tests.test_model.Streams.test_pipeline_seats"]
+
+[[plant]]
+name = "a compound's redirections hold inside it"
+file = "dispatcher/model.py"
+old = '''            saved = state.holds(self.opened(redirs, state, place, errors))
+            self.compound'''
+new = '''            saved = state.holds({})
+            self.compound'''
+tests = ["tests.test_model.Streams.test_enclosing_statements"]
+
+[[plant]]
+name = "a compound's redirections end with it"
+file = "dispatcher/model.py"
+old = '''            self.compound(command, state, place)
+            state.restores(saved)'''
+new = '            self.compound(command, state, place)'
+tests = ["tests.test_model.Streams.test_enclosing_statements"]
+
+[[plant]]
+name = "a pipe is its pipeline's"
+file = "dispatcher/model.py"
+old = 'pipe = End("pipe", pipeline=pipeline)'
+new = 'pipe = End("pipe")'
+tests = ["tests.test_model.Streams.test_a_pipe_is_its_pipelines"]
+
+[[plant]]
+name = "each element has a state of its own"
+file = "dispatcher/model.py"
+old = '                    element = state.copy()'
+new = '                    element = state'
+tests = ["tests.test_model.Streams.test_pipeline_seats"]
+
+[[plant]]
+name = "the first element reads no pipe"
+file = "dispatcher/model.py"
+old = '                    if index > 0:'
+new = '                    if index >= 0:'
+tests = ["tests.test_model.Streams.test_pipeline_seats"]
+
+[[plant]]
+name = "a later element reads the pipe"
+file = "dispatcher/model.py"
+old = '                        element.ends[INPUT] = pipe'
+new = '                        element.ends[ERRORS] = pipe'
+tests = ["tests.test_model.Streams.test_pipeline_seats"]
+
+[[plant]]
+name = "the last element writes no pipe"
+file = "dispatcher/model.py"
+old = '                    if index < len(items) - 1:'
+new = '                    if index < len(items):'
+tests = ["tests.test_model.Streams.test_pipeline_seats"]
+
+[[plant]]
+name = "an earlier element writes the pipe"
+file = "dispatcher/model.py"
+old = '                        element.ends[OUTPUT] = pipe'
+new = '                        element.ends[ERRORS] = pipe'
+tests = ["tests.test_model.Streams.test_pipeline_seats"]
+
+[[plant]]
+name = "|& joins the element before it"
+file = "dispatcher/model.py"
+old = 'items[index + 1:index + 2]] == ["|&"]'
+new = 'items[index:index + 1]] == ["|&"]'
+tests = ["tests.test_model.Streams.test_pipeline_seats"]
+
+[[plant]]
+name = "an element is told it joins its errors"
+file = "dispatcher/model.py"
+old = 'seated.into("pipeline", self.new_process()), joins)'
+new = 'seated.into("pipeline", self.new_process()), False)'
+tests = ["tests.test_model.Streams.test_pipeline_seats"]
+
+[[plant]]
+name = "a coprocess has a state of its own"
+file = "dispatcher/model.py"
+old = '                coprocess = state.copy()'
+new = '                coprocess = state'
+tests = ["tests.test_model.Streams.test_jobs"]
+
+[[plant]]
+name = "a coprocess writes a pipe"
+file = "dispatcher/model.py"
+old = 'coprocess.ends.update({INPUT: COPROCESS, OUTPUT: COPROCESS})'
+new = 'coprocess.ends.update({INPUT: COPROCESS})'
+tests = ["tests.test_model.Streams.test_jobs"]
+
+[[plant]]
+name = "a coprocess runs with its pipes"
+file = "dispatcher/model.py"
+old = 'self.stmt(command["stmt"], coprocess, place.into('
+new = 'self.stmt(command["stmt"], state.copy(), place.into('
+tests = ["tests.test_model.Streams.test_jobs"]
+
+[[plant]]
+name = "an if without else joins the path past it"
+file = "dispatcher/model.py"
+old = 'state.merges([*exits, otherwise])'
+new = 'state.merges([*exits])'
+tests = ["tests.test_model.Streams.test_paths_joined"]
+
+[[plant]]
+name = "a case joins the path no item matches"
+file = "dispatcher/model.py"
+old = '''        state.merges(exits)
+'''
+new = '''        state.merges(exits[1:])
+'''
+tests = ["tests.test_model.Streams.test_paths_joined"]
+
+[[plant]]
+name = "a loop pass that changes an end is walked again"
+file = "dispatcher/model.py"
+old = 'if trial.same(state) and trial.ends == state.ends:'
+new = 'if trial.same(state):'
+tests = ["tests.test_model.Streams.test_paths_joined"]
+
+[[plant]]
+name = "a second pass starts from a copy"
+file = "dispatcher/model.py"
+old = '''        start = state.copy()
+        start.merges'''
+new = '''        start = state
+        start.merges'''
+tests = ["tests.test_model.Streams.test_paths_joined"]
+
+[[plant]]
+name = "a second pass starts from the join"
+file = "dispatcher/model.py"
+old = 'start.merges([state, trial])'
+new = 'start.merges([state])'
+tests = ["tests.test_model.Streams.test_paths_joined"]
+
+[[plant]]
+name = "a loop leaves the join of its passes"
+file = "dispatcher/model.py"
+old = '        state.merges([state, start])'
+new = '        state.merges([start])'
+tests = ["tests.test_model.Streams.test_paths_joined"]
+
+[[plant]]
+name = "a function body's ends join the path past it"
+file = "dispatcher/model.py"
+old = 'state.merges([state, inside])'
+new = 'state.merges([state])'
+tests = ["tests.test_model.Streams.test_paths_joined"]
+
+[[plant]]
+name = "a substitution's form is read"
+file = "dispatcher/model.py"
+old = '                form = nested.get("form")'
+new = '                form = None'
+tests = ["tests.test_model.Streams.test_substitutions"]
+
+[[plant]]
+name = "${| ;} runs in the current shell"
+file = "dispatcher/model.py"
+old = 'if form in ("brace", "brace_reply"):'
+new = 'if form in ("brace",):'
+tests = ["tests.test_model.Streams.test_substitutions"]
+
+[[plant]]
+name = "${ ;} reads its output and ${| ;} does not"
+file = "dispatcher/model.py"
+old = '{OUTPUT: SUBSTITUTED} if form == "brace" else {}'
+new = '{OUTPUT: SUBSTITUTED} if form == "brace_reply" else {}'
+tests = ["tests.test_model.Streams.test_substitutions"]
+
+[[plant]]
+name = "${ ;} gives its output back"
+file = "dispatcher/model.py"
+old = '''                    self.stmts(nested.get("stmts", []), state, alone)
+                    state.restores(saved)'''
+new = '                    self.stmts(nested.get("stmts", []), state, alone)'
+tests = ["tests.test_model.Streams.test_substitutions"]
+
+[[plant]]
+name = "a substitution's subshell has a state of its own"
+file = "dispatcher/model.py"
+old = '''                    inner = state.copy()
+                    inner.ends'''
+new = '''                    inner = state
+                    inner.ends'''
+tests = ["tests.test_model.Streams.test_substitutions"]
+
+[[plant]]
+name = ">( ) feeds the input"
+file = "dispatcher/model.py"
+old = 'inner.ends[INPUT if nested.get("op") == ">(" else OUTPUT]'
+new = 'inner.ends[INPUT if nested.get("op") == "<(" else OUTPUT]'
+tests = ["tests.test_model.Streams.test_substitutions"]
+
+[[plant]]
+name = "a substitution's commands run with its ends"
+file = "dispatcher/model.py"
+old = 'self.stmts(nested.get("stmts", []), inner, alone.into('
+new = 'self.stmts(nested.get("stmts", []), state.copy(), alone.into('
+tests = ["tests.test_model.Streams.test_substitutions"]
+
+[[plant]]
+name = "a shell's own ends override its process's"
+file = "dispatcher/model.py"
+old = 'return {**place.ends, **state.ends}'
+new = 'return {**state.ends, **place.ends}'
+tests = ["tests.test_model.Streams.test_exec_keeps_its_redirections"]
+
+[[plant]]
+name = "redirections start from the shell's ends"
+file = "dispatcher/model.py"
+old = '''        table = self.table(state, place)
+        opened'''
+new = '''        table = dict(place.ends)
+        opened'''
+tests = ["tests.test_model.Streams.test_exec_keeps_its_redirections", "tests.test_model.Streams.test_pipeline_seats"]
+
+[[plant]]
+name = "redirections open nothing before the first"
+file = "dispatcher/model.py"
+old = '        opened: dict[Descriptor, End] = {}'
+new = '        opened: dict[Descriptor, End] = {ERRORS: NULL}'
+tests = ["tests.test_model.Streams.test_own_redirections"]
+
+[[plant]]
+name = "every redirection is performed"
+file = "dispatcher/model.py"
+old = '''        opened: dict[Descriptor, End] = {}
+        for node in redirs:'''
+new = '''        opened: dict[Descriptor, End] = {}
+        for node in redirs[:1]:'''
+tests = ["tests.test_model.Streams.test_own_redirections"]
+
+[[plant]]
+name = "a redirection's descriptor is read"
+file = "dispatcher/model.py"
+old = '''    spelled = node.get("fd")
+    if spelled is not None and (not'''
+new = '''    spelled = None
+    if spelled is not None and (not'''
+tests = ["tests.test_model.Streams.test_copies_and_closes"]
+
+[[plant]]
+name = "a {name}> redirection names no descriptor"
+file = "dispatcher/model.py"
+old = '''int(spelled) > ERRORS):
+        return True'''
+new = '''int(spelled) > ERRORS):
+        pass'''
+tests = ["tests.test_model.Streams.test_copies_and_closes"]
+
+[[plant]]
+name = "a copy reads the ends as they stand"
+file = "dispatcher/model.py"
+old = '''else self.ended(node, word, table)'''
+new = '''else self.ended(node, word, place.ends)'''
+tests = ["tests.test_model.Streams.test_own_redirections"]
+
+[[plant]]
+name = "each redirection sees the ones before it"
+file = "dispatcher/model.py"
+old = '''            table.update(ends)
+'''
+new = '''            pass
+'''
+tests = ["tests.test_model.Streams.test_own_redirections"]
+
+[[plant]]
+name = "each redirection's ends are given"
+file = "dispatcher/model.py"
+old = '''            opened.update(ends)
+'''
+new = '''            pass
+'''
+tests = ["tests.test_model.Streams.test_own_redirections"]
+
+[[plant]]
+name = "|& joins only where asked"
+file = "dispatcher/model.py"
+old = '''        if errors:
+            opened'''
+new = '''        if not errors:
+            opened'''
+tests = ["tests.test_model.Streams.test_pipeline_seats"]
+
+[[plant]]
+name = "|& copies the output to the errors"
+file = "dispatcher/model.py"
+old = 'opened[ERRORS] = table[OUTPUT]'
+new = 'opened[ERRORS] = table[ERRORS]'
+tests = ["tests.test_model.Streams.test_pipeline_seats"]
+
+[[plant]]
+name = "the opened ends are returned"
+file = "dispatcher/model.py"
+old = '''        return opened
+'''
+new = '''        return {}
+'''
+tests = ["tests.test_model.Streams.test_own_redirections"]
+
+[[plant]]
+name = "a redirection's spelled descriptor is read"
+file = "dispatcher/model.py"
+old = 'op, spelled = node.get("op"), node.get("fd")'
+new = 'op, spelled = node.get("op"), None'
+tests = ["tests.test_model.Streams.test_own_redirections"]
+
+[[plant]]
+name = "an input redirection defaults to descriptor 0"
+file = "dispatcher/model.py"
+old = 'else INPUT if op in INPUTS else OUTPUT'
+new = 'else OUTPUT if op in INPUTS else INPUT'
+tests = ["tests.test_model.Streams.test_own_redirections"]
+
+[[plant]]
+name = "a >& with a descriptor of its own names one descriptor"
+file = "dispatcher/model.py"
+old = 'both = spelled is None and op == ">&"'
+new = 'both = op == ">&"'
+tests = ["tests.test_model.Streams.test_copies_and_closes"]
+
+[[plant]]
+name = "<<- is a heredoc"
+file = "dispatcher/model.py"
+old = 'if op in ("<<", "<<-", "<<<"):'
+new = 'if op in ("<<", "<<<"):'
+tests = ["tests.test_model.Streams.test_own_redirections"]
+
+[[plant]]
+name = "a heredoc feeds text"
+file = "dispatcher/model.py"
+old = '            return {fd: TEXT}'
+new = '            return {fd: UNKNOWN}'
+tests = ["tests.test_model.Streams.test_own_redirections"]
+
+[[plant]]
+name = "<& copies like >&"
+file = "dispatcher/model.py"
+old = 'if op in (">&", "<&"):'
+new = 'if op in (">&",):'
+tests = ["tests.test_model.Streams.test_copies_and_closes"]
+
+[[plant]]
+name = "a copy reads the word's value"
+file = "dispatcher/model.py"
+old = '''            value = word.value
+            if value is None:'''
+new = '''            value = word.text
+            if value is None:'''
+tests = ["tests.test_model.Streams.test_copies_and_closes"]
+
+[[plant]]
+name = "an unknown copy is unknown"
+file = "dispatcher/model.py"
+old = '''            if value is None:
+                return {fd: UNKNOWN, ERRORS'''
+new = '''            if value is None and False:
+                return {fd: UNKNOWN, ERRORS'''
+tests = ["tests.test_model.Streams.test_copies_and_closes"]
+
+[[plant]]
+name = "an unknown >& may name both descriptors"
+file = "dispatcher/model.py"
+old = 'return {fd: UNKNOWN, ERRORS: UNKNOWN} if both else {fd: UNKNOWN}'
+new = 'return {fd: UNKNOWN}'
+tests = ["tests.test_model.Streams.test_copies_and_closes"]
+
+[[plant]]
+name = "- closes"
+file = "dispatcher/model.py"
+old = 'if value == "-":'
+new = 'if value == "--":'
+tests = ["tests.test_model.Streams.test_copies_and_closes"]
+
+[[plant]]
+name = "a closed descriptor ends closed"
+file = "dispatcher/model.py"
+old = 'return {fd: CLOSED}'
+new = 'return {fd: UNKNOWN}'
+tests = ["tests.test_model.Streams.test_copies_and_closes"]
+
+[[plant]]
+name = "digits copy a descriptor"
+file = "dispatcher/model.py"
+old = '            if DESCRIPTOR.fullmatch(value):'
+new = '            if False:'
+tests = ["tests.test_model.Streams.test_own_redirections"]
+
+[[plant]]
+name = "digits and - move a descriptor"
+file = "dispatcher/model.py"
+old = 'if (moved := MOVED.fullmatch(value)) is not None:'
+new = 'if (moved := MOVED.fullmatch(value)) is None:'
+tests = ["tests.test_model.Streams.test_copies_and_closes"]
+
+[[plant]]
+name = "a move reads its source"
+file = "dispatcher/model.py"
+old = 'source = Descriptor(int(moved.group(1)))'
+new = 'source = Descriptor(int(moved.group(1)) + 1)'
+tests = ["tests.test_model.Streams.test_copies_and_closes"]
+
+[[plant]]
+name = "a move closes its source"
+file = "dispatcher/model.py"
+old = 'return {fd: table.get(source, UNKNOWN), source: CLOSED}'
+new = 'return {fd: table.get(source, UNKNOWN)}'
+tests = ["tests.test_model.Streams.test_copies_and_closes"]
+
+[[plant]]
+name = ">& WORD with no descriptor is a file"
+file = "dispatcher/model.py"
+old = '''            if not both:
+'''
+new = '''            if both:
+'''
+tests = ["tests.test_model.Streams.test_own_redirections"]
+
+[[plant]]
+name = "N>&WORD is refused"
+file = "dispatcher/model.py"
+old = '''                return {fd: UNKNOWN}
+'''
+new = '''                return {fd: CLOSED}
+'''
+tests = ["tests.test_model.Streams.test_copies_and_closes"]
+
+[[plant]]
+name = "a target reads the ends as they stand"
+file = "dispatcher/model.py"
+old = 'end = self.target(node, word, table)'
+new = 'end = self.target(node, word, {})'
+tests = ["tests.test_model.Streams.test_devices_and_substitutions_as_targets"]
+
+[[plant]]
+name = "&>> names both descriptors"
+file = "dispatcher/model.py"
+old = 'if both or op in ("&>", "&>>") else {fd: end}'
+new = 'if both or op in ("&>",) else {fd: end}'
+tests = ["tests.test_model.Streams.test_own_redirections"]
+
+[[plant]]
+name = ">( ) is a substitution target"
+file = "dispatcher/model.py"
+old = 'if word.text[:2] in ("<(", ">("):'
+new = 'if word.text[:2] in ("<(",):'
+tests = ["tests.test_model.Streams.test_devices_and_substitutions_as_targets"]
+
+[[plant]]
+name = "a substitution target ends in it"
+file = "dispatcher/model.py"
+old = '''            return SUBSTITUTED
+'''
+new = '''            return UNKNOWN
+'''
+tests = ["tests.test_model.Streams.test_devices_and_substitutions_as_targets"]
+
+[[plant]]
+name = "a target reads the word's value"
+file = "dispatcher/model.py"
+old = '''        value = word.value
+        if value == "/dev/null":'''
+new = '''        value = word.text
+        if value == "/dev/null":'''
+tests = ["tests.test_model.Streams.test_devices_and_substitutions_as_targets"]
+
+[[plant]]
+name = "/dev/null is read"
+file = "dispatcher/model.py"
+old = 'if value == "/dev/null":'
+new = 'if value == "/dev/nul":'
+tests = ["tests.test_model.Streams.test_devices_and_substitutions_as_targets"]
+
+[[plant]]
+name = "/dev/null ends nowhere"
+file = "dispatcher/model.py"
+old = '''            return NULL
+'''
+new = '''            return UNKNOWN
+'''
+tests = ["tests.test_model.Streams.test_devices_and_substitutions_as_targets"]
+
+[[plant]]
+name = "/dev/stdout and its kin are read"
+file = "dispatcher/model.py"
+old = 'if value is not None and value in DEVICES:'
+new = 'if False:'
+tests = ["tests.test_model.Streams.test_devices_and_substitutions_as_targets"]
+
+[[plant]]
+name = "/dev/stdout and its kin copy their descriptor"
+file = "dispatcher/model.py"
+old = 'return table[DEVICES[value]]'
+new = 'return table[INPUT]'
+tests = ["tests.test_model.Streams.test_devices_and_substitutions_as_targets"]
+
+[[plant]]
+name = "/dev/fd/N is read"
+file = "dispatcher/model.py"
+old = '(device := DEVICE.fullmatch(value)) is not None:'
+new = '(device := DEVICE.fullmatch(value)) is None:'
+tests = ["tests.test_model.Streams.test_devices_and_substitutions_as_targets"]
+
+[[plant]]
+name = "/dev/fd/N of nothing opened is unknown"
+file = "dispatcher/model.py"
+old = 'return table.get(Descriptor(int(device.group(1))), UNKNOWN)'
+new = 'return table.get(Descriptor(int(device.group(1))), CLOSED)'
+tests = ["tests.test_model.Streams.test_devices_and_substitutions_as_targets"]
+
+[[plant]]
+name = "a file's opening reads the operator"
+file = "dispatcher/model.py"
+old = '''        op = node.get("op")
+        opening'''
+new = '''        op = ShellText(">")
+        opening'''
+tests = ["tests.test_model.Streams.test_own_redirections"]
+
+[[plant]]
+name = ">> and &>> append"
+file = "dispatcher/model.py"
+old = '"append" if op in APPENDS else'
+new = '"append" if op in WRITES else'
+tests = ["tests.test_model.Streams.test_own_redirections"]
+
+[[plant]]
+name = "<> opens for update"
+file = "dispatcher/model.py"
+old = '"update" if op == "<>" else'
+new = '"update" if op == "<" else'
+tests = ["tests.test_model.Streams.test_own_redirections"]
+
+[[plant]]
+name = "< opens for reading"
+file = "dispatcher/model.py"
+old = '"read" if op == "<" else "write"'
+new = '"write" if op == "<" else "write"'
+tests = ["tests.test_model.Streams.test_own_redirections"]
+
+[[plant]]
+name = "a file end keeps its opening"
+file = "dispatcher/model.py"
+old = 'return End("file", word, opening)'
+new = 'return End("file", word, "write")'
+tests = ["tests.test_model.Streams.test_own_redirections"]
+
+[[plant]]
+name = "a simple command's redirections hold while it runs"
+file = "dispatcher/model.py"
+old = '''        saved = state.holds(self.opened(redirs, state, place, errors))
+        env'''
+new = '''        saved = state.holds({})
+        env'''
+tests = ["tests.test_model.Streams.test_own_redirections"]
+
+[[plant]]
+name = "a simple command of |& joins its errors"
+file = "dispatcher/model.py"
+old = '''        saved = state.holds(self.opened(redirs, state, place, errors))
+        env'''
+new = '''        saved = state.holds(self.opened(redirs, state, place, False))
+        env'''
+tests = ["tests.test_model.Streams.test_pipeline_seats"]
+
+[[plant]]
+name = "a command acts"
+file = "dispatcher/model.py"
+old = '''        self.acts(rest, environ, command, redirs, state, place)
+'''
+new = '''        pass
+'''
+tests = ["tests.test_model.Streams.test_enclosing_statements"]
+
+[[plant]]
+name = "exec with no command keeps its redirections"
+file = "dispatcher/model.py"
+old = 'if first_value(rest) != "exec":'
+new = 'if True:'
+tests = ["tests.test_model.Streams.test_exec_keeps_its_redirections"]
+
+[[plant]]
+name = "a command's redirections end with it"
+file = "dispatcher/model.py"
+old = '''!= "exec":
+            state.restores(saved)'''
+new = '''!= "exec":
+            pass'''
+tests = ["tests.test_model.Streams.test_enclosing_statements"]
+
+[[plant]]
+name = "a command's ends are its shell's"
+file = "dispatcher/model.py"
+old = '''        ends = self.table(state, place)
+        self.commands'''
+new = '''        ends = dict(place.ends)
+        self.commands'''
+tests = ["tests.test_model.Streams.test_exec_keeps_its_redirections"]
+
+[[plant]]
+name = "no command carries where its descriptors end: every one the call's"
+file = "dispatcher/model.py"
+old = 'Streams(ends[INPUT], ends[OUTPUT], ends[ERRORS])'
+new = 'Streams(CALLED, CALLED, CALLED)'
+tests = ["tests.test_model.Streams.test_own_redirections",
+         "tests.test_model.Streams.test_copies_and_closes",
+         "tests.test_model.Streams.test_devices_and_substitutions_as_targets",
+         "tests.test_model.Streams.test_exec_keeps_its_redirections",
+         "tests.test_model.Streams.test_paths_joined",
+         "tests.test_model.Streams.test_enclosing_statements",
+         "tests.test_model.Streams.test_pipeline_seats",
+         "tests.test_model.Streams.test_a_pipe_is_its_pipelines",
+         "tests.test_model.Streams.test_an_end_holds_only_what_its_reach_has",
+         "tests.test_model.Streams.test_substitutions",
+         "tests.test_model.Streams.test_jobs",
+         "tests.test_model.Streams.test_processes_inherit"]
+
+[[plant]]
+name = "a carrier receives its command's ends"
+file = "dispatcher/model.py"
+old = '''                                                                   ends=self.table(state, place))
+        self.script(carried'''
+new = '''                                                                   ends=CALL_ENDS)
+        self.script(carried'''
+tests = ["tests.test_model.Streams.test_processes_inherit"]
+
+[[plant]]
+name = "a script receives its command's ends"
+file = "dispatcher/model.py"
+old = '''environ=environ,
+            ends=self.table(state, place))'''
+new = '''environ=environ,
+            ends=CALL_ENDS)'''
+tests = ["tests.test_model.Streams.test_processes_inherit"]
+
+[[plant]]
+name = "the call's shell holds ends"
+file = "dispatcher/model.py"
+old = 'walk.script(text, ShellState(cwd), Place('
+new = 'walk.script(text, State(cwd), Place('
+tests = ["tests.test_model.Streams.test_own_redirections"]
+
+[[plant]]
+name = "a carrier's shell holds ends"
+file = "dispatcher/model.py"
+old = 'self.script(carried, ShellState(state.cwd), inner)'
+new = 'self.script(carried, State(state.cwd), inner)'
+tests = ["tests.test_model.Streams.test_processes_inherit"]
+
+[[plant]]
+name = "a script's shell holds ends"
+file = "dispatcher/model.py"
+old = 'self.script(script, ShellState(state.cwd, names), inner, path, text)'
+new = 'self.script(script, State(state.cwd, names), inner, path, text)'
+tests = ["tests.test_model.Streams.test_processes_inherit"]
+
+[[plant]]
+name = "a Python start's shell holds ends"
+file = "dispatcher/model.py"
+old = 'here = ShellState(cwd)'
+new = 'here = State(cwd)'
+tests = ["tests.test_model.Streams.test_python_starts_reach_unknown_ends"]
+
+[[plant]]
+name = "a bare redirection's errors do not join its output under |&"
+file = "dispatcher/model.py"
+old = '''self.bare(redirs, ShellText(stmt["text"]), state, place, errors)'''
+new = '''self.bare(redirs, ShellText(stmt["text"]), state, place, False)'''
+tests = ["tests.test_model.Streams.test_a_statement_of_redirections_alone"]
+
+[[plant]]
+name = "a bare redirection's substitutions are not walked"
+file = "dispatcher/model.py"
+old = "        self.substitutions(redirs, state, place)\n        saved = state.holds(self.opened(redirs, state, place, errors))\n"
+new = "        saved = state.holds(self.opened(redirs, state, place, errors))\n"
+tests = ["tests.test_model.Streams.test_a_statement_of_redirections_alone"]
+
+[[plant]]
+name = "a bare redirection opens nothing"
+file = "dispatcher/model.py"
+old = "        saved = state.holds(self.opened(redirs, state, place, errors))\n        self.record((), ()"
+new = "        saved = state.holds({})\n        self.record((), ()"
+tests = ["tests.test_model.Streams.test_a_statement_of_redirections_alone"]
+
+[[plant]]
+name = "a bare redirection records no redirections"
+file = "dispatcher/model.py"
+old = '''tuple(self.redirect(r, state) for r in redirs), state, place, text)'''
+new = '''(), state, place, text)'''
+tests = ["tests.test_model.Streams.test_a_statement_of_redirections_alone"]
+
+[[plant]]
+name = "a bare redirection records no text"
+file = "dispatcher/model.py"
+old = '''for r in redirs), state, place, text)'''
+new = '''for r in redirs), state, place, ShellText(""))'''
+tests = ["tests.test_model.Streams.test_a_statement_of_redirections_alone"]
+
+[[plant]]
+name = "a bare redirection's ends outlive it"
+file = "dispatcher/model.py"
+old = "        self.wrote((), redirs, state)\n        state.restores(saved)\n"
+new = "        self.wrote((), redirs, state)\n"
+tests = ["tests.test_model.Streams.test_a_statement_of_redirections_alone"]
+
+# A Python start's ends, none the call makes known whatever its keywords: dispatcher/model.py's launched.
+
+[[plant]]
+name = "a Python start's input is the call's"
+file = "dispatcher/model.py"
+old = 'STARTED_ENDS: Mapping[Descriptor, End] = MappingProxyType({INPUT: UNKNOWN, OUTPUT: UNKNOWN, ERRORS: UNKNOWN})'
+new = 'STARTED_ENDS: Mapping[Descriptor, End] = MappingProxyType({INPUT: CALLED, OUTPUT: UNKNOWN, ERRORS: UNKNOWN})'
+tests = ["tests.test_model.Streams.test_python_starts_reach_unknown_ends"]
+
+[[plant]]
+name = "a Python start's output is the call's"
+file = "dispatcher/model.py"
+old = 'STARTED_ENDS: Mapping[Descriptor, End] = MappingProxyType({INPUT: UNKNOWN, OUTPUT: UNKNOWN, ERRORS: UNKNOWN})'
+new = 'STARTED_ENDS: Mapping[Descriptor, End] = MappingProxyType({INPUT: UNKNOWN, OUTPUT: CALLED, ERRORS: UNKNOWN})'
+tests = ["tests.test_model.Streams.test_python_starts_reach_unknown_ends"]
+
+[[plant]]
+name = "a Python start's errors are the call's"
+file = "dispatcher/model.py"
+old = 'STARTED_ENDS: Mapping[Descriptor, End] = MappingProxyType({INPUT: UNKNOWN, OUTPUT: UNKNOWN, ERRORS: UNKNOWN})'
+new = 'STARTED_ENDS: Mapping[Descriptor, End] = MappingProxyType({INPUT: UNKNOWN, OUTPUT: UNKNOWN, ERRORS: CALLED})'
+tests = ["tests.test_model.Streams.test_python_starts_reach_unknown_ends"]
+
+[[plant]]
+name = "a Python start keeps the ends of its python process"
+file = "dispatcher/model.py"
+old = '        place = place._replace(ends=STARTED_ENDS)'
+new = '        place = place._replace()'
+tests = ["tests.test_model.Streams.test_python_starts_reach_unknown_ends"]
+
+[[plant]]
+name = "a number past 2 before the operator names another descriptor"
+file = "dispatcher/model.py"
+old = '''or int(spelled) > ERRORS):'''
+new = '''or int(spelled) > ERRORS + 1):'''
+tests = ["tests.test_model.Streams.test_copies_and_closes"]
+
+[[plant]]
+name = "fd 2 before the operator is a stream"
+file = "dispatcher/model.py"
+old = '''or int(spelled) > ERRORS):'''
+new = '''or int(spelled) >= ERRORS):'''
+tests = ["tests.test_model.Streams.test_own_redirections", "tests.test_model.Streams.test_copies_and_closes"]
+
+[[plant]]
+name = "a {name} before the operator names another descriptor"
+file = "dispatcher/model.py"
+old = '''(not DESCRIPTOR.fullmatch(spelled) or int(spelled) > ERRORS)'''
+new = '''(DESCRIPTOR.fullmatch(spelled) is not None and int(spelled) > ERRORS)'''
+tests = ["tests.test_model.Streams.test_copies_and_closes"]
+
+[[plant]]
+name = "only a copy's word names a descriptor"
+file = "dispatcher/model.py"
+old = '''node.get("op") not in (">&", "<&")'''
+new = '''node.get("op") not in (">&", "<&", ">")'''
+tests = ["tests.test_model.Streams.test_copies_and_closes"]
+
+[[plant]]
+name = "a moved descriptor is read past its dash"
+file = "dispatcher/model.py"
+old = '''word.value.removesuffix("-")'''
+new = '''word.value'''
+tests = ["tests.test_model.Streams.test_copies_and_closes"]
+
+[[plant]]
+name = "a copy of fd 2 is a stream"
+file = "dispatcher/model.py"
+old = '''int(copied) > ERRORS'''
+new = '''int(copied) >= ERRORS'''
+tests = ["tests.test_model.Streams.test_copies_and_closes"]
+
+[[plant]]
+name = "a copy of a descriptor past 2 makes all three unknown"
+file = "dispatcher/model.py"
+old = '''return copied is not None and'''
+new = '''return False and'''
+tests = ["tests.test_model.Streams.test_copies_and_closes"]
+
+[[plant]]
+name = "a redirection past the streams makes all three unknown"
+file = "dispatcher/model.py"
+old = '''ends = STARTED_ENDS if past_streams(node, word) else'''
+new = '''ends = CALL_ENDS if past_streams(node, word) else'''
+tests = ["tests.test_model.Streams.test_copies_and_closes"]
+
+[[plant]]
+name = "each later redirection sets its stream again"
+file = "dispatcher/model.py"
+old = '''if past_streams(node, word) else'''
+new = '''if any(past_streams(n, word) for n in redirs) else'''
+tests = ["tests.test_model.Streams.test_copies_and_closes"]
+
+[[plant]]
+name = "digits copy the descriptor they name"
+file = "dispatcher/model.py"
+old = "                return {fd: table[Descriptor(int(value))]}"
+new = "                return {fd: table[INPUT]}"
+tests = ["tests.test_model.Streams.test_own_redirections"]

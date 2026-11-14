@@ -1,0 +1,778 @@
+# The plants that show rules/job_lifetime.py held by its tests, one per line of the module, a set's entries
+# each a plant:
+#   testing/plants.py tests/plants_job_lifetime.toml --out DIR
+
+[[plant]]
+name = "the rule answers another event"
+file = "rules/job_lifetime.py"
+old = '''EVENTS: frozenset[HookEvent] = frozenset({"PreToolUse"})'''
+new = '''EVENTS: frozenset[HookEvent] = frozenset({"PostToolUse"})'''
+tests = ["tests.test_job_lifetime.Jobs.test_refused"]
+
+[[plant]]
+name = "Monitor is not judged"
+file = "rules/job_lifetime.py"
+old = '''TOOLS = frozenset({ToolName("Bash"), ToolName("Monitor")})'''
+new = '''TOOLS = frozenset({ToolName("Bash")})'''
+tests = ["tests.test_job_lifetime.Monitor.test_refused"]
+
+[[plant]]
+name = "a list loses its first word"
+file = "rules/job_lifetime.py"
+old = '''    return frozenset(ShellText(word) for word in spelled.split())'''
+new = '''    return frozenset(ShellText(word) for word in spelled.split()[1:])'''
+tests = ["tests.test_job_lifetime.Systemctl.test_refused"]
+
+[[plant]]
+name = "a carrier starts no shell"
+file = "rules/job_lifetime.py"
+old = '''STARTED_SHELLS = spellings(ShellText("carrier script python"))'''
+new = '''STARTED_SHELLS = spellings(ShellText("script python"))'''
+tests = ["tests.test_job_lifetime.Kept"]
+
+[[plant]]
+name = "a plain wait is not plain"
+file = "rules/job_lifetime.py"
+old = '''WAIT = [ShellText("wait")]'''
+new = '''WAIT = [ShellText("wait"), ShellText("-n")]'''
+tests = ["tests.test_job_lifetime.Jobs.test_passed"]
+
+[[plant]]
+name = "the tmux sessions lose new-session"
+file = "rules/job_lifetime.py"
+old = '''TMUX_SESSIONS = spellings(ShellText("new-session new"))'''
+new = '''TMUX_SESSIONS = spellings(ShellText("new"))'''
+tests = ["tests.test_job_lifetime.Tmux.test_refused"]
+
+[[plant]]
+name = "the tmux sessions lose new"
+file = "rules/job_lifetime.py"
+old = '''TMUX_SESSIONS = spellings(ShellText("new-session new"))'''
+new = '''TMUX_SESSIONS = spellings(ShellText("new-session"))'''
+tests = ["tests.test_job_lifetime.Tmux.test_refused"]
+
+[[plant]]
+name = "the tmux panes lose new-window"
+file = "rules/job_lifetime.py"
+old = '''    "new-window neww split-window splitw respawn-pane respawnp respawn-window respawnw"))'''
+new = '''    "neww split-window splitw respawn-pane respawnp respawn-window respawnw"))'''
+tests = ["tests.test_job_lifetime.Tmux.test_refused"]
+
+[[plant]]
+name = "the tmux panes lose neww"
+file = "rules/job_lifetime.py"
+old = '''    "new-window neww split-window splitw respawn-pane respawnp respawn-window respawnw"))'''
+new = '''    "new-window split-window splitw respawn-pane respawnp respawn-window respawnw"))'''
+tests = ["tests.test_job_lifetime.Tmux.test_refused"]
+
+[[plant]]
+name = "the tmux panes lose split-window"
+file = "rules/job_lifetime.py"
+old = '''    "new-window neww split-window splitw respawn-pane respawnp respawn-window respawnw"))'''
+new = '''    "new-window neww splitw respawn-pane respawnp respawn-window respawnw"))'''
+tests = ["tests.test_job_lifetime.Tmux.test_refused"]
+
+[[plant]]
+name = "the tmux panes lose splitw"
+file = "rules/job_lifetime.py"
+old = '''    "new-window neww split-window splitw respawn-pane respawnp respawn-window respawnw"))'''
+new = '''    "new-window neww split-window respawn-pane respawnp respawn-window respawnw"))'''
+tests = ["tests.test_job_lifetime.Tmux.test_refused"]
+
+[[plant]]
+name = "the tmux panes lose respawn-pane"
+file = "rules/job_lifetime.py"
+old = '''    "new-window neww split-window splitw respawn-pane respawnp respawn-window respawnw"))'''
+new = '''    "new-window neww split-window splitw respawnp respawn-window respawnw"))'''
+tests = ["tests.test_job_lifetime.Tmux.test_refused"]
+
+[[plant]]
+name = "the tmux panes lose respawnp"
+file = "rules/job_lifetime.py"
+old = '''    "new-window neww split-window splitw respawn-pane respawnp respawn-window respawnw"))'''
+new = '''    "new-window neww split-window splitw respawn-pane respawn-window respawnw"))'''
+tests = ["tests.test_job_lifetime.Tmux.test_refused"]
+
+[[plant]]
+name = "the tmux panes lose respawn-window"
+file = "rules/job_lifetime.py"
+old = '''    "new-window neww split-window splitw respawn-pane respawnp respawn-window respawnw"))'''
+new = '''    "new-window neww split-window splitw respawn-pane respawnp respawnw"))'''
+tests = ["tests.test_job_lifetime.Tmux.test_refused"]
+
+[[plant]]
+name = "the tmux panes lose respawnw"
+file = "rules/job_lifetime.py"
+old = '''    "new-window neww split-window splitw respawn-pane respawnp respawn-window respawnw"))'''
+new = '''    "new-window neww split-window splitw respawn-pane respawnp respawn-window"))'''
+tests = ["tests.test_job_lifetime.Tmux.test_refused"]
+
+[[plant]]
+name = "the starting verbs lose start"
+file = "rules/job_lifetime.py"
+old = '''STARTING = spellings(ShellText("start restart try-restart reload-or-restart try-reload-or-restart isolate"))'''
+new = '''STARTING = spellings(ShellText("restart try-restart reload-or-restart try-reload-or-restart isolate"))'''
+tests = ["tests.test_job_lifetime.Systemctl.test_refused"]
+
+[[plant]]
+name = "the starting verbs lose restart"
+file = "rules/job_lifetime.py"
+old = '''STARTING = spellings(ShellText("start restart try-restart reload-or-restart try-reload-or-restart isolate"))'''
+new = '''STARTING = spellings(ShellText("start try-restart reload-or-restart try-reload-or-restart isolate"))'''
+tests = ["tests.test_job_lifetime.Systemctl.test_refused"]
+
+[[plant]]
+name = "the starting verbs lose try-restart"
+file = "rules/job_lifetime.py"
+old = '''STARTING = spellings(ShellText("start restart try-restart reload-or-restart try-reload-or-restart isolate"))'''
+new = '''STARTING = spellings(ShellText("start restart reload-or-restart try-reload-or-restart isolate"))'''
+tests = ["tests.test_job_lifetime.Systemctl.test_refused"]
+
+[[plant]]
+name = "the starting verbs lose reload-or-restart"
+file = "rules/job_lifetime.py"
+old = '''STARTING = spellings(ShellText("start restart try-restart reload-or-restart try-reload-or-restart isolate"))'''
+new = '''STARTING = spellings(ShellText("start restart try-restart try-reload-or-restart isolate"))'''
+tests = ["tests.test_job_lifetime.Systemctl.test_refused"]
+
+[[plant]]
+name = "the starting verbs lose try-reload-or-restart"
+file = "rules/job_lifetime.py"
+old = '''STARTING = spellings(ShellText("start restart try-restart reload-or-restart try-reload-or-restart isolate"))'''
+new = '''STARTING = spellings(ShellText("start restart try-restart reload-or-restart isolate"))'''
+tests = ["tests.test_job_lifetime.Systemctl.test_refused"]
+
+[[plant]]
+name = "the starting verbs lose isolate"
+file = "rules/job_lifetime.py"
+old = '''STARTING = spellings(ShellText("start restart try-restart reload-or-restart try-reload-or-restart isolate"))'''
+new = '''STARTING = spellings(ShellText("start restart try-restart reload-or-restart try-reload-or-restart"))'''
+tests = ["tests.test_job_lifetime.Systemctl.test_refused"]
+
+[[plant]]
+name = "the enabling verbs lose enable"
+file = "rules/job_lifetime.py"
+old = '''ENABLING = spellings(ShellText("enable reenable"))'''
+new = '''ENABLING = spellings(ShellText("reenable"))'''
+tests = ["tests.test_job_lifetime.Systemctl.test_refused"]
+
+[[plant]]
+name = "the enabling verbs lose reenable"
+file = "rules/job_lifetime.py"
+old = '''ENABLING = spellings(ShellText("enable reenable"))'''
+new = '''ENABLING = spellings(ShellText("enable"))'''
+tests = ["tests.test_job_lifetime.Systemctl.test_refused"]
+
+[[plant]]
+name = "the background flags lose -b"
+file = "rules/job_lifetime.py"
+old = '''BACKGROUND = spellings(ShellText("-b --background"))'''
+new = '''BACKGROUND = spellings(ShellText("--background"))'''
+tests = ["tests.test_job_lifetime.StartStopDaemon.test_refused"]
+
+[[plant]]
+name = "the background flags lose --background"
+file = "rules/job_lifetime.py"
+old = '''BACKGROUND = spellings(ShellText("-b --background"))'''
+new = '''BACKGROUND = spellings(ShellText("-b"))'''
+tests = ["tests.test_job_lifetime.StartStopDaemon.test_refused"]
+
+[[plant]]
+name = "the waiting options lose --wait"
+file = "rules/job_lifetime.py"
+old = '''WAITING = spellings(ShellText("--wait --pipe -P --pty -t --pty-late --shell -S --scope"))'''
+new = '''WAITING = spellings(ShellText("--pipe -P --pty -t --pty-late --shell -S --scope"))'''
+tests = ["tests.test_job_lifetime.SystemdRun.test_passed"]
+
+[[plant]]
+name = "the waiting options lose --pipe"
+file = "rules/job_lifetime.py"
+old = '''WAITING = spellings(ShellText("--wait --pipe -P --pty -t --pty-late --shell -S --scope"))'''
+new = '''WAITING = spellings(ShellText("--wait -P --pty -t --pty-late --shell -S --scope"))'''
+tests = ["tests.test_job_lifetime.SystemdRun.test_passed"]
+
+[[plant]]
+name = "the waiting options lose -P"
+file = "rules/job_lifetime.py"
+old = '''WAITING = spellings(ShellText("--wait --pipe -P --pty -t --pty-late --shell -S --scope"))'''
+new = '''WAITING = spellings(ShellText("--wait --pipe --pty -t --pty-late --shell -S --scope"))'''
+tests = ["tests.test_job_lifetime.SystemdRun.test_passed"]
+
+[[plant]]
+name = "the waiting options lose --pty"
+file = "rules/job_lifetime.py"
+old = '''WAITING = spellings(ShellText("--wait --pipe -P --pty -t --pty-late --shell -S --scope"))'''
+new = '''WAITING = spellings(ShellText("--wait --pipe -P -t --pty-late --shell -S --scope"))'''
+tests = ["tests.test_job_lifetime.SystemdRun.test_passed"]
+
+[[plant]]
+name = "the waiting options lose -t"
+file = "rules/job_lifetime.py"
+old = '''WAITING = spellings(ShellText("--wait --pipe -P --pty -t --pty-late --shell -S --scope"))'''
+new = '''WAITING = spellings(ShellText("--wait --pipe -P --pty --pty-late --shell -S --scope"))'''
+tests = ["tests.test_job_lifetime.SystemdRun.test_passed"]
+
+[[plant]]
+name = "the waiting options lose --pty-late"
+file = "rules/job_lifetime.py"
+old = '''WAITING = spellings(ShellText("--wait --pipe -P --pty -t --pty-late --shell -S --scope"))'''
+new = '''WAITING = spellings(ShellText("--wait --pipe -P --pty -t --shell -S --scope"))'''
+tests = ["tests.test_job_lifetime.SystemdRun.test_passed"]
+
+[[plant]]
+name = "the waiting options lose --shell"
+file = "rules/job_lifetime.py"
+old = '''WAITING = spellings(ShellText("--wait --pipe -P --pty -t --pty-late --shell -S --scope"))'''
+new = '''WAITING = spellings(ShellText("--wait --pipe -P --pty -t --pty-late -S --scope"))'''
+tests = ["tests.test_job_lifetime.SystemdRun.test_passed"]
+
+[[plant]]
+name = "the waiting options lose -S"
+file = "rules/job_lifetime.py"
+old = '''WAITING = spellings(ShellText("--wait --pipe -P --pty -t --pty-late --shell -S --scope"))'''
+new = '''WAITING = spellings(ShellText("--wait --pipe -P --pty -t --pty-late --shell --scope"))'''
+tests = ["tests.test_job_lifetime.SystemdRun.test_passed"]
+
+[[plant]]
+name = "the waiting options lose --scope"
+file = "rules/job_lifetime.py"
+old = '''WAITING = spellings(ShellText("--wait --pipe -P --pty -t --pty-late --shell -S --scope"))'''
+new = '''WAITING = spellings(ShellText("--wait --pipe -P --pty -t --pty-late --shell -S"))'''
+tests = ["tests.test_job_lifetime.SystemdRun.test_passed"]
+
+[[plant]]
+name = "a quote inside a double-quoted text goes unseen"
+file = "rules/job_lifetime.py"
+old = '''QUOTED_BODY = re.compile(r'(?<!\\)(?:\\\\)*"')'''
+new = '''QUOTED_BODY = re.compile(r'(?!)')'''
+tests = ["tests.test_job_lifetime.Traps.test_quotes_inside"]
+
+[[plant]]
+name = "an escaped quote stays escaped"
+file = "rules/job_lifetime.py"
+old = '''ESCAPED = re.compile(r"\\([\"\\$`])|\\\n")'''
+new = '''ESCAPED = re.compile(r"\\([\\$`])|\\\n")'''
+tests = ["tests.test_job_lifetime.Traps.test_passed"]
+
+[[plant]]
+name = "a shown form is cut sooner"
+file = "rules/job_lifetime.py"
+old = '''LONG_SHOWN = 100'''
+new = '''LONG_SHOWN = 90'''
+tests = ["tests.test_job_lifetime.Refusal.test_long_forms_cut"]
+
+[[plant]]
+name = "the escape is not said"
+file = "rules/job_lifetime.py"
+old = '''ESCAPES = Prose("which escapes the call's scope: it runs on after the call, unwatched")'''
+new = '''ESCAPES = Prose("which escapes")'''
+tests = ["tests.test_job_lifetime.Refusal.test_form_lines"]
+
+[[plant]]
+name = "the death is not said"
+file = "rules/job_lifetime.py"
+old = '''DIES = Prose("which the call's end kills before anything reads it")'''
+new = '''DIES = Prose("which dies")'''
+tests = ["tests.test_job_lifetime.Refusal.test_job_line"]
+
+[[plant]]
+name = "the reaping form is not said"
+file = "rules/job_lifetime.py"
+old = '''REAP_FORM = Prose("End the shell that started it with `wait`, or run a long run with run_in_background.")'''
+new = '''REAP_FORM = Prose("Reap it.")'''
+tests = ["tests.test_job_lifetime.Refusal.test_job_line"]
+
+[[plant]]
+name = "the foreground form is not said"
+file = "rules/job_lifetime.py"
+old = '''FORK_FORM = Prose("Run it in the foreground, or a long run with run_in_background.")'''
+new = '''FORK_FORM = Prose("Run it.")'''
+tests = ["tests.test_job_lifetime.Refusal.test_form_lines"]
+
+[[plant]]
+name = "the lead is lost"
+file = "rules/job_lifetime.py"
+old = '''ADVICE = """this call starts what outlives it unseen, or what its end kills unseen.'''
+new = '''ADVICE = """this call is refused.'''
+tests = ["tests.test_job_lifetime.Refusal.test_job_line"]
+
+[[plant]]
+name = "the lines are lost"
+file = "rules/job_lifetime.py"
+old = '''{problems}'''
+new = '''(lines)'''
+tests = ["tests.test_job_lifetime.Refusal.test_job_line"]
+
+[[plant]]
+name = "the advice loses the plain wait"
+file = "rules/job_lifetime.py"
+old = '''with a plain `wait`; start a unit'''
+new = '''with `wait`; start a unit'''
+tests = ["tests.test_job_lifetime.Refusal.test_job_line"]
+
+[[plant]]
+name = "a path hides the base name"
+file = "rules/job_lifetime.py"
+old = '''    return ShellText(words[0].value.rsplit("/", 1)[-1]) if words and words[0].value else None'''
+new = '''    return ShellText(words[0].value) if words and words[0].value else None'''
+tests = ["tests.test_job_lifetime.SystemdRun.test_refused"]
+
+[[plant]]
+name = "the shown words are spaced twice"
+file = "rules/job_lifetime.py"
+old = '''    spelled = " ".join(word.spelled for word in words)'''
+new = '''    spelled = "  ".join(word.spelled for word in words)'''
+tests = ["tests.test_job_lifetime.Refusal.test_form_lines"]
+
+[[plant]]
+name = "a shown form is never cut"
+file = "rules/job_lifetime.py"
+old = '''    return ShellText(spelled if len(spelled) <= LONG_SHOWN else spelled[:LONG_SHOWN] + "...")'''
+new = '''    return ShellText(spelled)'''
+tests = ["tests.test_job_lifetime.Refusal.test_long_forms_cut"]
+
+[[plant]]
+name = "a wrapper is not one wrapper deeper"
+file = "rules/job_lifetime.py"
+old = '''            and len(after.wrappers) == len(command.wrappers) + 1)'''
+new = '''            and len(after.wrappers) == len(command.wrappers) + 2)'''
+tests = ["tests.test_job_lifetime.Kept"]
+
+[[plant]]
+name = "a wrapper need not share its processes"
+file = "rules/job_lifetime.py"
+old = '''    return (after is not None and after.processes == command.processes and after.text == command.text'''
+new = '''    return (after is not None and after.text == command.text'''
+tests = ["tests.test_job_lifetime.Kept"]
+
+[[plant]]
+name = "a started shell is two processes deeper"
+file = "rules/job_lifetime.py"
+old = '''    return (after is not None and len(after.processes) == len(command.processes) + 1'''
+new = '''    return (after is not None and len(after.processes) == len(command.processes) + 2'''
+tests = ["tests.test_job_lifetime.Kept"]
+
+[[plant]]
+name = "any deeper process is a started shell"
+file = "rules/job_lifetime.py"
+old = '''            and after.processes[:-1] == command.processes and after.shells[-1] in STARTED_SHELLS)'''
+new = '''            and after.processes[:-1] == command.processes)'''
+tests = ["tests.test_job_lifetime.Kept"]
+
+[[plant]]
+name = "a single-dash option ends the options"
+file = "rules/job_lifetime.py"
+old = '''        if not word.startswith("-"):'''
+new = '''        if not word.startswith("--"):'''
+tests = ["tests.test_job_lifetime.SystemdRun.test_passed"]
+
+[[plant]]
+name = "the options run past the command"
+file = "rules/job_lifetime.py"
+old = '''            return list(words[:index])'''
+new = '''            return list(words)'''
+tests = ["tests.test_job_lifetime.SystemdRun.test_refused"]
+
+[[plant]]
+name = "words all options are none"
+file = "rules/job_lifetime.py"
+old = '''    return list(words)
+
+
+def form_line'''
+new = '''    return []
+
+
+def form_line'''
+tests = ["tests.test_job_lifetime.SystemdRun.test_passed"]
+
+[[plant]]
+name = "an unknown word is an option"
+file = "rules/job_lifetime.py"
+old = '''ShellText(word.value) if word.value is not None else ShellText("")'''
+new = '''ShellText(word.value) if word.value is not None else ShellText("-")'''
+tests = ["tests.test_job_lifetime.SystemdRun.test_refused"]
+
+[[plant]]
+name = "disown passes"
+file = "rules/job_lifetime.py"
+old = '''    if name == "disown":'''
+new = '''    if name == "disowned":'''
+tests = ["tests.test_job_lifetime.Disown.test_refused"]
+
+[[plant]]
+name = "the disown line is lost"
+file = "rules/job_lifetime.py"
+old = '''takes a job out of its shell's table, so no `wait` reaps it, '''
+new = '''takes a job, '''
+tests = ["tests.test_job_lifetime.Refusal.test_form_lines"]
+
+[[plant]]
+name = "setsid passes"
+file = "rules/job_lifetime.py"
+old = '''    if name == "setsid" and any('''
+new = '''    if name == "setsidx" and any('''
+tests = ["tests.test_job_lifetime.Setsid.test_refused"]
+
+[[plant]]
+name = "--fork passes"
+file = "rules/job_lifetime.py"
+old = '''word == "--fork" or'''
+new = '''word == "--forkx" or'''
+tests = ["tests.test_job_lifetime.Setsid.test_refused"]
+
+[[plant]]
+name = "a long option holding f forks"
+file = "rules/job_lifetime.py"
+old = '''(not word.startswith("--") and "f" in word)'''
+new = '''("f" in word)'''
+tests = ["tests.test_job_lifetime.Setsid.test_passed"]
+
+[[plant]]
+name = "-f passes"
+file = "rules/job_lifetime.py"
+old = '''and "f" in word)'''
+new = '''and "F" in word)'''
+tests = ["tests.test_job_lifetime.Setsid.test_refused"]
+
+[[plant]]
+name = "a command's -f forks"
+file = "rules/job_lifetime.py"
+old = '''                                for word in options(said)):'''
+new = '''                                for word in said):'''
+tests = ["tests.test_job_lifetime.Setsid.test_passed"]
+
+[[plant]]
+name = "the setsid line is lost"
+file = "rules/job_lifetime.py"
+old = '''forks a process no shell waits for, {DIES}. Run it without -f, or '''
+new = '''forks, {DIES}. Run it without -f, or '''
+tests = ["tests.test_job_lifetime.Refusal.test_form_lines"]
+
+[[plant]]
+name = "start-stop-daemon passes"
+file = "rules/job_lifetime.py"
+old = '''    if name == "start-stop-daemon" and'''
+new = '''    if name == "start-stop-daemonx" and'''
+tests = ["tests.test_job_lifetime.StartStopDaemon.test_refused"]
+
+[[plant]]
+name = "a daemon's own -b forks"
+file = "rules/job_lifetime.py"
+old = '''set(said[:said.index("--")] if "--" in said else said)'''
+new = '''set(said)'''
+tests = ["tests.test_job_lifetime.StartStopDaemon.test_passed"]
+
+[[plant]]
+name = "the start-stop-daemon line is lost"
+file = "rules/job_lifetime.py"
+old = '''forks a daemon that stays in the call's scope, {DIES}. '''
+new = '''forks a daemon, {DIES}. '''
+tests = ["tests.test_job_lifetime.Refusal.test_form_lines"]
+
+[[plant]]
+name = "tmux passes"
+file = "rules/job_lifetime.py"
+old = '''    if name == "tmux" and'''
+new = '''    if name == "tmuxx" and'''
+tests = ["tests.test_job_lifetime.Tmux.test_refused"]
+
+[[plant]]
+name = "a pane passes"
+file = "rules/job_lifetime.py"
+old = '''(TMUX_PANES & set(said) or (TMUX_SESSIONS'''
+new = '''((TMUX_SESSIONS'''
+tests = ["tests.test_job_lifetime.Tmux.test_refused"]
+
+[[plant]]
+name = "an attached session is refused"
+file = "rules/job_lifetime.py"
+old = '''and "-d" in said))'''
+new = '''))'''
+tests = ["tests.test_job_lifetime.Tmux.test_passed"]
+
+[[plant]]
+name = "the tmux line is lost"
+file = "rules/job_lifetime.py"
+old = '''starts a tmux session, window or pane, a scope of its own, '''
+new = '''starts tmux, '''
+tests = ["tests.test_job_lifetime.Refusal.test_form_lines"]
+
+[[plant]]
+name = "systemctl passes"
+file = "rules/job_lifetime.py"
+old = '''    if name == "systemctl" and'''
+new = '''    if name == "systemctlx" and'''
+tests = ["tests.test_job_lifetime.Systemctl.test_refused"]
+
+[[plant]]
+name = "a starting verb passes"
+file = "rules/job_lifetime.py"
+old = '''(STARTING & set(said) or (ENABLING'''
+new = '''((ENABLING'''
+tests = ["tests.test_job_lifetime.Systemctl.test_refused"]
+
+[[plant]]
+name = "enable without --now is refused"
+file = "rules/job_lifetime.py"
+old = '''and "--now" in said))'''
+new = '''))'''
+tests = ["tests.test_job_lifetime.Systemctl.test_passed"]
+
+[[plant]]
+name = "the systemctl line is lost"
+file = "rules/job_lifetime.py"
+old = '''starts a unit, {ESCAPES}. Run the work as systemd-run --wait.'''
+new = '''starts a unit, {ESCAPES}.'''
+tests = ["tests.test_job_lifetime.Refusal.test_form_lines"]
+
+[[plant]]
+name = "systemd-run passes"
+file = "rules/job_lifetime.py"
+old = '''    if name == "systemd-run" and'''
+new = '''    if name == "systemd-runx" and'''
+tests = ["tests.test_job_lifetime.SystemdRun.test_refused"]
+
+[[plant]]
+name = "a command's --wait waits"
+file = "rules/job_lifetime.py"
+old = '''not WAITING & set(options(said)):'''
+new = '''not WAITING & set(said):'''
+tests = ["tests.test_job_lifetime.SystemdRun.test_refused"]
+
+[[plant]]
+name = "the systemd-run line is lost"
+file = "rules/job_lifetime.py"
+old = '''starts a unit it does not wait for, {ESCAPES}. Give it --wait (or '''
+new = '''starts a unit, {ESCAPES}. Give it --wait (or '''
+tests = ["tests.test_job_lifetime.Refusal.test_form_lines"]
+
+[[plant]]
+name = "every command detaches"
+file = "rules/job_lifetime.py"
+old = '''    return None
+
+
+def jobs_of'''
+new = '''    return Prose("x")
+
+
+def jobs_of'''
+tests = ["tests.test_job_lifetime.Jobs.test_passed"]
+
+[[plant]]
+name = "a job's last command is its head"
+file = "rules/job_lifetime.py"
+old = '''if shell == "background" and command.processes[depth] not in found:'''
+new = '''if shell == "background":'''
+tests = ["tests.test_job_lifetime.Refusal.test_job_line"]
+
+[[plant]]
+name = "a background job is not one"
+file = "rules/job_lifetime.py"
+old = '''if shell == "background" and'''
+new = '''if shell == "subshell" and'''
+tests = ["tests.test_job_lifetime.Jobs.test_refused"]
+
+[[plant]]
+name = "a job's own process is its shell"
+file = "rules/job_lifetime.py"
+old = '''command.processes[:depth],'''
+new = '''command.processes[:depth + 1],'''
+tests = ["tests.test_job_lifetime.Jobs.test_passed"]
+
+[[plant]]
+name = "every job starts first"
+file = "rules/job_lifetime.py"
+old = '''Count(index), command)'''
+new = '''Count(0), command)'''
+tests = ["tests.test_job_lifetime.Jobs.test_later"]
+
+[[plant]]
+name = "only the first job counts"
+file = "rules/job_lifetime.py"
+old = '''    return list(found.values())'''
+new = '''    return list(found.values())[:1]'''
+tests = ["tests.test_job_lifetime.Jobs.test_later"]
+
+[[plant]]
+name = "a wait in another shell reaps"
+file = "rules/job_lifetime.py"
+old = '''command.processes == job.shell and '''
+new = '''True and '''
+tests = ["tests.test_job_lifetime.Jobs.test_very_shell"]
+
+[[plant]]
+name = "a wait in another body reaps"
+file = "rules/job_lifetime.py"
+old = '''command.function == job.head.function and '''
+new = '''True and '''
+tests = ["tests.test_job_lifetime.Jobs.test_same_body"]
+
+[[plant]]
+name = "a wrapped wait reaps"
+file = "rules/job_lifetime.py"
+old = ''' and not command.wrappers'''
+new = ''' and True'''
+tests = ["tests.test_job_lifetime.Jobs.test_plain"]
+
+[[plant]]
+name = "a wait with words reaps"
+file = "rules/job_lifetime.py"
+old = '''[word.value for word in command.words] == WAIT'''
+new = '''[word.value for word in command.words][:1] == WAIT'''
+tests = ["tests.test_job_lifetime.Jobs.test_plain"]
+
+[[plant]]
+name = "an earlier wait reaps"
+file = "rules/job_lifetime.py"
+old = '''for command in commands[job.first + 1:])'''
+new = '''for command in commands)'''
+tests = ["tests.test_job_lifetime.Jobs.test_later"]
+
+[[plant]]
+name = "a job's head is never cut"
+file = "rules/job_lifetime.py"
+old = '''    head = ShellText(job.head.text if len(job.head.text) <= LONG_SHOWN else job.head.text[:LONG_SHOWN] + "...")'''
+new = '''    head = ShellText(job.head.text)'''
+tests = ["tests.test_job_lifetime.Refusal.test_long_forms_cut"]
+
+[[plant]]
+name = "the job line is lost"
+file = "rules/job_lifetime.py"
+old = '''is reaped by no plain `wait` after it in the shell that '''
+new = '''is reaped by nothing in the shell that '''
+tests = ["tests.test_job_lifetime.Refusal.test_job_line"]
+
+[[plant]]
+name = "a trap sets no text"
+file = "rules/job_lifetime.py"
+old = '''    if base(command.words) != "trap":'''
+new = '''    if base(command.words) != "trapx":'''
+tests = ["tests.test_job_lifetime.Traps.test_refused"]
+
+[[plant]]
+name = "a leading -- is the text"
+file = "rules/job_lifetime.py"
+old = '''    if operands and operands[0].value == "--":'''
+new = '''    if operands and operands[0].value == "---":'''
+tests = ["tests.test_job_lifetime.Traps.test_refused"]
+
+[[plant]]
+name = "a leading -- takes the text with it"
+file = "rules/job_lifetime.py"
+old = '''        operands = operands[1:]'''
+new = '''        operands = operands[2:]'''
+tests = ["tests.test_job_lifetime.Traps.test_refused"]
+
+[[plant]]
+name = "a lone operand is a text"
+file = "rules/job_lifetime.py"
+old = '''    if len(operands) < 2:'''
+new = '''    if len(operands) < 1:'''
+tests = ["tests.test_job_lifetime.Traps.test_passed"]
+
+[[plant]]
+name = "the last operand is the text"
+file = "rules/job_lifetime.py"
+old = '''    word = operands[0]'''
+new = '''    word = operands[-1]'''
+tests = ["tests.test_job_lifetime.Traps.test_refused"]
+
+[[plant]]
+name = "a known text is not read"
+file = "rules/job_lifetime.py"
+old = '''        return word.value'''
+new = '''        return ShellText("true")'''
+tests = ["tests.test_job_lifetime.Traps.test_refused"]
+
+[[plant]]
+name = "a double-quoted text is not read"
+file = "rules/job_lifetime.py"
+old = '''word.text[0] == word.text[-1] == '"''''
+new = '''word.text[0] == word.text[-1] == "'"'''
+tests = ["tests.test_job_lifetime.Traps.test_refused"]
+
+[[plant]]
+name = "a quote inside is read through"
+file = "rules/job_lifetime.py"
+old = ''' and not QUOTED_BODY.search(word.text[1:-1]):'''
+new = ''':'''
+tests = ["tests.test_job_lifetime.Traps.test_quotes_inside"]
+
+[[plant]]
+name = "escapes are kept"
+file = "rules/job_lifetime.py"
+old = '''found.group(1) or ""'''
+new = '''found.group(0)'''
+tests = ["tests.test_job_lifetime.Traps.test_passed"]
+
+[[plant]]
+name = "the unknown text is not named"
+file = "rules/job_lifetime.py"
+old = '''the text a trap runs is not made known by the call:'''
+new = '''a trap is unknown:'''
+tests = ["tests.test_job_lifetime.Traps.test_unknown_text"]
+
+[[plant]]
+name = "no form line is kept"
+file = "rules/job_lifetime.py"
+old = '''    lines = [line for command in commands if (line := form_line(command)) is not None]'''
+new = '''    lines: list[Prose] = []'''
+tests = ["tests.test_job_lifetime.Disown.test_refused"]
+
+[[plant]]
+name = "a reaped job is refused"
+file = "rules/job_lifetime.py"
+old = '''if not reaped(job, commands))'''
+new = '''if reaped(job, commands))'''
+tests = ["tests.test_job_lifetime.Jobs.test_refused"]
+
+[[plant]]
+name = "no trap text is read"
+file = "rules/job_lifetime.py"
+old = '''        text = trap_text(command)'''
+new = '''        text = None'''
+tests = ["tests.test_job_lifetime.Traps.test_refused"]
+
+[[plant]]
+name = "a gap in a trap text is read past"
+file = "rules/job_lifetime.py"
+old = '''sub = known(build(text, command.cwd, event.reading))'''
+new = '''sub = build(text, command.cwd, event.reading)'''
+tests = ["tests.test_job_lifetime.Traps.test_gap_in_text"]
+
+[[plant]]
+name = "the unparsed trap is not named"
+file = "rules/job_lifetime.py"
+old = '''the text the trap `{shown(command.words)}` runs:'''
+new = '''a trap:'''
+tests = ["tests.test_job_lifetime.Traps.test_unparsed_text"]
+
+[[plant]]
+name = "a trap text is not judged"
+file = "rules/job_lifetime.py"
+old = '''        lines.extend(lines_of(event, sub))'''
+new = '''        lines.extend([])'''
+tests = ["tests.test_job_lifetime.Traps.test_refused"]
+
+[[plant]]
+name = "an empty refusal is made"
+file = "rules/job_lifetime.py"
+old = '''    if not lines:'''
+new = '''    if False:'''
+tests = ["tests.test_job_lifetime.Jobs.test_passed"]
+
+[[plant]]
+name = "the rule refuses nothing"
+file = "rules/job_lifetime.py"
+old = '''    return refuse(Prose(ADVICE.format(problems="\n".join(dict.fromkeys(lines)))))'''
+new = '''    return None'''
+tests = ["tests.test_job_lifetime.Jobs.test_refused"]
+
+[[plant]]
+name = "a line is said twice"
+file = "rules/job_lifetime.py"
+old = '''"\n".join(dict.fromkeys(lines))'''
+new = '''"\n".join(lines)'''
+tests = ["tests.test_job_lifetime.Refusal.test_each_line_once"]

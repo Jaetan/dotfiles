@@ -1,0 +1,152 @@
+# What the aletheia repository would declare in .claude/guard.toml. Each entry names, in a `replaces` line, the
+# hard-coded fact of today's kit (~/dotfiles/.claude/hooks) it stands for.
+
+schema = 1
+
+[records]
+paths = ["../aletheia-ci-output"]
+# replaces: heavy-run-guard.py:1040 (RUN_RECORDS, its second entry) and :1421 (_RECORD_NAMES)
+
+[bulk]
+paths = ["rust/target", "python/.venv", "cpp/build", "haskell-shim/dist-newstyle", "dist-newstyle", "build"]
+# replaces nothing: today's kit lets a recursive search read these
+
+[unread_scripts]
+paths = ["probes/run_all.sh"]
+# replaces nothing: today's kit refuses a call running it as code it cannot place, its text running Python from a
+# folder it computes
+
+[probes]
+record = "~/dev/agda/aletheia-ci-output/probes/aletheia/timings.tsv"
+# replaces: red-disposition-guard.py:64 (RECORDS_COMMAND, whose folder for the main checkout holds timings.tsv) and
+# :61 (RECORD)
+
+[[heavy]]
+module = "tools.run_ci"
+writes = true
+# replaces: _commands.py:581 (HEAVY_TOOLS) and :644 (_tool_script)
+
+[[heavy]]
+module = "tools.stability_run"
+writes = true
+# replaces: _commands.py:581
+
+[[heavy]]
+module = "tools.check_reproducible_build"
+writes = true
+# replaces: _commands.py:581
+
+[[heavy]]
+module = "tools.coverage_run"
+writes = true
+light_with = ["--scope"]
+# replaces: _commands.py:581, and coverage_run with --scope read as light
+
+[[heavy]]
+module = "tools.check_build_incremental"
+writes = true
+# replaces: _commands.py:581
+
+[[heavy]]
+module = "tools.iwyu"
+writes = true
+# replaces: _commands.py:582
+
+[[heavy]]
+module = "tools.warm_check_properties"
+writes = true
+# replaces: _commands.py:582
+
+[[heavy]]
+module = "tools.bundle_validate"
+writes = true
+# replaces: _commands.py:582
+
+[[heavy]]
+module = "tools.mutation_run"
+writes = true
+# replaces: _commands.py:582
+
+[[heavy]]
+module = "tools.mutation_cpp"
+writes = true
+# replaces: _commands.py:582
+
+[[heavy]]
+module = "tools.mutation_rust"
+writes = true
+# replaces: _commands.py:583
+
+[[heavy]]
+script = "probes/run_all.sh"
+writes = true
+# replaces: _commands.py:584 (_HEAVY_SCRIPTS)
+
+[[heavy]]
+script = "benchmarks/run_all.sh"
+writes = true
+# replaces: _commands.py:584
+
+[[heavy]]
+script = "tools/build_mull.sh"
+writes = true
+# replaces: _commands.py:584
+
+[[heavy]]
+argv = ["cabal", "run", "shake"]
+writes = true
+light_targets = ["count-modules", "help"]
+verbose_flags = ["-V"]
+# replaces: _commands.py:820 (cabal run shake, light for count-modules and help alone) and shake's -V read as
+# verbose, not as a version request
+
+[[heavy]]
+program = "unit_tests"
+targeted_by = "catch2-operands"
+light_with = ["--list-tests", "--list-tags", "--list-reporters", "--list-listeners"]
+# replaces: _commands.py:585 (_TEST_BINARIES), a run naming tests or tags read as targeted, and :845 (a run
+# listing what it holds read as light)
+
+[[heavy]]
+program = "excel_tests"
+targeted_by = "catch2-operands"
+light_with = ["--list-tests", "--list-tags", "--list-reporters", "--list-listeners"]
+# replaces: _commands.py:585 and :845
+
+[[heavy]]
+program = "yaml_tests"
+targeted_by = "catch2-operands"
+light_with = ["--list-tests", "--list-tags", "--list-reporters", "--list-listeners"]
+# replaces: _commands.py:585 and :845
+
+[[heavy]]
+program = "integration_tests"
+targeted_by = "catch2-operands"
+light_with = ["--list-tests", "--list-tags", "--list-reporters", "--list-listeners"]
+# replaces: _commands.py:585 and :845
+
+[[heavy]]
+program = "benchmark"
+valued_options = ["--frames", "--runs", "--warmup", "--bench", "--json"]
+light_with = ["--list-tests", "--list-tags", "--list-reporters", "--list-listeners"]
+# replaces: _commands.py:585, the last five of _CATCH2_VALUES (:586), aletheia's own options, and :845
+
+[[heavy]]
+program = "stability_bench"
+valued_options = ["--frames", "--runs", "--warmup", "--bench", "--json"]
+light_with = ["--list-tests", "--list-tags", "--list-reporters", "--list-listeners"]
+# replaces: _commands.py:585, :586 and :845
+
+[gates.test_determinism]
+run = ["python/.venv/bin/python", "-m", "tools.check_test_determinism"]
+protocol = "determinism-1"
+rule_source = "AGENTS.md, Universal Rules"
+# replaces: test-determinism-guard.py:115 (GATE), :116 (INTERPRETER) and :129 (the source its message cites)
+
+[gates.precise_hints]
+run = ["python/.venv/bin/python", "-m", "tools.check_precise_hints"]
+protocol = "hints-1"
+suffixes = [".py", ".sh"]
+rule_source = "AGENTS/python.md cat 8"
+# replaces: precise-hints-guard.py:143 (GATE), :144 (INTERPRETER), :152 (SUFFIXES), :161 and :163 (the source its
+# messages cite)

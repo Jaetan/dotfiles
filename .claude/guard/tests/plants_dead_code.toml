@@ -1,0 +1,157 @@
+# The plants that show tests/test_dead_code.py and the exemptions it reads, tests/dead_code_exemptions.py, held by
+# tests/test_dead_code.py: each exemption removed, and each behaving line of the test changed:
+#   testing/plants.py tests/plants_dead_code.toml --out DIR
+
+[[plant]]
+name = "the exemption of EVENTS removed"
+file = "tests/dead_code_exemptions.py"
+old = "\n_.EVENTS\n"
+new = "\n"
+tests = ["tests.test_dead_code.DeadCode.test_the_kit_holds_no_dead_code"]
+
+[[plant]]
+name = "the exemption of TOOLS removed"
+file = "tests/dead_code_exemptions.py"
+old = "\n_.TOOLS\n"
+new = "\n"
+tests = ["tests.test_dead_code.DeadCode.test_the_kit_holds_no_dead_code"]
+
+[[plant]]
+name = "the exemption of bad_lines removed"
+file = "tests/dead_code_exemptions.py"
+old = "\n_.bad_lines\n"
+new = "\n"
+tests = ["tests.test_dead_code.DeadCode.test_the_kit_holds_no_dead_code"]
+
+[[plant]]
+name = "the exemption of cmd removed"
+file = "tests/dead_code_exemptions.py"
+old = "\n_.cmd\n"
+new = "\n"
+tests = ["tests.test_dead_code.DeadCode.test_the_kit_holds_no_dead_code"]
+
+[[plant]]
+name = "the exemption of function_body_extent removed"
+file = "tests/dead_code_exemptions.py"
+old = "\n_.function_body_extent\n"
+new = "\n"
+tests = ["tests.test_dead_code.DeadCode.test_the_kit_holds_no_dead_code"]
+
+[[plant]]
+name = "the exemption of misreadings removed"
+file = "tests/dead_code_exemptions.py"
+old = "\n_.misreadings\n"
+new = "\n"
+tests = ["tests.test_dead_code.DeadCode.test_the_kit_holds_no_dead_code"]
+
+[[plant]]
+name = "the exemption of mtime_ns removed"
+file = "tests/dead_code_exemptions.py"
+old = "\n_.mtime_ns\n"
+new = "\n"
+tests = ["tests.test_dead_code.DeadCode.test_the_kit_holds_no_dead_code"]
+
+[[plant]]
+name = "the exemption of nfaults removed"
+file = "tests/dead_code_exemptions.py"
+old = "\n_.nfaults\n"
+new = "\n"
+tests = ["tests.test_dead_code.DeadCode.test_the_kit_holds_no_dead_code"]
+
+[[plant]]
+name = "the exemption of read_this_build removed"
+file = "tests/dead_code_exemptions.py"
+old = "\n_.read_this_build\n"
+new = "\n"
+tests = ["tests.test_dead_code.DeadCode.test_the_kit_holds_no_dead_code"]
+
+[[plant]]
+name = "the exemption of reader_error removed"
+file = "tests/dead_code_exemptions.py"
+old = "\n_.reader_error\n"
+new = "\n"
+tests = ["tests.test_dead_code.DeadCode.test_the_kit_holds_no_dead_code"]
+
+[[plant]]
+name = "the exemption of recorded_err removed"
+file = "tests/dead_code_exemptions.py"
+old = "\n_.recorded_err\n"
+new = "\n"
+tests = ["tests.test_dead_code.DeadCode.test_the_kit_holds_no_dead_code"]
+
+[[plant]]
+name = "the exemption of run_in_background removed"
+file = "tests/dead_code_exemptions.py"
+old = "\n_.run_in_background\n"
+new = "\n"
+tests = ["tests.test_dead_code.DeadCode.test_the_kit_holds_no_dead_code"]
+
+[[plant]]
+name = "the exemption of selection removed"
+file = "tests/dead_code_exemptions.py"
+old = "\n_.selection\n"
+new = "\n"
+tests = ["tests.test_dead_code.DeadCode.test_the_kit_holds_no_dead_code"]
+
+[[plant]]
+name = "the exemption of subs removed"
+file = "tests/dead_code_exemptions.py"
+old = "\n_.subs\n"
+new = "\n"
+tests = ["tests.test_dead_code.DeadCode.test_the_kit_holds_no_dead_code"]
+
+[[plant]]
+name = "the exemption of unrecorded_refusals removed"
+file = "tests/dead_code_exemptions.py"
+old = "\n_.unrecorded_refusals\n"
+new = "\n"
+tests = ["tests.test_dead_code.DeadCode.test_the_kit_holds_no_dead_code"]
+
+[[plant]]
+name = "the exemption of tempdir removed"
+file = "tests/dead_code_exemptions.py"
+old = "\n_.tempdir\n"
+new = "\n"
+tests = ["tests.test_dead_code.DeadCode.test_the_kit_holds_no_dead_code"]
+
+[[plant]]
+name = "vulture is given no discovered test class"
+file = "tests/test_dead_code.py"
+old = "\n               \"--ignore-names\", \",\".join(discovered_classes())]"
+new = "]"
+tests = ["tests.test_dead_code.DeadCode.test_the_kit_holds_no_dead_code"]
+
+[[plant]]
+name = "discovery finds no test class"
+file = "tests/test_dead_code.py"
+old = "return sorted({ClassName(type(case).__name__) for case in cases(suite)})"
+new = "return sorted({ClassName(type(case).__name__) for case in []})"
+tests = ["tests.test_dead_code.DeadCode.test_the_kit_holds_no_dead_code"]
+
+[[plant]]
+name = "vulture's stderr is dropped"
+file = "tests/test_dead_code.py"
+old = "(run.stdout + run.stderr)"
+new = "run.stdout"
+tests = ["tests.test_dead_code.DeadCode.test_an_unused_function_and_an_unparsable_file_are_found"]
+
+[[plant]]
+name = "vulture reads another folder"
+file = "tests/test_dead_code.py"
+old = "command = [str(vulture), str(folder),"
+new = "command = [str(vulture), str(KIT / \"rules\"),"
+tests = ["tests.test_dead_code.DeadCode.test_an_unused_function_and_an_unparsable_file_are_found"]
+
+[[plant]]
+name = "a missing vulture is not checked"
+file = "tests/test_dead_code.py"
+old = "    if not vulture.is_file():"
+new = "    if False:"
+tests = ["tests.test_dead_code.DeadCode.test_a_missing_vulture_fails_with_its_install_line"]
+
+[[plant]]
+name = "the failure for a missing vulture leaves out its install line"
+file = "tests/test_dead_code.py"
+old = "for dead code: {INSTALL}"
+new = "for dead code"
+tests = ["tests.test_dead_code.DeadCode.test_a_missing_vulture_fails_with_its_install_line"]

@@ -1,0 +1,33 @@
+# The plants that show the work a trivial event costs held by tests/test_work_count.py:
+#   testing/plants.py tests/plants_work_count.toml --out DIR
+
+[[plant]]
+name = "a rule builds the call's model itself instead of asking the event"
+file = "rules/shared_shell.py"
+old = '''    for command in event.call().commands:'''
+new = '''    from dispatcher.model import build
+    for command in build(event.command(), event.cwd, event.reading).commands:'''
+tests = ["tests.test_work_count.Trivial.test_a_pretooluse_bash_true"]
+
+[[plant]]
+name = "the event builds the call's model for every rule that asks"
+file = "dispatcher/core.py"
+old = '''        if self.built is None:
+            try:'''
+new = '''        if True:
+            try:'''
+tests = ["tests.test_work_count.Trivial.test_a_pretooluse_bash_true"]
+
+[[plant]]
+name = "the dribble is parsed for every rule that reads it"
+file = "rules/_dribble.py"
+old = '''    if kept is None or kept.event is not event:'''
+new = '''    if True:'''
+tests = ["tests.test_work_count.Trivial.test_a_posttooluse_bash_true_with_a_pending_dribble"]
+
+[[plant]]
+name = "the determinism gate is asked before a call too"
+file = "rules/test_determinism.py"
+old = '''EVENTS: frozenset[HookEvent] = frozenset({"PostToolUse"})'''
+new = '''EVENTS: frozenset[HookEvent] = frozenset({"PreToolUse", "PostToolUse"})'''
+tests = ["tests.test_work_count.Trivial.test_a_pretooluse_read"]

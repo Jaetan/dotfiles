@@ -1,0 +1,129 @@
+# The plants that show rules/_dribble.py and the two rules reading it held by tests/test_dribble.py:
+#   testing/plants.py tests/plants_dribble.toml --out DIR
+
+[[plant]]
+name = "a missing dribble is built"
+file = "rules/_dribble.py"
+old = '''    if not dribble.is_file():
+        return None
+'''
+new = '''    if not dribble.is_file():
+        pass
+'''
+tests = ["tests.test_dribble.Model.test_no_dribble_gives_none_and_builds_nothing"]
+
+[[plant]]
+name = "the version reads no size"
+file = "rules/_dribble.py"
+old = '''Size(status.st_size)'''
+new = '''Size(0)'''
+tests = ["tests.test_dribble.Model.test_a_dribble_of_another_size_is_built_again"]
+
+[[plant]]
+name = "the version reads no modification time"
+file = "rules/_dribble.py"
+old = '''Nanoseconds(status.st_mtime_ns)'''
+new = '''Nanoseconds(0)'''
+tests = ["tests.test_dribble.Model.test_a_dribble_of_another_modification_time_is_built_again"]
+
+[[plant]]
+name = "the version names no dribble"
+file = "rules/_dribble.py"
+old = '''version: Version = (dribble, '''
+new = '''version: Version = (Path(), '''
+tests = ["tests.test_dribble.Model.test_two_dribbles_of_one_size_and_time_in_one_event_are_built_each"]
+
+[[plant]]
+name = "an event reuses the model another event built"
+file = "rules/_dribble.py"
+old = '''kept is None or kept.event is not event'''
+new = '''kept is None'''
+tests = ["tests.test_dribble.Model.test_another_event_builds_it_again"]
+
+[[plant]]
+name = "every ask builds the dribble"
+file = "rules/_dribble.py"
+old = '''    if kept is None or kept.event is not event:'''
+new = '''    if True:'''
+tests = ["tests.test_dribble.Model.test_a_dribble_asked_twice_in_one_event_is_built_once",
+         "tests.test_dribble.Rules.test_one_event_both_rules_read_builds_the_dribble_once"]
+
+[[plant]]
+name = "the model built is not kept"
+file = "rules/_dribble.py"
+old = '''kept = KEPT[version] = Kept(event, call)'''
+new = '''kept = Kept(event, call)'''
+tests = ["tests.test_dribble.Model.test_a_dribble_asked_twice_in_one_event_is_built_once",
+         "tests.test_dribble.Rules.test_one_event_both_rules_read_builds_the_dribble_once"]
+
+[[plant]]
+name = "the dribble is read as nothing"
+file = "rules/_dribble.py"
+old = '''ShellText(f"bash {shlex.quote(str(dribble))}")'''
+new = '''ShellText("true")'''
+tests = ["tests.test_dribble.Model.test_the_dribble_is_built_as_bash_runs_it_from_its_folder",
+         "tests.test_entry_points.Refused.test_a_run_before_the_edit_is_refused",
+         "tests.test_merge_dribble.Refused.test_gh_pr_merge_is_refused_whatever_its_flags"]
+
+[[plant]]
+name = "the dribble is read from no folder"
+file = "rules/_dribble.py"
+old = '''Directory(str(dribble.parent))'''
+new = '''None'''
+tests = ["tests.test_dribble.Model.test_the_dribble_is_built_as_bash_runs_it_from_its_folder"]
+
+[[plant]]
+name = "the dribble is read with settings not the event's"
+file = "rules/_dribble.py"
+old = ''', event.reading)'''
+new = ''', event.reading._replace(timeout=event.reading.timeout * 2))'''
+tests = ["tests.test_dribble.Model.test_the_dribble_is_built_as_bash_runs_it_from_its_folder"]
+
+[[plant]]
+name = "the entry-points rule reads no model of the dribble"
+file = "rules/entry_points.py"
+old = '''    call = model(dribble, event)
+'''
+new = '''    call = None
+'''
+tests = ["tests.test_entry_points.Refused.test_a_run_before_the_edit_is_refused"]
+
+[[plant]]
+name = "the entry-points rule reads a dribble gone before its model"
+file = "rules/entry_points.py"
+old = '''call.commands if call is not None else ()'''
+new = '''call.commands'''
+tests = ["tests.test_dribble.Rules.test_a_dribble_gone_before_its_model_is_built_is_none_to_both_rules"]
+
+[[plant]]
+name = "the entry-points rule builds the dribble before reading HEAD"
+file = "rules/entry_points.py"
+old = '''    head = git(root, HEAD_TIME)
+'''
+new = '''    _ = model(dribble, event)
+    head = git(root, HEAD_TIME)
+'''
+tests = ["tests.test_dribble.Rules.test_the_entry_points_rule_builds_nothing_for_a_dribble_older_than_head"]
+
+[[plant]]
+name = "the merge-dribble rule reads no model of the dribble"
+file = "rules/merge_dribble.py"
+old = '''    call = model(dribble, event)
+'''
+new = '''    call = None
+'''
+tests = ["tests.test_merge_dribble.Refused.test_gh_pr_merge_is_refused_whatever_its_flags"]
+
+[[plant]]
+name = "the merge-dribble rule reads a dribble gone before its model"
+file = "rules/merge_dribble.py"
+old = '''call.commands if call is not None else ()'''
+new = '''call.commands'''
+tests = ["tests.test_dribble.Rules.test_a_dribble_gone_before_its_model_is_built_is_none_to_both_rules"]
+
+[[plant]]
+name = "the merge-dribble rule finds in no command"
+file = "rules/merge_dribble.py"
+old = '''findings(commands)'''
+new = '''findings(())'''
+tests = ["tests.test_merge_dribble.Refused.test_gh_pr_merge_is_refused_whatever_its_flags"]

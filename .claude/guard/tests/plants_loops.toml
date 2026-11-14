@@ -1,0 +1,412 @@
+# The plants that show the call model's loops are held by tests/test_model.py: run
+#   testing/plants.py tests/plants_loops.toml --out DIR
+# Every plant is killed when each line of dispatcher/model.py that places a command in the loops it runs inside is
+# held by a test, as is each line of dispatcher/python.py reading the loops of Python code that sleep and of
+# dispatcher/model.py giving them to the interpreter's command, with whether the code sleeps outside them.
+
+[[plant]]
+name = "a loop's identifier is its kind"
+file = "dispatcher/model.py"
+old = '''    loop: LoopId
+    kind: LoopKind
+'''
+new = '''    kind: LoopKind
+    loop: LoopId
+'''
+tests = ["tests.test_model.Loops.test_a_while"]
+
+[[plant]]
+name = "a loop's kind is the part holding the command"
+file = "dispatcher/model.py"
+old = '''    kind: LoopKind
+    part: LoopPart
+'''
+new = '''    part: LoopPart
+    kind: LoopKind
+'''
+tests = ["tests.test_model.Loops.test_a_while"]
+
+[[plant]]
+name = "a command's loops are its pipelines"
+file = "dispatcher/model.py"
+old = '''    pipelines: tuple[Seat, ...]
+    loops: tuple[Loop, ...]
+'''
+new = '''    loops: tuple[Loop, ...]
+    pipelines: tuple[Seat, ...]
+'''
+tests = ["tests.test_model.Loops.test_a_while"]
+
+[[plant]]
+name = "the call's own shell is in a loop"
+file = "dispatcher/model.py"
+old = 'loops: tuple[Loop, ...] = ()'
+new = 'loops: tuple[Loop, ...] = (Loop(LoopId(0), "while", "body"),)'
+tests = ["tests.test_model.Loops.test_a_while"]
+
+[[plant]]
+name = "a walk starts with no loop identifier"
+file = "dispatcher/model.py"
+old = '        self.last_loop = LoopId(0)'
+new = '        pass'
+tests = ["tests.test_model.Loops.test_a_while"]
+
+[[plant]]
+name = "a new loop identifier is the last one issued"
+file = "dispatcher/model.py"
+old = 'self.last_loop = LoopId(self.last_loop + 1)'
+new = 'self.last_loop = LoopId(self.last_loop)'
+tests = ["tests.test_model.Loops.test_a_command_after_a_loop_is_in_none"]
+
+[[plant]]
+name = "every loop identifier is one"
+file = "dispatcher/model.py"
+old = '''        return self.last_loop
+'''
+new = '''        return LoopId(0)
+'''
+tests = ["tests.test_model.Loops.test_nested_loops_outermost_first"]
+
+[[plant]]
+name = "every loop is one loop"
+file = "dispatcher/model.py"
+old = 'loop, kind = self.new_loop(), loop_kind(command)'
+new = 'loop, kind = LoopId(0), loop_kind(command)'
+tests = ["tests.test_model.Loops.test_a_command_after_a_loop_is_in_none"]
+
+[[plant]]
+name = "every loop is a while"
+file = "dispatcher/model.py"
+old = 'loop, kind = self.new_loop(), loop_kind(command)'
+new = 'loop, kind = self.new_loop(), "while"'
+tests = ["tests.test_model.Loops.test_an_until"]
+
+[[plant]]
+name = "a loop's condition is its body"
+file = "dispatcher/model.py"
+old = "tested = place._replace(loops=(*place.loops, Loop(loop, kind, \"condition\")))"
+new = "tested = place._replace(loops=(*place.loops, Loop(loop, kind, \"body\")))"
+tests = ["tests.test_model.Loops.test_a_while"]
+
+[[plant]]
+name = "a loop's body is its condition"
+file = "dispatcher/model.py"
+old = 'inside = place._replace(loops=(*place.loops, Loop(loop, kind, "body")))'
+new = 'inside = place._replace(loops=(*place.loops, Loop(loop, kind, "condition")))'
+tests = ["tests.test_model.Loops.test_a_while"]
+
+[[plant]]
+name = "a for's words are not read"
+file = "dispatcher/model.py"
+old = 'head = command["loop"]'
+new = 'head = command.get("loops") or {}'
+tests = ["tests.test_model.Loops.test_a_for_and_its_words"]
+
+[[plant]]
+name = "a for's words are outside it"
+file = "dispatcher/model.py"
+old = 'self.substitutions([head], state, tested)'
+new = 'self.substitutions([head], state, place)'
+tests = ["tests.test_model.Loops.test_a_for_and_its_words"]
+
+[[plant]]
+name = "a for's variable keeps its value"
+file = "dispatcher/model.py"
+old = 'name = head.get("name")'
+new = 'name = head.get("names")'
+tests = ["tests.test_model.Loops.test_a_for_leaves_its_variable_unknown"]
+
+[[plant]]
+name = "a while's test list is its body"
+file = "dispatcher/model.py"
+old = 'self.stmts(cond, here, tested)'
+new = 'self.stmts(cond, here, inside)'
+tests = ["tests.test_model.Loops.test_a_while"]
+
+[[plant]]
+name = "a loop's body is outside it"
+file = "dispatcher/model.py"
+old = 'self.stmts(body, here, inside)'
+new = 'self.stmts(body, here, place)'
+tests = ["tests.test_model.Loops.test_a_while"]
+
+[[plant]]
+name = "a loop's second pass starts from a later loop identifier"
+file = "dispatcher/model.py"
+old = 'issued = self.last_process, self.last_pipeline, self.last_loop'
+new = 'issued = self.last_process, self.last_pipeline, LoopId(self.last_loop + 1)'
+tests = ["tests.test_model.Loops.test_a_body_walked_twice_names_its_loop_once"]
+
+[[plant]]
+name = "a loop's second pass issues new loop identifiers"
+file = "dispatcher/model.py"
+old = 'self.last_process, self.last_pipeline, self.last_loop = issued'
+new = 'self.last_process, self.last_pipeline = issued[:2]'
+tests = ["tests.test_model.Loops.test_a_body_walked_twice_names_its_loop_once"]
+
+[[plant]]
+name = "a command records no loops"
+file = "dispatcher/model.py"
+old = "place.processes, place.pipelines, place.loops,"
+new = "place.processes, place.pipelines, (),"
+tests = ["tests.test_model.Loops.test_a_while"]
+
+[[plant]]
+name = "a while node is a for"
+file = "dispatcher/model.py"
+old = '''    if command.get("type") == "while":
+        return "until"'''
+new = '''    if command.get("type") != "while":
+        return "until"'''
+tests = ["tests.test_model.Loops.test_a_while"]
+
+[[plant]]
+name = "an until is a while"
+file = "dispatcher/model.py"
+old = 'return "until" if command.get("until") else "while"'
+new = 'return "while"'
+tests = ["tests.test_model.Loops.test_an_until"]
+
+[[plant]]
+name = "a select is a for"
+file = "dispatcher/model.py"
+old = 'return "select" if command.get("select") else "for"'
+new = 'return "for"'
+tests = ["tests.test_model.Loops.test_a_select"]
+
+[[plant]]
+name = "a loop that sleeps gives its spin as its line"
+file = "dispatcher/python.py"
+old = '''    line: LineNumber
+    spins: bool
+'''
+new = '''    spins: bool
+    line: LineNumber
+'''
+tests = ["tests.test_model.Python.test_each_loop_that_sleeps"]
+
+[[plant]]
+name = "a reading carries no loops that sleep"
+file = "dispatcher/python.py"
+old = '''    sleeps: tuple[SleepLoop, ...] = ()
+'''
+new = '''    slept: tuple[SleepLoop, ...] = ()
+'''
+tests = ["tests.test_model.Python.test_each_loop_that_sleeps"]
+
+[[plant]]
+name = "asyncio.sleep is no sleep"
+file = "dispatcher/python.py"
+old = 'SLEEPS = frozenset({QualName("time.sleep"), QualName("asyncio.sleep")})'
+new = 'SLEEPS = frozenset({QualName("time.sleep")})'
+tests = ["tests.test_model.Python.test_each_loop_that_sleeps"]
+
+[[plant]]
+name = "an os.path function does something"
+file = "dispatcher/python.py"
+old = 'READS = ("time.", "os.path.")'
+new = 'READS = ("time.",)'
+tests = ["tests.test_model.Python.test_what_only_sleeps_and_checks"]
+
+[[plant]]
+name = "a break does something"
+file = "dispatcher/python.py"
+old = 'QUIET = (ast.Pass, ast.Continue, ast.Break, ast.Expr,'
+new = 'QUIET = (ast.Pass, ast.Continue, ast.Expr,'
+tests = ["tests.test_model.Python.test_what_only_sleeps_and_checks"]
+
+[[plant]]
+name = "an annotated assignment does something"
+file = "dispatcher/python.py"
+old = 'ast.Assign, ast.AugAssign, ast.AnnAssign)'
+new = 'ast.Assign, ast.AugAssign)'
+tests = ["tests.test_model.Python.test_what_only_sleeps_and_checks"]
+
+[[plant]]
+name = "a star import binds no sleep"
+file = "dispatcher/python.py"
+old = 'for name in (*STARTS, *SLEEPS):'
+new = 'for name in (*STARTS,):'
+tests = ["tests.test_model.Python.test_each_loop_that_sleeps"]
+
+[[plant]]
+name = "a yield does nothing"
+file = "dispatcher/python.py"
+old = 'isinstance(sub, ast.Yield | ast.YieldFrom) or ('
+new = 'isinstance(sub, ast.YieldFrom) or ('
+tests = ["tests.test_model.Python.test_what_only_sleeps_and_checks"]
+
+[[plant]]
+name = "asyncio.sleep is a call that does something"
+file = "dispatcher/python.py"
+old = '        name in SLEEPS or name.startswith(READS) for name'
+new = '        name.startswith(READS) for name'
+tests = ["tests.test_model.Python.test_each_loop_that_sleeps"]
+
+[[plant]]
+name = "an if's test is not read"
+file = "dispatcher/python.py"
+old = 'return all(idle(names, statement.test) and spins('
+new = 'return all(spins('
+tests = ["tests.test_model.Python.test_what_only_sleeps_and_checks"]
+
+[[plant]]
+name = "an if's else branch is not read"
+file = "dispatcher/python.py"
+old = 'spins(names, [*statement.body, *statement.orelse])'
+new = 'spins(names, statement.body)'
+tests = ["tests.test_model.Python.test_what_only_sleeps_and_checks"]
+
+[[plant]]
+name = "any statement kind only sleeps and checks"
+file = "dispatcher/python.py"
+old = 'else isinstance(statement, QUIET) and idle(names, statement)'
+new = 'else idle(names, statement)'
+tests = ["tests.test_model.Python.test_what_only_sleeps_and_checks"]
+
+[[plant]]
+name = "a body's first statement is not read"
+file = "dispatcher/python.py"
+old = '''               for statement in body)
+'''
+new = '''               for statement in body[1:])
+'''
+tests = ["tests.test_model.Python.test_what_only_sleeps_and_checks"]
+
+[[plant]]
+name = "loops are given in walk order"
+file = "dispatcher/python.py"
+old = 'return tuple(sorted(SleepLoop('
+new = 'return tuple((SleepLoop('
+tests = ["tests.test_model.Python.test_each_loop_that_sleeps"]
+
+[[plant]]
+name = "a loop's else clause spins with its body"
+file = "dispatcher/python.py"
+old = 'spins(names, node.body)) for node'
+new = 'spins(names, [*node.body, *node.orelse])) for node'
+tests = ["tests.test_model.Python.test_each_loop_that_sleeps"]
+
+[[plant]]
+name = "an async for is no loop"
+file = "dispatcher/python.py"
+old = '''LOOPS = (ast.While, ast.For, ast.AsyncFor)'''
+new = '''LOOPS = (ast.While, ast.For)'''
+tests = ["tests.test_model.Python.test_each_loop_that_sleeps",
+         "tests.test_model.Python.test_a_sleep_outside_the_loops_that_sleep"]
+
+[[plant]]
+name = "any call is a sleep"
+file = "dispatcher/python.py"
+old = '''return isinstance(node, ast.Call) and bool(names.of(node.func) & SLEEPS)'''
+new = '''return isinstance(node, ast.Call) and bool(names.of(node.func))'''
+tests = ["tests.test_model.Python.test_each_loop_that_sleeps",
+         "tests.test_model.Python.test_a_sleep_outside_the_loops_that_sleep"]
+
+[[plant]]
+name = "a sleep in a loop's else clause is not read"
+file = "dispatcher/python.py"
+old = '''for statement in (*loop.body, *loop.orelse) for sub in'''
+new = '''for statement in loop.body for sub in'''
+tests = ["tests.test_model.Python.test_each_loop_that_sleeps",
+         "tests.test_model.Python.test_a_sleep_outside_the_loops_that_sleep"]
+
+[[plant]]
+name = "a sleep in a loop's test is read"
+file = "dispatcher/python.py"
+old = '''for statement in (*loop.body, *loop.orelse) for sub in ast.walk(statement))'''
+new = '''for statement in (loop,) for sub in ast.walk(statement))'''
+tests = ["tests.test_model.Python.test_each_loop_that_sleeps",
+         "tests.test_model.Python.test_a_sleep_outside_the_loops_that_sleep"]
+
+[[plant]]
+name = "a reading gives no loop that sleeps"
+file = "dispatcher/python.py"
+old = ''', sleeps=sleeping(tree, names),'''
+new = ''','''
+tests = ["tests.test_model.Python.test_each_loop_that_sleeps"]
+
+[[plant]]
+name = "a command carries no loops that sleep"
+file = "dispatcher/model.py"
+old = '''    sleeps: tuple[SleepLoop, ...] = ()
+'''
+new = '''    slept: tuple[SleepLoop, ...] = ()
+'''
+tests = ["tests.test_model.Python.test_the_interpreter_of_each_python_text_carries_its_loops"]
+
+[[plant]]
+name = "the first command carries the loops"
+file = "dispatcher/model.py"
+old = '''self.commands[-1] = self.commands[-1]._replace(sleeps=reading.sleeps,'''
+new = '''self.commands[0] = self.commands[0]._replace(sleeps=reading.sleeps,'''
+tests = ["tests.test_model.Python.test_the_interpreter_of_each_python_text_carries_its_loops",
+         "tests.test_model.Python.test_the_interpreter_carries_whether_its_code_sleeps_outside_them"]
+
+[[plant]]
+name = "the interpreter's command carries no loops"
+file = "dispatcher/model.py"
+old = '''._replace(sleeps=reading.sleeps,'''
+new = '''._replace(sleeps=(),'''
+tests = ["tests.test_model.Python.test_the_interpreter_of_each_python_text_carries_its_loops"]
+
+[[plant]]
+name = "a reading carries no pause"
+file = "dispatcher/python.py"
+old = '''    pauses: bool = False
+'''
+new = '''    paused: bool = False
+'''
+tests = ["tests.test_model.Python.test_a_sleep_outside_the_loops_that_sleep"]
+
+[[plant]]
+name = "a reading gives no pause"
+file = "dispatcher/python.py"
+old = ''', pauses=pausing(tree, names))'''
+new = ''')'''
+tests = ["tests.test_model.Python.test_a_sleep_outside_the_loops_that_sleep",
+         "tests.test_model.Python.test_the_interpreter_carries_whether_its_code_sleeps_outside_them"]
+
+[[plant]]
+name = "a loop sleeps only where every node of it naps"
+file = "dispatcher/python.py"
+old = '''if isinstance(node, LOOPS) and any(naps(names, sub)'''
+new = '''if isinstance(node, LOOPS) and all(naps(names, sub)'''
+tests = ["tests.test_model.Python.test_each_loop_that_sleeps"]
+
+[[plant]]
+name = "a for loop's sleep pauses"
+file = "dispatcher/python.py"
+old = '''if isinstance(node, LOOPS) for sub in looped(node)}'''
+new = '''if isinstance(node, ast.While) for sub in looped(node)}'''
+tests = ["tests.test_model.Python.test_a_sleep_outside_the_loops_that_sleep"]
+
+[[plant]]
+name = "a sleep inside a loop pauses"
+file = "dispatcher/python.py"
+old = '''naps(names, node) and node not in inside'''
+new = '''naps(names, node)'''
+tests = ["tests.test_model.Python.test_a_sleep_outside_the_loops_that_sleep"]
+
+[[plant]]
+name = "only a top statement pauses"
+file = "dispatcher/python.py"
+old = '''and node not in inside for node in ast.walk(tree))'''
+new = '''and node not in inside for node in tree.body)'''
+tests = ["tests.test_model.Python.test_a_sleep_outside_the_loops_that_sleep"]
+
+[[plant]]
+name = "a command carries no pause"
+file = "dispatcher/model.py"
+old = '''    pauses: bool = False
+'''
+new = '''    paused: bool = False
+'''
+tests = ["tests.test_model.Python.test_the_interpreter_carries_whether_its_code_sleeps_outside_them"]
+
+[[plant]]
+name = "the interpreter's command carries no pause"
+file = "dispatcher/model.py"
+old = '''pauses=reading.pauses)'''
+new = '''pauses=False)'''
+tests = ["tests.test_model.Python.test_the_interpreter_carries_whether_its_code_sleeps_outside_them"]

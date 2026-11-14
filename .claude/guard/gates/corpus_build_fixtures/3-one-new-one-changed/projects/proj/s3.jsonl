@@ -1,0 +1,1 @@
+{"type":"assistant","message":{"role":"assistant","content":[{"type":"tool_use","id":"n1","name":"Bash","input":{"command":"make test"}},{"type":"tool_use","id":"n2","name":"Bash","input":{"command":"echo hi"}}]}}

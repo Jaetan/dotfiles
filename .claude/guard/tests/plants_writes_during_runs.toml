@@ -1,0 +1,486 @@
+# The plants that show rules/writes_during_runs.py held by tests/test_writes_during_runs.py, one or more per line
+# of the rule:
+#   testing/plants.py tests/plants_writes_during_runs.toml --out DIR
+
+[[plant]]
+name = "the rule judges another event"
+file = "rules/writes_during_runs.py"
+old = "frozenset({\"PreToolUse\"})"
+new = "frozenset({\"PostToolUse\"})"
+tests = ["tests.test_writes_during_runs.Rule.test_a_write_into_the_runs_tree"]
+
+[[plant]]
+name = "a Monitor call is not judged"
+file = "rules/writes_during_runs.py"
+old = "TOOLS = frozenset({ToolName(\"Bash\"), ToolName(\"Monitor\")})"
+new = "TOOLS = frozenset({ToolName(\"Bash\")})"
+tests = ["tests.test_writes_during_runs.Rule.test_a_write_into_the_runs_tree"]
+
+[[plant]]
+name = "git takes another name"
+file = "rules/writes_during_runs.py"
+old = "GIT = ShellText(\"git\")"
+new = "GIT = ShellText(\"gitx\")"
+tests = ["tests.test_writes_during_runs.Rule.test_a_write_into_the_runs_tree"]
+
+[[plant]]
+name = "the line is cut a character later"
+file = "rules/writes_during_runs.py"
+old = "CUT = 120"
+new = "CUT = 121"
+tests = ["tests.test_writes_during_runs.Rule.test_the_runs_line_cut_short"]
+
+[[plant]]
+name = "the line is cut a character sooner"
+file = "rules/writes_during_runs.py"
+old = "CUT = 120"
+new = "CUT = 119"
+tests = ["tests.test_writes_during_runs.Rule.test_the_runs_line_cut_short"]
+
+[[plant]]
+name = "the headline names no live run"
+file = "rules/writes_during_runs.py"
+old = "ADVICE = \"\"\"this call writes into the git work tree of a live heavy run"
+new = "ADVICE = \"\"\"this call writes into a tree"
+tests = ["tests.test_writes_during_runs.Rule.test_a_write_into_the_runs_tree", "tests.test_writes_during_runs.Rule.test_a_write_the_call_does_not_make_known", "tests.test_writes_during_runs.Rule.test_each_live_run"]
+
+[[plant]]
+name = "the advice names no form that passes"
+file = "rules/writes_during_runs.py"
+old = "Wait for the run's completion notification, then make the edit; draft it in the scratchpad meanwhile.\"\"\""
+new = "Wait.\"\"\""
+tests = ["tests.test_writes_during_runs.Rule.test_a_write_into_the_runs_tree"]
+
+[[plant]]
+name = "git's folder starts unknown"
+file = "rules/writes_during_runs.py"
+old = "folder = None if command.cwd is None else FilePath(command.cwd)"
+new = "folder = None"
+tests = ["tests.test_writes_during_runs.Rule.test_a_write_into_the_runs_tree"]
+
+[[plant]]
+name = "-c takes no value"
+file = "rules/writes_during_runs.py"
+old = "if word.value in (\"-C\", \"-c\"):"
+new = "if word.value in (\"-C\",):"
+tests = ["tests.test_writes_during_runs.Rule.test_a_write_into_the_runs_tree"]
+
+[[plant]]
+name = "-c places the folder"
+file = "rules/writes_during_runs.py"
+old = "if word.value == \"-C\":"
+new = "if word.value == \"-c\":"
+tests = ["tests.test_writes_during_runs.Rule.test_a_write_into_the_runs_tree"]
+
+[[plant]]
+name = "a -C value is placed from nowhere"
+file = "rules/writes_during_runs.py"
+old = "place = None if folder is None else Directory(folder)"
+new = "place = None"
+tests = ["tests.test_writes_during_runs.Rule.test_a_write_into_the_runs_tree"]
+
+[[plant]]
+name = "a -C with no value is read"
+file = "rules/writes_during_runs.py"
+old = "folder = None if given is None else write_of(given, \"edited\", place).path"
+new = "folder = write_of(given, \"edited\", place).path"
+tests = ["tests.test_writes_during_runs.Rule.test_a_write_the_call_does_not_make_known"]
+
+[[plant]]
+name = "a -C past the subcommand is read"
+file = "rules/writes_during_runs.py"
+old = "            return Git(folder, (word, *rest))"
+new = "            continue"
+tests = ["tests.test_writes_during_runs.Rule.test_a_write_into_the_runs_tree"]
+
+[[plant]]
+name = "an unknown path is not named so"
+file = "rules/writes_during_runs.py"
+old = "unknown = \"\" if write.path is not None else \", a path the call does not make known\""
+new = "unknown = \"\""
+tests = ["tests.test_writes_during_runs.Rule.test_a_write_the_call_does_not_make_known"]
+
+[[plant]]
+name = "a known path is charged to the call's directory"
+file = "rules/writes_during_runs.py"
+old = "({write.kind}{unknown})\"), write.path)"
+new = "({write.kind}{unknown})\"), None)"
+tests = ["tests.test_writes_during_runs.Rule.test_a_write_into_the_runs_tree"]
+
+[[plant]]
+name = "an unknown errors end is no write"
+file = "rules/writes_during_runs.py"
+old = "if \"unknown\" in (command.streams.output.reach, command.streams.errors.reach):"
+new = "if \"unknown\" in (command.streams.output.reach,):"
+tests = ["tests.test_writes_during_runs.Rule.test_a_write_the_call_does_not_make_known"]
+
+[[plant]]
+name = "an unknown output end is no write"
+file = "rules/writes_during_runs.py"
+old = "if \"unknown\" in (command.streams.output.reach, command.streams.errors.reach):"
+new = "if \"unknown\" in (command.streams.errors.reach,):"
+tests = ["tests.test_writes_during_runs.Rule.test_a_write_the_call_does_not_make_known"]
+
+[[plant]]
+name = "an unknown end is charged outside every tree"
+file = "rules/writes_during_runs.py"
+old = "the call does not make known\"), None)"
+new = "the call does not make known\"), FilePath(\"/\"))"
+tests = ["tests.test_writes_during_runs.Rule.test_a_write_the_call_does_not_make_known"]
+
+[[plant]]
+name = "a command of unknown name is read as git"
+file = "rules/writes_during_runs.py"
+old = "if command.name is not None and base(command.name) == GIT:"
+new = "if base(command.name) == GIT:"
+tests = ["tests.test_writes_during_runs.Rule.test_a_write_into_the_runs_tree"]
+
+[[plant]]
+name = "git is known by its whole name"
+file = "rules/writes_during_runs.py"
+old = "if command.name is not None and base(command.name) == GIT:"
+new = "if command.name is not None and command.name == GIT:"
+tests = ["tests.test_writes_during_runs.Rule.test_a_write_into_the_runs_tree"]
+
+[[plant]]
+name = "git's repository is charged to the call's directory"
+file = "rules/writes_during_runs.py"
+old = "writes\"), git.folder)"
+new = "writes\"), None)"
+tests = ["tests.test_writes_during_runs.Rule.test_a_write_into_the_runs_tree"]
+
+[[plant]]
+name = "an unknown path is charged outside every tree"
+file = "rules/writes_during_runs.py"
+old = "start_of(Path(path or event.cwd or \"/\"))"
+new = "start_of(Path(path or \"/\"))"
+tests = ["tests.test_writes_during_runs.Rule.test_a_write_the_call_does_not_make_known"]
+
+[[plant]]
+name = "no write lies in a tree"
+file = "rules/writes_during_runs.py"
+old = "return None if found is None else found.work"
+new = "return None"
+tests = ["tests.test_writes_during_runs.Rule.test_a_write_into_the_runs_tree"]
+
+[[plant]]
+name = "the declared rows are not filtered for"
+file = "rules/writes_during_runs.py"
+old = "rows = (*KIT_ROWS, *(row for folder in trees for row in event.declaration(folder).project.heavy))"
+new = "rows = KIT_ROWS"
+tests = ["tests.test_writes_during_runs.Rule.test_each_live_run"]
+
+[[plant]]
+name = "a program's name is not filtered for"
+file = "rules/writes_during_runs.py"
+old = "row.program, row.argv[0] if row.argv else None,"
+new = "None, row.argv[0] if row.argv else None,"
+tests = ["tests.test_writes_during_runs.Rule.test_each_live_run"]
+
+[[plant]]
+name = "an argv's name is not filtered for"
+file = "rules/writes_during_runs.py"
+old = "row.argv[0] if row.argv else None, row.module"
+new = "None, row.module"
+tests = ["tests.test_writes_during_runs.Rule.test_each_live_run"]
+
+[[plant]]
+name = "a module's name is not filtered for"
+file = "rules/writes_during_runs.py"
+old = "row.module and row.module.rsplit(\".\", 1)[-1],"
+new = "None,"
+tests = ["tests.test_writes_during_runs.Rule.test_each_live_run"]
+
+[[plant]]
+name = "a script's name is not filtered for"
+file = "rules/writes_during_runs.py"
+old = "row.script and base(row.script)) if name)"
+new = "None) if name)"
+tests = ["tests.test_writes_during_runs.Rule.test_each_live_run"]
+
+[[plant]]
+name = "a row with no such name gives None"
+file = "rules/writes_during_runs.py"
+old = "row.script and base(row.script)) if name)"
+new = "row.script and base(row.script)))"
+tests = ["tests.test_writes_during_runs.Rule.test_a_write_into_the_runs_tree"]
+
+[[plant]]
+name = "an unreadable line is no run"
+file = "rules/writes_during_runs.py"
+old = "        return True\n    return any("
+new = "        return False\n    return any("
+tests = ["tests.test_writes_during_runs.Rule.test_each_live_run"]
+
+[[plant]]
+name = "a light line is a run"
+file = "rules/writes_during_runs.py"
+old = "return any(heavy(command, facts) is not None for command in call.commands)"
+new = "return any(heavy(command, facts) is None for command in call.commands)"
+tests = ["tests.test_writes_during_runs.Rule.test_each_live_run"]
+
+[[plant]]
+name = "an entry that is no pid is read"
+file = "rules/writes_during_runs.py"
+old = "if not entry.name.isdigit():"
+new = "if not entry.name:"
+tests = ["tests.test_writes_during_runs.Rule.test_a_write_into_the_runs_tree"]
+
+[[plant]]
+name = "a process whose folder cannot be read is read"
+file = "rules/writes_during_runs.py"
+old = "except OSError:  # ended, or not the hook's user's to read\n            continue"
+new = "except OSError:  # ended, or not the hook's user's to read\n            raise"
+tests = ["tests.test_writes_during_runs.Rule.test_a_write_into_the_runs_tree"]
+
+[[plant]]
+name = "the empty word after the last NUL is kept"
+file = "rules/writes_during_runs.py"
+old = "split(\"\\0\") if text]"
+new = "split(\"\\0\")]"
+tests = ["tests.test_writes_during_runs.Rule.test_a_write_into_the_runs_tree"]
+
+[[plant]]
+name = "a process outside the written trees is read"
+file = "rules/writes_during_runs.py"
+old = "if not (any(cwd.is_relative_to(folder) for folder in trees)"
+new = "if not (True"
+tests = ["tests.test_writes_during_runs.Rule.test_each_live_run"]
+
+[[plant]]
+name = "a process holding no row's name is read"
+file = "rules/writes_during_runs.py"
+old = "and any(name in base(word) for word in words for name in wanted)):"
+new = "and True):"
+tests = ["tests.test_writes_during_runs.Rule.test_each_live_run"]
+
+[[plant]]
+name = "the run is judged under no declaration"
+file = "rules/writes_during_runs.py"
+old = "facts = event.declaration(cwd)"
+new = "facts = event.declaration(Path(\"/\"))"
+tests = ["tests.test_writes_during_runs.Rule.test_a_write_into_the_runs_tree"]
+
+[[plant]]
+name = "every process is a heavy run"
+file = "rules/writes_during_runs.py"
+old = "if heavy_line(event, words, cwd, facts):"
+new = "if True:"
+tests = ["tests.test_writes_during_runs.Rule.test_each_live_run"]
+
+[[plant]]
+name = "a line of the limit's length is cut"
+file = "rules/writes_during_runs.py"
+old = "line if len(line) <= CUT else"
+new = "line if len(line) < CUT else"
+tests = ["tests.test_writes_during_runs.Rule.test_the_runs_line_cut_short"]
+
+[[plant]]
+name = "a cut line keeps a character less"
+file = "rules/writes_during_runs.py"
+old = "f\"{line[:CUT]}...\""
+new = "f\"{line[:CUT - 1]}...\""
+tests = ["tests.test_writes_during_runs.Rule.test_the_runs_line_cut_short"]
+
+[[plant]]
+name = "a run has no tree"
+file = "rules/writes_during_runs.py"
+old = "), facts.work_root)"
+new = "), None)"
+tests = ["tests.test_writes_during_runs.Rule.test_a_write_into_the_runs_tree"]
+
+[[plant]]
+name = "a write outside every tree is placed"
+file = "rules/writes_during_runs.py"
+old = "if (at := tree(event, target.path)) is not None]"
+new = "if (at := tree(event, target.path)) is not None or True]"
+tests = ["tests.test_writes_during_runs.Rule.test_a_write_into_the_runs_tree"]
+
+[[plant]]
+name = "the proc tree is read for a call writing into no tree"
+file = "rules/writes_during_runs.py"
+old = "live = list(runs(event, trees)) if trees else []"
+new = "live = list(runs(event, trees))"
+tests = ["tests.test_writes_during_runs.Rule.test_a_call_writing_into_no_tree_reads_no_proc_tree"]
+
+[[plant]]
+name = "a write is paired with a run of another tree"
+file = "rules/writes_during_runs.py"
+old = "for target, at in placed for run in live if run.tree == at]"
+new = "for target, at in placed for run in live]"
+tests = ["tests.test_writes_during_runs.Rule.test_each_live_run"]
+
+[[plant]]
+name = "every call is refused"
+file = "rules/writes_during_runs.py"
+old = "refuse(Prose(ADVICE.format(problems=\"\\n\".join(found)))) if found else None"
+new = "refuse(Prose(ADVICE.format(problems=\"\\n\".join(found)))) if True else None"
+tests = ["tests.test_writes_during_runs.Rule.test_a_write_into_the_runs_tree"]
+
+[[plant]]
+name = "a problem names no tree"
+file = "rules/writes_during_runs.py"
+old = "lies in {at}, where pid {run.pid} runs"
+new = "in {run.pid} runs"
+tests = ["tests.test_writes_during_runs.Rule.test_a_write_into_the_runs_tree"]
+
+[[plant]]
+name = "a git command that only reads still writes"
+file = "rules/writes_during_runs.py"
+old = "        if not git.reads:"
+new = "        if True:"
+tests = ["tests.test_writes_during_runs.Rule.test_a_git_command_that_only_reads"]
+
+[[plant]]
+name = "status is not read-only"
+file = "rules/writes_during_runs.py"
+old = "\"status\""
+new = "\"x-status\""
+tests = ["tests.test_writes_during_runs.Rule.test_a_git_command_that_only_reads"]
+
+[[plant]]
+name = "diff is not read-only"
+file = "rules/writes_during_runs.py"
+old = "\"diff\""
+new = "\"x-diff\""
+tests = ["tests.test_writes_during_runs.Rule.test_a_git_command_that_only_reads"]
+
+[[plant]]
+name = "show is not read-only"
+file = "rules/writes_during_runs.py"
+old = "\"show\""
+new = "\"x-show\""
+tests = ["tests.test_writes_during_runs.Rule.test_a_git_command_that_only_reads"]
+
+[[plant]]
+name = "log is not read-only"
+file = "rules/writes_during_runs.py"
+old = "\"log\""
+new = "\"x-log\""
+tests = ["tests.test_writes_during_runs.Rule.test_a_git_command_that_only_reads"]
+
+[[plant]]
+name = "ls-files is not read-only"
+file = "rules/writes_during_runs.py"
+old = "\"ls-files\""
+new = "\"x-ls-files\""
+tests = ["tests.test_writes_during_runs.Rule.test_a_git_command_that_only_reads"]
+
+[[plant]]
+name = "ls-tree is not read-only"
+file = "rules/writes_during_runs.py"
+old = "\"ls-tree\""
+new = "\"x-ls-tree\""
+tests = ["tests.test_writes_during_runs.Rule.test_a_git_command_that_only_reads"]
+
+[[plant]]
+name = "grep is not read-only"
+file = "rules/writes_during_runs.py"
+old = "\"grep\""
+new = "\"x-grep\""
+tests = ["tests.test_writes_during_runs.Rule.test_a_git_command_that_only_reads"]
+
+[[plant]]
+name = "rev-parse is not read-only"
+file = "rules/writes_during_runs.py"
+old = "\"rev-parse\""
+new = "\"x-rev-parse\""
+tests = ["tests.test_writes_during_runs.Rule.test_a_git_command_that_only_reads"]
+
+[[plant]]
+name = "cat-file is not read-only"
+file = "rules/writes_during_runs.py"
+old = "\"cat-file\""
+new = "\"x-cat-file\""
+tests = ["tests.test_writes_during_runs.Rule.test_a_git_command_that_only_reads"]
+
+[[plant]]
+name = "blame is not read-only"
+file = "rules/writes_during_runs.py"
+old = "\"blame\""
+new = "\"x-blame\""
+tests = ["tests.test_writes_during_runs.Rule.test_a_git_command_that_only_reads"]
+
+[[plant]]
+name = "describe is not read-only"
+file = "rules/writes_during_runs.py"
+old = "\"describe\""
+new = "\"x-describe\""
+tests = ["tests.test_writes_during_runs.Rule.test_a_git_command_that_only_reads"]
+
+[[plant]]
+name = "branch takes another name"
+file = "rules/writes_during_runs.py"
+old = "BRANCH = ShellText(\"branch\")"
+new = "BRANCH = ShellText(\"branchx\")"
+tests = ["tests.test_writes_during_runs.Rule.test_a_git_command_that_only_reads"]
+
+[[plant]]
+name = "a branch operand is ignored"
+file = "rules/writes_during_runs.py"
+old = "all((word.value or \"\").startswith(\"-\") for word in rest)"
+new = "True"
+tests = ["tests.test_writes_during_runs.Rule.test_a_git_command_that_only_reads"]
+
+[[plant]]
+name = "a branch option is led by --"
+file = "rules/writes_during_runs.py"
+old = ".startswith(\"-\") for word in rest)"
+new = ".startswith(\"--\") for word in rest)"
+tests = ["tests.test_writes_during_runs.Rule.test_a_git_command_that_only_reads"]
+
+[[plant]]
+name = "a branch operand the call does not make known is an option"
+file = "rules/writes_during_runs.py"
+old = "(word.value or \"\").startswith(\"-\") for word in rest"
+new = "(word.value or \"-\").startswith(\"-\") for word in rest"
+tests = ["tests.test_writes_during_runs.Rule.test_a_git_command_that_only_reads"]
+
+[[plant]]
+name = "branch itself counts as its operand"
+file = "rules/writes_during_runs.py"
+old = "for word in rest))"
+new = "for word in self.words))"
+tests = ["tests.test_writes_during_runs.Rule.test_a_git_command_that_only_reads"]
+
+[[plant]]
+name = "a git command of no subcommand only reads"
+file = "rules/writes_during_runs.py"
+old = "if not self.words:\n            return False"
+new = "if not self.words:\n            return True"
+tests = ["tests.test_writes_during_runs.Rule.test_a_git_command_that_only_reads", "tests.test_writes_during_runs.Rule.test_a_write_the_call_does_not_make_known"]
+
+[[plant]]
+name = "a listed subcommand reads only as branch"
+file = "rules/writes_during_runs.py"
+old = "subcommand.value in READS or ("
+new = "subcommand.value in READS and ("
+tests = ["tests.test_writes_during_runs.Rule.test_a_git_command_that_only_reads"]
+
+[[plant]]
+name = "branch is read as any other subcommand"
+file = "rules/writes_during_runs.py"
+old = "subcommand.value == BRANCH and"
+new = "subcommand.value != BRANCH and"
+tests = ["tests.test_writes_during_runs.Rule.test_a_git_command_that_only_reads"]
+
+[[plant]]
+name = "the words past the subcommand are lost"
+file = "rules/writes_during_runs.py"
+old = "            return Git(folder, (word, *rest))"
+new = "            return Git(folder, (word,))"
+tests = ["tests.test_writes_during_runs.Rule.test_a_git_command_that_only_reads"]
+
+[[plant]]
+name = "the subcommand is lost"
+file = "rules/writes_during_runs.py"
+old = "            return Git(folder, (word, *rest))"
+new = "            return Git(folder, tuple(rest))"
+tests = ["tests.test_writes_during_runs.Rule.test_a_git_command_that_only_reads"]
+
+[[plant]]
+name = "a git command of no subcommand is status"
+file = "rules/writes_during_runs.py"
+old = "    return Git(folder, ())"
+new = "    return Git(folder, (Word(ShellText(\"status\"), ShellText(\"status\"), None),))"
+tests = ["tests.test_writes_during_runs.Rule.test_a_git_command_that_only_reads"]

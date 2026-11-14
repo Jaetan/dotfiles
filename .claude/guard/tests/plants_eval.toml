@@ -1,0 +1,104 @@
+# The plants that show the tests hold the scripts a project declares the kit runs unread: run
+#   testing/plants.py tests/plants_eval.toml --out DIR
+# Every plant is killed when each line of the declaration and its reading they break is held by a test.
+
+[[plant]]
+name = "the project key is unknown"
+file = "declarations/schema.py"
+old = '''"heavy", "gates", "unread_scripts"})'''
+new = '''"heavy", "gates"})'''
+tests = ["tests.test_declarations.Examples.test_the_aletheia_example", "tests.test_declarations.Lookups.test_a_linked_worktree_outside_its_tree"]
+
+[[plant]]
+name = "the table is read under another name"
+file = "declarations/schema.py"
+old = '''top.get(TomlKey("unread_scripts"), {})'''
+new = '''top.get(TomlKey("unread"), {})'''
+tests = ["tests.test_declarations.Examples.test_the_aletheia_example"]
+
+[[plant]]
+name = "the table admits another key"
+file = "declarations/schema.py"
+old = '''TomlKey("unread_scripts"),
+                           frozenset({TomlKey("paths")}))'''
+new = '''TomlKey("unread_scripts"),
+                           frozenset({TomlKey("paths"), TomlKey("scripts")}))'''
+tests = ["tests.test_declarations.Refusals.test_path_forms"]
+
+[[plant]]
+name = "an unread script may be absolute"
+file = "declarations/schema.py"
+old = '''TomlKey("unread_scripts"), frozenset({"relative"}))'''
+new = '''TomlKey("unread_scripts"), frozenset({"relative", "home"}))'''
+tests = ["tests.test_declarations.Refusals.test_path_forms"]
+
+[[plant]]
+name = "a repository declaring nothing has an unread script"
+file = "declarations/lookup.py"
+old = '''NO_PROJECT = Project((), (), (), None, None, ())'''
+new = '''NO_PROJECT = Project((), (), (), None, None, (Path("/x"),))'''
+tests = ["tests.test_declarations.Lookups.test_a_nested_repository_with_its_own"]
+
+[[plant]]
+name = "an unread script resolves against the main work tree"
+file = "declarations/lookup.py"
+old = '''placed(path, tree.work, home) for path in entries.unread_scripts'''
+new = '''placed(path, tree.main, home) for path in entries.unread_scripts'''
+tests = ["tests.test_declarations.Lookups.test_a_linked_worktree_outside_its_tree"]
+
+[[plant]]
+name = "the call is built without the declared scripts"
+file = "dispatcher/core.py"
+old = '''self.reading._replace(unread=self.unread())'''
+new = '''self.reading'''
+tests = ["tests.test_heavy_output.Unread.test_a_declared_script_is_judged_heavy"]
+
+[[plant]]
+name = "the call's directory is not asked"
+file = "dispatcher/core.py"
+old = '''        cwd = self.cwd
+        if cwd is None:'''
+new = '''        cwd = None
+        if cwd is None:'''
+tests = ["tests.test_heavy_output.Unread.test_a_declared_script_is_judged_heavy"]
+
+[[plant]]
+name = "a call with a directory declares nothing"
+file = "dispatcher/core.py"
+old = '''        if cwd is None:
+            return frozenset()
+        from pathlib'''
+new = '''        if cwd is not None:
+            return frozenset()
+        from pathlib'''
+tests = ["tests.test_heavy_output.Unread.test_a_declared_script_is_judged_heavy"]
+
+[[plant]]
+name = "another key's paths are taken"
+file = "dispatcher/core.py"
+old = '''.project.unread_scripts)'''
+new = '''.project.bulk)'''
+tests = ["tests.test_heavy_output.Unread.test_a_declared_script_is_judged_heavy"]
+
+[[plant]]
+name = "a script the call writes is not read"
+file = "dispatcher/model.py"
+old = '''if path in self.settings.unread and path not in self.written:'''
+new = '''if path in self.settings.unread:'''
+tests = ["tests.test_model.Scripts.test_a_script_its_project_declares_unread"]
+
+[[plant]]
+name = "an undeclared script is not read"
+file = "dispatcher/model.py"
+old = '''if path in self.settings.unread and path not in self.written:'''
+new = '''if path not in self.written:'''
+tests = ["tests.test_model.Scripts.test_a_script_its_project_declares_unread"]
+
+[[plant]]
+name = "a declared script is read"
+file = "dispatcher/model.py"
+old = '''            return None
+        return self.found(path, holder)'''
+new = '''            return self.found(path, holder)
+        return self.found(path, holder)'''
+tests = ["tests.test_model.Scripts.test_a_script_its_project_declares_unread"]

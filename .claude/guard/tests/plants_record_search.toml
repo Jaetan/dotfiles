@@ -1,0 +1,686 @@
+# The plants that show rules/record_search.py held by tests/test_record_search.py, one or more per line that
+# decides a verdict or a word of the refusal:
+#   testing/plants.py tests/plants_record_search.toml --out DIR
+
+[[plant]]
+name = "the rule judges no PreToolUse"
+file = "rules/record_search.py"
+old = '''frozenset({"PreToolUse"})'''
+new = '''frozenset({"PostToolUse"})'''
+tests = ["tests.test_record_search.Grep.test_old_refused"]
+
+[[plant]]
+name = "Monitor is not judged"
+file = "rules/record_search.py"
+old = '''ToolName("Bash"), ToolName("Monitor")'''
+new = '''ToolName("Bash")'''
+tests = ["tests.test_record_search.Declared.test_monitor"]
+
+[[plant]]
+name = "a name list is split once"
+file = "rules/record_search.py"
+old = '''for name in spelled.split())'''
+new = '''for name in spelled.split(" ", 1))'''
+tests = ["tests.test_record_search.Find.test_name_only"]
+
+[[plant]]
+name = "grep is no grep"
+file = "rules/record_search.py"
+old = '''names(Prose("grep egrep fgrep"))'''
+new = '''names(Prose("egrep fgrep"))'''
+tests = ["tests.test_record_search.Grep.test_old_refused"]
+
+[[plant]]
+name = "egrep is no grep"
+file = "rules/record_search.py"
+old = '''names(Prose("grep egrep fgrep"))'''
+new = '''names(Prose("grep fgrep"))'''
+tests = ["tests.test_record_search.Grep.test_old_refused"]
+
+[[plant]]
+name = "fgrep is no grep"
+file = "rules/record_search.py"
+old = '''names(Prose("grep egrep fgrep"))'''
+new = '''names(Prose("grep egrep"))'''
+tests = ["tests.test_record_search.Grep.test_old_refused"]
+
+[[plant]]
+name = "rg does not always recurse"
+file = "rules/record_search.py"
+old = '''names(Prose("rg rgrep"))'''
+new = '''names(Prose("rgrep"))'''
+tests = ["tests.test_record_search.Rg.test_old_refused"]
+
+[[plant]]
+name = "rgrep does not always recurse"
+file = "rules/record_search.py"
+old = '''names(Prose("rg rgrep"))'''
+new = '''names(Prose("rg"))'''
+tests = ["tests.test_record_search.Grep.test_old_refused"]
+
+[[plant]]
+name = "--recursive does not recurse"
+file = "rules/record_search.py"
+old = '''"--recursive --dereference-recursive --directories=recurse"'''
+new = '''"--dereference-recursive --directories=recurse"'''
+tests = ["tests.test_record_search.Grep.test_old_refused"]
+
+[[plant]]
+name = "--dereference-recursive does not recurse"
+file = "rules/record_search.py"
+old = '''"--recursive --dereference-recursive --directories=recurse"'''
+new = '''"--recursive --directories=recurse"'''
+tests = ["tests.test_record_search.Grep.test_old_refused"]
+
+[[plant]]
+name = "--directories=recurse does not recurse"
+file = "rules/record_search.py"
+old = '''"--recursive --dereference-recursive --directories=recurse"'''
+new = '''"--recursive --dereference-recursive"'''
+tests = ["tests.test_record_search.Grep.test_spec_forms"]
+
+[[plant]]
+name = "--regexp gives no pattern"
+file = "rules/record_search.py"
+old = '''names(Prose("--regexp --file"))'''
+new = '''names(Prose("--file"))'''
+tests = ["tests.test_record_search.Grep.test_old_refused"]
+
+[[plant]]
+name = "--file gives no pattern"
+file = "rules/record_search.py"
+old = '''names(Prose("--regexp --file"))'''
+new = '''names(Prose("--regexp"))'''
+tests = ["tests.test_record_search.Grep.test_old_refused"]
+
+[[plant]]
+name = "ls reads contents"
+file = "rules/record_search.py"
+old = '''names(Prose("ls eza stat'''
+new = '''names(Prose("eza stat'''
+tests = ["tests.test_record_search.Find.test_name_only"]
+
+[[plant]]
+name = "mkdir reads contents"
+file = "rules/record_search.py"
+old = '''"ln touch chmod chown mkdir"))'''
+new = '''"ln touch chmod chown"))'''
+tests = ["tests.test_record_search.Find.test_name_only"]
+
+[[plant]]
+name = "-H ends a find's start paths"
+file = "rules/record_search.py"
+old = '''("-H", "-L", "-P", "-D", "-O")'''
+new = '''("-L", "-P", "-D", "-O")'''
+tests = ["tests.test_record_search.Find.test_old_refused"]
+
+[[plant]]
+name = "-L ends a find's start paths"
+file = "rules/record_search.py"
+old = '''("-H", "-L", "-P", "-D", "-O")'''
+new = '''("-H", "-P", "-D", "-O")'''
+tests = ["tests.test_record_search.Find.test_old_refused"]
+
+[[plant]]
+name = "-P ends a find's start paths"
+file = "rules/record_search.py"
+old = '''("-H", "-L", "-P", "-D", "-O")'''
+new = '''("-H", "-L", "-D", "-O")'''
+tests = ["tests.test_record_search.Find.test_old_refused"]
+
+[[plant]]
+name = "-D ends a find's start paths"
+file = "rules/record_search.py"
+old = '''("-H", "-L", "-P", "-D", "-O")'''
+new = '''("-H", "-L", "-P", "-O")'''
+tests = ["tests.test_record_search.Find.test_old_refused"]
+
+[[plant]]
+name = "-O ends a find's start paths"
+file = "rules/record_search.py"
+old = '''("-H", "-L", "-P", "-D", "-O")'''
+new = '''("-H", "-L", "-P", "-D")'''
+tests = ["tests.test_record_search.Find.test_old_refused"]
+
+[[plant]]
+name = "( is a start path"
+file = "rules/record_search.py"
+old = '''names(Prose("( ! ,"))'''
+new = '''names(Prose("! ,"))'''
+tests = ["tests.test_record_search.Find.test_start_paths"]
+
+[[plant]]
+name = "! is a start path"
+file = "rules/record_search.py"
+old = '''names(Prose("( ! ,"))'''
+new = '''names(Prose("( ,"))'''
+tests = ["tests.test_record_search.Find.test_start_paths"]
+
+[[plant]]
+name = ", is a start path"
+file = "rules/record_search.py"
+old = '''names(Prose("( ! ,"))'''
+new = '''names(Prose("( !"))'''
+tests = ["tests.test_record_search.Find.test_start_paths"]
+
+[[plant]]
+name = "a piped rg reads its directory"
+file = "rules/record_search.py"
+old = '''frozenset({"pipe", "text"})'''
+new = '''frozenset({"text"})'''
+tests = ["tests.test_record_search.Rg.test_old_passed"]
+
+[[plant]]
+name = "an rg fed a heredoc reads its directory"
+file = "rules/record_search.py"
+old = '''frozenset({"pipe", "text"})'''
+new = '''frozenset({"pipe"})'''
+tests = ["tests.test_record_search.Rg.test_old_passed"]
+
+[[plant]]
+name = "no path is a folder beneath the directory"
+file = "rules/record_search.py"
+old = '''HERE = Word(ShellText("."), ShellText("."), ShellText("."))'''
+new = '''HERE = Word(ShellText("x"), ShellText("x"), ShellText("x"))'''
+tests = ["tests.test_record_search.Rg.test_old_refused"]
+
+[[plant]]
+name = "a command is cut a character shorter"
+file = "rules/record_search.py"
+old = '''SPELLED_MAX = 120'''
+new = '''SPELLED_MAX = 119'''
+tests = ["tests.test_record_search.Messages.test_long_command_cut"]
+
+[[plant]]
+name = "the refusal names no search"
+file = "rules/record_search.py"
+old = '''a recursive search starts at a run-record folder or at a folder holding one.
+'''
+new = '''a search reads a record.
+'''
+tests = ["tests.test_record_search.Messages.test_known"]
+
+[[plant]]
+name = "the refusal lists no problem"
+file = "rules/record_search.py"
+old = '''
+{problems}
+'''
+new = '''
+
+'''
+tests = ["tests.test_record_search.Messages.test_known"]
+
+[[plant]]
+name = "the refusal names fewer skips"
+file = "rules/record_search.py"
+old = '''(--exclude-dir, -g, ignore files, -prune, -maxdepth)'''
+new = '''(--exclude-dir, -g)'''
+tests = ["tests.test_record_search.Messages.test_known"]
+
+[[plant]]
+name = "the refusal names no folder beside"
+file = "rules/record_search.py"
+old = '''beneath the record, or a folder beside it;'''
+new = '''beneath the record;'''
+tests = ["tests.test_record_search.Messages.test_known"]
+
+[[plant]]
+name = "the refusal's git grep names no paths"
+file = "rules/record_search.py"
+old = '''  * git grep -n PATTERN -- PATHS;'''
+new = '''  * git grep -n PATTERN;'''
+tests = ["tests.test_record_search.Messages.test_known"]
+
+[[plant]]
+name = "the refusal's rg names any tree"
+file = "rules/record_search.py"
+old = '''PATHS over named trees that hold no record."""'''
+new = '''PATHS."""'''
+tests = ["tests.test_record_search.Messages.test_known"]
+
+[[plant]]
+name = "a program's folder is kept"
+file = "rules/record_search.py"
+old = '''ShellText(word.value.rsplit("/", 1)[-1])'''
+new = '''ShellText(word.value)'''
+tests = ["tests.test_record_search.Grep.test_spec_forms"]
+
+[[plant]]
+name = "-- ends nothing"
+file = "rules/record_search.py"
+old = '''if word.value == "--"), len(words))'''
+new = '''if word.value == "---"), len(words))'''
+tests = ["tests.test_record_search.Grep.test_old_passed"]
+
+[[plant]]
+name = "a command's name is a word before --"
+file = "rules/record_search.py"
+old = '''return list(words[1:end]), list(words[end + 1:])'''
+new = '''return list(words[0:end]), list(words[end + 1:])'''
+tests = ["tests.test_record_search.Grep.test_old_passed"]
+
+[[plant]]
+name = "-- is an operand"
+file = "rules/record_search.py"
+old = '''return list(words[1:end]), list(words[end + 1:])'''
+new = '''return list(words[1:end]), list(words[end:])'''
+tests = ["tests.test_record_search.Grep.test_spec_forms"]
+
+[[plant]]
+name = "a word is read by its value alone"
+file = "rules/record_search.py"
+old = '''return [word.prefix or ShellText("") for word'''
+new = '''return [word.value or ShellText("") for word'''
+tests = ["tests.test_record_search.Grep.test_old_refused"]
+
+[[plant]]
+name = "any word is a bundle"
+file = "rules/record_search.py"
+old = '''return head.startswith("-") and not head.startswith("--")'''
+new = '''return True and not head.startswith("--")'''
+tests = ["tests.test_record_search.Grep.test_spec_forms"]
+
+[[plant]]
+name = "a long option is a bundle"
+file = "rules/record_search.py"
+old = '''return head.startswith("-") and not head.startswith("--") and any('''
+new = '''return head.startswith("-") and any('''
+tests = ["tests.test_record_search.Grep.test_spec_forms"]
+
+[[plant]]
+name = "a bundle holds every letter"
+file = "rules/record_search.py"
+old = '''and any(letter in head for letter in letters)'''
+new = '''and all(letter in head for letter in letters)'''
+tests = ["tests.test_record_search.Grep.test_old_refused"]
+
+[[plant]]
+name = "a long recursive option is not read"
+file = "rules/record_search.py"
+old = '''any(head in RECURSIVE or bundle(head, Prose("rR")) for head in said)'''
+new = '''any(bundle(head, Prose("rR")) for head in said)'''
+tests = ["tests.test_record_search.Grep.test_old_refused"]
+
+[[plant]]
+name = "a bundle holding r is not read"
+file = "rules/record_search.py"
+old = '''any(head in RECURSIVE or bundle(head, Prose("rR")) for head in said)'''
+new = '''any(head in RECURSIVE for head in said)'''
+tests = ["tests.test_record_search.Grep.test_old_refused"]
+
+[[plant]]
+name = "a bundle holding R is not read"
+file = "rules/record_search.py"
+old = '''bundle(head, Prose("rR"))'''
+new = '''bundle(head, Prose("r"))'''
+tests = ["tests.test_record_search.Grep.test_old_refused"]
+
+[[plant]]
+name = "-d recurse is not read"
+file = "rules/record_search.py"
+old = ''' or ("-d", "recurse") in pairwise(said)'''
+new = ''' or False'''
+tests = ["tests.test_record_search.Grep.test_old_refused"]
+
+[[plant]]
+name = "every word is an operand"
+file = "rules/record_search.py"
+old = '''if not (word.prefix or "").startswith("-") or word.value == "-"] + after'''
+new = '''if True] + after'''
+tests = ["tests.test_record_search.Grep.test_old_passed"]
+
+[[plant]]
+name = "a lone - is an option"
+file = "rules/record_search.py"
+old = '''if not (word.prefix or "").startswith("-") or word.value == "-"] + after'''
+new = '''if not (word.prefix or "").startswith("-")] + after'''
+tests = ["tests.test_record_search.Grep.test_old_passed"]
+
+[[plant]]
+name = "no word after -- is an operand"
+file = "rules/record_search.py"
+old = '''or word.value == "-"] + after'''
+new = '''or word.value == "-"]'''
+tests = ["tests.test_record_search.Grep.test_old_refused"]
+
+[[plant]]
+name = "--regexp=X gives no pattern"
+file = "rules/record_search.py"
+old = '''head.split("=")[0] in PATTERN_GIVEN or bundle(head, Prose("ef"))'''
+new = '''head in PATTERN_GIVEN or bundle(head, Prose("ef"))'''
+tests = ["tests.test_record_search.Grep.test_old_refused"]
+
+[[plant]]
+name = "a bundle holding f gives no pattern"
+file = "rules/record_search.py"
+old = '''head.split("=")[0] in PATTERN_GIVEN or bundle(head, Prose("ef"))'''
+new = '''head.split("=")[0] in PATTERN_GIVEN or bundle(head, Prose("e"))'''
+tests = ["tests.test_record_search.Grep.test_old_refused"]
+
+[[plant]]
+name = "a bundle holding e gives no pattern"
+file = "rules/record_search.py"
+old = '''head.split("=")[0] in PATTERN_GIVEN or bundle(head, Prose("ef"))'''
+new = '''head.split("=")[0] in PATTERN_GIVEN or bundle(head, Prose("f"))'''
+tests = ["tests.test_record_search.Grep.test_old_refused"]
+
+[[plant]]
+name = "the first operand is always the pattern"
+file = "rules/record_search.py"
+old = '''return operands if given else operands[1:]'''
+new = '''return operands[1:]'''
+tests = ["tests.test_record_search.Grep.test_old_refused"]
+
+[[plant]]
+name = "no operand is the pattern"
+file = "rules/record_search.py"
+old = '''return operands if given else operands[1:]'''
+new = '''return operands'''
+tests = ["tests.test_record_search.Grep.test_old_passed"]
+
+[[plant]]
+name = "find is its own start path"
+file = "rules/record_search.py"
+old = '''    at = 1
+'''
+new = '''    at = 0
+'''
+tests = ["tests.test_record_search.Find.test_old_refused"]
+
+[[plant]]
+name = "-D takes no value"
+file = "rules/record_search.py"
+old = '''at += 2 if words[at].value == "-D" else 1'''
+new = '''at += 1'''
+tests = ["tests.test_record_search.Find.test_old_refused"]
+
+[[plant]]
+name = "an option is a start path"
+file = "rules/record_search.py"
+old = '''lambda word: not (word.prefix or "").startswith("-") and word.value not in EXPRESSION'''
+new = '''lambda word: word.value not in EXPRESSION'''
+tests = ["tests.test_record_search.Find.test_start_paths"]
+
+[[plant]]
+name = "an expression word is a start path"
+file = "rules/record_search.py"
+old = '''startswith("-") and word.value not in EXPRESSION,'''
+new = '''startswith("-"),'''
+tests = ["tests.test_record_search.Find.test_start_paths"]
+
+[[plant]]
+name = "a name-only program reads contents"
+file = "rules/record_search.py"
+old = '''return not words or base(words[0]) not in NAME_ONLY'''
+new = '''return not words or base(words[0]) in NAME_ONLY'''
+tests = ["tests.test_record_search.Find.test_old_refused"]
+
+[[plant]]
+name = "-execdir, -ok and -okdir are no actions"
+file = "rules/record_search.py"
+old = '''if any(word.value in FIND_ACTIONS and'''
+new = '''if any(word.value == "-exec" and'''
+tests = ["tests.test_record_search.Find.test_old_refused"]
+
+[[plant]]
+name = "an action's program is its -exec word"
+file = "rules/record_search.py"
+old = '''reads_contents(words[at + 1:at + 2])'''
+new = '''reads_contents(words[at:at + 1])'''
+tests = ["tests.test_record_search.Find.test_name_only"]
+
+[[plant]]
+name = "an action that reads hands nothing"
+file = "rules/record_search.py"
+old = '''        return True
+    seats'''
+new = '''        return False
+    seats'''
+tests = ["tests.test_record_search.Find.test_old_refused"]
+
+[[plant]]
+name = "any later command is an xargs"
+file = "rules/record_search.py"
+old = '''return any("xargs" in later.wrappers and reads_contents(later.words)'''
+new = '''return any(reads_contents(later.words)'''
+tests = ["tests.test_record_search.Find.test_old_passed"]
+
+[[plant]]
+name = "an xargs always reads"
+file = "rules/record_search.py"
+old = '''return any("xargs" in later.wrappers and reads_contents(later.words)'''
+new = '''return any("xargs" in later.wrappers'''
+tests = ["tests.test_record_search.Pipelines.test_xargs"]
+
+[[plant]]
+name = "another pipeline feeds the xargs"
+file = "rules/record_search.py"
+old = '''and any(theirs.pipeline == mine.pipeline and theirs.position'''
+new = '''and any(theirs.position'''
+tests = ["tests.test_record_search.Find.test_old_passed"]
+
+[[plant]]
+name = "the same element feeds the xargs"
+file = "rules/record_search.py"
+old = '''theirs.position > mine.position'''
+new = '''theirs.position >= mine.position'''
+tests = ["tests.test_record_search.Pipelines.test_elements"]
+
+[[plant]]
+name = "no pipe or heredoc feeds an rg"
+file = "rules/record_search.py"
+old = '''return fed.reach in READ_INPUT or (fed.file'''
+new = '''return (fed.file'''
+tests = ["tests.test_record_search.Rg.test_old_passed"]
+
+[[plant]]
+name = "a file the call does not name feeds an rg"
+file = "rules/record_search.py"
+old = '''(fed.file is not None and fed.file.value is not None)'''
+new = '''(fed.file is not None)'''
+tests = ["tests.test_record_search.Rg.test_input"]
+
+[[plant]]
+name = "no file feeds an rg"
+file = "rules/record_search.py"
+old = '''(fed.file is not None and fed.file.value is not None)'''
+new = '''False'''
+tests = ["tests.test_record_search.Rg.test_old_passed"]
+
+[[plant]]
+name = "a find is no find"
+file = "rules/record_search.py"
+old = '''    if name == "find":
+'''
+new = '''    if name == "xfind":
+'''
+tests = ["tests.test_record_search.Find.test_old_refused"]
+
+[[plant]]
+name = "a find naming no path starts nowhere"
+file = "rules/record_search.py"
+old = '''return (find_paths(words) or [HERE]) if'''
+new = '''return find_paths(words) if'''
+tests = ["tests.test_record_search.Find.test_old_refused"]
+
+[[plant]]
+name = "every find reads contents"
+file = "rules/record_search.py"
+old = '''if find_reads(commands, index) else []'''
+new = '''if True else []'''
+tests = ["tests.test_record_search.Find.test_old_passed"]
+
+[[plant]]
+name = "every grep recurses"
+file = "rules/record_search.py"
+old = '''and not (name in GREPS and recursive_grep(words)):'''
+new = '''and not (name in GREPS):'''
+tests = ["tests.test_record_search.Grep.test_old_passed"]
+
+[[plant]]
+name = "any command with -r recurses"
+file = "rules/record_search.py"
+old = '''and not (name in GREPS and recursive_grep(words)):'''
+new = '''and not (recursive_grep(words)):'''
+tests = ["tests.test_record_search.Grep.test_spec_forms"]
+
+[[plant]]
+name = "an rg naming a path reads its input"
+file = "rules/record_search.py"
+old = '''if not paths and name == "rg" and reads_input(command):'''
+new = '''if name == "rg" and reads_input(command):'''
+tests = ["tests.test_record_search.Rg.test_old_refused"]
+
+[[plant]]
+name = "a grep reads its input"
+file = "rules/record_search.py"
+old = '''if not paths and name == "rg" and reads_input(command):'''
+new = '''if not paths and reads_input(command):'''
+tests = ["tests.test_record_search.Grep.test_spec_forms"]
+
+[[plant]]
+name = "an rg naming no path reads nothing"
+file = "rules/record_search.py"
+old = '''if not paths and name == "rg" and reads_input(command):'''
+new = '''if not paths and name == "rg":'''
+tests = ["tests.test_record_search.Rg.test_old_refused"]
+
+[[plant]]
+name = "a search naming no path starts nowhere"
+file = "rules/record_search.py"
+old = '''    return paths or [HERE]
+'''
+new = '''    return paths
+'''
+tests = ["tests.test_record_search.Grep.test_old_refused"]
+
+[[plant]]
+name = "a record's links are kept"
+file = "rules/record_search.py"
+old = '''return [Path(os.path.realpath(record)) for record'''
+new = '''return [Path(record) for record'''
+tests = ["tests.test_record_search.Grep.test_old_refused"]
+
+[[plant]]
+name = "the records are the root's"
+file = "rules/record_search.py"
+old = '''for record in event.declaration(folder).records]'''
+new = '''for record in event.declaration(Path("/")).records]'''
+tests = ["tests.test_record_search.Grep.test_old_refused"]
+
+[[plant]]
+name = "a command is quoted as written"
+file = "rules/record_search.py"
+old = '''said = " ".join(word.spelled for word in words)'''
+new = '''said = " ".join(word.text for word in words)'''
+tests = ["tests.test_record_search.Messages.test_known"]
+
+[[plant]]
+name = "a long command is not cut"
+file = "rules/record_search.py"
+old = '''return Prose(said if len(said) <= SPELLED_MAX else said[:SPELLED_MAX - 3] + "...")'''
+new = '''return Prose(said)'''
+tests = ["tests.test_record_search.Messages.test_long_command_cut"]
+
+[[plant]]
+name = "a cut command is cut long"
+file = "rules/record_search.py"
+old = '''said[:SPELLED_MAX - 3]'''
+new = '''said[:SPELLED_MAX - 2]'''
+tests = ["tests.test_record_search.Messages.test_long_command_cut"]
+
+[[plant]]
+name = "a relative path is not known"
+file = "rules/record_search.py"
+old = '''folder = path.folder(command.cwd)'''
+new = '''folder = path.folder(None)'''
+tests = ["tests.test_record_search.Grep.test_old_passed"]
+
+[[plant]]
+name = "the call's directory holds the records"
+file = "rules/record_search.py"
+old = '''here = Path(command.cwd or event.cwd or "/")'''
+new = '''here = Path(event.cwd or "/")'''
+tests = ["tests.test_record_search.Messages.test_unknown"]
+
+[[plant]]
+name = "the root holds the records of a directory not known"
+file = "rules/record_search.py"
+old = '''here = Path(command.cwd or event.cwd or "/")'''
+new = '''here = Path(command.cwd or "/")'''
+tests = ["tests.test_record_search.Messages.test_unknown"]
+
+[[plant]]
+name = "an unknown folder's line names nothing"
+file = "rules/record_search.py"
+old = '''a folder this call does not make known, while "'''
+new = '''a folder, while "'''
+tests = ["tests.test_record_search.Messages.test_unknown"]
+
+[[plant]]
+name = "an unknown folder reaches no record"
+file = "rules/record_search.py"
+old = '''for record in records(event, here)]'''
+new = '''for record in records(event, here)[:0]]'''
+tests = ["tests.test_record_search.Unknown.test_unknown_paths"]
+
+[[plant]]
+name = "a folder's links are kept"
+file = "rules/record_search.py"
+old = '''start = Path(os.path.realpath(folder))'''
+new = '''start = Path(folder)'''
+tests = ["tests.test_record_search.Grep.test_old_refused"]
+
+[[plant]]
+name = "a known folder's line names nothing"
+file = "rules/record_search.py"
+old = '''which is or holds the run record {record}")'''
+new = '''which holds {record}")'''
+tests = ["tests.test_record_search.Messages.test_known"]
+
+[[plant]]
+name = "a record named itself is not read"
+file = "rules/record_search.py"
+old = '''if record == start or start in record.parents]'''
+new = '''if start in record.parents]'''
+tests = ["tests.test_record_search.Rg.test_old_refused"]
+
+[[plant]]
+name = "a folder holding a record is not read"
+file = "rules/record_search.py"
+old = '''if record == start or start in record.parents]'''
+new = '''if record == start]'''
+tests = ["tests.test_record_search.Grep.test_old_refused"]
+
+[[plant]]
+name = "a folder beneath a record is read"
+file = "rules/record_search.py"
+old = '''if record == start or start in record.parents]'''
+new = '''if record == start or start in record.parents or record in start.parents]'''
+tests = ["tests.test_record_search.Grep.test_old_passed"]
+
+[[plant]]
+name = "a skip by name is read"
+file = "rules/record_search.py"
+old = '''    for path in paths:
+'''
+new = '''    for path in ([] if any("exclude" in word.text or word.text in ("-g", "-prune", "-maxdepth") for word in command.words) else paths):
+'''
+tests = ["tests.test_record_search.Skips.test_nothing_skipped"]
+
+[[plant]]
+name = "the rule refuses nothing"
+file = "rules/record_search.py"
+old = '''    if not found:
+        return None'''
+new = '''    if True:
+        return None'''
+tests = ["tests.test_record_search.Grep.test_old_refused"]
+
+[[plant]]
+name = "a line is named twice"
+file = "rules/record_search.py"
+old = '''ADVICE.format(problems="\n".join(dict.fromkeys(found)))'''
+new = '''ADVICE.format(problems="\n".join(found))'''
+tests = ["tests.test_record_search.Messages.test_named_once"]

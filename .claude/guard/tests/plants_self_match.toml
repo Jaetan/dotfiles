@@ -1,0 +1,423 @@
+# The plants that show rules/self_match.py held by tests/test_self_match.py, one or more per line that decides
+# a verdict or a word of the refusal:
+#   testing/plants.py tests/plants_self_match.toml --out DIR
+
+[[plant]]
+name = "the rule judges no PreToolUse"
+file = "rules/self_match.py"
+old = "frozenset({\"PreToolUse\"})"
+new = "frozenset({\"PostToolUse\"})"
+tests = ["tests.test_self_match.Judged.test_a_lookup_by_its_base_name_any_version"]
+
+[[plant]]
+name = "Monitor is not judged"
+file = "rules/self_match.py"
+old = "TOOLS = frozenset({ToolName(\"Bash\"), ToolName(\"Monitor\")})"
+new = "TOOLS = frozenset({ToolName(\"Bash\")})"
+tests = ["tests.test_self_match.Judged.test_a_lookup_by_its_base_name_any_version"]
+
+[[plant]]
+name = "pidwait is not a lookup"
+file = "rules/self_match.py"
+old = "(?:pgrep|pkill|pidwait)"
+new = "(?:pgrep|pkill)"
+tests = ["tests.test_self_match.Judged.test_a_lookup_by_its_base_name_any_version"]
+
+[[plant]]
+name = "a version suffix is no lookup"
+file = "rules/self_match.py"
+old = "(?:-?[0-9]+(?:\\.[0-9]+)*)?\")"
+new = "\")"
+tests = ["tests.test_self_match.Judged.test_a_lookup_by_its_base_name_any_version"]
+
+[[plant]]
+name = "ps is another name"
+file = "rules/self_match.py"
+old = "PS = ShellText(\"ps\")"
+new = "PS = ShellText(\"psx\")"
+tests = ["tests.test_self_match.Judged.test_a_ps_chain_filtered_after_ps"]
+
+[[plant]]
+name = "grep alone filters"
+file = "rules/self_match.py"
+old = "(\"grep\", \"egrep\", \"fgrep\", \"rg\", \"awk\", \"gawk\", \"mawk\")"
+new = "(\"grep\",)"
+tests = ["tests.test_self_match.Judged.test_a_ps_chain_filtered_after_ps"]
+
+[[plant]]
+name = "the line without -A says nothing"
+file = "rules/self_match.py"
+old = "WHOLE = \"it matches whole"
+new = "WHOLE = \"it fits whole"
+tests = ["tests.test_self_match.Judged.test_the_line_for_a_lookup_without_a"]
+
+[[plant]]
+name = "the line under -A says nothing"
+file = "rules/self_match.py"
+old = "FORKED = \"under -A it is"
+new = "FORKED = \"with -A it is"
+tests = ["tests.test_self_match.Judged.test_the_line_for_a_lookup_a_does_not_save"]
+
+[[plant]]
+name = "the ps line says nothing"
+file = "rules/self_match.py"
+old = "FILTERED = \"a grep, rg or awk"
+new = "FILTERED = \"a filter"
+tests = ["tests.test_self_match.Judged.test_the_line_for_a_ps_chain"]
+
+[[plant]]
+name = "the refusal is another rule's"
+file = "rules/self_match.py"
+old = "ADVICE = \"\"\"this call looks a process up in a way"
+new = "ADVICE = \"\"\"this call finds a process in a way"
+tests = ["tests.test_self_match.Judged.test_a_lookup_by_its_base_name_any_version"]
+
+[[plant]]
+name = "the refusal names no command"
+file = "rules/self_match.py"
+old = "\n{problems}\n"
+new = "\n\n"
+tests = ["tests.test_self_match.Judged.test_every_command_refused_is_named"]
+
+[[plant]]
+name = "the refusal says nothing of the shell's line"
+file = "rules/self_match.py"
+old = "as one shell whose command line holds the whole text, so pgrep,"
+new = "as one shell, so pgrep,"
+tests = ["tests.test_self_match.Judged.test_the_forms_that_pass"]
+
+[[plant]]
+name = "the refusal says nothing of ps"
+file = "rules/self_match.py"
+old = "or ps piped into grep, rg or awk, can find that shell"
+new = "can find that shell"
+tests = ["tests.test_self_match.Judged.test_the_forms_that_pass"]
+
+[[plant]]
+name = "the refusal says nothing of the harm"
+file = "rules/self_match.py"
+old = "ended reads as running, pidwait waits on itself and pkill kills the call."
+new = "ended is harmed."
+tests = ["tests.test_self_match.Judged.test_the_forms_that_pass"]
+
+[[plant]]
+name = "the refusal names no -A form"
+file = "rules/self_match.py"
+old = "  * `pgrep -A -f PATTERN`, which leaves the call's own shells out, outside a"
+new = "  * `pgrep -f PATTERN`, which leaves the call's own shells out, outside a"
+tests = ["tests.test_self_match.Judged.test_the_forms_that_pass"]
+
+[[plant]]
+name = "the -A form keeps background jobs"
+file = "rules/self_match.py"
+old = "    background job;\n"
+new = "    job;\n"
+tests = ["tests.test_self_match.Judged.test_the_forms_that_pass"]
+
+[[plant]]
+name = "the refusal names no -x form"
+file = "rules/self_match.py"
+old = "  * `pgrep -x NAME`, which matches"
+new = "  * `pgrep NAME`, which matches"
+tests = ["tests.test_self_match.Judged.test_the_forms_that_pass"]
+
+[[plant]]
+name = "the refusal names no pid"
+file = "rules/self_match.py"
+old = "tested with `kill -0 PID`;"
+new = "tested;"
+tests = ["tests.test_self_match.Judged.test_the_forms_that_pass"]
+
+[[plant]]
+name = "the refusal names no bare ps"
+file = "rules/self_match.py"
+old = "  * ps with no filter after it in its pipeline."
+new = "  * ps alone."
+tests = ["tests.test_self_match.Judged.test_the_forms_that_pass"]
+
+[[plant]]
+name = "a path is no base name"
+file = "rules/self_match.py"
+old = "ShellText(command.name.rsplit(\"/\", 1)[-1])"
+new = "ShellText(command.name)"
+tests = ["tests.test_self_match.Judged.test_a_lookup_by_its_base_name_any_version"]
+
+[[plant]]
+name = "the first option is read as the program"
+file = "rules/self_match.py"
+old = "[word.value for word in words[1:]]"
+new = "[word.value for word in words[2:]]"
+tests = ["tests.test_self_match.Judged.test_whole_lines_matched_before_the_end_of_options"]
+
+[[plant]]
+name = "-- ends no options"
+file = "rules/self_match.py"
+old = "return values[:values.index(ShellText(\"--\"))] if ShellText(\"--\") in values else values"
+new = "return values"
+tests = ["tests.test_self_match.Judged.test_whole_lines_matched_before_the_end_of_options"]
+
+[[plant]]
+name = "--full is no -f"
+file = "rules/self_match.py"
+old = "value == long or (value"
+new = "(value"
+tests = ["tests.test_self_match.Judged.test_whole_lines_matched_before_the_end_of_options"]
+
+[[plant]]
+name = "a word with no dash is a bundle"
+file = "rules/self_match.py"
+old = "value is not None and value[:1] == \"-\" and value[1:2]"
+new = "value is not None and value[1:2]"
+tests = ["tests.test_self_match.Judged.test_whole_lines_matched_before_the_end_of_options"]
+
+[[plant]]
+name = "a long option is a bundle"
+file = "rules/self_match.py"
+old = " and value[1:2] != \"-\" and letter in value"
+new = " and letter in value"
+tests = ["tests.test_self_match.Judged.test_whole_lines_matched_before_the_end_of_options"]
+
+[[plant]]
+name = "a bundle holds only its first letter"
+file = "rules/self_match.py"
+old = "and letter in value)"
+new = "and value[1:2] == letter)"
+tests = ["tests.test_self_match.Judged.test_whole_lines_matched_before_the_end_of_options"]
+
+[[plant]]
+name = "only the first option is read"
+file = "rules/self_match.py"
+old = "               for value in values)"
+new = "               for value in values[:1])"
+tests = ["tests.test_self_match.Judged.test_whole_lines_matched_before_the_end_of_options"]
+
+[[plant]]
+name = "the lookup's name is its path"
+file = "rules/self_match.py"
+old = "    name = base(command)\n"
+new = "    name = command.name\n"
+tests = ["tests.test_self_match.Judged.test_a_lookup_by_its_base_name_any_version"]
+
+[[plant]]
+name = "a name beginning with a lookup's is one"
+file = "rules/self_match.py"
+old = "LOOKUP.fullmatch(name) is None:"
+new = "LOOKUP.match(name) is None:"
+tests = ["tests.test_self_match.Judged.test_a_lookup_by_its_base_name_any_version"]
+
+[[plant]]
+name = "any known name is a lookup"
+file = "rules/self_match.py"
+old = "if name is None or LOOKUP.fullmatch(name) is None:"
+new = "if name is None:"
+tests = ["tests.test_self_match.Judged.test_a_lookup_by_its_base_name_any_version"]
+
+[[plant]]
+name = "an unknown name is a lookup's"
+file = "rules/self_match.py"
+old = "if name is None or LOOKUP"
+new = "if LOOKUP"
+tests = ["tests.test_self_match.Judged.test_a_lookup_by_its_base_name_any_version"]
+
+[[plant]]
+name = "the words before -- are not read"
+file = "rules/self_match.py"
+old = "    values = options(command.words)\n"
+new = "    values = [word.value for word in command.words[1:]]\n"
+tests = ["tests.test_self_match.Judged.test_whole_lines_matched_before_the_end_of_options"]
+
+[[plant]]
+name = "an unknown word is no -f"
+file = "rules/self_match.py"
+old = "if None not in values and not sets(values, \"f\", \"--full\"):"
+new = "if not sets(values, \"f\", \"--full\"):"
+tests = ["tests.test_self_match.Judged.test_whole_lines_matched_before_the_end_of_options"]
+
+[[plant]]
+name = "--full is another option"
+file = "rules/self_match.py"
+old = "sets(values, \"f\", \"--full\")"
+new = "sets(values, \"f\", \"--fu\")"
+tests = ["tests.test_self_match.Judged.test_whole_lines_matched_before_the_end_of_options"]
+
+[[plant]]
+name = "a lookup by name is refused"
+file = "rules/self_match.py"
+old = "\"--full\"):\n        return None"
+new = "\"--full\"):\n        pass"
+tests = ["tests.test_self_match.Judged.test_whole_lines_matched_before_the_end_of_options"]
+
+[[plant]]
+name = "-A leaves nothing out"
+file = "rules/self_match.py"
+old = "if not sets(values, \"A\", \"--ignore-ancestors\"):"
+new = "if True:"
+tests = ["tests.test_self_match.Judged.test_ancestors_left_out_by_a"]
+
+[[plant]]
+name = "--ignore-ancestors is another option"
+file = "rules/self_match.py"
+old = "sets(values, \"A\", \"--ignore-ancestors\")"
+new = "sets(values, \"A\", \"--ignore-parents\")"
+tests = ["tests.test_self_match.Judged.test_ancestors_left_out_by_a"]
+
+[[plant]]
+name = "a bundle holding A is no -A"
+file = "rules/self_match.py"
+old = "sets(values, \"A\", \"--ignore"
+new = "sets(values, \"Z\", \"--ignore"
+tests = ["tests.test_self_match.Judged.test_ancestors_left_out_by_a"]
+
+[[plant]]
+name = "the line without -A is the forked one"
+file = "rules/self_match.py"
+old = "{WHOLE}\")\n    if"
+new = "{FORKED}\")\n    if"
+tests = ["tests.test_self_match.Judged.test_the_line_for_a_lookup_without_a"]
+
+[[plant]]
+name = "-A in a pipeline passes"
+file = "rules/self_match.py"
+old = "    if command.pipelines or any("
+new = "    if any("
+tests = ["tests.test_self_match.Judged.test_a_under_a_pipeline_or_a_background_job"]
+
+[[plant]]
+name = "a background job is a subshell"
+file = "rules/self_match.py"
+old = "any(\"background\" in other.shells"
+new = "any(\"subshell\" in other.shells"
+tests = ["tests.test_self_match.Judged.test_a_under_a_pipeline_or_a_background_job"]
+
+[[plant]]
+name = "only the lookup's own job counts"
+file = "rules/self_match.py"
+old = "for other in commands):"
+new = "for other in [command]):"
+tests = ["tests.test_self_match.Judged.test_a_under_a_pipeline_or_a_background_job"]
+
+[[plant]]
+name = "the line under -A is the bare one"
+file = "rules/self_match.py"
+old = "{FORKED}\")\n    return None"
+new = "{WHOLE}\")\n    return None"
+tests = ["tests.test_self_match.Judged.test_the_line_for_a_lookup_a_does_not_save"]
+
+[[plant]]
+name = "-A never passes"
+file = "rules/self_match.py"
+old = "{FORKED}\")\n    return None"
+new = "{FORKED}\")\n    return Prose(\"x\")"
+tests = ["tests.test_self_match.Judged.test_ancestors_left_out_by_a"]
+
+[[plant]]
+name = "every known command is a ps"
+file = "rules/self_match.py"
+old = "if base(command) != PS:"
+new = "if base(command) is None:"
+tests = ["tests.test_self_match.Judged.test_a_ps_chain_filtered_after_ps"]
+
+[[plant]]
+name = "a command that is no ps is one"
+file = "rules/self_match.py"
+old = "!= PS:\n        return None"
+new = "!= PS:\n        pass"
+tests = ["tests.test_self_match.Judged.test_a_ps_chain_filtered_after_ps"]
+
+[[plant]]
+name = "any later element filters"
+file = "rules/self_match.py"
+old = "if not any(base(other) in FILTERS and seat"
+new = "if not any(seat"
+tests = ["tests.test_self_match.Judged.test_a_ps_chain_filtered_after_ps"]
+
+[[plant]]
+name = "two pipelines are one"
+file = "rules/self_match.py"
+old = "and seat.pipeline == own.pipeline and seat.position"
+new = "and seat.position"
+tests = ["tests.test_self_match.Judged.test_a_ps_chain_filtered_after_ps"]
+
+[[plant]]
+name = "only the next element filters"
+file = "rules/self_match.py"
+old = "seat.position > own.position"
+new = "seat.position == own.position + 1"
+tests = ["tests.test_self_match.Judged.test_a_ps_chain_filtered_after_ps"]
+
+[[plant]]
+name = "an earlier element filters"
+file = "rules/self_match.py"
+old = "and seat.position > own.position"
+new = "and seat.position != own.position"
+tests = ["tests.test_self_match.Judged.test_a_ps_chain_filtered_after_ps"]
+
+[[plant]]
+name = "only an inner pipeline holds ps"
+file = "rules/self_match.py"
+old = "for own in command.pipelines):"
+new = "for own in command.pipelines[1:]):"
+tests = ["tests.test_self_match.Judged.test_a_ps_chain_filtered_after_ps"]
+
+[[plant]]
+name = "ps unfiltered is refused"
+file = "rules/self_match.py"
+old = "command.pipelines):\n        return None"
+new = "command.pipelines):\n        pass"
+tests = ["tests.test_self_match.Judged.test_a_ps_chain_filtered_after_ps"]
+
+[[plant]]
+name = "the ps line is the bare one"
+file = "rules/self_match.py"
+old = "{FILTERED}\")"
+new = "{WHOLE}\")"
+tests = ["tests.test_self_match.Judged.test_the_line_for_a_ps_chain"]
+
+[[plant]]
+name = "a command is spelled by its name"
+file = "rules/self_match.py"
+old = "word.spelled for word in command.words))"
+new = "word.spelled for word in command.words[:1]))"
+tests = ["tests.test_self_match.Judged.test_the_line_for_a_lookup_without_a"]
+
+[[plant]]
+name = "only the first command is judged"
+file = "rules/self_match.py"
+old = "    commands = event.call().commands\n"
+new = "    commands = event.call().commands[:1]\n"
+tests = ["tests.test_self_match.Judged.test_every_command_refused_is_named"]
+
+[[plant]]
+name = "only the first command is named"
+file = "rules/self_match.py"
+old = "found = [line for command in commands\n"
+new = "found = [line for command in commands[:1]\n"
+tests = ["tests.test_self_match.Judged.test_every_command_refused_is_named"]
+
+[[plant]]
+name = "no ps is judged"
+file = "rules/self_match.py"
+old = "lookup(command, commands) or listing(command, commands)"
+new = "lookup(command, commands)"
+tests = ["tests.test_self_match.Judged.test_a_ps_chain_filtered_after_ps"]
+
+[[plant]]
+name = "a call with no problem is refused"
+file = "rules/self_match.py"
+old = "    if not found:\n"
+new = "    if found:\n"
+tests = ["tests.test_self_match.Judged.test_a_lookup_by_its_base_name_any_version"]
+
+[[plant]]
+name = "a passing call is refused"
+file = "rules/self_match.py"
+old = "if not found:\n        return None"
+new = "if not found:\n        return refuse(Prose(\"\"))"
+tests = ["tests.test_self_match.Judged.test_whole_lines_matched_before_the_end_of_options"]
+
+[[plant]]
+name = "the refusal names one command"
+file = "rules/self_match.py"
+old = "problems=\"\\n\".join(found)"
+new = "problems=\"\\n\".join(found[:1])"
+tests = ["tests.test_self_match.Judged.test_every_command_refused_is_named"]

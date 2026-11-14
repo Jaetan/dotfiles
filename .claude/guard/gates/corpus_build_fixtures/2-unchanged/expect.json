@@ -1,0 +1,10 @@
+{
+ "index": {},
+ "corpus": [
+  {"n": 2, "cmd": "ls -la"},
+  {"n": 1, "cmd": "git status"},
+  {"n": 1, "cmd": "make all"},
+  {"n": 1, "cmd": "cd /p && make all"},
+  {"n": 1, "cmd": "echo hi"}
+ ]
+}

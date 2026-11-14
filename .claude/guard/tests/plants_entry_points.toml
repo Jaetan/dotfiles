@@ -1,0 +1,506 @@
+# The plants that show rules/entry_points.py held by tests/test_entry_points.py, one or more per line of the rule:
+#   testing/plants.py tests/plants_entry_points.toml --out DIR
+
+[[plant]]
+name = "the rule keeps no run"
+file = "rules/entry_points.py"
+old = '''frozenset({"PreToolUse", "PostToolUse"})'''
+new = '''frozenset({"PostToolUse"})'''
+tests = ["tests.test_entry_points.Kept.test_a_run_through_bash_is_kept"]
+
+[[plant]]
+name = "the rule judges no PostToolUse"
+file = "rules/entry_points.py"
+old = '''frozenset({"PreToolUse", "PostToolUse"})'''
+new = '''frozenset({"PreToolUse"})'''
+tests = ["tests.test_entry_points.Refused.test_each_tool_that_writes_reads_it"]
+
+[[plant]]
+name = "the rule judges every tool"
+file = "rules/entry_points.py"
+old = '''TOOLS = frozenset({ToolName("Bash"), ToolName("Edit"), ToolName("Write"), ToolName("MultiEdit")})'''
+new = '''TOOLS = None'''
+tests = ["tests.test_entry_points.Passing.test_other_tools_and_events_pass"]
+
+[[plant]]
+name = "the rule judges no Bash call"
+file = "rules/entry_points.py"
+old = '''TOOLS = frozenset({ToolName("Bash"), ToolName("Edit"), '''
+new = '''TOOLS = frozenset({ToolName("Edit"), '''
+tests = ["tests.test_entry_points.Refused.test_each_tool_that_writes_reads_it"]
+
+[[plant]]
+name = "the rule judges no Edit call"
+file = "rules/entry_points.py"
+old = '''ToolName("Bash"), ToolName("Edit"), ToolName("Write")'''
+new = '''ToolName("Bash"), ToolName("Write")'''
+tests = ["tests.test_entry_points.Refused.test_each_tool_that_writes_reads_it"]
+
+[[plant]]
+name = "the rule judges no Write call"
+file = "rules/entry_points.py"
+old = '''ToolName("Edit"), ToolName("Write"), ToolName("MultiEdit")'''
+new = '''ToolName("Edit"), ToolName("MultiEdit")'''
+tests = ["tests.test_entry_points.Refused.test_each_tool_that_writes_reads_it"]
+
+[[plant]]
+name = "the rule judges no MultiEdit call"
+file = "rules/entry_points.py"
+old = '''ToolName("Write"), ToolName("MultiEdit")})'''
+new = '''ToolName("Write")})'''
+tests = ["tests.test_entry_points.Refused.test_each_tool_that_writes_reads_it"]
+
+[[plant]]
+name = "runs are kept for Edit, not Bash"
+file = "rules/entry_points.py"
+old = '''BASH = ToolName("Bash")'''
+new = '''BASH = ToolName("Edit")'''
+tests = ["tests.test_entry_points.Kept.test_a_run_through_bash_is_kept"]
+
+[[plant]]
+name = "runs are kept for every tool"
+file = "rules/entry_points.py"
+old = ''' if event.tool == BASH else []'''
+new = ''' if True else []'''
+tests = ["tests.test_entry_points.Passing.test_other_tools_and_events_pass"]
+
+[[plant]]
+name = "a run is kept under another kind"
+file = "rules/entry_points.py"
+old = '''session.record(KIND, '''
+new = '''session.record("run", '''
+tests = ["tests.test_entry_points.Kept.test_a_run_through_bash_is_kept"]
+
+[[plant]]
+name = "a run is kept under another id"
+file = "rules/entry_points.py"
+old = '''RecordId(IDENT + str(path))'''
+new = '''RecordId(str(path))'''
+tests = ["tests.test_entry_points.Kept.test_a_run_through_bash_is_kept"]
+
+[[plant]]
+name = "a run is kept under another field"
+file = "rules/entry_points.py"
+old = '''{FieldName("sha256"): FieldValue'''
+new = '''{FieldName("sha"): FieldValue'''
+tests = ["tests.test_entry_points.Kept.test_a_run_through_bash_is_kept"]
+
+[[plant]]
+name = "a run is read under another field"
+file = "rules/entry_points.py"
+old = '''record.fields.get(FieldName("sha256"))'''
+new = '''record.fields.get(FieldName("sha"))'''
+tests = ["tests.test_entry_points.Kept.test_a_run_through_bash_is_kept"]
+
+[[plant]]
+name = "commit-tree commits nothing"
+file = "rules/entry_points.py"
+old = '''COMMITS = frozenset({ShellText("commit"), ShellText("commit-tree")})'''
+new = '''COMMITS = frozenset({ShellText("commit")})'''
+tests = ["tests.test_entry_points.Refused.test_a_commit_tree_dribble_is_pending"]
+
+[[plant]]
+name = "commit commits nothing"
+file = "rules/entry_points.py"
+old = '''COMMITS = frozenset({ShellText("commit"), ShellText("commit-tree")})'''
+new = '''COMMITS = frozenset({ShellText("commit-tree")})'''
+tests = ["tests.test_entry_points.Refused.test_a_run_before_the_edit_is_refused"]
+
+[[plant]]
+name = "any command naming commit commits"
+file = "rules/entry_points.py"
+old = '''base(command.words) == GIT and '''
+new = '''True and '''
+tests = ["tests.test_entry_points.Passing.test_a_dribble_that_commits_nothing_passes"]
+
+[[plant]]
+name = "git's words are read past its first"
+file = "rules/entry_points.py"
+old = '''command.words[1:]}'''
+new = '''command.words[2:]}'''
+tests = ["tests.test_entry_points.Refused.test_a_run_before_the_edit_is_refused"]
+
+[[plant]]
+name = "every dribble commits"
+file = "rules/entry_points.py"
+old = '''return dribble if commits else None'''
+new = '''return dribble'''
+tests = ["tests.test_entry_points.Passing.test_a_dribble_that_commits_nothing_passes"]
+
+[[plant]]
+name = "the dribble is read as nothing"
+file = "rules/_dribble.py"
+old = '''ShellText(f"bash {shlex.quote(str(dribble))}")'''
+new = '''ShellText("true")'''
+tests = ["tests.test_entry_points.Refused.test_a_run_before_the_edit_is_refused"]
+
+[[plant]]
+name = "a folder outside every tree is a tree"
+file = "rules/entry_points.py"
+old = '''not (root / ".git").exists() or '''
+new = '''False or '''
+tests = ["tests.test_entry_points.Passing.test_a_call_outside_any_work_tree_passes"]
+
+[[plant]]
+name = "a missing dribble is read"
+file = "rules/entry_points.py"
+old = ''' or not dribble.is_file():'''
+new = ''':'''
+tests = ["tests.test_entry_points.Passing.test_no_dribble_passes"]
+
+[[plant]]
+name = "a tree with no commit compares its HEAD"
+file = "rules/entry_points.py"
+old = '''if head is not None and dribble'''
+new = '''if dribble'''
+tests = ["tests.test_entry_points.Refused.test_a_tree_with_no_commit_is_pending"]
+
+[[plant]]
+name = "a dribble in HEAD's second is newer"
+file = "rules/entry_points.py"
+old = '''st_mtime <= int(head)'''
+new = '''st_mtime < int(head)'''
+tests = ["tests.test_entry_points.Passing.test_a_dribble_in_head_s_second_is_older"]
+
+[[plant]]
+name = "a dribble older than HEAD is pending"
+file = "rules/entry_points.py"
+old = '''st_mtime <= int(head):
+        return None'''
+new = '''st_mtime <= int(head):
+        pass'''
+tests = ["tests.test_entry_points.Passing.test_a_dribble_older_than_head_passes"]
+
+[[plant]]
+name = "HEAD's time is read as its hash"
+file = "rules/entry_points.py"
+old = '''"--format=%ct"'''
+new = '''"--format=%h"'''
+tests = ["tests.test_entry_points.Passing.test_a_dribble_older_than_head_passes"]
+
+[[plant]]
+name = "git's failure is read as its output"
+file = "rules/entry_points.py"
+old = ''' if done.returncode == 0 else None'''
+new = ''' if True else None'''
+tests = ["tests.test_entry_points.Refused.test_a_tree_with_no_commit_is_pending"]
+
+[[plant]]
+name = "a status git cannot read is empty"
+file = "rules/entry_points.py"
+old = '''raise KitFault(Prose(f"git status cannot read the work tree {root}"))'''
+new = '''listed = GitOutput("")'''
+tests = ["tests.test_entry_points.Refused.test_a_tree_git_cannot_read_is_refused_naming_it"]
+
+[[plant]]
+name = "untracked folders are listed whole"
+file = "rules/entry_points.py"
+old = '''"--untracked-files=all"'''
+new = '''"--untracked-files=normal"'''
+tests = ["tests.test_entry_points.Refused.test_a_modified_an_added_and_an_untracked_entry_point_never_run_are_refused"]
+
+[[plant]]
+name = "renames are read"
+file = "rules/entry_points.py"
+old = '''"-z", "--no-renames", '''
+new = '''"-z", '''
+tests = ["tests.test_entry_points.Refused.test_a_renamed_entry_point_is_its_new_path"]
+
+[[plant]]
+name = "status is not cut at NUL"
+file = "rules/entry_points.py"
+old = '''"--porcelain=v1", "-z", '''
+new = '''"--porcelain=v1", '''
+tests = ["tests.test_entry_points.Refused.test_a_run_before_the_edit_is_refused"]
+
+[[plant]]
+name = "a status path keeps its space"
+file = "rules/entry_points.py"
+old = '''os.path.realpath(root / item[3:])'''
+new = '''os.path.realpath(root / item[2:])'''
+tests = ["tests.test_entry_points.Refused.test_a_run_before_the_edit_is_refused"]
+
+[[plant]]
+name = "a status path is not resolved"
+file = "rules/entry_points.py"
+old = '''Path(os.path.realpath(root / item[3:]))'''
+new = '''root / item[3:]'''
+tests = ["tests.test_entry_points.Kept.test_a_run_of_a_link_s_target_keeps_the_link"]
+
+[[plant]]
+name = "a deleted file is read"
+file = "rules/entry_points.py"
+old = ''' if (root / item[3:]).is_file()]'''
+new = ''']'''
+tests = ["tests.test_entry_points.Passing.test_a_deleted_entry_point_passes"]
+
+[[plant]]
+name = "a .py is read as any file"
+file = "rules/entry_points.py"
+old = '''if path.suffix != PY and not shebang:'''
+new = '''if not shebang:'''
+tests = ["tests.test_entry_points.Refused.test_a_run_before_the_edit_is_refused"]
+
+[[plant]]
+name = "a script with a shebang is read past"
+file = "rules/entry_points.py"
+old = '''if path.suffix != PY and not shebang:'''
+new = '''if path.suffix != PY:'''
+tests = ["tests.test_entry_points.Refused.test_an_executable_with_a_shebang_and_a_single_quoted_guard_are_entry_points"]
+
+[[plant]]
+name = "a shebang needs no executable mode"
+file = "rules/entry_points.py"
+old = '''shebang = data == SHEBANG and os.access(path, os.X_OK)'''
+new = '''shebang = data == SHEBANG'''
+tests = ["tests.test_entry_points.Passing.test_a_change_that_is_no_entry_point_passes"]
+
+[[plant]]
+name = "an executable needs no shebang"
+file = "rules/entry_points.py"
+old = '''shebang = data == SHEBANG and os.access(path, os.X_OK)'''
+new = '''shebang = os.access(path, os.X_OK)'''
+tests = ["tests.test_entry_points.Passing.test_a_change_that_is_no_entry_point_passes"]
+
+[[plant]]
+name = "one byte is read for the shebang"
+file = "rules/entry_points.py"
+old = '''handle.read(len(SHEBANG))'''
+new = '''handle.read(1)'''
+tests = ["tests.test_entry_points.Refused.test_an_executable_with_a_shebang_and_a_single_quoted_guard_are_entry_points"]
+
+[[plant]]
+name = "the file past its shebang is not read"
+file = "rules/entry_points.py"
+old = '''data += handle.read()'''
+new = '''data += b""'''
+tests = ["tests.test_entry_points.Refused.test_a_run_before_the_edit_is_refused"]
+
+[[plant]]
+name = "a script with a shebang needs the guard"
+file = "rules/entry_points.py"
+old = '''FileBytes(data) if shebang or MAIN_GUARD.search(data) else None'''
+new = '''FileBytes(data) if MAIN_GUARD.search(data) else None'''
+tests = ["tests.test_entry_points.Refused.test_an_executable_with_a_shebang_and_a_single_quoted_guard_are_entry_points"]
+
+[[plant]]
+name = "every .py is an entry point"
+file = "rules/entry_points.py"
+old = '''FileBytes(data) if shebang or MAIN_GUARD.search(data) else None'''
+new = '''FileBytes(data)'''
+tests = ["tests.test_entry_points.Passing.test_a_change_that_is_no_entry_point_passes"]
+
+[[plant]]
+name = "the guard double-quoted alone"
+file = "rules/entry_points.py"
+old = '''== ['"]__main__['"]'''
+new = '''== "__main__"'''
+tests = ["tests.test_entry_points.Refused.test_an_executable_with_a_shebang_and_a_single_quoted_guard_are_entry_points"]
+
+[[plant]]
+name = "no space before the guard's colon"
+file = "rules/entry_points.py"
+old = '''['"]\s*:"""'''
+new = '''['"]:"""'''
+tests = ["tests.test_entry_points.Refused.test_an_executable_with_a_shebang_and_a_single_quoted_guard_are_entry_points"]
+
+[[plant]]
+name = "the guard anywhere in a line"
+file = "rules/entry_points.py"
+old = '''rb"""^if'''
+new = '''rb"""if'''
+tests = ["tests.test_entry_points.Passing.test_a_change_that_is_no_entry_point_passes"]
+
+[[plant]]
+name = "the guard at the file's start alone"
+file = "rules/entry_points.py"
+old = ''', re.MULTILINE)'''
+new = ''')'''
+tests = ["tests.test_entry_points.Refused.test_a_run_before_the_edit_is_refused"]
+
+[[plant]]
+name = "a bare name is a run by path"
+file = "rules/entry_points.py"
+old = '''command.name is not None and "/" in command.name'''
+new = '''command.name is not None'''
+tests = ["tests.test_entry_points.Refused.test_a_bare_name_is_no_run_by_its_path"]
+
+[[plant]]
+name = "a name not known is read"
+file = "rules/entry_points.py"
+old = '''if command.name is not None and "/" in command.name else None'''
+new = '''if "/" in command.name else None'''
+tests = ["tests.test_entry_points.Passing.test_a_command_of_a_name_not_known_keeps_nothing"]
+
+[[plant]]
+name = "a path run of a file that cannot run is kept"
+file = "rules/entry_points.py"
+old = '''found = [first] if first is not None and os.access(first, os.X_OK) else []'''
+new = '''found = [first] if first is not None else []'''
+tests = ["tests.test_entry_points.Kept.test_a_path_run_of_a_file_that_cannot_run_is_not_kept"]
+
+[[plant]]
+name = "no path run is checked for None"
+file = "rules/entry_points.py"
+old = '''found = [first] if first is not None and os.access(first, os.X_OK) else []'''
+new = '''found = [first] if os.access(first, os.X_OK) else []'''
+tests = ["tests.test_entry_points.Kept.test_a_run_through_bash_is_kept"]
+
+[[plant]]
+name = "a Python script is not kept"
+file = "rules/entry_points.py"
+old = '''run.kind == "script":'''
+new = '''run.kind == "input":'''
+tests = ["tests.test_entry_points.Kept.test_a_run_through_python_by_its_path_is_kept"]
+
+[[plant]]
+name = "a module's dots are kept"
+file = "rules/entry_points.py"
+old = '''stem = run.value.replace(".", "/")'''
+new = '''stem = run.value'''
+tests = ["tests.test_entry_points.Kept.test_a_run_through_python_dash_m_is_kept"]
+
+[[plant]]
+name = "a module's file is not kept"
+file = "rules/entry_points.py"
+old = '''found += [at(command.cwd, ShellText(stem + PY)), '''
+new = '''found += ['''
+tests = ["tests.test_entry_points.Kept.test_a_run_through_python_dash_m_is_kept"]
+
+[[plant]]
+name = "a package's __main__ is not kept"
+file = "rules/entry_points.py"
+old = ''', at(command.cwd, ShellText(stem + "/__main__" + PY))]'''
+new = ''']'''
+tests = ["tests.test_entry_points.Kept.test_a_run_through_python_dash_m_is_kept"]
+
+[[plant]]
+name = "every command's operand is a script"
+file = "rules/entry_points.py"
+old = '''operand(values) if base(command.words) in CARRIERS else None'''
+new = '''operand(values)'''
+tests = ["tests.test_entry_points.Passing.test_a_run_of_another_file_keeps_nothing_for_it"]
+
+[[plant]]
+name = "a shell's operand is not kept"
+file = "rules/entry_points.py"
+old = '''found.append(at(command.cwd, values[index]))'''
+new = '''pass'''
+tests = ["tests.test_entry_points.Kept.test_a_run_through_bash_is_kept"]
+
+[[plant]]
+name = "a file not resolved is read"
+file = "rules/entry_points.py"
+old = '''path is not None and path.is_file()]'''
+new = '''path.is_file()]'''
+tests = ["tests.test_entry_points.Refused.test_a_run_from_a_folder_not_known_is_not_kept"]
+
+[[plant]]
+name = "a missing file is read"
+file = "rules/entry_points.py"
+old = '''path is not None and path.is_file()]'''
+new = '''path is not None]'''
+tests = ["tests.test_entry_points.Kept.test_a_run_through_python_dash_m_is_kept"]
+
+[[plant]]
+name = "a relative path resolves with no folder"
+file = "rules/entry_points.py"
+old = '''value is None or cwd is None else'''
+new = '''value is None else'''
+tests = ["tests.test_entry_points.Refused.test_a_run_from_a_folder_not_known_is_not_kept"]
+
+[[plant]]
+name = "a run's path is not resolved"
+file = "rules/entry_points.py"
+old = '''Path(os.path.realpath(os.path.join(cwd, value)))'''
+new = '''Path(os.path.join(cwd, value))'''
+tests = ["tests.test_entry_points.Kept.test_a_run_through_python_by_its_path_is_kept"]
+
+[[plant]]
+name = "the refusal is given with nothing to name"
+file = "rules/entry_points.py"
+old = ''' if unrun else None'''
+new = ''' if True else None'''
+tests = ["tests.test_entry_points.Kept.test_a_run_through_bash_is_kept"]
+
+[[plant]]
+name = "a kept run is what refuses"
+file = "rules/entry_points.py"
+old = '''digest(data)) not in seen]'''
+new = '''digest(data)) in seen]'''
+tests = ["tests.test_entry_points.Refused.test_a_run_before_the_edit_is_refused"]
+
+[[plant]]
+name = "every file has one digest"
+file = "rules/entry_points.py"
+old = '''hashlib.sha256(data)'''
+new = '''hashlib.sha256(b"")'''
+tests = ["tests.test_entry_points.Refused.test_a_run_before_the_edit_is_refused"]
+
+[[plant]]
+name = "every form is python3"
+file = "rules/entry_points.py"
+old = '''quoted if os.access(path, os.X_OK) else f"python3 {quoted}"'''
+new = '''f"python3 {quoted}"'''
+tests = ["tests.test_entry_points.Refused.test_the_refusal_names_the_dribble_each_entry_point_and_its_form"]
+
+[[plant]]
+name = "the advice names no reading"
+file = "rules/entry_points.py"
+old = '''commits entry points no run has read'''
+new = '''commits entry points'''
+tests = ["tests.test_entry_points.Refused.test_the_refusal_names_the_dribble_each_entry_point_and_its_form"]
+
+[[plant]]
+name = "the entry names no form"
+file = "rules/entry_points.py"
+old = '''f"  * {path}, run as `{form(path)}`"'''
+new = '''f"  * {path}"'''
+tests = ["tests.test_entry_points.Refused.test_the_refusal_names_the_dribble_each_entry_point_and_its_form"]
+
+[[plant]]
+name = "runs are kept after the call"
+file = "rules/entry_points.py"
+old = '''if event.name == "PreToolUse":'''
+new = '''if event.name == "PostToolUse":'''
+tests = ["tests.test_entry_points.Refused.test_a_run_before_the_edit_is_refused"]
+
+[[plant]]
+name = "a PreToolUse event is judged"
+file = "rules/entry_points.py"
+old = '''        return None
+    if event.cwd is None:'''
+new = '''    if event.cwd is None:'''
+tests = ["tests.test_entry_points.Passing.test_other_tools_and_events_pass"]
+
+[[plant]]
+name = "an event naming no folder is judged"
+file = "rules/entry_points.py"
+old = '''    if event.cwd is None:
+        return None
+    root'''
+new = '''    root'''
+tests = ["tests.test_entry_points.Passing.test_an_event_naming_no_folder_passes"]
+
+[[plant]]
+name = "the state is read for a call keeping nothing"
+file = "rules/entry_points.py"
+old = '''        if kept:
+'''
+new = '''        if True:
+'''
+tests = ["tests.test_entry_points.Passing.test_a_call_running_no_entry_point_reads_no_state"]
+
+[[plant]]
+name = "a run of no entry point is kept"
+file = "rules/entry_points.py"
+old = '''if (data := entry(path)) is not None]'''
+new = '''if (data := entry(path)) is not None or True]'''
+tests = ["tests.test_entry_points.Passing.test_a_run_of_another_file_keeps_nothing_for_it"]
+
+[[plant]]
+name = "a change that is no entry point is digested"
+file = "rules/entry_points.py"
+old = '''if (data := entry(path)) is not None and (IDENT'''
+new = '''if ((data := entry(path)) is not None or True) and (IDENT'''
+tests = ["tests.test_entry_points.Passing.test_a_change_that_is_no_entry_point_passes"]

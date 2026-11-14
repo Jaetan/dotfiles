@@ -1,0 +1,565 @@
+# The plants that show dispatcher/heavy_table.py, the kit's own heavy rows, held by tests/test_heavy_table.py:
+# one for each field a row line sets and for each other line the rows read, each run with the one test
+# holding it:
+#   testing/plants.py tests/plants_heavy_table.toml --out DIR
+
+[[plant]]
+name = "the kit holds no row"
+file = "dispatcher/heavy.py"
+old = '''KIT_ROWS: tuple[Heavy, ...] = ROWS'''
+new = '''KIT_ROWS: tuple[Heavy, ...] = ()'''
+tests = ["tests.test_heavy_table.KitRows.test_pytest"]
+
+[[plant]]
+name = "pytest is another program"
+file = "dispatcher/heavy_table.py"
+old = '''program=ProgramName("pytest")'''
+new = '''program=ProgramName("pytestx")'''
+tests = ["tests.test_heavy_table.KitRows.test_pytest"]
+
+[[plant]]
+name = "pytest runs heavy collecting"
+file = "dispatcher/heavy_table.py"
+old = '''ProgramName("pytest"), light_with=COLLECT,'''
+new = '''ProgramName("pytest"),'''
+tests = ["tests.test_heavy_table.KitRows.test_pytest"]
+
+[[plant]]
+name = "pytest names no targets"
+file = "dispatcher/heavy_table.py"
+old = '''ProgramName("pytest"), light_with=COLLECT, targeted_by="pytest-operands"'''
+new = '''ProgramName("pytest"), light_with=COLLECT'''
+tests = ["tests.test_heavy_table.KitRows.test_pytest"]
+
+[[plant]]
+name = "py.test is another program"
+file = "dispatcher/heavy_table.py"
+old = '''program=ProgramName("py.test")'''
+new = '''program=ProgramName("py.testx")'''
+tests = ["tests.test_heavy_table.KitRows.test_pytest"]
+
+[[plant]]
+name = "py.test runs heavy collecting"
+file = "dispatcher/heavy_table.py"
+old = '''ProgramName("py.test"), light_with=COLLECT,'''
+new = '''ProgramName("py.test"),'''
+tests = ["tests.test_heavy_table.KitRows.test_pytest"]
+
+[[plant]]
+name = "py.test names no targets"
+file = "dispatcher/heavy_table.py"
+old = '''ProgramName("py.test"), light_with=COLLECT, targeted_by="pytest-operands"'''
+new = '''ProgramName("py.test"), light_with=COLLECT'''
+tests = ["tests.test_heavy_table.KitRows.test_pytest"]
+
+[[plant]]
+name = "-m pytest is another module"
+file = "dispatcher/heavy_table.py"
+old = '''module=ModuleName("pytest")'''
+new = '''module=ModuleName("pytestx")'''
+tests = ["tests.test_heavy_table.KitRows.test_pytest"]
+
+[[plant]]
+name = "-m pytest runs heavy collecting"
+file = "dispatcher/heavy_table.py"
+old = '''ModuleName("pytest"), light_with=COLLECT,'''
+new = '''ModuleName("pytest"),'''
+tests = ["tests.test_heavy_table.KitRows.test_pytest"]
+
+[[plant]]
+name = "-m pytest names no targets"
+file = "dispatcher/heavy_table.py"
+old = '''ModuleName("pytest"), light_with=COLLECT, targeted_by="pytest-operands"'''
+new = '''ModuleName("pytest"), light_with=COLLECT'''
+tests = ["tests.test_heavy_table.KitRows.test_old_cases"]
+
+[[plant]]
+name = "mutmut is another program"
+file = "dispatcher/heavy_table.py"
+old = '''program=ProgramName("mutmut")'''
+new = '''program=ProgramName("mutmutx")'''
+tests = ["tests.test_heavy_table.KitRows.test_mutmut"]
+
+[[plant]]
+name = "mutmut takes no value"
+file = "dispatcher/heavy_table.py"
+old = '''ProgramName("mutmut"), light_with=MUTMUT_LIGHT, valued_options=MUTMUT_VALUED'''
+new = '''ProgramName("mutmut"), light_with=MUTMUT_LIGHT'''
+tests = ["tests.test_heavy_table.KitRows.test_valued_options"]
+
+[[plant]]
+name = "-m mutmut is another module"
+file = "dispatcher/heavy_table.py"
+old = '''module=ModuleName("mutmut")'''
+new = '''module=ModuleName("mutmutx")'''
+tests = ["tests.test_heavy_table.KitRows.test_mutmut"]
+
+[[plant]]
+name = "-m mutmut takes no value"
+file = "dispatcher/heavy_table.py"
+old = '''ModuleName("mutmut"), light_with=MUTMUT_LIGHT, valued_options=MUTMUT_VALUED'''
+new = '''ModuleName("mutmut"), light_with=MUTMUT_LIGHT'''
+tests = ["tests.test_heavy_table.KitRows.test_valued_options"]
+
+[[plant]]
+name = "pylint is another program"
+file = "dispatcher/heavy_table.py"
+old = '''program=ProgramName("pylint")'''
+new = '''program=ProgramName("pylintx")'''
+tests = ["tests.test_heavy_table.KitRows.test_linters"]
+
+[[plant]]
+name = "pylint names no targets"
+file = "dispatcher/heavy_table.py"
+old = '''ProgramName("pylint"), targeted_by="python-files"'''
+new = '''ProgramName("pylint")'''
+tests = ["tests.test_heavy_table.KitRows.test_linters"]
+
+[[plant]]
+name = "basedpyright is another program"
+file = "dispatcher/heavy_table.py"
+old = '''program=ProgramName("basedpyright")'''
+new = '''program=ProgramName("basedpyrightx")'''
+tests = ["tests.test_heavy_table.KitRows.test_linters"]
+
+[[plant]]
+name = "basedpyright names no targets"
+file = "dispatcher/heavy_table.py"
+old = '''ProgramName("basedpyright"), targeted_by="python-files", '''
+new = '''ProgramName("basedpyright"), '''
+tests = ["tests.test_heavy_table.KitRows.test_linters"]
+
+[[plant]]
+name = "basedpyright takes no value"
+file = "dispatcher/heavy_table.py"
+old = '''ProgramName("basedpyright"), targeted_by="python-files", valued_options=BASEDPYRIGHT_VALUED'''
+new = '''ProgramName("basedpyright"), targeted_by="python-files"'''
+tests = ["tests.test_heavy_table.KitRows.test_valued_options"]
+
+[[plant]]
+name = "-m pylint is another module"
+file = "dispatcher/heavy_table.py"
+old = '''module=ModuleName("pylint")'''
+new = '''module=ModuleName("pylintx")'''
+tests = ["tests.test_heavy_table.KitRows.test_linters"]
+
+[[plant]]
+name = "-m pylint names no targets"
+file = "dispatcher/heavy_table.py"
+old = '''ModuleName("pylint"), targeted_by="python-files"'''
+new = '''ModuleName("pylint")'''
+tests = ["tests.test_heavy_table.KitRows.test_linters"]
+
+[[plant]]
+name = "-m basedpyright is another module"
+file = "dispatcher/heavy_table.py"
+old = '''module=ModuleName("basedpyright")'''
+new = '''module=ModuleName("basedpyrightx")'''
+tests = ["tests.test_heavy_table.KitRows.test_linters"]
+
+[[plant]]
+name = "-m basedpyright names no targets"
+file = "dispatcher/heavy_table.py"
+old = '''ModuleName("basedpyright"), targeted_by="python-files", '''
+new = '''ModuleName("basedpyright"), '''
+tests = ["tests.test_heavy_table.KitRows.test_linters"]
+
+[[plant]]
+name = "-m basedpyright takes no value"
+file = "dispatcher/heavy_table.py"
+old = '''ModuleName("basedpyright"), targeted_by="python-files", valued_options=BASEDPYRIGHT_VALUED'''
+new = '''ModuleName("basedpyright"), targeted_by="python-files"'''
+tests = ["tests.test_heavy_table.KitRows.test_valued_options"]
+
+[[plant]]
+name = "cargo has no building subcommand"
+file = "dispatcher/heavy_table.py"
+old = '''for sub in CARGO_WRITERS)'''
+new = '''for sub in ())'''
+tests = ["tests.test_heavy_table.KitRows.test_cargo"]
+
+[[plant]]
+name = "cargo mutants is another subcommand"
+file = "dispatcher/heavy_table.py"
+old = '''argv=(CARGO, Word("mutants"))'''
+new = '''argv=(CARGO, Word("mutant"))'''
+tests = ["tests.test_heavy_table.KitRows.test_cargo"]
+
+[[plant]]
+name = "cargo mutants --list runs heavy"
+file = "dispatcher/heavy_table.py"
+old = '''light_with=(Word("--list"), Word("--list-files"),'''
+new = '''light_with=(Word("--list-files"),'''
+tests = ["tests.test_heavy_table.KitRows.test_build_old_cases"]
+
+[[plant]]
+name = "cargo mutants --emit-schema runs heavy"
+file = "dispatcher/heavy_table.py"
+old = '''Word("--emit-schema")))'''
+new = '''))'''
+tests = ["tests.test_heavy_table.KitRows.test_cargo"]
+
+[[plant]]
+name = "cargo llvm-cov is another subcommand"
+file = "dispatcher/heavy_table.py"
+old = '''argv=(CARGO, Word("llvm-cov"))'''
+new = '''argv=(CARGO, Word("llvm-co"))'''
+tests = ["tests.test_heavy_table.KitRows.test_cargo"]
+
+[[plant]]
+name = "cargo llvm-cov --no-run runs heavy"
+file = "dispatcher/heavy_table.py"
+old = '''Word("llvm-cov")), light_with=(Word("--no-run"),)'''
+new = '''Word("llvm-cov"))'''
+tests = ["tests.test_heavy_table.KitRows.test_build_old_cases"]
+
+[[plant]]
+name = "cargo install is another subcommand"
+file = "dispatcher/heavy_table.py"
+old = '''argv=(CARGO, Word("install"))'''
+new = '''argv=(CARGO, Word("installs"))'''
+tests = ["tests.test_heavy_table.KitRows.test_cargo"]
+
+[[plant]]
+name = "cargo install --list runs heavy"
+file = "dispatcher/heavy_table.py"
+old = '''Word("install")), light_with=(Word("--list"),)'''
+new = '''Word("install"))'''
+tests = ["tests.test_heavy_table.KitRows.test_build_old_cases"]
+
+[[plant]]
+name = "go test is another subcommand"
+file = "dispatcher/heavy_table.py"
+old = '''argv=(GO, Word("test"))'''
+new = '''argv=(GO, Word("tests"))'''
+tests = ["tests.test_heavy_table.KitRows.test_go"]
+
+[[plant]]
+name = "go test -list runs heavy"
+file = "dispatcher/heavy_table.py"
+old = '''Word("test")), light_with=(Word("-list"),)'''
+new = '''Word("test"))'''
+tests = ["tests.test_heavy_table.KitRows.test_go"]
+
+[[plant]]
+name = "go has no other building subcommand"
+file = "dispatcher/heavy_table.py"
+old = '''for sub in GO_BUILDS)'''
+new = '''for sub in ())'''
+tests = ["tests.test_heavy_table.KitRows.test_go"]
+
+[[plant]]
+name = "cmake is another program"
+file = "dispatcher/heavy_table.py"
+old = '''program=ProgramName("cmake")'''
+new = '''program=ProgramName("cmakex")'''
+tests = ["tests.test_heavy_table.KitRows.test_cmake"]
+
+[[plant]]
+name = "cmake takes no value"
+file = "dispatcher/heavy_table.py"
+old = '''ProgramName("cmake"), valued_options=CMAKE_VALUED'''
+new = '''ProgramName("cmake")'''
+tests = ["tests.test_heavy_table.KitRows.test_valued_options"]
+
+[[plant]]
+name = "ctest is another program"
+file = "dispatcher/heavy_table.py"
+old = '''program=ProgramName("ctest")'''
+new = '''program=ProgramName("ctestx")'''
+tests = ["tests.test_heavy_table.KitRows.test_ctest"]
+
+[[plant]]
+name = "ctest never lists"
+file = "dispatcher/heavy_table.py"
+old = '''ProgramName("ctest"), light_with=CTEST_LIGHT, '''
+new = '''ProgramName("ctest"), '''
+tests = ["tests.test_heavy_table.KitRows.test_ctest"]
+
+[[plant]]
+name = "ctest takes no value"
+file = "dispatcher/heavy_table.py"
+old = '''light_with=CTEST_LIGHT, valued_options=CTEST_VALUED,'''
+new = '''light_with=CTEST_LIGHT,'''
+tests = ["tests.test_heavy_table.KitRows.test_valued_options"]
+
+[[plant]]
+name = "ctest's -V is its version"
+file = "dispatcher/heavy_table.py"
+old = '''verbose_flags=(Word("-V"),)'''
+new = '''verbose_flags=()'''
+tests = ["tests.test_heavy_table.KitRows.test_verbose_flag"]
+
+[[plant]]
+name = "make is another program"
+file = "dispatcher/heavy_table.py"
+old = '''program=ProgramName("make")'''
+new = '''program=ProgramName("makex")'''
+tests = ["tests.test_heavy_table.KitRows.test_make"]
+
+[[plant]]
+name = "make never dry-runs"
+file = "dispatcher/heavy_table.py"
+old = '''ProgramName("make"), light_with=MAKE_LIGHT'''
+new = '''ProgramName("make")'''
+tests = ["tests.test_heavy_table.KitRows.test_make"]
+
+[[plant]]
+name = "gmake is another program"
+file = "dispatcher/heavy_table.py"
+old = '''program=ProgramName("gmake")'''
+new = '''program=ProgramName("gmakex")'''
+tests = ["tests.test_heavy_table.KitRows.test_make"]
+
+[[plant]]
+name = "gmake never dry-runs"
+file = "dispatcher/heavy_table.py"
+old = '''ProgramName("gmake"), light_with=MAKE_LIGHT'''
+new = '''ProgramName("gmake")'''
+tests = ["tests.test_heavy_table.KitRows.test_make"]
+
+[[plant]]
+name = "ninja is another program"
+file = "dispatcher/heavy_table.py"
+old = '''program=ProgramName("ninja")'''
+new = '''program=ProgramName("ninjax")'''
+tests = ["tests.test_heavy_table.KitRows.test_make"]
+
+[[plant]]
+name = "ninja never dry-runs"
+file = "dispatcher/heavy_table.py"
+old = '''ProgramName("ninja"), light_with=(Word("-n"),)'''
+new = '''ProgramName("ninja")'''
+tests = ["tests.test_heavy_table.KitRows.test_make"]
+
+[[plant]]
+name = "cabal has no building subcommand"
+file = "dispatcher/heavy_table.py"
+old = '''for sub in CABAL_COMMANDS)'''
+new = '''for sub in ())'''
+tests = ["tests.test_heavy_table.KitRows.test_cabal"]
+
+[[plant]]
+name = "agda is another program"
+file = "dispatcher/heavy_table.py"
+old = '''program=ProgramName("agda")'''
+new = '''program=ProgramName("agdax")'''
+tests = ["tests.test_heavy_table.KitRows.test_agda"]
+
+[[plant]]
+name = "agda takes no value"
+file = "dispatcher/heavy_table.py"
+old = '''ProgramName("agda"), light_with=AGDA_LIGHT, valued_options=AGDA_VALUED'''
+new = '''ProgramName("agda"), light_with=AGDA_LIGHT'''
+tests = ["tests.test_heavy_table.KitRows.test_valued_options"]
+
+[[plant]]
+name = "gremlins unleash is another subcommand"
+file = "dispatcher/heavy_table.py"
+old = '''Word("gremlins"), Word("unleash")'''
+new = '''Word("gremlins"), Word("unleashx")'''
+tests = ["tests.test_heavy_table.KitRows.test_gremlins"]
+
+[[plant]]
+name = "gremlins unleash never dry-runs"
+file = "dispatcher/heavy_table.py"
+old = '''Word("unleash")), light_with=(Word("--dry-run"), Word("-d")),'''
+new = '''Word("unleash")),'''
+tests = ["tests.test_heavy_table.KitRows.test_gremlins"]
+
+[[plant]]
+name = "gremlins takes no value"
+file = "dispatcher/heavy_table.py"
+old = '''valued_options=GREMLINS_VALUED)'''
+new = ''')'''
+tests = ["tests.test_heavy_table.KitRows.test_valued_options"]
+
+[[plant]]
+name = "mull-runner is another program"
+file = "dispatcher/heavy_table.py"
+old = '''program=ProgramName("mull-runner")'''
+new = '''program=ProgramName("mull-runnerx")'''
+tests = ["tests.test_heavy_table.KitRows.test_mull_runner"]
+
+[[plant]]
+name = "mull-runner never dry-runs"
+file = "dispatcher/heavy_table.py"
+old = '''ProgramName("mull-runner"), light_with=(Word("--dry-run"),), '''
+new = '''ProgramName("mull-runner"), '''
+tests = ["tests.test_heavy_table.KitRows.test_mull_runner"]
+
+[[plant]]
+name = "mull-runner takes no value"
+file = "dispatcher/heavy_table.py"
+old = ''', valued_options=MULL_VALUED)'''
+new = ''')'''
+tests = ["tests.test_heavy_table.KitRows.test_valued_options"]
+
+[[plant]]
+name = "bazel has no building command"
+file = "dispatcher/heavy_table.py"
+old = '''for sub in BAZEL_COMMANDS)'''
+new = '''for sub in ())'''
+tests = ["tests.test_heavy_table.KitRows.test_bazel"]
+
+[[plant]]
+name = "docker build is another subcommand"
+file = "dispatcher/heavy_table.py"
+old = '''Word("docker"), Word("build")'''
+new = '''Word("docker"), Word("built")'''
+tests = ["tests.test_heavy_table.KitRows.test_docker"]
+
+[[plant]]
+name = "docker takes no value"
+file = "dispatcher/heavy_table.py"
+old = ''', valued_options=DOCKER_VALUED)'''
+new = ''')'''
+tests = ["tests.test_heavy_table.KitRows.test_valued_options"]
+
+[[plant]]
+name = "cargo's -C takes no value"
+file = "dispatcher/heavy_table.py"
+old = '''Word("-C"), Word("--config"), Word("-Z")))'''
+new = '''Word("--config"), Word("-Z")))'''
+tests = ["tests.test_heavy_table.KitRows.test_valued_options"]
+
+[[plant]]
+name = "go vet is no building subcommand"
+file = "dispatcher/heavy_table.py"
+old = '''Word("run"), Word("vet"), '''
+new = '''Word("run"), '''
+tests = ["tests.test_heavy_table.KitRows.test_go"]
+
+[[plant]]
+name = "ctest -N runs heavy"
+file = "dispatcher/heavy_table.py"
+old = '''CTEST_LIGHT = (Word("-N"), '''
+new = '''CTEST_LIGHT = ('''
+tests = ["tests.test_heavy_table.KitRows.test_ctest"]
+
+[[plant]]
+name = "make -n runs heavy"
+file = "dispatcher/heavy_table.py"
+old = '''MAKE_LIGHT = (Word("-n"), '''
+new = '''MAKE_LIGHT = ('''
+tests = ["tests.test_heavy_table.KitRows.test_make"]
+
+[[plant]]
+name = "make -v runs heavy"
+file = "dispatcher/heavy_table.py"
+old = '''Word("--question"),
+              Word("-v"))'''
+new = '''Word("--question"))'''
+tests = ["tests.test_heavy_table.KitRows.test_version_flag"]
+
+[[plant]]
+name = "cabal takes no value"
+file = "dispatcher/heavy_table.py"
+old = '''CABAL_ROW = BARE._replace(valued_options=CABAL_VALUED)'''
+new = '''CABAL_ROW = BARE'''
+tests = ["tests.test_heavy_table.KitRows.test_valued_options"]
+
+[[plant]]
+name = "cabal build is no building subcommand"
+file = "dispatcher/heavy_table.py"
+old = '''CABAL_COMMANDS = (Word("build"), '''
+new = '''CABAL_COMMANDS = ('''
+tests = ["tests.test_heavy_table.KitRows.test_cabal"]
+
+[[plant]]
+name = "cabal run is no building subcommand"
+file = "dispatcher/heavy_table.py"
+old = '''Word("v2-install"), Word("run"), '''
+new = '''Word("v2-install"), '''
+tests = ["tests.test_heavy_table.KitRows.test_cabal"]
+
+[[plant]]
+name = "bazel's startup options take no value"
+file = "dispatcher/heavy_table.py"
+old = '''BAZEL_ROW = BARE._replace(valued_options=('''
+new = '''BAZEL_ROW = BARE._replace(light_with=('''
+tests = ["tests.test_heavy_table.KitRows.test_valued_options"]
+
+[[plant]]
+name = '''mutmut's other subcommands are not light'''
+file = "dispatcher/heavy_table.py"
+old = '''program=ProgramName("mutmut"), light_with=MUTMUT_LIGHT, '''
+new = '''program=ProgramName("mutmut"), '''
+tests = ["tests.test_heavy_table.KitRows.test_mutmut"]
+
+[[plant]]
+name = '''-m mutmut's other subcommands are not light'''
+file = "dispatcher/heavy_table.py"
+old = '''module=ModuleName("mutmut"), light_with=MUTMUT_LIGHT, '''
+new = '''module=ModuleName("mutmut"), '''
+tests = ["tests.test_heavy_table.KitRows.test_mutmut"]
+
+[[plant]]
+name = '''mutmut apply is another subcommand'''
+file = "dispatcher/heavy_table.py"
+old = '''Word("apply")'''
+new = '''Word("applyx")'''
+tests = ["tests.test_heavy_table.KitRows.test_mutmut"]
+
+[[plant]]
+name = '''mutmut badge is another subcommand'''
+file = "dispatcher/heavy_table.py"
+old = '''Word("badge")'''
+new = '''Word("badgex")'''
+tests = ["tests.test_heavy_table.KitRows.test_mutmut"]
+
+[[plant]]
+name = '''mutmut browse is another subcommand'''
+file = "dispatcher/heavy_table.py"
+old = '''Word("browse")'''
+new = '''Word("browsex")'''
+tests = ["tests.test_heavy_table.KitRows.test_mutmut"]
+
+[[plant]]
+name = '''mutmut export-cicd-stats is another subcommand'''
+file = "dispatcher/heavy_table.py"
+old = '''Word("export-cicd-stats")'''
+new = '''Word("export-cicd-statsx")'''
+tests = ["tests.test_heavy_table.KitRows.test_mutmut"]
+
+[[plant]]
+name = '''mutmut print-time-estimates is another subcommand'''
+file = "dispatcher/heavy_table.py"
+old = '''Word("print-time-estimates")'''
+new = '''Word("print-time-estimatesx")'''
+tests = ["tests.test_heavy_table.KitRows.test_mutmut"]
+
+[[plant]]
+name = '''mutmut results is another subcommand'''
+file = "dispatcher/heavy_table.py"
+old = '''Word("results")'''
+new = '''Word("resultsx")'''
+tests = ["tests.test_heavy_table.KitRows.test_mutmut"]
+
+[[plant]]
+name = '''mutmut show is another subcommand'''
+file = "dispatcher/heavy_table.py"
+old = '''Word("show")'''
+new = '''Word("showx")'''
+tests = ["tests.test_heavy_table.KitRows.test_mutmut"]
+
+[[plant]]
+name = '''mutmut tests-for-mutant is another subcommand'''
+file = "dispatcher/heavy_table.py"
+old = '''Word("tests-for-mutant")'''
+new = '''Word("tests-for-mutantx")'''
+tests = ["tests.test_heavy_table.KitRows.test_mutmut"]
+
+[[plant]]
+name = '''agda's --numeric-version is not light'''
+file = "dispatcher/heavy_table.py"
+old = '''AGDA_LIGHT = (Word("--numeric-version"), '''
+new = '''AGDA_LIGHT = ('''
+tests = ["tests.test_heavy_table.KitRows.test_agda", "tests.test_heavy_table.KitRows.test_runner_old_cases"]
+
+[[plant]]
+name = '''agda's --print-agda-dir is not light'''
+file = "dispatcher/heavy_table.py"
+old = ''', Word("--print-agda-dir"))'''
+new = ''', )'''
+tests = ["tests.test_heavy_table.KitRows.test_agda", "tests.test_heavy_table.KitRows.test_runner_old_cases"]

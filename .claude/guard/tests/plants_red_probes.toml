@@ -1,0 +1,210 @@
+# The plants that show rules/red_probes.py held by tests/test_red_probes.py, one or more per line of the rule:
+#   testing/plants.py tests/plants_red_probes.toml --out DIR
+
+[[plant]]
+name = "the rule judges no Stop"
+file = "rules/red_probes.py"
+old = 'frozenset({"Stop"})'
+new = 'frozenset({"SessionStart"})'
+tests = ["tests.test_red_probes.Refused.test_an_unnamed_fail_is_refused_at_every_attempt",
+         "tests.test_red_probes.Faulted.test_a_missing_record"]
+
+[[plant]]
+name = "a SubagentStop is judged"
+file = "rules/red_probes.py"
+old = 'frozenset({"Stop"})'
+new = 'frozenset({"Stop", "SubagentStop"})'
+tests = ["tests.test_red_probes.NotJudged.test_a_subagent_stop_is_not_judged"]
+
+[[plant]]
+name = "another header is taken for the record's"
+file = "rules/red_probes.py"
+old = 'HEADER: Final = "probe\tverdict\tseconds"'
+new = 'HEADER: Final = "probe\tverdict"'
+tests = ["tests.test_red_probes.Passed.test_every_row_pass_passes"]
+
+[[plant]]
+name = "a lower-case pass is taken for PASS"
+file = "rules/red_probes.py"
+old = 'PASS = ProbeVerdict("PASS")'
+new = 'PASS = ProbeVerdict("pass")'
+tests = ["tests.test_red_probes.Passed.test_every_row_pass_passes"]
+
+[[plant]]
+name = "the record is read in another encoding"
+file = "rules/red_probes.py"
+old = 'encoding="utf-8"'
+new = 'encoding="latin-1"'
+tests = ["tests.test_red_probes.Faulted.test_bytes_not_utf8"]
+
+[[plant]]
+name = "a record not UTF-8 is no fault naming it"
+file = "rules/red_probes.py"
+old = 'except (OSError, UnicodeDecodeError) as fault:'
+new = 'except OSError as fault:'
+tests = ["tests.test_red_probes.Faulted.test_bytes_not_utf8"]
+
+[[plant]]
+name = "a missing record is no fault naming it"
+file = "rules/red_probes.py"
+old = 'except (OSError, UnicodeDecodeError) as fault:'
+new = 'except (IsADirectoryError, UnicodeDecodeError) as fault:'
+tests = ["tests.test_red_probes.Faulted.test_a_missing_record"]
+
+[[plant]]
+name = "the fault of a record that cannot be read names no file"
+file = "rules/red_probes.py"
+old = 'f"the probe record {record} cannot be read: {fault}"'
+new = 'f"the probe record cannot be read: {fault}"'
+tests = ["tests.test_red_probes.Faulted.test_a_missing_record", "tests.test_red_probes.Faulted.test_bytes_not_utf8"]
+
+[[plant]]
+name = "the header is not checked"
+file = "rules/red_probes.py"
+old = 'if lines[:1] != [HEADER]:'
+new = 'if not lines:'
+tests = ["tests.test_red_probes.Faulted.test_a_wrong_header"]
+
+[[plant]]
+name = "the header is looked for on the last line"
+file = "rules/red_probes.py"
+old = 'if lines[:1] != [HEADER]:'
+new = 'if lines[-1:] != [HEADER]:'
+tests = ["tests.test_red_probes.Passed.test_every_row_pass_passes"]
+
+[[plant]]
+name = "the header's fault names no file"
+file = "rules/red_probes.py"
+old = 'f"the probe record {record} does not open with'
+new = 'f"the probe record does not open with'
+tests = ["tests.test_red_probes.Faulted.test_a_wrong_header"]
+
+[[plant]]
+name = "the header is read as a row"
+file = "rules/red_probes.py"
+old = 'for line in lines[1:]:'
+new = 'for line in lines:'
+tests = ["tests.test_red_probes.Passed.test_every_row_pass_passes"]
+
+[[plant]]
+name = "the file name is the whole path"
+file = "rules/red_probes.py"
+old = 'ProbeName(Path(fields[0]).name)'
+new = 'ProbeName(fields[0])'
+tests = ["tests.test_red_probes.Passed.test_a_path_folder_part_is_not_needed_to_name_it"]
+
+[[plant]]
+name = "a row of two fields is read"
+file = "rules/red_probes.py"
+old = 'len(fields) != 3'
+new = 'len(fields) < 2'
+tests = ["tests.test_red_probes.Faulted.test_a_row_not_of_three_fields_or_naming_no_file"]
+
+[[plant]]
+name = "a row naming no file is read"
+file = "rules/red_probes.py"
+old = 'if len(fields) != 3 or not name:'
+new = 'if len(fields) != 3:'
+tests = ["tests.test_red_probes.Faulted.test_a_row_not_of_three_fields_or_naming_no_file"]
+
+[[plant]]
+name = "the row's fault quotes no row"
+file = "rules/red_probes.py"
+old = 'its seconds: {line!r}"'
+new = 'its seconds"'
+tests = ["tests.test_red_probes.Faulted.test_a_row_not_of_three_fields_or_naming_no_file"]
+
+[[plant]]
+name = "the verdict is read from the seconds"
+file = "rules/red_probes.py"
+old = 'ProbeVerdict(fields[1])'
+new = 'ProbeVerdict(fields[2])'
+tests = ["tests.test_red_probes.Passed.test_every_row_pass_passes"]
+
+[[plant]]
+name = "an event naming no folder is read for one"
+file = "rules/red_probes.py"
+old = 'if event.cwd is None or (record'
+new = 'if (record'
+tests = ["tests.test_red_probes.NotJudged.test_an_event_naming_no_folder_passes"]
+
+[[plant]]
+name = "no record declared is read as one"
+file = "rules/red_probes.py"
+old = '.project.probe_record) is None:'
+new = '.project.probe_record) is None and False:'
+tests = ["tests.test_red_probes.NotJudged.test_no_declaration_passes",
+         "tests.test_red_probes.NotJudged.test_a_declaration_naming_no_record_passes"]
+
+[[plant]]
+name = "the declaration is read for another folder"
+file = "rules/red_probes.py"
+old = 'event.declaration(Path(event.cwd))'
+new = 'event.declaration(Path("/"))'
+tests = ["tests.test_red_probes.Refused.test_an_unnamed_fail_is_refused_at_every_attempt"]
+
+[[plant]]
+name = "a Stop with no last message passes"
+file = "rules/red_probes.py"
+old = 'message = Prose(said if isinstance(said, str) else "")'
+new = '''if not isinstance(said, str):
+        return None
+    message = Prose(said)'''
+tests = ["tests.test_red_probes.Refused.test_a_stop_with_no_last_message_is_refused"]
+
+[[plant]]
+name = "a red is named only as a word of its own"
+file = "rules/red_probes.py"
+old = 'name not in message'
+new = 'name not in message.split()'
+tests = ["tests.test_red_probes.Passed.test_a_red_named_in_a_code_span_passes_at_every_attempt"]
+
+[[plant]]
+name = "a red named is refused all the same"
+file = "rules/red_probes.py"
+old = 'if verdict != PASS and name not in message'
+new = 'if verdict != PASS'
+tests = ["tests.test_red_probes.Passed.test_a_red_named_in_a_code_span_passes_at_every_attempt",
+         "tests.test_red_probes.Refused.test_two_reds_with_one_named_refuse_the_other_alone"]
+
+[[plant]]
+name = "only FAIL is red"
+file = "rules/red_probes.py"
+old = 'verdict != PASS'
+new = 'verdict == "FAIL"'
+tests = ["tests.test_red_probes.Refused.test_a_verdict_not_exactly_pass_is_red"]
+
+[[plant]]
+name = "a verdict is read whatever its case"
+file = "rules/red_probes.py"
+old = 'verdict != PASS'
+new = 'verdict.upper() != PASS'
+tests = ["tests.test_red_probes.Refused.test_a_verdict_not_exactly_pass_is_red"]
+
+[[plant]]
+name = "a finding names no verdict"
+file = "rules/red_probes.py"
+old = '''f"  * {name}, verdict '{verdict}'"'''
+new = 'f"  * {name}"'
+tests = ["tests.test_red_probes.Refused.test_an_unnamed_fail_is_refused_at_every_attempt"]
+
+[[plant]]
+name = "the refusal names no record"
+file = "rules/red_probes.py"
+old = 'record=record'
+new = 'record="the record"'
+tests = ["tests.test_red_probes.Refused.test_an_unnamed_fail_is_refused_at_every_attempt"]
+
+[[plant]]
+name = "the refusal drops a way out"
+file = "rules/red_probes.py"
+old = 'make it pass and run the store again, or name each red'
+new = 'make it pass, or name each red'
+tests = ["tests.test_red_probes.Refused.test_two_reds_with_one_named_refuse_the_other_alone"]
+
+[[plant]]
+name = "a record with no red is refused"
+file = "rules/red_probes.py"
+old = ') if found else None'
+new = ') if found or True else None'
+tests = ["tests.test_red_probes.Passed.test_every_row_pass_passes"]

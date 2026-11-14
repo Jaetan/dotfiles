@@ -1,0 +1,440 @@
+# The plants that show rules/precise_hints.py held by tests/test_precise_hints.py, one or more per line of the rule:
+#   testing/plants.py tests/plants_precise_hints.toml --out DIR
+
+[[plant]]
+name = "the rule judges nothing"
+file = "rules/precise_hints.py"
+old = '''if event.name == "PreToolUse":
+        return before(event)
+    return after(event) if event.tool == BASH else None'''
+new = '''return None'''
+tests = ["tests.test_precise_hints.Edits.test_each_edit_is_handed_the_text_after_it_as_its_rel", "tests.test_precise_hints.Edits.test_a_finding_refuses_naming_the_file_the_gate_its_rule_and_its_text", "tests.test_precise_hints.Edits.test_an_unreadable_answer_refuses", "tests.test_precise_hints.Writes.test_a_calls_changed_files_are_handed_where_they_stand", "tests.test_precise_hints.Writes.test_every_finding_and_unreadable_answer_is_refused_together", "tests.test_precise_hints.Writes.test_five_changed_files_refuse_the_fifth_as_unchecked", "tests.test_precise_hints.Writes.test_the_first_ten_unchecked_files_are_named", "tests.test_precise_hints.Writes.test_files_left_out_are_not_counted_against_the_bound"]
+
+[[plant]]
+name = "the rule judges no PreToolUse"
+file = "rules/precise_hints.py"
+old = '''frozenset({"PreToolUse", "PostToolUse"})'''
+new = '''frozenset({"PostToolUse"})'''
+tests = ["tests.test_precise_hints.Edits.test_each_edit_is_handed_the_text_after_it_as_its_rel"]
+
+[[plant]]
+name = "the rule judges no PostToolUse"
+file = "rules/precise_hints.py"
+old = '''frozenset({"PreToolUse", "PostToolUse"})'''
+new = '''frozenset({"PreToolUse"})'''
+tests = ["tests.test_precise_hints.Writes.test_a_calls_changed_files_are_handed_where_they_stand"]
+
+[[plant]]
+name = "the rule judges no Bash call"
+file = "rules/precise_hints.py"
+old = '''TOOLS = frozenset({ToolName("Bash"), '''
+new = '''TOOLS = frozenset({'''
+tests = ["tests.test_precise_hints.Writes.test_a_calls_changed_files_are_handed_where_they_stand"]
+
+[[plant]]
+name = "the rule judges no Edit"
+file = "rules/precise_hints.py"
+old = '''ToolName("Bash"), ToolName("Edit"), ToolName("Write")'''
+new = '''ToolName("Bash"), ToolName("Write")'''
+tests = ["tests.test_precise_hints.Edits.test_each_edit_is_handed_the_text_after_it_as_its_rel"]
+
+[[plant]]
+name = "the rule judges no Write"
+file = "rules/precise_hints.py"
+old = '''ToolName("Edit"), ToolName("Write"), ToolName("MultiEdit")})'''
+new = '''ToolName("Edit"), ToolName("MultiEdit")})'''
+tests = ["tests.test_precise_hints.Edits.test_each_edit_is_handed_the_text_after_it_as_its_rel"]
+
+[[plant]]
+name = "the rule judges no MultiEdit"
+file = "rules/precise_hints.py"
+old = '''ToolName("MultiEdit")})'''
+new = '''ToolName("Edit")})'''
+tests = ["tests.test_precise_hints.Edits.test_each_edit_is_handed_the_text_after_it_as_its_rel"]
+
+[[plant]]
+name = "a Bash call is named as another tool"
+file = "rules/precise_hints.py"
+old = '''BASH, WRITE, MULTI_EDIT = ToolName("Bash"),'''
+new = '''BASH, WRITE, MULTI_EDIT = ToolName("Monitor"),'''
+tests = ["tests.test_precise_hints.Writes.test_a_calls_changed_files_are_handed_where_they_stand"]
+
+[[plant]]
+name = "a Write is named as another tool"
+file = "rules/precise_hints.py"
+old = '''MULTI_EDIT = ToolName("Bash"), ToolName("Write"),'''
+new = '''MULTI_EDIT = ToolName("Bash"), ToolName("Writ"),'''
+tests = ["tests.test_precise_hints.Edits.test_each_edit_is_handed_the_text_after_it_as_its_rel"]
+
+[[plant]]
+name = "a MultiEdit is named as another tool"
+file = "rules/precise_hints.py"
+old = '''ToolName("MultiEdit")
+CONTENT'''
+new = '''ToolName("Multi")
+CONTENT'''
+tests = ["tests.test_precise_hints.Edits.test_each_edit_is_handed_the_text_after_it_as_its_rel"]
+
+[[plant]]
+name = "a Write's content is read under another key"
+file = "rules/precise_hints.py"
+old = '''("content", "edits",'''
+new = '''("contents", "edits",'''
+tests = ["tests.test_precise_hints.Edits.test_each_edit_is_handed_the_text_after_it_as_its_rel"]
+
+[[plant]]
+name = "a MultiEdit's edits are read under another key"
+file = "rules/precise_hints.py"
+old = '''"edits", "old_string"'''
+new = '''"edit", "old_string"'''
+tests = ["tests.test_precise_hints.Edits.test_each_edit_is_handed_the_text_after_it_as_its_rel"]
+
+[[plant]]
+name = "an edit's old text is read under another key"
+file = "rules/precise_hints.py"
+old = '''"old_string", "new_string"'''
+new = '''"old", "new_string"'''
+tests = ["tests.test_precise_hints.Edits.test_each_edit_is_handed_the_text_after_it_as_its_rel"]
+
+[[plant]]
+name = "an edit's new text is read under another key"
+file = "rules/precise_hints.py"
+old = '''"new_string", "replace_all"'''
+new = '''"new", "replace_all"'''
+tests = ["tests.test_precise_hints.Edits.test_each_edit_is_handed_the_text_after_it_as_its_rel"]
+
+[[plant]]
+name = "replace_all is read under another key"
+file = "rules/precise_hints.py"
+old = '''"replace_all"))'''
+new = '''"replace"))'''
+tests = ["tests.test_precise_hints.Edits.test_each_edit_is_handed_the_text_after_it_as_its_rel"]
+
+[[plant]]
+name = "the text is read and written as ASCII"
+file = "rules/precise_hints.py"
+old = '''ENCODING = "utf-8"'''
+new = '''ENCODING = "ascii"'''
+tests = ["tests.test_precise_hints.Edits.test_each_edit_is_handed_the_text_after_it_as_its_rel"]
+
+[[plant]]
+name = "an edit's refusal says the edit is made"
+file = "rules/precise_hints.py"
+old = '''so the edit is not made:'''
+new = '''and the edit is made:'''
+tests = ["tests.test_precise_hints.Edits.test_a_finding_refuses_naming_the_file_the_gate_its_rule_and_its_text"]
+
+[[plant]]
+name = "an edit's refusal names no way on"
+file = "rules/precise_hints.py"
+old = '''Type each hint it names precisely, as its rule says, and edit again.'''
+new = '''Edit again.'''
+tests = ["tests.test_precise_hints.Edits.test_a_finding_refuses_naming_the_file_the_gate_its_rule_and_its_text"]
+
+[[plant]]
+name = "a Bash call's refusal says its files are noted"
+file = "rules/precise_hints.py"
+old = '''files this call wrote are refused;'''
+new = '''files this call wrote are noted;'''
+tests = ["tests.test_precise_hints.Writes.test_every_finding_and_unreadable_answer_is_refused_together"]
+
+[[plant]]
+name = "a file is handed to the determinism gate"
+file = "rules/precise_hints.py"
+old = '''.project.precise_hints'''
+new = '''.project.test_determinism'''
+tests = ["tests.test_precise_hints.Edits.test_each_edit_is_handed_the_text_after_it_as_its_rel", "tests.test_precise_hints.Writes.test_a_calls_changed_files_are_handed_where_they_stand"]
+
+[[plant]]
+name = "an edit's input is never read"
+file = "rules/precise_hints.py"
+old = '''cast("dict[JsonKey, Json]", event.payload.get("tool_input"))'''
+new = '''cast("dict[JsonKey, Json]", {})'''
+tests = ["tests.test_precise_hints.Edits.test_each_edit_is_handed_the_text_after_it_as_its_rel"]
+
+[[plant]]
+name = "a Write is read as an Edit"
+file = "rules/precise_hints.py"
+old = '''if event.tool == WRITE:'''
+new = '''if event.tool != WRITE:'''
+tests = ["tests.test_precise_hints.Edits.test_each_edit_is_handed_the_text_after_it_as_its_rel"]
+
+[[plant]]
+name = "a Write's content of another shape is handed"
+file = "rules/precise_hints.py"
+old = '''return content if isinstance(content, str) else None'''
+new = '''return content'''
+tests = ["tests.test_precise_hints.Edits.test_an_edit_the_tool_cannot_apply_passes_unjudged"]
+
+[[plant]]
+name = "an Edit applies no replacement"
+file = "rules/precise_hints.py"
+old = '''else [asked]'''
+new = '''else []'''
+tests = ["tests.test_precise_hints.Edits.test_each_edit_is_handed_the_text_after_it_as_its_rel"]
+
+[[plant]]
+name = "an edit of a file that does not stand is read"
+file = "rules/precise_hints.py"
+old = '''if not path.is_file() or not isinstance(edits, list):'''
+new = '''if not isinstance(edits, list):'''
+tests = ["tests.test_precise_hints.Edits.test_an_edit_the_tool_cannot_apply_passes_unjudged"]
+
+[[plant]]
+name = "a MultiEdit without a list of edits is applied"
+file = "rules/precise_hints.py"
+old = '''if not path.is_file() or not isinstance(edits, list):'''
+new = '''if not path.is_file():'''
+tests = ["tests.test_precise_hints.Edits.test_an_edit_the_tool_cannot_apply_passes_unjudged"]
+
+[[plant]]
+name = "an edit starts from an empty file"
+file = "rules/precise_hints.py"
+old = '''text = FileText(path.read_text(encoding=ENCODING))'''
+new = '''text = FileText("")'''
+tests = ["tests.test_precise_hints.Edits.test_each_edit_is_handed_the_text_after_it_as_its_rel"]
+
+[[plant]]
+name = "an edit of another shape is applied"
+file = "rules/precise_hints.py"
+old = '''if not isinstance(edit, dict):'''
+new = '''if False:'''
+tests = ["tests.test_precise_hints.Edits.test_an_edit_the_tool_cannot_apply_passes_unjudged"]
+
+[[plant]]
+name = "an old text of another shape is applied"
+file = "rules/precise_hints.py"
+old = '''if not isinstance(old, str) or not old or'''
+new = '''if not old or'''
+tests = ["tests.test_precise_hints.Edits.test_an_edit_the_tool_cannot_apply_passes_unjudged"]
+
+[[plant]]
+name = "an empty old text is applied"
+file = "rules/precise_hints.py"
+old = '''or not old or not isinstance(new, str):'''
+new = '''or not isinstance(new, str):'''
+tests = ["tests.test_precise_hints.Edits.test_an_edit_the_tool_cannot_apply_passes_unjudged"]
+
+[[plant]]
+name = "a new text of another shape is applied"
+file = "rules/precise_hints.py"
+old = '''not old or not isinstance(new, str):'''
+new = '''not old:'''
+tests = ["tests.test_precise_hints.Edits.test_an_edit_the_tool_cannot_apply_passes_unjudged"]
+
+[[plant]]
+name = "an old text the file does not hold is applied"
+file = "rules/precise_hints.py"
+old = '''if found == 0 or (found > 1 and not every):'''
+new = '''if found > 1 and not every:'''
+tests = ["tests.test_precise_hints.Edits.test_an_edit_the_tool_cannot_apply_passes_unjudged"]
+
+[[plant]]
+name = "an old text the file holds twice is applied without replace_all"
+file = "rules/precise_hints.py"
+old = '''(found > 1 and not every)'''
+new = '''(False)'''
+tests = ["tests.test_precise_hints.Edits.test_an_edit_the_tool_cannot_apply_passes_unjudged"]
+
+[[plant]]
+name = "replace_all is never read"
+file = "rules/precise_hints.py"
+old = '''found > 1 and not every)'''
+new = '''found > 1)'''
+tests = ["tests.test_precise_hints.Edits.test_each_edit_is_handed_the_text_after_it_as_its_rel"]
+
+[[plant]]
+name = "replace_all replaces the first occurrence alone"
+file = "rules/precise_hints.py"
+old = '''text = FileText(text.replace(old, new))'''
+new = '''text = FileText(text.replace(old, new, 1))'''
+tests = ["tests.test_precise_hints.Edits.test_each_edit_is_handed_the_text_after_it_as_its_rel"]
+
+[[plant]]
+name = "a MultiEdit applies its edits backwards"
+file = "rules/precise_hints.py"
+old = '''for edit in edits:'''
+new = '''for edit in reversed(edits):'''
+tests = ["tests.test_precise_hints.Edits.test_each_edit_is_handed_the_text_after_it_as_its_rel"]
+
+[[plant]]
+name = "the text after an edit gains a line"
+file = "rules/precise_hints.py"
+old = '''return text'''
+new = '''return FileText(text + "\n")'''
+tests = ["tests.test_precise_hints.Edits.test_each_edit_is_handed_the_text_after_it_as_its_rel"]
+
+[[plant]]
+name = "no edit is handed"
+file = "rules/precise_hints.py"
+old = '''handed = handed_to(event, paths[0]) if paths else None'''
+new = '''handed = None'''
+tests = ["tests.test_precise_hints.Edits.test_each_edit_is_handed_the_text_after_it_as_its_rel"]
+
+[[plant]]
+name = "an edit is handed an empty text"
+file = "rules/precise_hints.py"
+old = '''text = None if handed is None else edited(event, paths[0])'''
+new = '''text = None if handed is None else FileText("")'''
+tests = ["tests.test_precise_hints.Edits.test_each_edit_is_handed_the_text_after_it_as_its_rel"]
+
+[[plant]]
+name = "an edit the tool cannot apply is handed"
+file = "rules/precise_hints.py"
+old = '''if handed is None or text is None:'''
+new = '''if handed is None:'''
+tests = ["tests.test_precise_hints.Edits.test_an_edit_the_tool_cannot_apply_passes_unjudged"]
+
+[[plant]]
+name = "the temporary file has no suffix"
+file = "rules/precise_hints.py"
+old = '''suffix=paths[0].suffix'''
+new = '''suffix=""'''
+tests = ["tests.test_precise_hints.Edits.test_each_edit_is_handed_the_text_after_it_as_its_rel"]
+
+[[plant]]
+name = "the temporary file is left empty"
+file = "rules/precise_hints.py"
+old = '''_ = staged.write(text)'''
+new = '''_ = staged.write("")'''
+tests = ["tests.test_precise_hints.Edits.test_each_edit_is_handed_the_text_after_it_as_its_rel"]
+
+[[plant]]
+name = "the temporary file is not flushed"
+file = "rules/precise_hints.py"
+old = '''staged.flush()'''
+new = '''pass'''
+tests = ["tests.test_precise_hints.Edits.test_each_edit_is_handed_the_text_after_it_as_its_rel"]
+
+[[plant]]
+name = "an edit hands the file as it stands"
+file = "rules/precise_hints.py"
+old = '''run(handed[0], Path(staged.name), handed[1])'''
+new = '''run(handed[0], paths[0], handed[1])'''
+tests = ["tests.test_precise_hints.Edits.test_each_edit_is_handed_the_text_after_it_as_its_rel"]
+
+[[plant]]
+name = "an edit is handed as another REL"
+file = "rules/precise_hints.py"
+old = '''run(handed[0], Path(staged.name), handed[1])'''
+new = '''run(handed[0], Path(staged.name), RelPath("x"))'''
+tests = ["tests.test_precise_hints.Edits.test_each_edit_is_handed_the_text_after_it_as_its_rel"]
+
+[[plant]]
+name = "an unreadable answer passes an edit"
+file = "rules/precise_hints.py"
+old = '''return None if answer.kind == "clean" else refuse('''
+new = '''return None if answer.kind != "finding" else refuse('''
+tests = ["tests.test_precise_hints.Edits.test_an_unreadable_answer_refuses"]
+
+[[plant]]
+name = "a finding passes an edit"
+file = "rules/precise_hints.py"
+old = '''else refuse(Prose(EDITED.format(answer=said(paths[0], handed, answer, FINDING))))'''
+new = '''else None'''
+tests = ["tests.test_precise_hints.Edits.test_a_finding_refuses_naming_the_file_the_gate_its_rule_and_its_text"]
+
+[[plant]]
+name = "a Bash call's files are handed backwards"
+file = "rules/precise_hints.py"
+old = '''for path in changed(event):'''
+new = '''for path in reversed(changed(event)):'''
+tests = ["tests.test_precise_hints.Writes.test_a_calls_changed_files_are_handed_where_they_stand"]
+
+[[plant]]
+name = "a file that no longer stands is handed"
+file = "rules/precise_hints.py"
+old = '''handed_to(event, path) if path.is_file() else None'''
+new = '''handed_to(event, path)'''
+tests = ["tests.test_precise_hints.Writes.test_a_deleted_file_and_a_call_changing_nothing_pass"]
+
+[[plant]]
+name = "a Bash call keeps only the files no gate takes"
+file = "rules/precise_hints.py"
+old = '''if handed is not None:'''
+new = '''if handed is None:'''
+tests = ["tests.test_precise_hints.Writes.test_a_calls_changed_files_are_handed_where_they_stand"]
+
+[[plant]]
+name = "the bound counts files no gate takes"
+file = "rules/precise_hints.py"
+old = '''limited(tuple(standing))'''
+new = '''limited(tuple(changed(event)))'''
+tests = ["tests.test_precise_hints.Writes.test_files_left_out_are_not_counted_against_the_bound"]
+
+[[plant]]
+name = "a Bash call's file is handed as its name"
+file = "rules/precise_hints.py"
+old = '''run(standing[path][0], path, standing[path][1])'''
+new = '''run(standing[path][0], path, RelPath(path.name))'''
+tests = ["tests.test_precise_hints.Writes.test_a_calls_changed_files_are_handed_where_they_stand"]
+
+[[plant]]
+name = "an unreadable answer passes a Bash call's file"
+file = "rules/precise_hints.py"
+old = '''if answer.kind != "clean":'''
+new = '''if answer.kind == "finding":'''
+tests = ["tests.test_precise_hints.Writes.test_every_finding_and_unreadable_answer_is_refused_together"]
+
+[[plant]]
+name = "a finding on a Bash call's file is dropped"
+file = "rules/precise_hints.py"
+old = '''refused.append(said(path, standing[path], answer, FINDING))'''
+new = '''pass'''
+tests = ["tests.test_precise_hints.Writes.test_every_finding_and_unreadable_answer_is_refused_together"]
+
+[[plant]]
+name = "the files past the bound pass"
+file = "rules/precise_hints.py"
+old = '''if rest:'''
+new = '''if False:'''
+tests = ["tests.test_precise_hints.Writes.test_five_changed_files_refuse_the_fifth_as_unchecked"]
+
+[[plant]]
+name = "a Bash call's refusals are spaced otherwise"
+file = "rules/precise_hints.py"
+old = '''WRITTEN.format(answers="\n".join(refused))'''
+new = '''WRITTEN.format(answers="\n\n".join(refused))'''
+tests = ["tests.test_precise_hints.Writes.test_every_finding_and_unreadable_answer_is_refused_together"]
+
+[[plant]]
+name = "a Bash call is refused with nothing to say"
+file = "rules/precise_hints.py"
+old = '''if refused else None'''
+new = '''if True else None'''
+tests = ["tests.test_precise_hints.Writes.test_a_calls_changed_files_are_handed_where_they_stand"]
+
+[[plant]]
+name = "every event is judged as before a call"
+file = "rules/precise_hints.py"
+old = '''if event.name == "PreToolUse":'''
+new = '''if True:'''
+tests = ["tests.test_precise_hints.Writes.test_a_calls_changed_files_are_handed_where_they_stand"]
+
+[[plant]]
+name = "an edit is judged after it runs too"
+file = "rules/precise_hints.py"
+old = '''return after(event) if event.tool == BASH else None'''
+new = '''return after(event)'''
+tests = ["tests.test_precise_hints.Edits.test_an_edit_is_judged_before_it_runs_alone"]
+
+[[plant]]
+name = "a hint finding said as a site"
+file = "rules/precise_hints.py"
+old = '''FindingVerb("refuses a hint")'''
+new = '''FindingVerb("refuses a site")'''
+tests = ["tests.test_precise_hints.Edits.test_a_finding_refuses_naming_the_file_the_gate_its_rule_and_its_text"]
+
+[[plant]]
+name = "the unchecked files called tests"
+file = "rules/precise_hints.py"
+old = '''Noun("files")'''
+new = '''Noun("tests")'''
+tests = ["tests.test_precise_hints.Writes.test_five_changed_files_refuse_the_fifth_as_unchecked"]
+
+[[plant]]
+name = "the handed files refused as unchecked"
+file = "rules/precise_hints.py"
+old = '''unchecked(rest, standing, NOUN)'''
+new = '''unchecked(first, standing, NOUN)'''
+tests = ["tests.test_precise_hints.Writes.test_five_changed_files_refuse_the_fifth_as_unchecked"]

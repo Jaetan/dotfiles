@@ -1,0 +1,614 @@
+# The plants that show rules/unit_slice.py held by tests/test_unit_slice.py, one per line of the module, a line naming
+# a few words planted once per word and a line of the list once, by one of its words:
+#   testing/plants.py tests/plants_unit_slice.toml --out DIR
+
+[[plant]]
+name = "the rule judges no PreToolUse event"
+file = "rules/unit_slice.py"
+old = '''EVENTS: frozenset[HookEvent] = frozenset({"PreToolUse"})'''
+new = '''EVENTS: frozenset[HookEvent] = frozenset({"PostToolUse"})'''
+tests = ["tests.test_unit_slice.OldCases.test_refused"]
+
+[[plant]]
+name = "Monitor is not judged"
+file = "rules/unit_slice.py"
+old = '''TOOLS = frozenset({ToolName("Bash"), ToolName("Monitor")})'''
+new = '''TOOLS = frozenset({ToolName("Bash")})'''
+tests = ["tests.test_unit_slice.Reach.test_monitor"]
+
+[[plant]]
+name = "systemd-run is found by another name"
+file = "rules/unit_slice.py"
+old = '''SYSTEMD_RUN = ShellText("systemd-run")'''
+new = '''SYSTEMD_RUN = ShellText("systemd")'''
+tests = ["tests.test_unit_slice.OldCases.test_refused"]
+
+[[plant]]
+name = "-h and --version start a unit"
+file = "rules/unit_slice.py"
+old = '''NO_UNIT = frozenset({ShellText("-h"), ShellText("--help"), ShellText("--version")})'''
+new = '''NO_UNIT = frozenset({ShellText("--help")})'''
+tests = ["tests.test_unit_slice.Exceptions.test_no_unit"]
+
+[[plant]]
+name = "--help starts a unit"
+file = "rules/unit_slice.py"
+old = '''NO_UNIT = frozenset({ShellText("-h"), ShellText("--help"), ShellText("--version")})'''
+new = '''NO_UNIT = frozenset({ShellText("-h"), ShellText("--version")})'''
+tests = ["tests.test_unit_slice.Exceptions.test_no_unit"]
+
+[[plant]]
+name = "--system names no manager"
+file = "rules/unit_slice.py"
+old = '''MANAGERS = frozenset({ShellText("--user"), ShellText("--system")})'''
+new = '''MANAGERS = frozenset({ShellText("--user")})'''
+tests = ["tests.test_unit_slice.User.test_cases"]
+
+[[plant]]
+name = "the user manager is named by --system"
+file = "rules/unit_slice.py"
+old = '''USER = ShellText("--user")'''
+new = '''USER = ShellText("--system")'''
+tests = ["tests.test_unit_slice.OldCases.test_passed"]
+
+[[plant]]
+name = "--slice-inherit is abbreviated"
+file = "rules/unit_slice.py"
+old = '''INHERIT = ShellText("--slice-inherit")'''
+new = '''INHERIT = ShellText("--slice-inh")'''
+tests = ["tests.test_unit_slice.OldCases.test_passed", "tests.test_unit_slice.List.test_cases"]
+
+[[plant]]
+name = "--slice=NAME names no slice"
+file = "rules/unit_slice.py"
+old = '''JOINED = (ShellText("--slice="), ShellText("--property=Slice="))'''
+new = '''JOINED = (ShellText("--property=Slice="),)'''
+tests = ["tests.test_unit_slice.OldCases.test_passed"]
+
+[[plant]]
+name = "--property=Slice=NAME names no slice"
+file = "rules/unit_slice.py"
+old = '''JOINED = (ShellText("--slice="), ShellText("--property=Slice="))'''
+new = '''JOINED = (ShellText("--slice="),)'''
+tests = ["tests.test_unit_slice.OldCases.test_passed", "tests.test_unit_slice.Placement.test_cases"]
+
+[[plant]]
+name = "a slice ends in another suffix"
+file = "rules/unit_slice.py"
+old = '''SUFFIX = ShellText(".slice")'''
+new = '''SUFFIX = ShellText(".slicex")'''
+tests = ["tests.test_unit_slice.OldCases.test_passed"]
+
+[[plant]]
+name = "the lead names no caps"
+file = "rules/unit_slice.py"
+old = '''ADVICE = """this call starts a systemd unit outside {slice}, the machine's slice, and its memory and CPU caps.'''
+new = '''ADVICE = """this call starts a systemd unit outside {slice}, the machine's slice.'''
+tests = ["tests.test_unit_slice.Refusal.test_text"]
+
+[[plant]]
+name = "each line is given twice"
+file = "rules/unit_slice.py"
+old = '''{problems}'''
+new = '''{problems}{problems}'''
+tests = ["tests.test_unit_slice.Refusal.test_text"]
+
+[[plant]]
+name = "the advice says nothing of app.slice"
+file = "rules/unit_slice.py"
+old = '''A user unit naming no slice lands in app.slice, outside every cap. Name the user manager and the slice:'''
+new = '''Name the user manager and the slice:'''
+tests = ["tests.test_unit_slice.Refusal.test_text"]
+
+[[plant]]
+name = "the form that passes names no --user"
+file = "rules/unit_slice.py"
+old = '''  systemd-run --user --slice={slice} ...'''
+new = '''  systemd-run --slice={slice} ...'''
+tests = ["tests.test_unit_slice.Refusal.test_text"]
+
+[[plant]]
+name = "the advice names no --slice-inherit"
+file = "rules/unit_slice.py"
+old = '''or a slice beneath it, --slice={stem}-NAME.slice, or --slice-inherit, which keeps the unit in the slice the call'''
+new = '''or a slice beneath it, --slice={stem}-NAME.slice, which keeps the unit in the slice the call'''
+tests = ["tests.test_unit_slice.Refusal.test_text"]
+
+[[plant]]
+name = "the advice ends in a blank line"
+file = "rules/unit_slice.py"
+old = '''runs in."""'''
+new = '''runs in.
+"""'''
+tests = ["tests.test_unit_slice.Refusal.test_text"]
+
+[[plant]]
+name = "systemd-run by path is not found"
+file = "rules/unit_slice.py"
+old = '''words[0].value.rsplit("/", 1)[-1] == SYSTEMD_RUN'''
+new = '''words[0].value == SYSTEMD_RUN'''
+tests = ["tests.test_unit_slice.Reach.test_cases"]
+
+[[plant]]
+name = "a systemd-run's last word is dropped"
+file = "rules/unit_slice.py"
+old = '''    words = commands[at].words'''
+new = '''    words = commands[at].words[:-1]'''
+tests = ["tests.test_unit_slice.OldCases.test_passed"]
+
+[[plant]]
+name = "the next command is taken for the one a systemd-run runs"
+file = "rules/unit_slice.py"
+old = '''    if at + 1 < len(commands) and commands[at + 1].wrappers == (*commands[at].wrappers, SYSTEMD_RUN):'''
+new = '''    if at + 1 < len(commands):'''
+tests = ["tests.test_unit_slice.OwnWords.test_cases"]
+
+[[plant]]
+name = "the command a systemd-run runs is among its own words"
+file = "rules/unit_slice.py"
+old = '''        cut = len(words) - len(commands[at + 1].words)'''
+new = '''        cut = len(words)'''
+tests = ["tests.test_unit_slice.OwnWords.test_cases"]
+
+[[plant]]
+name = "the command a systemd-run runs is not quoted"
+file = "rules/unit_slice.py"
+old = '''        return words[:cut], words[cut:]'''
+new = '''        return words[:cut], ()'''
+tests = ["tests.test_unit_slice.OldCases.test_refused"]
+
+[[plant]]
+name = "a systemd-run running no command has no own words"
+file = "rules/unit_slice.py"
+old = '''    return words, ()'''
+new = '''    return words[:1], ()'''
+tests = ["tests.test_unit_slice.Nesting.test_cases"]
+
+[[plant]]
+name = "a name gets no .slice appended"
+file = "rules/unit_slice.py"
+old = '''    return SliceName(name if name.endswith(SUFFIX) else name + SUFFIX)'''
+new = '''    return SliceName(name)'''
+tests = ["tests.test_unit_slice.Placement.test_cases"]
+
+[[plant]]
+name = "only the first slice named is judged"
+file = "rules/unit_slice.py"
+old = '''for form in JOINED if word.startswith(form)]'''
+new = '''for form in JOINED if word.startswith(form)][:1]'''
+tests = ["tests.test_unit_slice.Placement.test_cases"]
+
+[[plant]]
+name = "beneath needs no dash"
+file = "rules/unit_slice.py"
+old = '''    beneath = f"{declared.removesuffix(SUFFIX)}-"'''
+new = '''    beneath = f"{declared.removesuffix(SUFFIX)}"'''
+tests = ["tests.test_unit_slice.OldCases.test_refused"]
+
+[[plant]]
+name = "a stem and a dash is beneath"
+file = "rules/unit_slice.py"
+old = '''len(name) > len(beneath) + len(SUFFIX))'''
+new = '''len(name) >= len(beneath) + len(SUFFIX))'''
+tests = ["tests.test_unit_slice.Placement.test_cases"]
+
+[[plant]]
+name = "one unknown word does not refuse"
+file = "rules/unit_slice.py"
+old = '''    if unknown:'''
+new = '''    if len(unknown) > 1:'''
+tests = ["tests.test_unit_slice.Exceptions.test_unknown"]
+
+[[plant]]
+name = "the unknown word is not quoted as code"
+file = "rules/unit_slice.py"
+old = '''        return Prose(f"holds `{unknown[0]}`, a word the call does not make known")'''
+new = '''        return Prose(f"holds {unknown[0]}, a word the call does not make known")'''
+tests = ["tests.test_unit_slice.Exceptions.test_unknown"]
+
+[[plant]]
+name = "only the first option may ask for help"
+file = "rules/unit_slice.py"
+old = '''    if NO_UNIT & set(said):'''
+new = '''    if NO_UNIT & set(said[:2]):'''
+tests = ["tests.test_unit_slice.Exceptions.test_no_unit"]
+
+[[plant]]
+name = "help goes on to be judged"
+file = "rules/unit_slice.py"
+old = '''    if NO_UNIT & set(said):
+        return None'''
+new = '''    if NO_UNIT & set(said):
+        pass'''
+tests = ["tests.test_unit_slice.Exceptions.test_no_unit"]
+
+[[plant]]
+name = "a --system after --user is not read"
+file = "rules/unit_slice.py"
+old = '''    if [word for word in said if word in MANAGERS][-1:] != [USER]:'''
+new = '''    if USER not in said:'''
+tests = ["tests.test_unit_slice.User.test_cases"]
+
+[[plant]]
+name = "the manager's line names no --system"
+file = "rules/unit_slice.py"
+old = '''        return Prose("names no --user, or a --system after it")'''
+new = '''        return Prose("names no --user")'''
+tests = ["tests.test_unit_slice.User.test_cases"]
+
+[[plant]]
+name = "--slice-inherit decides only where no slice is named"
+file = "rules/unit_slice.py"
+old = '''    if INHERIT in said:'''
+new = '''    if INHERIT in said and not slices(said):'''
+tests = ["tests.test_unit_slice.Placement.test_cases"]
+
+[[plant]]
+name = "--slice-inherit places no unit"
+file = "rules/unit_slice.py"
+old = '''    if INHERIT in said:
+        return None'''
+new = '''    if INHERIT in said:
+        pass'''
+tests = ["tests.test_unit_slice.OldCases.test_passed"]
+
+[[plant]]
+name = "the last own word names no slice"
+file = "rules/unit_slice.py"
+old = '''    names = slices(said)'''
+new = '''    names = slices(said[:-1])'''
+tests = ["tests.test_unit_slice.OldCases.test_passed"]
+
+[[plant]]
+name = "a unit naming no slice passes"
+file = "rules/unit_slice.py"
+old = '''    if not names:'''
+new = '''    if not said:'''
+tests = ["tests.test_unit_slice.OldCases.test_refused"]
+
+[[plant]]
+name = "the no-slice line names no app.slice"
+file = "rules/unit_slice.py"
+old = '''        return Prose("names no slice, so its unit lands in app.slice")'''
+new = '''        return Prose("names no slice")'''
+tests = ["tests.test_unit_slice.OldCases.test_refused"]
+
+[[plant]]
+name = "the first slice named is not judged"
+file = "rules/unit_slice.py"
+old = '''    outside = [name for name in names if not within(name, declared)]'''
+new = '''    outside = [name for name in names[1:] if not within(name, declared)]'''
+tests = ["tests.test_unit_slice.Placement.test_cases"]
+
+[[plant]]
+name = "one slice outside does not refuse"
+file = "rules/unit_slice.py"
+old = '''beneath it") if outside else None'''
+new = '''beneath it") if len(outside) > 1 else None'''
+tests = ["tests.test_unit_slice.OldCases.test_refused"]
+
+[[plant]]
+name = "only the call's first command is read"
+file = "rules/unit_slice.py"
+old = '''    commands = event.call().commands'''
+new = '''    commands = event.call().commands[:1]'''
+tests = ["tests.test_unit_slice.OldCases.test_refused"]
+
+[[plant]]
+name = "a wrapped systemd-run is not found"
+file = "rules/unit_slice.py"
+old = '''    runs = [Count(at) for at, command in enumerate(commands) if is_systemd_run(command.words)]'''
+new = '''    runs = [Count(at) for at, command in enumerate(commands) if is_systemd_run(command.words) and not command.wrappers]'''
+tests = ["tests.test_unit_slice.OldCases.test_refused", "tests.test_unit_slice.Nesting.test_cases"]
+
+[[plant]]
+name = "a call without systemd-run reads the declaration"
+file = "rules/unit_slice.py"
+old = '''    if not runs:'''
+new = '''    if runs is None:'''
+tests = ["tests.test_unit_slice.Machines.test_no_systemd_run_reads_nothing"]
+
+[[plant]]
+name = "the slice is fixed at claude.slice"
+file = "rules/unit_slice.py"
+old = '''    declared = event.declaration(Path("/")).machine.slice'''
+new = '''    declared = SliceName("claude.slice") if event.declaration(Path("/")).machine.slice else None'''
+tests = ["tests.test_unit_slice.Machines.test_another_slice", "tests.test_unit_slice.Refusal.test_text"]
+
+[[plant]]
+name = "a machine declaring no slice holds claude.slice"
+file = "rules/unit_slice.py"
+old = '''    if declared is None:
+        return None'''
+new = '''    if declared is None:
+        declared = SliceName("claude.slice")'''
+tests = ["tests.test_unit_slice.Machines.test_no_slice"]
+
+[[plant]]
+name = "every call starts with a refusal line"
+file = "rules/unit_slice.py"
+old = '''    lines: list[Prose] = []'''
+new = '''    lines: list[Prose] = [Prose("  * a planted line")]'''
+tests = ["tests.test_unit_slice.OldCases.test_passed"]
+
+[[plant]]
+name = "only the first systemd-run is judged"
+file = "rules/unit_slice.py"
+old = '''    for at in runs:'''
+new = '''    for at in runs[:1]:'''
+tests = ["tests.test_unit_slice.Nesting.test_cases"]
+
+[[plant]]
+name = "a systemd-run's own words take in its command"
+file = "rules/unit_slice.py"
+old = '''        own, after = spelled(commands, at)'''
+new = '''        own, after = commands[at].words, ()'''
+tests = ["tests.test_unit_slice.OwnWords.test_cases"]
+
+[[plant]]
+name = "the verdict is turned round"
+file = "rules/unit_slice.py"
+old = '''        if (why := problem(own, after, declared)) is not None:'''
+new = '''        if (why := problem(own, after, declared)) is None:'''
+tests = ["tests.test_unit_slice.OldCases.test_refused", "tests.test_unit_slice.OldCases.test_passed"]
+
+[[plant]]
+name = "a long command is quoted without its ellipsis"
+file = "rules/unit_slice.py"
+old = '''([ShellText("...")] if len(after) > 1 else [])'''
+new = '''([ShellText("...")] if len(after) > 9 else [])'''
+tests = ["tests.test_unit_slice.OldCases.test_refused"]
+
+[[plant]]
+name = "a line quotes its systemd-run without its name"
+file = "rules/unit_slice.py"
+old = '''            lines.append(Prose(f"  * `{' '.join(quoted)}` {why}"))'''
+new = '''            lines.append(Prose(f"  * `{' '.join(quoted[1:])}` {why}"))'''
+tests = ["tests.test_unit_slice.OldCases.test_refused"]
+
+[[plant]]
+name = "a call refused by no line is refused"
+file = "rules/unit_slice.py"
+old = '''    if not lines:'''
+new = '''    if not lines and False:'''
+tests = ["tests.test_unit_slice.OldCases.test_passed"]
+
+[[plant]]
+name = "the advice's stem keeps its suffix"
+file = "rules/unit_slice.py"
+old = '''stem=declared.removesuffix(SUFFIX)'''
+new = '''stem=declared'''
+tests = ["tests.test_unit_slice.Refusal.test_text"]
+
+[[plant]]
+name = "the list holds the letters of its text"
+file = "rules/unit_slice.py"
+old = '''FLAGS = named(ShellText('''
+new = '''FLAGS = frozenset(ShellText('''
+tests = ["tests.test_unit_slice.OldCases.test_passed"]
+
+[[plant]]
+name = "--no-ask-password is off the list"
+file = "rules/unit_slice.py"
+old = '''"-h --help --version --no-ask-password --user'''
+new = '''"-h --help --version --user'''
+tests = ["tests.test_unit_slice.List.test_every_word"]
+
+[[plant]]
+name = "--help is off the list"
+file = "rules/unit_slice.py"
+old = '''"-h --help --version --no-ask-password'''
+new = '''"-h --version --no-ask-password'''
+tests = ["tests.test_unit_slice.Exceptions.test_no_unit"]
+
+[[plant]]
+name = "--wait is off the list"
+file = "rules/unit_slice.py"
+old = '''"--wait --send-sighup'''
+new = '''"--send-sighup'''
+tests = ["tests.test_unit_slice.List.test_every_word"]
+
+[[plant]]
+name = "--on-clock-change is off the list"
+file = "rules/unit_slice.py"
+old = ''' --on-timezone-change --on-clock-change"))'''
+new = ''' --on-timezone-change"))'''
+tests = ["tests.test_unit_slice.List.test_every_word"]
+
+[[plant]]
+name = "the valued options are the letters of their text"
+file = "rules/unit_slice.py"
+old = '''VALUED = named(ShellText('''
+new = '''VALUED = frozenset(ShellText('''
+tests = ["tests.test_unit_slice.OldCases.test_passed"]
+
+[[plant]]
+name = "--unit= is off the list"
+file = "rules/unit_slice.py"
+old = '''"--unit --property'''
+new = '''"--property'''
+tests = ["tests.test_unit_slice.List.test_every_word"]
+
+[[plant]]
+name = "--working-directory= is off the list"
+file = "rules/unit_slice.py"
+old = '''"--working-directory --root-directory'''
+new = '''"--root-directory'''
+tests = ["tests.test_unit_slice.List.test_every_word"]
+
+[[plant]]
+name = "--socket-property= is off the list"
+file = "rules/unit_slice.py"
+old = '''"--socket-property --on-active'''
+new = '''"--on-active'''
+tests = ["tests.test_unit_slice.List.test_every_word"]
+
+[[plant]]
+name = "--timer-property= is off the list"
+file = "rules/unit_slice.py"
+old = '''"--timer-property"))'''
+new = '''"--on-calendar"))'''
+tests = ["tests.test_unit_slice.List.test_every_word"]
+
+[[plant]]
+name = "-p takes no value as the next word"
+file = "rules/unit_slice.py"
+old = '''PAIRED = {ShellText("-p"): ShellText("--property="), '''
+new = '''PAIRED = {'''
+tests = ["tests.test_unit_slice.OldCases.test_passed"]
+
+[[plant]]
+name = "-E takes no value as the next word"
+file = "rules/unit_slice.py"
+old = '''ShellText("-E"): ShellText("--setenv=")}'''
+new = '''}'''
+tests = ["tests.test_unit_slice.List.test_every_word"]
+
+[[plant]]
+name = "-p joins as no --property"
+file = "rules/unit_slice.py"
+old = '''ShellText("--property="), ShellText("-E")'''
+new = '''ShellText("--prop="), ShellText("-E")'''
+tests = ["tests.test_unit_slice.OldCases.test_passed"]
+
+[[plant]]
+name = "the joined words start with an option off the list"
+file = "rules/unit_slice.py"
+old = '''    words: list[ShellText] = []'''
+new = '''    words: list[ShellText] = [ShellText("-x")]'''
+tests = ["tests.test_unit_slice.OldCases.test_passed"]
+
+[[plant]]
+name = "the first own word is not joined"
+file = "rules/unit_slice.py"
+old = '''    for word in said:'''
+new = '''    for word in said[1:]:'''
+tests = ["tests.test_unit_slice.OldCases.test_passed"]
+
+[[plant]]
+name = "a flag after -p is read as an option"
+file = "rules/unit_slice.py"
+old = '''        if words and words[-1] in PAIRED:'''
+new = '''        if words and words[-1] in PAIRED and word not in FLAGS:'''
+tests = ["tests.test_unit_slice.Exceptions.test_no_unit"]
+
+[[plant]]
+name = "-p joins as no value"
+file = "rules/unit_slice.py"
+old = '''            words[-1] = ShellText(PAIRED[words[-1]] + word)'''
+new = '''            words[-1] = ShellText(PAIRED[words[-1]])'''
+tests = ["tests.test_unit_slice.OldCases.test_passed"]
+
+[[plant]]
+name = "a word not after -p or -E is dropped"
+file = "rules/unit_slice.py"
+old = '''            words.append(word)'''
+new = '''            pass'''
+tests = ["tests.test_unit_slice.OldCases.test_passed"]
+
+[[plant]]
+name = "-p and -E are not joined"
+file = "rules/unit_slice.py"
+old = '''            words.append(word)
+    return words'''
+new = '''            words.append(word)
+    return list(said)'''
+tests = ["tests.test_unit_slice.OldCases.test_passed"]
+
+[[plant]]
+name = "a word with = is listed by its whole text"
+file = "rules/unit_slice.py"
+old = '''    name, equals, _ = word.partition("=")'''
+new = '''    name, equals, _ = word.partition(":")'''
+tests = ["tests.test_unit_slice.OldCases.test_passed"]
+
+[[plant]]
+name = "a valued option needs no ="
+file = "rules/unit_slice.py"
+old = '''(bool(equals) and name in VALUED)'''
+new = '''(name in VALUED)'''
+tests = ["tests.test_unit_slice.List.test_cases"]
+
+[[plant]]
+name = "a flag takes a value"
+file = "rules/unit_slice.py"
+old = '''    return word in FLAGS or'''
+new = '''    return name in FLAGS or'''
+tests = ["tests.test_unit_slice.List.test_cases"]
+
+[[plant]]
+name = "a slice keeps its option in its name"
+file = "rules/unit_slice.py"
+old = '''    return [sliced(ShellText(word.removeprefix(form)))'''
+new = '''    return [sliced(ShellText(word))'''
+tests = ["tests.test_unit_slice.OldCases.test_passed"]
+
+[[plant]]
+name = "the command is not read"
+file = "rules/unit_slice.py"
+old = '''for word in (*own, *command[:1]) if word.value is None]'''
+new = '''for word in own if word.value is None]'''
+tests = ["tests.test_unit_slice.Exceptions.test_unknown"]
+
+[[plant]]
+name = "every word of the command is read"
+file = "rules/unit_slice.py"
+old = '''(*own, *command[:1])'''
+new = '''(*own, *command)'''
+tests = ["tests.test_unit_slice.Exceptions.test_unknown"]
+
+[[plant]]
+name = "the unknown word is quoted by its prefix"
+file = "rules/unit_slice.py"
+old = '''[word.text for word in (*own'''
+new = '''[word.prefix for word in (*own'''
+tests = ["tests.test_unit_slice.Exceptions.test_unknown"]
+
+[[plant]]
+name = "the systemd-run's name is an own option"
+file = "rules/unit_slice.py"
+old = '''    said = joined([word.spelled for word in own[1:]])'''
+new = '''    said = joined([word.spelled for word in own])'''
+tests = ["tests.test_unit_slice.OldCases.test_passed"]
+
+[[plant]]
+name = "the own words are not joined"
+file = "rules/unit_slice.py"
+old = '''    said = joined([word.spelled for word in own[1:]])'''
+new = '''    said = [word.spelled for word in own[1:]]'''
+tests = ["tests.test_unit_slice.OldCases.test_passed"]
+
+[[plant]]
+name = "the first own word is not checked against the list"
+file = "rules/unit_slice.py"
+old = '''    unread = [word for word in said if not listed(word)]'''
+new = '''    unread = [word for word in said[1:] if not listed(word)]'''
+tests = ["tests.test_unit_slice.List.test_cases"]
+
+[[plant]]
+name = "one word off the list does not refuse"
+file = "rules/unit_slice.py"
+old = '''    if unread:'''
+new = '''    if len(unread) > 1:'''
+tests = ["tests.test_unit_slice.List.test_cases"]
+
+[[plant]]
+name = "the line quotes the first own word"
+file = "rules/unit_slice.py"
+old = '''holds `{unread[0]}`, which'''
+new = '''holds `{said[0]}`, which'''
+tests = ["tests.test_unit_slice.List.test_cases"]
+
+[[plant]]
+name = "the line names no --name=VALUE form"
+file = "rules/unit_slice.py"
+old = '''which the rule does not read: an option's value is given as --name=VALUE")'''
+new = '''which the rule does not read")'''
+tests = ["tests.test_unit_slice.List.test_cases"]
+
+[[plant]]
+name = "the command is not passed to be read"
+file = "rules/unit_slice.py"
+old = '''problem(own, after, declared)'''
+new = '''problem(own, (), declared)'''
+tests = ["tests.test_unit_slice.Exceptions.test_unknown"]

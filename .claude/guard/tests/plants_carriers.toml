@@ -1,0 +1,1462 @@
+# The plants that show the call model reads what a carrier runs are held by tests/test_model.py: run
+#   testing/plants.py tests/plants_carriers.toml --out DIR
+# Every plant is killed when each line of dispatcher/model.py and dispatcher/scripts.py that reads a carrier's
+# script is held by a test.
+
+[[plant]]
+name = "--help runs nothing"
+file = "dispatcher/scripts.py"
+old = '''INTERPRETER_STOPS = frozenset({"--help", "--version"})'''
+new = '''INTERPRETER_STOPS = frozenset({"--version"})'''
+tests = ["tests.test_model.Scripts.test_an_interpreter_that_runs_nothing_on_its_input"]
+
+[[plant]]
+name = "--version runs nothing"
+file = "dispatcher/scripts.py"
+old = '''INTERPRETER_STOPS = frozenset({"--help", "--version"})'''
+new = '''INTERPRETER_STOPS = frozenset({"--help"})'''
+tests = ["tests.test_model.Scripts.test_an_interpreter_that_runs_nothing_on_its_input"]
+
+[[plant]]
+name = "an input script's options start past its name"
+file = "dispatcher/scripts.py"
+old = "    index, runs, stdin, text, stops = 1, True, False, False, False"
+new = "    index, runs, stdin, text, stops = 0, True, False, False, False"
+tests = ["tests.test_model.Scripts.test_a_script_on_an_interpreters_input"]
+
+[[plant]]
+name = "an input script runs unless an option stops it"
+file = "dispatcher/scripts.py"
+old = "    index, runs, stdin, text, stops = 1, True, False, False, False"
+new = "    index, runs, stdin, text, stops = 1, False, False, False, False"
+tests = ["tests.test_model.Scripts.test_a_script_on_an_interpreters_input"]
+
+[[plant]]
+name = "an input script has no -c until one is read"
+file = "dispatcher/scripts.py"
+old = "    index, runs, stdin, text, stops = 1, True, False, False, False"
+new = "    index, runs, stdin, text, stops = 1, True, False, True, False"
+tests = ["tests.test_model.Scripts.test_a_script_on_an_interpreters_input"]
+
+[[plant]]
+name = "an unknown word past the options is a parameter"
+file = "dispatcher/scripts.py"
+old = "        if value is None or value[:1] not in (\"-\", \"+\"):\n            break"
+new = "        if value is None:\n            return Options(Count(index), False, stdin, text, stops)\n        if value[:1] not in (\"-\", \"+\"):\n            break"
+tests = ["tests.test_model.Scripts.test_a_script_on_an_interpreters_input"]
+
+[[plant]]
+name = "-- ends an input script's options"
+file = "dispatcher/scripts.py"
+old = "        if value in (\"--\", \"-\"):"
+new = "        if value == \"-\":"
+tests = ["tests.test_model.Scripts.test_a_script_on_an_interpreters_input"]
+
+[[plant]]
+name = "the word ending the options is no parameter"
+file = "dispatcher/scripts.py"
+old = "        if value in (\"--\", \"-\"):\n            break"
+new = "        if value in (\"--\", \"-\"):\n            index += 1\n            break"
+tests = ["tests.test_model.Scripts.test_a_script_on_an_interpreters_input"]
+
+[[plant]]
+name = "a stopping option runs nothing"
+file = "dispatcher/scripts.py"
+old = "            stops = stops or value in INTERPRETER_STOPS"
+new = "            stops = stops and value in INTERPRETER_STOPS"
+tests = ["tests.test_model.Scripts.test_an_interpreter_that_runs_nothing_on_its_input"]
+
+[[plant]]
+name = "a valued long option takes its value"
+file = "dispatcher/scripts.py"
+old = "            index += 1 if value in INTERPRETER_VALUED else 0"
+new = "            index += 0"
+tests = ["tests.test_model.Scripts.test_a_script_on_an_interpreters_input", "tests.test_model.Scripts.test_an_interpreters_operand"]
+
+[[plant]]
+name = "a long option is skipped whole"
+file = "dispatcher/scripts.py"
+old = "        if value.startswith(\"--\"):\n            index += 1 if"
+new = "        if value.startswith(\"---\"):\n            index += 1 if"
+tests = ["tests.test_model.Scripts.test_a_script_on_an_interpreters_input"]
+
+[[plant]]
+name = "a + word is an option word"
+file = "dispatcher/scripts.py"
+old = "        if value is None or value[:1] not in (\"-\", \"+\"):"
+new = "        if value is None or value[:1] != \"-\":"
+tests = ["tests.test_model.Scripts.test_a_script_on_an_interpreters_input"]
+
+[[plant]]
+name = "every letter of an option word is read"
+file = "dispatcher/scripts.py"
+old = "        for letter in value[1:]:\n            if letter in \"oO\":"
+new = "        for letter in value[2:]:\n            if letter in \"oO\":"
+tests = ["tests.test_model.Scripts.test_an_interpreter_that_runs_nothing_on_its_input"]
+
+[[plant]]
+name = "an O takes the next word"
+file = "dispatcher/scripts.py"
+old = "            if letter in \"oO\":"
+new = "            if letter == \"o\":"
+tests = ["tests.test_model.Scripts.test_a_script_on_an_interpreters_input"]
+
+[[plant]]
+name = "an o with no next word takes none"
+file = "dispatcher/scripts.py"
+old = "                taken = values[index] if index < len(values) else None"
+new = "                taken = values[index]"
+tests = ["tests.test_model.Scripts.test_an_interpreters_input_the_call_does_not_make_known"]
+
+[[plant]]
+name = "an o or O takes one word"
+file = "dispatcher/scripts.py"
+old = "                index += 1\n                runs"
+new = "                index += 2\n                runs"
+tests = ["tests.test_model.Scripts.test_a_script_on_an_interpreters_input"]
+
+[[plant]]
+name = "-o noexec runs nothing and +o noexec runs"
+file = "dispatcher/scripts.py"
+old = '''runs = value[0] == "+" if letter == "o" and taken == "noexec" else runs'''
+new = '''runs = value[0] == "-" if letter == "o" and taken == "noexec" else runs'''
+tests = ["tests.test_model.Scripts.test_an_interpreter_that_runs_nothing_on_its_input"]
+
+[[plant]]
+name = "noexec is the option -o names"
+file = "dispatcher/scripts.py"
+old = '''runs = value[0] == "+" if letter == "o" and taken == "noexec" else runs'''
+new = '''runs = value[0] == "+" if letter == "o" and taken == "noexe" else runs'''
+tests = ["tests.test_model.Scripts.test_an_interpreter_that_runs_nothing_on_its_input"]
+
+[[plant]]
+name = "-n runs nothing and +n runs"
+file = "dispatcher/scripts.py"
+old = "            runs = value[0] == \"+\" if letter == \"n\" else runs"
+new = "            runs = value[0] == \"-\" if letter == \"n\" else runs"
+tests = ["tests.test_model.Scripts.test_an_interpreter_that_runs_nothing_on_its_input"]
+
+[[plant]]
+name = "n is the noexec letter"
+file = "dispatcher/scripts.py"
+old = "            runs = value[0] == \"+\" if letter == \"n\" else runs"
+new = "            runs = value[0] == \"+\" if letter == \"N\" else runs"
+tests = ["tests.test_model.Scripts.test_an_interpreter_that_runs_nothing_on_its_input"]
+
+[[plant]]
+name = "a -c with no text runs nothing"
+file = "dispatcher/scripts.py"
+old = "            text = text or letter == \"c\""
+new = "            text = text and letter == \"c\""
+tests = ["tests.test_model.Scripts.test_an_interpreter_that_runs_nothing_on_its_input"]
+
+[[plant]]
+name = "the options go on past an option word"
+file = "dispatcher/scripts.py"
+old = "            text = text or letter == \"c\"\n    return Options("
+new = "            text = text or letter == \"c\"\n        break\n    return Options("
+tests = ["tests.test_model.Scripts.test_a_script_on_an_interpreters_input"]
+
+[[plant]]
+name = "noexec runs nothing"
+file = "dispatcher/scripts.py"
+old = "    return read.end if read.runs and not (read.text or read.stops) else None"
+new = "    return read.end if read.runs or not (read.text or read.stops) else None"
+tests = ["tests.test_model.Scripts.test_an_interpreter_that_runs_nothing_on_its_input"]
+
+[[plant]]
+name = "a -c runs nothing"
+file = "dispatcher/scripts.py"
+old = "    return read.end if read.runs and not (read.text or read.stops) else None"
+new = "    return read.end if read.runs and not read.stops else None"
+tests = ["tests.test_model.Scripts.test_an_interpreter_that_runs_nothing_on_its_input"]
+
+[[plant]]
+name = "an interpreter is given its redirections"
+file = "dispatcher/model.py"
+old = '''self.interpreted(words, CARRIERS[base], environ, redirs, state, place, text)'''
+new = '''self.interpreted(words, CARRIERS[base], environ, (), state, place, text)'''
+tests = ["tests.test_model.Scripts.test_a_script_on_an_interpreters_input"]
+
+[[plant]]
+name = "an interpreter with no operand reads its input"
+file = "dispatcher/model.py"
+old = '''            self.inputted(words, dialect, environ, redirs, state, place, text)'''
+new = '''            pass'''
+tests = ["tests.test_model.Scripts.test_a_script_on_an_interpreters_input", "tests.test_model.Scripts.test_an_interpreters_input_the_call_does_not_make_known"]
+
+[[plant]]
+name = "an input script is read in its interpreter's dialect"
+file = "dispatcher/model.py"
+old = '''            self.inputted(words, dialect, environ, redirs, state, place, text)'''
+new = '''            self.inputted(words, "bash", environ, redirs, state, place, text)'''
+tests = ["tests.test_model.Scripts.test_a_script_on_an_interpreters_input"]
+
+[[plant]]
+name = "an interpreter that runs nothing reads nothing"
+file = "dispatcher/model.py"
+old = '''        if start is None:
+            return
+        given'''
+new = '''        if start is None:
+            pass
+        given'''
+tests = ["tests.test_model.Scripts.test_an_interpreter_that_runs_nothing_on_its_input"]
+
+[[plant]]
+name = "an input script is what its own redirections feed"
+file = "dispatcher/model.py"
+old = '''        given = self.fed(redirs, state)
+        file = '''
+new = '''        given = self.fed((), state)
+        file = '''
+tests = ["tests.test_model.Scripts.test_a_script_on_an_interpreters_input"]
+
+[[plant]]
+name = "/dev/null on the input is read"
+file = "dispatcher/model.py"
+old = '''self.table(state, place)[INPUT].reach in ("file", "null") else None'''
+new = '''self.table(state, place)[INPUT].reach in ("file",) else None'''
+tests = ["tests.test_model.Scripts.test_an_interpreter_that_runs_nothing_on_its_input"]
+
+[[plant]]
+name = "a file on the input is read"
+file = "dispatcher/model.py"
+old = '''self.table(state, place)[INPUT].reach in ("file", "null") else None'''
+new = '''self.table(state, place)[INPUT].reach in ("null",) else None'''
+tests = ["tests.test_model.Scripts.test_a_script_on_an_interpreters_input"]
+
+[[plant]]
+name = "a substitution on the input is no file"
+file = "dispatcher/model.py"
+old = '''self.table(state, place)[INPUT].reach in ("file", "null") else None'''
+new = '''self.table(state, place)[INPUT].reach in ("file", "null", "substitution") else None'''
+tests = ["tests.test_model.Scripts.test_an_interpreters_input_the_call_does_not_make_known"]
+
+[[plant]]
+name = "a file on the input is located"
+file = "dispatcher/model.py"
+old = '''        path = None if file is None else self.located(file, state, text)'''
+new = '''        path = None'''
+tests = ["tests.test_model.Scripts.test_a_script_on_an_interpreters_input"]
+
+[[plant]]
+name = "a heredoc on the input is read"
+file = "dispatcher/model.py"
+old = '''        script = given.text if file is None else None if path is None else self.found(path, text)'''
+new = '''        script = None if file is None else None if path is None else self.found(path, text)'''
+tests = ["tests.test_model.Scripts.test_a_script_on_an_interpreters_input"]
+
+[[plant]]
+name = "a file on the input is found"
+file = "dispatcher/model.py"
+old = '''        script = given.text if file is None else None if path is None else self.found(path, text)'''
+new = '''        script = given.text if file is None else None if path is None else given.text'''
+tests = ["tests.test_model.Scripts.test_a_script_on_an_interpreters_input"]
+
+[[plant]]
+name = "an empty input script is read"
+file = "dispatcher/model.py"
+old = '''        if script is not None:
+            self.run(script, dialect, (words[0]'''
+new = '''        if script:
+            self.run(script, dialect, (words[0]'''
+tests = ["tests.test_model.Scripts.test_an_interpreter_that_runs_nothing_on_its_input"]
+
+[[plant]]
+name = "an input script's parameters start where the options end"
+file = "dispatcher/model.py"
+old = '''self.run(script, dialect, (words[0], *words[start:]), environ, state, place, path, text)'''
+new = '''self.run(script, dialect, (words[0], *words[start + 1:]), environ, state, place, path, text)'''
+tests = ["tests.test_model.Scripts.test_a_script_on_an_interpreters_input"]
+
+[[plant]]
+name = "an input script's $0 is its interpreter's name"
+file = "dispatcher/model.py"
+old = '''self.run(script, dialect, (words[0], *words[start:]), environ, state, place, path, text)'''
+new = '''self.run(script, dialect, (*words[start:],), environ, state, place, path, text)'''
+tests = ["tests.test_model.Scripts.test_a_script_on_an_interpreters_input"]
+
+[[plant]]
+name = "an input file is read with its path"
+file = "dispatcher/model.py"
+old = '''self.run(script, dialect, (words[0], *words[start:]), environ, state, place, path, text)'''
+new = '''self.run(script, dialect, (words[0], *words[start:]), environ, state, place, None, text)'''
+tests = ["tests.test_model.Scripts.test_an_interpreters_input_the_call_does_not_make_known"]
+
+[[plant]]
+name = "a file the kit cannot read has its own gap alone"
+file = "dispatcher/model.py"
+old = '''        elif file is None:
+            self.gaps.append(Gap(Prose(f"the script {words[0].spelled} reads'''
+new = '''        else:
+            self.gaps.append(Gap(Prose(f"the script {words[0].spelled} reads'''
+tests = ["tests.test_model.Scripts.test_an_interpreters_input_the_call_does_not_make_known"]
+
+[[plant]]
+name = "the input gap names the interpreter"
+file = "dispatcher/model.py"
+old = '''Prose(f"the script {words[0].spelled} reads on its input is not known from the call")'''
+new = '''Prose("the script bash reads on its input is not known from the call")'''
+tests = ["tests.test_model.Scripts.test_an_interpreters_input_the_call_does_not_make_known"]
+
+[[plant]]
+name = "the input gap's form is to write the text out"
+file = "dispatcher/model.py"
+old = '''                                 text, GAP_FORM))
+
+    def run('''
+new = '''                                 text, SCRIPT_PATH_FORM))
+
+    def run('''
+tests = ["tests.test_model.Scripts.test_an_interpreters_input_the_call_does_not_make_known"]
+
+[[plant]]
+name = "xargs is no wrapper"
+file = "dispatcher/wrappers.py"
+old = '''    ShellText("xargs"): Wrapper('''
+new = '''    ShellText("xargs-gone"): Wrapper('''
+tests = ["tests.test_wrappers.Input.test_the_command_and_the_word_it_adds", "tests.test_model.Wrappers.test_what_script_and_xargs_run"]
+
+[[plant]]
+name = "xargs's --help runs its command"
+file = "dispatcher/wrappers.py"
+old = '''named(ShellText("-e --eof -i --replace -l")), GNU_STOPS,'''
+new = '''named(ShellText("-e --eof -i --replace -l")), frozenset(),'''
+tests = ["tests.test_wrappers.Input.test_what_runs_no_command"]
+
+[[plant]]
+name = "xargs's short optional values are flags"
+file = "dispatcher/wrappers.py"
+old = '''named(ShellText("-e --eof -i --replace -l"))'''
+new = '''named(ShellText("--eof --replace"))'''
+tests = ["tests.test_wrappers.Input.test_the_command_and_the_word_it_adds"]
+
+[[plant]]
+name = "xargs adds no word"
+file = "dispatcher/wrappers.py"
+old = '''appends=ShellText("echo")),'''
+new = '''appends=None),'''
+tests = ["tests.test_wrappers.Input.test_the_command_and_the_word_it_adds", "tests.test_model.Wrappers.test_what_script_and_xargs_run"]
+
+[[plant]]
+name = "xargs runs true where its words name none"
+file = "dispatcher/wrappers.py"
+old = '''appends=ShellText("echo")),'''
+new = '''appends=ShellText("true")),'''
+tests = ["tests.test_wrappers.Input.test_the_command_and_the_word_it_adds"]
+
+[[plant]]
+name = "xargs's -d takes no value"
+file = "dispatcher/wrappers.py"
+old = '''XARGS_VALUED = ShellText("-a --arg-file -d --delimiter '''
+new = '''XARGS_VALUED = ShellText("-a --arg-file --delimiter '''
+tests = ["tests.test_wrappers.Input.test_the_command_and_the_word_it_adds"]
+
+[[plant]]
+name = "xargs's --process-slot-var takes no value"
+file = "dispatcher/wrappers.py"
+old = '''"--process-slot-var -s --max-chars")'''
+new = '''"-s --max-chars")'''
+tests = ["tests.test_wrappers.Input.test_the_command_and_the_word_it_adds"]
+
+[[plant]]
+name = "every wrapper appends"
+file = "dispatcher/wrappers.py"
+old = '''    appends: ShellText | None = None'''
+new = '''    appends: ShellText | None = ShellText("echo")'''
+tests = ["tests.test_model.Wrappers.test_each_wrapper_is_peeled"]
+
+[[plant]]
+name = "script is no wrapper"
+file = "dispatcher/wrappers.py"
+old = '''    ShellText("script"): Wrapper('''
+new = '''    ShellText("script-gone"): Wrapper('''
+tests = ["tests.test_wrappers.Script.test_what_it_runs", "tests.test_model.Wrappers.test_what_script_and_xargs_run"]
+
+[[plant]]
+name = "script's -h runs its text"
+file = "dispatcher/wrappers.py"
+old = '''named(ShellText("-t --timing")), UTIL_STOPS,'''
+new = '''named(ShellText("-t --timing")), frozenset(),'''
+tests = ["tests.test_wrappers.Script.test_what_runs_no_command"]
+
+[[plant]]
+name = "script's -t is a flag"
+file = "dispatcher/wrappers.py"
+old = '''named(ShellText("-t --timing"))'''
+new = '''named(ShellText("--timing"))'''
+tests = ["tests.test_wrappers.Script.test_what_runs_no_command"]
+
+[[plant]]
+name = "script's -- is no end"
+file = "dispatcher/wrappers.py"
+old = '''ends=named(ShellText("--")), needs='''
+new = '''ends=frozenset(), needs='''
+tests = ["tests.test_wrappers.Script.test_what_it_runs"]
+
+[[plant]]
+name = "script runs its words without --"
+file = "dispatcher/wrappers.py"
+old = '''needs=named(ShellText("--")), operands=ONE,'''
+new = '''needs=frozenset(), operands=ONE,'''
+tests = ["tests.test_wrappers.Script.test_what_runs_no_command"]
+
+[[plant]]
+name = "script's file is read as its command"
+file = "dispatcher/wrappers.py"
+old = '''needs=named(ShellText("--")), operands=ONE,'''
+new = '''needs=named(ShellText("--")), operands=Count(0),'''
+tests = ["tests.test_wrappers.Script.test_what_it_runs"]
+
+[[plant]]
+name = "script's -c runs in an unknown shell"
+file = "dispatcher/wrappers.py"
+old = '''texts=running(ShellText("-c --command"), Runner("$SHELL")), joins=Runner("$SHELL")),'''
+new = '''texts=running(ShellText("-c --command"), UNKNOWN_SHELL), joins=Runner("$SHELL")),'''
+tests = ["tests.test_wrappers.Script.test_what_it_runs", "tests.test_model.Wrappers.test_what_script_and_xargs_run"]
+
+[[plant]]
+name = "script's words after -- run as a command"
+file = "dispatcher/wrappers.py"
+old = '''joins=Runner("$SHELL")),
+}'''
+new = '''joins=None),
+}'''
+tests = ["tests.test_wrappers.Script.test_what_it_runs"]
+
+[[plant]]
+name = "script's -T takes no value"
+file = "dispatcher/wrappers.py"
+old = '''"-I --log-in -O --log-out -B --log-io -T --log-timing'''
+new = '''"-I --log-in -O --log-out -B --log-io --log-timing'''
+tests = ["tests.test_wrappers.Script.test_what_it_runs"]
+
+[[plant]]
+name = "script's -o takes no value"
+file = "dispatcher/wrappers.py"
+old = '''"--echo -o --output-limit")'''
+new = '''"--echo --output-limit")'''
+tests = ["tests.test_wrappers.Script.test_what_it_runs"]
+
+[[plant]]
+name = "an end -- is not taken"
+file = "dispatcher/model.py"
+old = '''                if value in row.ends:
+                    self.took(value, None)'''
+new = '''                if False:
+                    self.took(value, None)'''
+tests = ["tests.test_wrappers.Script.test_what_it_runs"]
+
+[[plant]]
+name = "operands are skipped past an end option"
+file = "dispatcher/model.py"
+old = '''    if not taken.given & row.ends:'''
+new = '''    if True:'''
+tests = ["tests.test_wrappers.Script.test_what_it_runs"]
+
+[[plant]]
+name = "the word after the operands is not read"
+file = "dispatcher/model.py"
+old = '''        option = first_value(words[index:])'''
+new = '''        option = None'''
+tests = ["tests.test_wrappers.Script.test_what_it_runs"]
+
+[[plant]]
+name = "an end option after the operands is not read"
+file = "dispatcher/model.py"
+old = '''        if option is not None and option in row.ends:'''
+new = '''        if False:'''
+tests = ["tests.test_wrappers.Script.test_what_it_runs"]
+
+[[plant]]
+name = "an end option after the operands is not taken"
+file = "dispatcher/model.py"
+old = '''            taken.took(option, None)
+            index = Count(index + 1)
+        elif'''
+new = '''            index = Count(index + 1)
+        elif'''
+tests = ["tests.test_wrappers.Script.test_what_it_runs"]
+
+[[plant]]
+name = "an end option after the operands is read as the command"
+file = "dispatcher/model.py"
+old = '''            taken.took(option, None)
+            index = Count(index + 1)
+        elif'''
+new = '''            taken.took(option, None)
+        elif'''
+tests = ["tests.test_wrappers.Script.test_what_it_runs"]
+
+[[plant]]
+name = "a row that appends adds nothing"
+file = "dispatcher/model.py"
+old = '''    if row.appends is not None:'''
+new = '''    if False:'''
+tests = ["tests.test_wrappers.Input.test_the_command_and_the_word_it_adds", "tests.test_model.Wrappers.test_what_script_and_xargs_run"]
+
+[[plant]]
+name = "a row's own command is not run where its words name none"
+file = "dispatcher/model.py"
+old = '''(*(after or (literal(row.appends),)), INPUT_WORDS)'''
+new = '''(*after, INPUT_WORDS)'''
+tests = ["tests.test_wrappers.Input.test_the_command_and_the_word_it_adds"]
+
+[[plant]]
+name = "the input word is not added"
+file = "dispatcher/model.py"
+old = '''(*(after or (literal(row.appends),)), INPUT_WORDS)'''
+new = '''(*(after or (literal(row.appends),)),)'''
+tests = ["tests.test_wrappers.Input.test_the_command_and_the_word_it_adds", "tests.test_model.Wrappers.test_what_script_and_xargs_run"]
+
+[[plant]]
+name = "the input word is known"
+file = "dispatcher/model.py"
+old = '''INPUT_WORDS = Word(ShellText("the words a wrapper reads from its input"), None, None)'''
+new = '''INPUT_WORDS = Word(ShellText("the words a wrapper reads from its input"), ShellText("x"), None)'''
+tests = ["tests.test_wrappers.Input.test_the_command_and_the_word_it_adds"]
+
+# A find's actions: each command its -exec, -execdir, -ok and -okdir runs is a command of a find process of its
+# own, read as GNU find 4.10 reads its words.
+
+[[plant]]
+name = "-P is no leading option"
+file = "dispatcher/model.py"
+old = '''FIND_LEADING = options(ShellText("-H -L -P"))'''
+new = '''FIND_LEADING = options(ShellText("-H -L"))'''
+tests = ["tests.test_model.Finds.test_each_action_and_where_it_runs"]
+
+[[plant]]
+name = "-okdir is no action"
+file = "dispatcher/model.py"
+old = '''FIND_ACTIONS = options(ShellText("-exec -execdir -ok -okdir"))'''
+new = '''FIND_ACTIONS = options(ShellText("-exec -execdir -ok"))'''
+tests = ["tests.test_model.Finds.test_each_action_and_where_it_runs"]
+
+[[plant]]
+name = "-okdir does not prompt"
+file = "dispatcher/model.py"
+old = '''FIND_PROMPTED = options(ShellText("-ok -okdir"))'''
+new = '''FIND_PROMPTED = options(ShellText("-ok"))'''
+tests = ["tests.test_model.Finds.test_each_action_and_where_it_runs"]
+
+[[plant]]
+name = "-okdir runs in find's directory"
+file = "dispatcher/model.py"
+old = '''FIND_ELSEWHERE = options(ShellText("-execdir -okdir"))'''
+new = '''FIND_ELSEWHERE = options(ShellText("-execdir"))'''
+tests = ["tests.test_model.Finds.test_each_action_and_where_it_runs"]
+
+[[plant]]
+name = "-amin takes no argument"
+file = "dispatcher/model.py"
+old = '''FIND_VALUED = options(ShellText("-amin -anewer'''
+new = '''FIND_VALUED = options(ShellText("-anewer'''
+tests = ["tests.test_model.Finds.test_each_action_and_where_it_runs"]
+
+[[plant]]
+name = "-iname takes no argument"
+file = "dispatcher/model.py"
+old = '''"-fstype -gid -group -ilname -iname -inum'''
+new = '''"-fstype -gid -group -ilname -inum'''
+tests = ["tests.test_model.Finds.test_each_action_and_where_it_runs"]
+
+[[plant]]
+name = "-name takes no argument"
+file = "dispatcher/model.py"
+old = '''"-maxdepth -mindepth -mmin -mtime -name -path'''
+new = '''"-maxdepth -mindepth -mmin -mtime -path'''
+tests = ["tests.test_model.Finds.test_each_action_and_where_it_runs"]
+
+[[plant]]
+name = "-xtype takes no argument"
+file = "dispatcher/model.py"
+old = '''-wholename -xtype"))'''
+new = '''-wholename"))'''
+tests = ["tests.test_model.Finds.test_each_action_and_where_it_runs"]
+
+[[plant]]
+name = "the leading options start past the start point"
+file = "dispatcher/model.py"
+old = '''    index = 1
+    while index < len(words):
+        value = words[index].value or ShellText("")
+'''
+new = '''    index = 2
+    while index < len(words):
+        value = words[index].value or ShellText("")
+'''
+tests = ["tests.test_model.Finds.test_each_action_and_where_it_runs"]
+
+[[plant]]
+name = "-O is no leading option"
+file = "dispatcher/model.py"
+old = '''        if value in FIND_LEADING or value.startswith("-O"):'''
+new = '''        if value in FIND_LEADING:'''
+tests = ["tests.test_model.Finds.test_each_action_and_where_it_runs"]
+
+[[plant]]
+name = "a leading option takes the word after it"
+file = "dispatcher/model.py"
+old = '''value.startswith("-O"):
+            index += 1'''
+new = '''value.startswith("-O"):
+            index += 2'''
+tests = ["tests.test_model.Finds.test_each_action_and_where_it_runs"]
+
+[[plant]]
+name = "-D is no leading option"
+file = "dispatcher/model.py"
+old = '''        elif value == "-D":'''
+new = '''        elif value == "-DD":'''
+tests = ["tests.test_model.Finds.test_each_action_and_where_it_runs"]
+
+[[plant]]
+name = "-D takes no value"
+file = "dispatcher/model.py"
+old = '''elif value == "-D":
+            index += 2'''
+new = '''elif value == "-D":
+            index += 1'''
+tests = ["tests.test_model.Finds.test_each_action_and_where_it_runs"]
+
+[[plant]]
+name = "-- does not end the leading options"
+file = "dispatcher/model.py"
+old = '''        elif value == "--":'''
+new = '''        elif value == "---":'''
+tests = ["tests.test_model.Finds.test_each_action_and_where_it_runs"]
+
+[[plant]]
+name = "-- is not passed"
+file = "dispatcher/model.py"
+old = '''elif value == "--":
+            index += 1'''
+new = '''elif value == "--":
+            index += 0'''
+tests = ["tests.test_model.Finds.test_each_action_and_where_it_runs"]
+
+[[plant]]
+name = "the first start point is dropped"
+file = "dispatcher/model.py"
+old = '''    first = index
+'''
+new = '''    first = index + 1
+'''
+tests = ["tests.test_model.Finds.test_a_placeholder_is_a_part_not_known"]
+
+[[plant]]
+name = "no start point is read"
+file = "dispatcher/model.py"
+old = '''    while index < len(words) and not opens_expression(words[index].value or ShellText("")):'''
+new = '''    while False:'''
+tests = ["tests.test_model.Finds.test_each_action_and_where_it_runs", "tests.test_model.Finds.test_a_placeholder_is_a_part_not_known"]
+
+[[plant]]
+name = "the start points run to the end"
+file = "dispatcher/model.py"
+old = '''    return words[first:index], Count(index)'''
+new = '''    return words[first:], Count(index)'''
+tests = ["tests.test_model.Finds.test_a_placeholder_is_a_part_not_known"]
+
+[[plant]]
+name = "a known start point is read by its prefix"
+file = "dispatcher/model.py"
+old = '''        if root.value is not None:
+            prefixes.append'''
+new = '''        if False:
+            prefixes.append'''
+tests = ["tests.test_model.Finds.test_a_placeholder_is_a_part_not_known"]
+
+[[plant]]
+name = "a start point's slash is kept"
+file = "dispatcher/model.py"
+old = '''prefixes.append(ShellText(root.value.rstrip("/") + "/"))'''
+new = '''prefixes.append(ShellText(root.value + "/"))'''
+tests = ["tests.test_model.Finds.test_a_placeholder_is_a_part_not_known"]
+
+[[plant]]
+name = "a start point gets no slash"
+file = "dispatcher/model.py"
+old = '''prefixes.append(ShellText(root.value.rstrip("/") + "/"))'''
+new = '''prefixes.append(ShellText(root.value.rstrip("/")))'''
+tests = ["tests.test_model.Finds.test_a_placeholder_is_a_part_not_known", "tests.test_record_search.Find.test_old_passed"]
+
+[[plant]]
+name = "an unknown prefix is taken"
+file = "dispatcher/model.py"
+old = '''        elif root.prefix is not None:'''
+new = '''        elif True:'''
+tests = ["tests.test_model.Finds.test_a_placeholder_is_a_part_not_known"]
+
+[[plant]]
+name = "a start point's prefix is dropped"
+file = "dispatcher/model.py"
+old = '''            prefixes.append(root.prefix)'''
+new = '''            prefixes.append(ShellText(""))'''
+tests = ["tests.test_model.Finds.test_a_placeholder_is_a_part_not_known"]
+
+[[plant]]
+name = "an unknown start is empty"
+file = "dispatcher/model.py"
+old = '''            return None
+    return ShellText(commonprefix'''
+new = '''            return ShellText("")
+    return ShellText(commonprefix'''
+tests = ["tests.test_model.Finds.test_a_placeholder_is_a_part_not_known"]
+
+[[plant]]
+name = "find with no start point passes nothing"
+file = "dispatcher/model.py"
+old = '''commonprefix(prefixes or [ShellText("./")])'''
+new = '''commonprefix(prefixes)'''
+tests = ["tests.test_model.Finds.test_a_placeholder_is_a_part_not_known"]
+
+[[plant]]
+name = "the last start point stands for all"
+file = "dispatcher/model.py"
+old = '''ShellText(commonprefix(prefixes or [ShellText("./")]))'''
+new = '''ShellText((prefixes or [ShellText("./")])[-1])'''
+tests = ["tests.test_model.Finds.test_a_placeholder_is_a_part_not_known"]
+
+[[plant]]
+name = "a lone - opens the expression"
+file = "dispatcher/model.py"
+old = '''    return (len(value) > 1 and value.startswith("-")) or value in ("(", "!")'''
+new = '''    return value.startswith("-") or value in ("(", "!")'''
+tests = ["tests.test_model.Finds.test_each_action_and_where_it_runs"]
+
+[[plant]]
+name = "a ( is a start point"
+file = "dispatcher/model.py"
+old = '''    return (len(value) > 1 and value.startswith("-")) or value in ("(", "!")'''
+new = '''    return (len(value) > 1 and value.startswith("-")) or value in ("!",)'''
+tests = ["tests.test_model.Finds.test_what_the_call_does_not_make_known_is_a_gap"]
+
+[[plant]]
+name = "a ! is a start point"
+file = "dispatcher/model.py"
+old = '''    return (len(value) > 1 and value.startswith("-")) or value in ("(", "!")'''
+new = '''    return (len(value) > 1 and value.startswith("-")) or value in ("(",)'''
+tests = ["tests.test_model.Finds.test_what_the_call_does_not_make_known_is_a_gap"]
+
+[[plant]]
+name = "-fprintf takes one argument"
+file = "dispatcher/model.py"
+old = '''    if primary == "-fprintf":'''
+new = '''    if primary == "-fprintfx":'''
+tests = ["tests.test_model.Finds.test_each_action_and_where_it_runs"]
+
+[[plant]]
+name = "-fprintf's two are one"
+file = "dispatcher/model.py"
+old = '''        return Count(2)'''
+new = '''        return Count(1)'''
+tests = ["tests.test_model.Finds.test_each_action_and_where_it_runs"]
+
+[[plant]]
+name = "-newerXY takes no argument"
+file = "dispatcher/model.py"
+old = '''primary in FIND_VALUED or primary.startswith("-newer") else 0'''
+new = '''primary in FIND_VALUED else 0'''
+tests = ["tests.test_model.Finds.test_each_action_and_where_it_runs"]
+
+[[plant]]
+name = "a valued primary takes no argument"
+file = "dispatcher/model.py"
+old = '''return Count(1 if primary in FIND_VALUED'''
+new = '''return Count(0 if primary in FIND_VALUED'''
+tests = ["tests.test_model.Finds.test_each_action_and_where_it_runs"]
+
+[[plant]]
+name = "an action's first word is never its end"
+file = "dispatcher/model.py"
+old = '''    for index in range(start, len(words)):'''
+new = '''    for index in range(start + 1, len(words)):'''
+tests = ["tests.test_model.Finds.test_each_action_and_where_it_runs"]
+
+[[plant]]
+name = "an end is read as written"
+file = "dispatcher/model.py"
+old = '''        value = words[index].value
+        if value == ";"'''
+new = '''        value = words[index].text
+        if value == ";"'''
+tests = ["tests.test_model.Finds.test_each_action_and_where_it_runs"]
+
+[[plant]]
+name = "; ends no action"
+file = "dispatcher/model.py"
+old = '''        if value == ";" or (batched'''
+new = '''        if value == ";;" or (batched'''
+tests = ["tests.test_model.Finds.test_each_action_and_where_it_runs"]
+
+[[plant]]
+name = "-ok ends at {} +"
+file = "dispatcher/model.py"
+old = '''(batched and value == "+" and words'''
+new = '''(value == "+" and words'''
+tests = ["tests.test_model.Finds.test_each_action_and_where_it_runs", "tests.test_model.Finds.test_what_the_call_does_not_make_known_is_a_gap"]
+
+[[plant]]
+name = "+ ends an action after any word"
+file = "dispatcher/model.py"
+old = '''value == "+" and words[index - 1].value == "{}")'''
+new = '''value == "+")'''
+tests = ["tests.test_model.Finds.test_what_the_call_does_not_make_known_is_a_gap"]
+
+[[plant]]
+name = "the end is part of the action"
+file = "dispatcher/model.py"
+old = '''            return Count(index)
+    return None'''
+new = '''            return Count(index + 1)
+    return None'''
+tests = ["tests.test_model.Finds.test_each_action_and_where_it_runs"]
+
+[[plant]]
+name = "an action with no end ends the words"
+file = "dispatcher/model.py"
+old = '''            return Count(index)
+    return None'''
+new = '''            return Count(index)
+    return Count(len(words))'''
+tests = ["tests.test_model.Finds.test_what_the_call_does_not_make_known_is_a_gap"]
+
+[[plant]]
+name = "{} is known"
+file = "dispatcher/model.py"
+old = '''    if word.value is None or "{}" not in word.value:'''
+new = '''    if word.value is None:'''
+tests = ["tests.test_model.Finds.test_a_placeholder_is_a_part_not_known"]
+
+[[plant]]
+name = "every action word is unknown"
+file = "dispatcher/model.py"
+old = '''    if word.value is None or "{}" not in word.value:
+        return word
+'''
+new = '''    if word.value is None or "{}" not in word.value:
+        return word._replace(value=None)
+'''
+tests = ["tests.test_model.Finds.test_what_find_runs"]
+
+[[plant]]
+name = "a word before {} is dropped"
+file = "dispatcher/model.py"
+old = '''    head = ShellText(word.value[:word.value.index("{}")])'''
+new = '''    head = ShellText("")'''
+tests = ["tests.test_model.Finds.test_a_placeholder_is_a_part_not_known"]
+
+[[plant]]
+name = "a known head is unknown where find's start is"
+file = "dispatcher/model.py"
+old = '''None if passed is None and not head else'''
+new = '''None if passed is None else'''
+tests = ["tests.test_model.Finds.test_a_placeholder_is_a_part_not_known"]
+
+[[plant]]
+name = "an unknown start is empty in {}"
+file = "dispatcher/model.py"
+old = '''None if passed is None and not head else'''
+new = '''ShellText("") if passed is None and not head else'''
+tests = ["tests.test_model.Finds.test_a_placeholder_is_a_part_not_known"]
+
+[[plant]]
+name = "{} begins with nothing find passes"
+file = "dispatcher/model.py"
+old = '''ShellText(head + (passed or ""))'''
+new = '''ShellText(head)'''
+tests = ["tests.test_model.Finds.test_a_placeholder_is_a_part_not_known"]
+
+[[plant]]
+name = "the start points are not read"
+file = "dispatcher/model.py"
+old = '''        roots, index = find_starts(words)'''
+new = '''        roots, index = (), find_starts(words)[1]'''
+tests = ["tests.test_model.Finds.test_a_placeholder_is_a_part_not_known"]
+
+[[plant]]
+name = "find's start is unknown"
+file = "dispatcher/model.py"
+old = '''        start = found_prefix(roots)'''
+new = '''        start = None'''
+tests = ["tests.test_model.Finds.test_a_placeholder_is_a_part_not_known", "tests.test_record_search.Find.test_old_passed"]
+
+[[plant]]
+name = "a primary is read as written"
+file = "dispatcher/model.py"
+old = '''            primary = words[index].value
+'''
+new = '''            primary = words[index].text
+'''
+tests = ["tests.test_model.Finds.test_what_the_call_does_not_make_known_is_a_gap"]
+
+[[plant]]
+name = "a primary takes the word after it"
+file = "dispatcher/model.py"
+old = '''            primary = words[index].value
+            index += 1'''
+new = '''            primary = words[index].value
+            index += 2'''
+tests = ["tests.test_model.Finds.test_what_find_runs"]
+
+[[plant]]
+name = "an unknown primary is no gap"
+file = "dispatcher/model.py"
+old = '''            if primary is None:'''
+new = '''            if False:'''
+tests = ["tests.test_model.Finds.test_what_the_call_does_not_make_known_is_a_gap"]
+
+[[plant]]
+name = "an unknown primary's gap is dropped"
+file = "dispatcher/model.py"
+old = '''self.gaps.append(Gap(Prose("a word of the find expression is not known from the call"), text,
+                                     FIND_FORM))'''
+new = '''pass'''
+tests = ["tests.test_model.Finds.test_what_the_call_does_not_make_known_is_a_gap"]
+
+[[plant]]
+name = "an unknown primary is read on"
+file = "dispatcher/model.py"
+old = '''FIND_FORM))
+                return
+            if primary'''
+new = '''FIND_FORM))
+            if primary'''
+tests = ["tests.test_model.Finds.test_what_the_call_does_not_make_known_is_a_gap"]
+
+[[plant]]
+name = "-exec is no action"
+file = "dispatcher/model.py"
+old = '''            if primary not in FIND_ACTIONS:'''
+new = '''            if primary not in FIND_PROMPTED:'''
+tests = ["tests.test_model.Finds.test_what_find_runs"]
+
+[[plant]]
+name = "a primary's arguments are read as primaries"
+file = "dispatcher/model.py"
+old = '''                index += find_arguments(primary)'''
+new = '''                index += 0'''
+tests = ["tests.test_model.Finds.test_each_action_and_where_it_runs"]
+
+[[plant]]
+name = "a primary is read as an action"
+file = "dispatcher/model.py"
+old = '''                index += find_arguments(primary)
+                continue'''
+new = '''                index += find_arguments(primary)
+                pass'''
+tests = ["tests.test_model.Finds.test_each_action_and_where_it_runs"]
+
+[[plant]]
+name = "every action ends at {} +"
+file = "dispatcher/model.py"
+old = '''action_end(words, Count(index), primary not in FIND_PROMPTED)'''
+new = '''action_end(words, Count(index), True)'''
+tests = ["tests.test_model.Finds.test_each_action_and_where_it_runs", "tests.test_model.Finds.test_what_the_call_does_not_make_known_is_a_gap"]
+
+[[plant]]
+name = "an unknown action word is no gap"
+file = "dispatcher/model.py"
+old = '''            if end is None or any(word.value is None for word in words[index:end]):'''
+new = '''            if end is None:'''
+tests = ["tests.test_model.Finds.test_what_the_call_does_not_make_known_is_a_gap"]
+
+[[plant]]
+name = "the two gaps swap"
+file = "dispatcher/model.py"
+old = '''why = "has no end" if end is None else "holds a word not known from the call"'''
+new = '''why = "holds a word not known from the call" if end is None else "has no end"'''
+tests = ["tests.test_model.Finds.test_what_the_call_does_not_make_known_is_a_gap"]
+
+[[plant]]
+name = "an action's gap is dropped"
+file = "dispatcher/model.py"
+old = '''self.gaps.append(Gap(Prose(f"the find {primary} action {why}"), text, FIND_FORM))'''
+new = '''pass'''
+tests = ["tests.test_model.Finds.test_what_the_call_does_not_make_known_is_a_gap"]
+
+[[plant]]
+name = "an action with a gap is read on"
+file = "dispatcher/model.py"
+old = '''action {why}"), text, FIND_FORM))
+                return
+'''
+new = '''action {why}"), text, FIND_FORM))
+'''
+tests = ["tests.test_model.Finds.test_what_the_call_does_not_make_known_is_a_gap"]
+
+[[plant]]
+name = "no action runs"
+file = "dispatcher/model.py"
+old = '''            self.acted(words[index:end], primary, start, environ, state, place, text)'''
+new = '''            pass'''
+tests = ["tests.test_model.Finds.test_what_find_runs"]
+
+[[plant]]
+name = "the word after an action is skipped"
+file = "dispatcher/model.py"
+old = '''            index = end + 1'''
+new = '''            index = end + 2'''
+tests = ["tests.test_model.Finds.test_each_action_and_where_it_runs"]
+
+[[plant]]
+name = "an empty action runs"
+file = "dispatcher/model.py"
+old = '''        if not action:
+            return
+        ends'''
+new = '''        if False:
+            return
+        ends'''
+tests = ["tests.test_model.Finds.test_each_action_and_where_it_runs"]
+
+[[plant]]
+name = "find's redirections are not passed"
+file = "dispatcher/model.py"
+old = '''        ends = self.table(state, place)
+        if primary in FIND_PROMPTED'''
+new = '''        ends = dict(place.ends)
+        if primary in FIND_PROMPTED'''
+tests = ["tests.test_model.Finds.test_each_action_and_where_it_runs"]
+
+[[plant]]
+name = "-ok keeps find's input"
+file = "dispatcher/model.py"
+old = '''        if primary in FIND_PROMPTED:
+            ends[INPUT] = NULL'''
+new = '''        if False:
+            ends[INPUT] = NULL'''
+tests = ["tests.test_model.Finds.test_each_action_and_where_it_runs"]
+
+[[plant]]
+name = "-ok's input is the call's"
+file = "dispatcher/model.py"
+old = '''            ends[INPUT] = NULL'''
+new = '''            ends[INPUT] = CALLED'''
+tests = ["tests.test_model.Finds.test_each_action_and_where_it_runs"]
+
+[[plant]]
+name = "the action runs in a python process"
+file = "dispatcher/model.py"
+old = '''place.into("find", self.new_process())'''
+new = '''place.into("python", self.new_process())'''
+tests = ["tests.test_model.Finds.test_what_find_runs"]
+
+[[plant]]
+name = "the action runs in bash"
+file = "dispatcher/model.py"
+old = '''_replace(dialect="sh", environ=environ, ends=ends)'''
+new = '''_replace(dialect="bash", environ=environ, ends=ends)'''
+tests = ["tests.test_model.Scripts.test_the_dialect_a_script_is_read_in"]
+
+[[plant]]
+name = "the action receives no environment"
+file = "dispatcher/model.py"
+old = '''_replace(dialect="sh", environ=environ, ends=ends)'''
+new = '''_replace(dialect="sh", environ=Environ(), ends=ends)'''
+tests = ["tests.test_model.Finds.test_each_action_runs_in_a_process_of_its_own"]
+
+[[plant]]
+name = "the action receives the call's descriptors"
+file = "dispatcher/model.py"
+old = '''_replace(dialect="sh", environ=environ, ends=ends)'''
+new = '''_replace(dialect="sh", environ=environ)'''
+tests = ["tests.test_model.Finds.test_each_action_and_where_it_runs"]
+
+[[plant]]
+name = "-execdir runs in find's directory"
+file = "dispatcher/model.py"
+old = '''        here = ShellState(None if primary in FIND_ELSEWHERE else state.cwd)'''
+new = '''        here = ShellState(state.cwd)'''
+tests = ["tests.test_model.Finds.test_each_action_and_where_it_runs"]
+
+[[plant]]
+name = "-execdir passes find's start"
+file = "dispatcher/model.py"
+old = '''        passed = ShellText("./") if primary in FIND_ELSEWHERE else start'''
+new = '''        passed = start'''
+tests = ["tests.test_model.Finds.test_a_placeholder_is_a_part_not_known"]
+
+[[plant]]
+name = "{} is passed as written"
+file = "dispatcher/model.py"
+old = '''peel(tuple(placed(word, passed) for word in action), inner.environ, None)'''
+new = '''peel(tuple(action), inner.environ, None)'''
+tests = ["tests.test_model.Finds.test_a_placeholder_is_a_part_not_known"]
+
+[[plant]]
+name = "the action runs in a shell"
+file = "dispatcher/model.py"
+old = '''peel(tuple(placed(word, passed) for word in action), inner.environ, None)'''
+new = '''peel(tuple(placed(word, passed) for word in action), inner.environ, "bash")'''
+tests = ["tests.test_model.Finds.test_each_action_and_where_it_runs"]
+
+[[plant]]
+name = "the action's wrappers start with no environment"
+file = "dispatcher/model.py"
+old = '''peel(tuple(placed(word, passed) for word in action), inner.environ, None)'''
+new = '''peel(tuple(placed(word, passed) for word in action), Environ(), None)'''
+tests = ["tests.test_model.Finds.test_each_action_runs_in_a_process_of_its_own"]
+
+[[plant]]
+name = "the action is not recorded"
+file = "dispatcher/model.py"
+old = '''        self.unwrap(got, (), here, inner, text)'''
+new = '''        pass'''
+tests = ["tests.test_model.Finds.test_what_find_runs"]
+
+[[plant]]
+name = "the last word is the program"
+file = "dispatcher/model.py"
+old = '''        first = got.words[0]'''
+new = '''        first = got.words[-1]'''
+tests = ["tests.test_model.Finds.test_each_action_and_where_it_runs"]
+
+[[plant]]
+name = "a known path is a gap"
+file = "dispatcher/model.py"
+old = '''        if first.value is None and "/" in first.text:'''
+new = '''        if "/" in first.text:'''
+tests = ["tests.test_model.Finds.test_each_action_and_where_it_runs"]
+
+[[plant]]
+name = "an unknown path is read"
+file = "dispatcher/model.py"
+old = '''        if first.value is None and "/" in first.text:'''
+new = '''        if first.value is None and "//" in first.text:'''
+tests = ["tests.test_model.Finds.test_what_the_call_does_not_make_known_is_a_gap"]
+
+[[plant]]
+name = "an unknown path's gap is dropped"
+file = "dispatcher/model.py"
+old = '''self.gaps.append(Gap(Prose("the path of the script it runs is not known from the call"), text,
+                                 SCRIPT_PATH_FORM))
+        else:
+            self.program(got.words, got.environ, (), here, inner, text)'''
+new = '''pass
+        else:
+            self.program(got.words, got.environ, (), here, inner, text)'''
+tests = ["tests.test_model.Finds.test_what_the_call_does_not_make_known_is_a_gap"]
+
+[[plant]]
+name = "the action's program is not read"
+file = "dispatcher/model.py"
+old = '''            self.program(got.words, got.environ, (), here, inner, text)'''
+new = '''            pass'''
+tests = ["tests.test_model.Finds.test_each_action_runs_in_a_process_of_its_own"]
+
+[[plant]]
+name = "find is no program the model reads"
+file = "dispatcher/model.py"
+old = '''        elif base == "find":'''
+new = '''        elif base == "findx":'''
+tests = ["tests.test_model.Finds.test_what_find_runs"]
+
+[[plant]]
+name = "find's actions are not read"
+file = "dispatcher/model.py"
+old = '''            self.finds(words, environ, state, place, text)'''
+new = '''            pass'''
+tests = ["tests.test_model.Finds.test_what_find_runs"]
+
+[[plant]]
+name = "a lone + ends a shell's options and is its operand"
+file = "dispatcher/scripts.py"
+old = "        if value is None or value[:1] not in (\"-\", \"+\"):"
+new = "        if value is None or value[:1] not in (\"-\", \"+\") or value == \"+\":"
+tests = ["tests.test_model.Scripts.test_an_interpreters_operand"]
+
+[[plant]]
+name = "/proc/thread-self/fd/N names a descriptor"
+file = "dispatcher/model.py"
+old = '''DESCRIPTOR_PATH = re.compile(r"/(?:dev/fd|proc/(?:self|thread-self)/fd)/([0-9]+)")'''
+new = '''DESCRIPTOR_PATH = re.compile(r"/(?:dev/fd|proc/self/fd)/([0-9]+)")'''
+tests = ["tests.test_model.Scripts.test_a_script_named_by_a_descriptor_path"]
+
+[[plant]]
+name = "/dev/fd/N names its descriptor"
+file = "dispatcher/model.py"
+old = '''    named = DESCRIPTOR_PATH.fullmatch(path)'''
+new = '''    named = None'''
+tests = ["tests.test_model.Scripts.test_a_script_named_by_a_descriptor_path", "tests.test_model.Scripts.test_a_descriptor_path_is_known_by_its_spelling"]
+
+[[plant]]
+name = "/dev/stdin names descriptor 0"
+file = "dispatcher/model.py"
+old = "    return DEVICES.get(ShellText(path)) if named is None else Descriptor(int(named.group(1)))"
+new = '''    return None if named is None else Descriptor(int(named.group(1)))'''
+tests = ["tests.test_model.Scripts.test_a_script_named_by_a_descriptor_path", "tests.test_model.Scripts.test_a_descriptor_path_is_known_by_its_spelling"]
+
+[[plant]]
+name = "a lone + before -c is an option word"
+file = "dispatcher/model.py"
+old = '''        if value[:1] in ("-", "+"):
+            letters = value[1:]
+            command = command or "c" in letters'''
+new = '''        if value[:1] in ("-", "+") and len(value) > 1:
+            letters = value[1:]
+            command = command or "c" in letters'''
+tests = ["tests.test_model.Carriers.test_an_option_bundle_reads_as_the_shells_getopt"]
+
+[[plant]]
+name = "a redirection with no number is onto descriptor 0"
+file = "dispatcher/model.py"
+old = '''            onto = fd if fd is not None else "0" if op in INPUTS else None'''
+new = '''            onto = fd if fd is not None else "1" if op in INPUTS else None'''
+tests = ["tests.test_model.Scripts.test_a_script_named_by_a_descriptor_path"]
+
+[[plant]]
+name = "Python's code is the text fed"
+file = "dispatcher/model.py"
+old = '''                code, file = given.text, given.file'''
+new = '''                code, file = None, given.file'''
+tests = ["tests.test_model.Python"]
+[[plant]]
+name = "a link is followed up to the kernel's limit"
+file = "dispatcher/model.py"
+old = "MAX_LINKS = 40"
+new = "MAX_LINKS = 1"
+tests = ["tests.test_model.Scripts.test_a_link_to_a_descriptor_path"]
+
+[[plant]]
+name = "links are followed to a descriptor"
+file = "dispatcher/model.py"
+old = "    for _ in range(MAX_LINKS + 1):"
+new = "    for _ in range(1):"
+tests = ["tests.test_model.Scripts.test_a_link_to_a_descriptor_path"]
+
+[[plant]]
+name = "the walk starts at the root, component by component"
+file = "dispatcher/model.py"
+old = "    folder, rest = \"/\", path.split(\"/\")"
+new = "    folder, rest = \"/\", [path]"
+tests = ["tests.test_model.Scripts.test_a_link_to_a_descriptor_path"]
+
+[[plant]]
+name = "a link's target is checked for a descriptor"
+file = "dispatcher/model.py"
+old = "        named = named_descriptor(ScriptPath(normpath(join(folder, *rest))))"
+new = "        named = named_descriptor(path)"
+tests = ["tests.test_model.Scripts.test_a_link_to_a_descriptor_path"]
+
+[[plant]]
+name = "a link is followed"
+file = "dispatcher/model.py"
+old = "        while named is None and rest and not islink(join(folder, rest[0])):"
+new = "        while named is None and rest:"
+tests = ["tests.test_model.Scripts.test_a_link_to_a_descriptor_path"]
+
+[[plant]]
+name = "the walk advances its folder"
+file = "dispatcher/model.py"
+old = "            folder, rest = normpath(join(folder, rest[0])), rest[1:]"
+new = "            folder, rest = folder, rest[1:]"
+tests = ["tests.test_model.Scripts.test_a_link_to_a_descriptor_path"]
+
+[[plant]]
+name = "a named path ends the walk"
+file = "dispatcher/model.py"
+old = "        if named is not None or not rest:"
+new = "        if not rest:"
+tests = ["tests.test_model.Scripts.test_a_link_to_a_descriptor_path", "tests.test_model.Scripts.test_a_script_named_by_a_descriptor_path"]
+
+[[plant]]
+name = "a link is replaced by its target"
+file = "dispatcher/model.py"
+old = "        target = readlink(join(folder, rest[0]))"
+new = "        target = rest[0]"
+tests = ["tests.test_model.Scripts.test_a_link_to_a_descriptor_path"]
+
+[[plant]]
+name = "a relative target is read from the link's folder"
+file = "dispatcher/model.py"
+old = "        folder, rest = \"/\" if target.startswith(\"/\") else folder, [*target.split(\"/\"), *rest[1:]]"
+new = "        folder, rest = \"/\", [*target.split(\"/\"), *rest[1:]]"
+tests = ["tests.test_model.Scripts.test_a_link_to_a_descriptor_path"]
+
+[[plant]]
+name = "a folder's link keeps the rest of the path"
+file = "dispatcher/model.py"
+old = "        folder, rest = \"/\" if target.startswith(\"/\") else folder, [*target.split(\"/\"), *rest[1:]]"
+new = "        folder, rest = \"/\" if target.startswith(\"/\") else folder, [*target.split(\"/\")]"
+tests = ["tests.test_model.Scripts.test_a_link_to_a_descriptor_path"]
+
+[[plant]]
+name = "a link loop names no descriptor"
+file = "dispatcher/model.py"
+old = "        folder, rest = \"/\" if target.startswith(\"/\") else folder, [*target.split(\"/\"), *rest[1:]]\n    return None"
+new = "        folder, rest = \"/\" if target.startswith(\"/\") else folder, [*target.split(\"/\"), *rest[1:]]\n    return INPUT"
+tests = ["tests.test_model.Scripts.test_a_link_to_a_descriptor_path"]
+
+[[plant]]
+name = "/dev/null is known by its device number"
+file = "dispatcher/scripts.py"
+old = "NULL_DEVICE = makedev(1, 3)"
+new = "NULL_DEVICE = makedev(1, 5)"
+tests = ["tests.test_model.Scripts.test_a_script_that_is_no_file_is_never_opened", "tests.test_model.Scripts.test_a_link_to_a_descriptor_path"]
+
+[[plant]]
+name = "a link to a script is followed"
+file = "dispatcher/scripts.py"
+old = "        status = stat(path)"
+new = "        status = stat(path, follow_symlinks=False)"
+tests = ["tests.test_model.Scripts.test_a_link_to_a_descriptor_path"]
+
+[[plant]]
+name = "only a regular file is opened"
+file = "dispatcher/scripts.py"
+old = "        if not S_ISREG(status.st_mode):"
+new = "        if S_ISFIFO(status.st_mode):"
+tests = ["tests.test_model.Scripts.test_a_script_that_is_no_file_is_never_opened"]
+
+[[plant]]
+name = "no other kind of file is opened"
+file = "dispatcher/scripts.py"
+old = "            return unopened(status)"
+new = "            return Found(None, None)"
+tests = ["tests.test_model.Scripts.test_a_script_that_is_no_file_is_never_opened"]
+
+[[plant]]
+name = "only the null device holds no text"
+file = "dispatcher/scripts.py"
+old = "    if S_ISCHR(status.st_mode) and status.st_rdev == NULL_DEVICE:"
+new = "    if S_ISCHR(status.st_mode):"
+tests = ["tests.test_model.Scripts.test_a_script_that_is_no_file_is_never_opened"]
+
+[[plant]]
+name = "/dev/null holds empty text"
+file = "dispatcher/scripts.py"
+old = "        return Found(ShellText(\"\"), None)"
+new = "        return Found(None, None)"
+tests = ["tests.test_model.Scripts.test_a_script_that_is_no_file_is_never_opened"]
+
+[[plant]]
+name = "each kind of file is named"
+file = "dispatcher/scripts.py"
+old = "    kind = \"a FIFO\" if S_ISFIFO(status.st_mode) else \"a socket\" if S_ISSOCK(status.st_mode) else \"a device\""
+new = "    kind = \"a FIFO\""
+tests = ["tests.test_model.Scripts.test_a_script_that_is_no_file_is_never_opened"]
+
+[[plant]]
+name = "a file that is never opened is a trouble"
+file = "dispatcher/scripts.py"
+old = "    return Found(None, Prose(f\"is {kind}, which the kit does not open\"))"
+new = "    return Found(None, None)"
+tests = ["tests.test_model.Scripts.test_a_script_that_is_no_file_is_never_opened", "tests.test_model.Python.test_a_script_linked_to_a_descriptor_path_or_no_file"]
+
+[[plant]]
+name = "a descriptor path is refused before it is read"
+file = "dispatcher/model.py"
+old = "        if linked_descriptor(path) is not None:"
+new = "        if False:"
+tests = ["tests.test_model.Scripts.test_a_script_named_by_a_descriptor_path",
+         "tests.test_model.Scripts.test_a_script_sourced_or_run_by_a_descriptor_path",
+         "tests.test_model.Python.test_a_script_named_by_a_descriptor_path"]
+
+[[plant]]
+name = "a link to a descriptor path is refused"
+file = "dispatcher/model.py"
+old = "        if linked_descriptor(path) is not None:"
+new = "        if named_descriptor(path) is not None:"
+tests = ["tests.test_model.Scripts.test_a_link_to_a_descriptor_path",
+         "tests.test_model.Python.test_a_script_linked_to_a_descriptor_path_or_no_file"]
+
+[[plant]]
+name = "a refused descriptor path is not read on"
+file = "dispatcher/model.py"
+old = "                                 DESCRIPTOR_FORM))\n            return None\n"
+new = "                                 DESCRIPTOR_FORM))\n"
+tests = ["tests.test_model.Scripts.test_a_script_named_by_a_descriptor_path"]
+
+[[plant]]
+name = "the descriptor gap names its own form"
+file = "dispatcher/model.py"
+old = "                                 DESCRIPTOR_FORM))"
+new = "                                 GAP_FORM))"
+tests = ["tests.test_model.Scripts.test_a_script_named_by_a_descriptor_path"]
+
+[[plant]]
+name = "the descriptor gap says the kit does not read it"
+file = "dispatcher/model.py"
+old = 'names a descriptor, which the kit does not read"), holder,'
+new = 'names a descriptor whose end the call does not make known"), holder,'
+tests = ["tests.test_model.Scripts.test_a_script_named_by_a_descriptor_path"]
+
+[[plant]]
+name = "the descriptor form names the script's own path"
+file = "dispatcher/model.py"
+old = 'DESCRIPTOR_FORM = Prose("Run the script by its own path, not'
+new = 'DESCRIPTOR_FORM = Prose("Run the script by a path, not'
+tests = ["tests.test_model.Scripts.test_a_script_named_by_a_descriptor_path"]
+
+[[plant]]
+name = "script_at gives the text found() reads"
+file = "dispatcher/model.py"
+old = "            return None\n        return self.found(path, holder)\n"
+new = "            return None\n        return None\n"
+tests = ["tests.test_model.Scripts"]
+
+[[plant]]
+name = '''a declared script is read when the call writes it'''
+file = "dispatcher/model.py"
+old = '''        if path in self.settings.unread and path not in self.written:
+            return None'''
+new = '''        if path in self.settings.unread:
+            return None'''
+tests = ["tests.test_model.Scripts"]
+
+[[plant]]
+name = '''fed reads descriptor 1'''
+file = "dispatcher/model.py"
+old = '''            if onto != "0":
+                continue'''
+new = '''            if onto != "1":
+                continue'''
+tests = ["tests.test_model"]
+
+[[plant]]
+name = '''a script run by its path is never read'''
+file = "dispatcher/model.py"
+old = '''        script = None if path is None else self.script_at(path, text)
+        if script is None:
+            return
+        shell = interpreter(script)'''
+new = '''        script = None
+        if script is None:
+            return
+        shell = interpreter(script)'''
+tests = ["tests.test_model.Scripts"]
+
+[[plant]]
+name = '''an interpreter's operand is never read'''
+file = "dispatcher/model.py"
+old = '''        script = None if path is None else self.script_at(path, text)
+        if script is not None:
+            self.run(script, dialect, words[index:]'''
+new = '''        script = None
+        if script is not None:
+            self.run(script, dialect, words[index:]'''
+tests = ["tests.test_model.Scripts"]
+
+[[plant]]
+name = '''a sourced script is never read'''
+file = "dispatcher/model.py"
+old = '''        script = None if path is None else self.script_at(path, text)
+        if script is None:
+            return
+        at = place.positionals'''
+new = '''        script = None
+        if script is None:
+            return
+        at = place.positionals'''
+tests = ["tests.test_model.Scripts"]
+
+[[plant]]
+name = '''Python's input gap names no interpreter'''
+file = "dispatcher/model.py"
+old = '''                where = Prose(f"{words[0].spelled} reads on its input")'''
+new = '''                where = Prose("it reads on its input")'''
+tests = ["tests.test_model.Python"]

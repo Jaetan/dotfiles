@@ -1,0 +1,242 @@
+# The plants that show rules/ignored_declaration.py and declarations/ignored.py held by tests/test_ignored_declaration.py:
+#   testing/plants.py tests/plants_ignored_declaration.toml --out DIR
+# The plant on state/session.py holds the claim that the note is said once per claude process, which rests on the
+# state's key: with every process in one folder, a second process hears nothing.
+
+[[plant]]
+name = "the rule does not judge SessionStart"
+file = "rules/ignored_declaration.py"
+old = 'EVENTS: frozenset[HookEvent] = frozenset({"SessionStart", "PreToolUse"})'
+new = 'EVENTS: frozenset[HookEvent] = frozenset({"PreToolUse"})'
+tests = ["tests.test_ignored_declaration.Ignored.test_a_folder_rule_is_named_at_session_start"]
+
+[[plant]]
+name = "the rule does not judge a call"
+file = "rules/ignored_declaration.py"
+old = 'EVENTS: frozenset[HookEvent] = frozenset({"SessionStart", "PreToolUse"})'
+new = 'EVENTS: frozenset[HookEvent] = frozenset({"SessionStart"})'
+tests = ["tests.test_ignored_declaration.Ignored.test_a_call_from_inside_the_work_tree_names_it"]
+
+[[plant]]
+name = "an event naming no folder is judged"
+file = "rules/ignored_declaration.py"
+old = '''    if event.cwd is None:
+        return None'''
+new = '''    if False:
+        return None'''
+tests = ["tests.test_ignored_declaration.Undeclared.test_outside_every_repository_no_state_is_read"]
+
+[[plant]]
+name = "the state is read outside every repository"
+file = "rules/ignored_declaration.py"
+old = '''    if facts.work_root is None:
+        return None'''
+new = '''    if False:
+        return None'''
+tests = ["tests.test_ignored_declaration.Undeclared.test_outside_every_repository_no_state_is_read"]
+
+[[plant]]
+name = "a work tree is checked at every call"
+file = "rules/ignored_declaration.py"
+old = 'if any(record.ident == ident for record in session.records(KIND)):'
+new = 'if False:'
+tests = ["tests.test_ignored_declaration.Once.test_a_work_tree_is_named_once_per_process"]
+
+[[plant]]
+name = "the check is not recorded"
+file = "rules/ignored_declaration.py"
+old = '    session.record(KIND, ident, {})'
+new = '    _ = KIND'
+tests = ["tests.test_ignored_declaration.Once.test_a_work_tree_is_named_once_per_process",
+         "tests.test_ignored_declaration.Processes.test_each_process_names_it"]
+
+[[plant]]
+name = "only a hidden declaration is recorded"
+file = "rules/ignored_declaration.py"
+old = '''    session.record(KIND, ident, {})
+    if hiding is None:
+        return None'''
+new = '''    if hiding is None:
+        return None
+    session.record(KIND, ident, {})'''
+tests = ["tests.test_ignored_declaration.Once.test_a_work_tree_checked_stays_checked"]
+
+[[plant]]
+name = "the record names no work tree"
+file = "rules/ignored_declaration.py"
+old = 'ident = RecordId(IDENT + str(facts.work_root))'
+new = 'ident = RecordId(IDENT)'
+tests = ["tests.test_ignored_declaration.Once.test_each_work_tree_is_named"]
+
+[[plant]]
+name = "the record is a run"
+file = "rules/ignored_declaration.py"
+old = 'KIND: Final = "notice"'
+new = 'KIND: Final = "run"'
+tests = ["tests.test_ignored_declaration.Once.test_a_work_tree_is_named_once_per_process",
+         "tests.test_ignored_declaration.Once.test_the_check_is_a_notice_and_no_watch"]
+
+[[plant]]
+name = "the record is a watch"
+file = "rules/ignored_declaration.py"
+old = 'KIND: Final = "notice"'
+new = 'KIND: Final = "watch"'
+tests = ["tests.test_ignored_declaration.Once.test_a_work_tree_is_named_once_per_process",
+         "tests.test_ignored_declaration.Once.test_the_check_is_a_notice_and_no_watch"]
+
+[[plant]]
+name = "the note refuses the call"
+file = "rules/ignored_declaration.py"
+old = 'return context(Prose(NOTE.format('
+new = 'return Verdict("refuse", Prose(NOTE.format('
+tests = ["tests.test_ignored_declaration.Ignored.test_a_folder_rule_is_named_at_session_start"]
+
+[[plant]]
+name = "the note names the folder, not the file"
+file = "rules/ignored_declaration.py"
+old = 'file=hiding.declaration,'
+new = 'file=hiding.declaration.parent,'
+tests = ["tests.test_ignored_declaration.Ignored.test_a_folder_rule_is_named_at_session_start"]
+
+[[plant]]
+name = "the note names another line"
+file = "rules/ignored_declaration.py"
+old = 'line=hiding.line)'
+new = 'line=hiding.line - 1)'
+tests = ["tests.test_ignored_declaration.Ignored.test_a_folder_rule_is_named_at_session_start"]
+
+[[plant]]
+name = "the check is imported at the rule's load"
+file = "rules/ignored_declaration.py"
+old = '''from dispatcher.verdict import Prose, Verdict, context
+'''
+new = '''from dispatcher.verdict import Prose, Verdict, context
+from declarations.ignored import hidden as _hidden
+'''
+tests = ["tests.test_ignored_declaration.Light.test_an_event_the_rule_does_not_judge_loads_neither"]
+
+[[plant]]
+name = "the state is imported at the rule's load"
+file = "rules/ignored_declaration.py"
+old = '''from dispatcher.verdict import Prose, Verdict, context
+'''
+new = '''from dispatcher.verdict import Prose, Verdict, context
+from state.session import RecordId as _RecordId
+'''
+tests = ["tests.test_ignored_declaration.Light.test_an_event_the_rule_does_not_judge_loads_neither"]
+
+[[plant]]
+name = "a work tree with no declaration is asked of git"
+file = "declarations/ignored.py"
+old = '''    if file is None:
+        return None'''
+new = '''    if False:
+        return None'''
+tests = ["tests.test_ignored_declaration.Undeclared.test_nothing_is_named_without_a_declaration"]
+
+[[plant]]
+name = "a match of a negated rule reads as hiding"
+file = "declarations/ignored.py"
+old = 'if pattern.startswith("!"):'
+new = 'if False:'
+tests = ["tests.test_ignored_declaration.Kept.test_a_declaration_git_keeps_is_not_named"]
+
+[[plant]]
+name = "git's no-match status is a fault"
+file = "declarations/ignored.py"
+old = '''    if done.returncode == 1:
+        return None'''
+new = '''    if False:
+        return None'''
+tests = ["tests.test_ignored_declaration.Kept.test_a_declaration_git_keeps_is_not_named"]
+
+[[plant]]
+name = "git reads no index"
+file = "declarations/ignored.py"
+old = '"check-ignore", "-v"'
+new = '"check-ignore", "--no-index", "-v"'
+tests = ["tests.test_ignored_declaration.Kept.test_a_declaration_git_keeps_is_not_named"]
+
+[[plant]]
+name = "the hook's own git variables reach git"
+file = "declarations/ignored.py"
+old = 'environ = {name: value for name, value in os.environ.items() if name not in CLEARED}'
+new = 'environ = dict(os.environ)'
+tests = ["tests.test_ignored_declaration.Ignored.test_the_hook_s_own_git_variables_are_not_read"]
+
+[[plant]]
+name = "the ignore file is named relative"
+file = "declarations/ignored.py"
+old = 'Hiding(file, tree / source,'
+new = 'Hiding(file, Path(source),'
+tests = ["tests.test_ignored_declaration.Ignored.test_a_folder_rule_is_named_at_session_start"]
+
+[[plant]]
+name = "the pattern read from the path's field"
+file = "declarations/ignored.py"
+old = 'source, line, pattern, _, _ = said'
+new = 'source, line, _, pattern, _ = said'
+tests = ["tests.test_ignored_declaration.Ignored.test_a_folder_rule_is_named_at_session_start"]
+
+[[plant]]
+name = "git with no time limit"
+file = "declarations/ignored.py"
+old = 'timeout=GIT_TIMEOUT, check=False'
+new = 'check=False'
+tests = ["tests.test_ignored_declaration.Faults.test_git_failing_is_a_kit_fault"]
+
+[[plant]]
+name = "git outrunning its limit is no kit fault"
+file = "declarations/ignored.py"
+old = 'except subprocess.TimeoutExpired:'
+new = 'except ZeroDivisionError:'
+tests = ["tests.test_ignored_declaration.Faults.test_git_failing_is_a_kit_fault"]
+
+[[plant]]
+name = "git that cannot run is no kit fault"
+file = "declarations/ignored.py"
+old = 'except OSError as fault:'
+new = 'except ZeroDivisionError as fault:'
+tests = ["tests.test_ignored_declaration.Faults.test_git_failing_is_a_kit_fault"]
+
+[[plant]]
+name = "a failing status is read"
+file = "declarations/ignored.py"
+old = 'if done.returncode != 0 or len(said) != SAID'
+new = 'if len(said) != SAID'
+tests = ["tests.test_ignored_declaration.Faults.test_git_failing_is_a_kit_fault"]
+
+[[plant]]
+name = "a short answer is read"
+file = "declarations/ignored.py"
+old = 'or len(said) != SAID or'
+new = 'or'
+tests = ["tests.test_ignored_declaration.Faults.test_git_failing_is_a_kit_fault"]
+
+[[plant]]
+name = "a line that is no number is read"
+file = "declarations/ignored.py"
+old = ' or not said[1].isdecimal():'
+new = ':'
+tests = ["tests.test_ignored_declaration.Faults.test_git_failing_is_a_kit_fault"]
+
+[[plant]]
+name = "the fault names git's last line"
+file = "declarations/ignored.py"
+old = "why[0] if why else 'no answer it reads'"
+new = "why[-1] if why else 'no answer it reads'"
+tests = ["tests.test_ignored_declaration.Faults.test_git_failing_is_a_kit_fault"]
+
+[[plant]]
+name = "the fault names nothing where git says nothing"
+file = "declarations/ignored.py"
+old = "why[0] if why else 'no answer it reads'"
+new = "why[0] if why else ''"
+tests = ["tests.test_ignored_declaration.Faults.test_git_failing_is_a_kit_fault"]
+
+[[plant]]
+name = "every claude process keeps one state"
+file = "state/session.py"
+old = 'return FileStem(f"{self.pid}-{self.start}-{self.boot}")'
+new = 'return FileStem("one")'
+tests = ["tests.test_ignored_declaration.Processes.test_each_process_names_it"]

@@ -1,0 +1,127 @@
+# The plants that show the event's declarations and session state are held by tests/test_wiring.py: run
+#   testing/plants.py tests/plants_wiring.toml --out DIR
+# Every plant is killed when each line of dispatcher/core.py wiring the declarations and the state is held by a test.
+# No plant drops the places argument of Session.of or sweep, whose defaults name the real state folder: the tests
+# patch the state module's LIVE to a decoy, which a plant reaches only through state_places.
+
+[[plant]]
+name = "a new Declarations for every ask"
+file = "dispatcher/core.py"
+old = '''        if self.declarations is None:
+            from declarations.lookup import Declarations'''
+new = '''        if True:
+            from declarations.lookup import Declarations'''
+tests = ["tests.test_wiring.Declared.test_one_declarations_per_event"]
+
+[[plant]]
+name = "the declarations read the process's own home"
+file = "dispatcher/core.py"
+old = 'self.declarations = Declarations(home=self.home)'
+new = 'self.declarations = Declarations()'
+tests = ["tests.test_wiring.Declared.test_a_rule_reads_the_declaration_for_a_path"]
+
+[[plant]]
+name = "the event is made without its home and places"
+file = "dispatcher/core.py"
+old = 'Event(payload_of(raw), settings.reading, settings.home, settings.places)'
+new = 'Event(payload_of(raw), settings.reading)'
+tests = ["tests.test_wiring.Declared.test_a_rule_reads_the_declaration_for_a_path",
+         "tests.test_wiring.State.test_a_rule_keeps_the_state_of_its_process"]
+
+[[plant]]
+name = "a new Session for every ask"
+file = "dispatcher/core.py"
+old = '''        if self.session is None:
+            from state.session import Session'''
+new = '''        if True:
+            from state.session import Session'''
+tests = ["tests.test_wiring.State.test_one_session_per_event"]
+
+[[plant]]
+name = "the state ignores the places given"
+file = "dispatcher/core.py"
+old = 'return LIVE if places is None else places'
+new = 'return LIVE'
+tests = ["tests.test_wiring.State.test_a_rule_keeps_the_state_of_its_process",
+         "tests.test_wiring.Sweep.test_session_start_sweeps_ended_processes"]
+
+[[plant]]
+name = "no places given is no live state"
+file = "dispatcher/core.py"
+old = 'return LIVE if places is None else places'
+new = 'return places'
+tests = ["tests.test_wiring.State.test_a_process_with_no_key_is_one_refusal",
+         "tests.test_wiring.Sweep.test_the_live_state_is_swept_where_no_places_are_given"]
+
+[[plant]]
+name = "the sweep runs at SessionEnd"
+file = "dispatcher/core.py"
+old = 'if event.name == "SessionStart" else []'
+new = 'if event.name == "SessionEnd" else []'
+tests = ["tests.test_wiring.Sweep.test_session_start_sweeps_ended_processes"]
+
+[[plant]]
+name = "every event sweeps"
+file = "dispatcher/core.py"
+old = 'swept(settings.places) if event.name == "SessionStart" else []'
+new = 'swept(settings.places)'
+tests = ["tests.test_wiring.Sweep.test_session_start_sweeps_ended_processes"]
+
+[[plant]]
+name = "a sweep that cannot read the boot passes"
+file = "dispatcher/core.py"
+old = '''        return [fault.reason]
+    except OSError as fault:'''
+new = '''        return []
+    except OSError as fault:'''
+tests = ["tests.test_wiring.Sweep.test_a_sweep_that_cannot_run_is_a_refusal"]
+
+[[plant]]
+name = "the sweep's state fault is not caught"
+file = "dispatcher/core.py"
+old = '''    except KitFault as fault:
+        return [fault.reason]
+    except OSError'''
+new = '''    except LookupError as fault:
+        return [fault.reason]
+    except OSError'''
+tests = ["tests.test_wiring.Sweep.test_a_sweep_that_cannot_run_is_a_refusal"]
+
+[[plant]]
+name = "a sessions folder that cannot be listed passes"
+file = "dispatcher/core.py"
+old = 'return [Prose(f"the session state cannot be swept: {fault}")]'
+new = 'return []'
+tests = ["tests.test_wiring.Sweep.test_a_sweep_that_cannot_run_is_a_refusal"]
+
+[[plant]]
+name = "a sessions folder that cannot be listed is not caught"
+file = "dispatcher/core.py"
+old = '''    except OSError as fault:
+        return [Prose(f"the session state cannot be swept'''
+new = '''    except LookupError as fault:
+        return [Prose(f"the session state cannot be swept'''
+tests = ["tests.test_wiring.Sweep.test_a_sweep_that_cannot_run_is_a_refusal"]
+
+[[plant]]
+name = "the declarations are imported for every event"
+file = "dispatcher/core.py"
+old = '''import importlib.util
+import json
+'''
+new = '''import importlib.util
+import json
+
+import declarations.lookup
+'''
+tests = ["tests.test_wiring.Light.test_neither_module_is_imported_unasked"]
+
+[[plant]]
+name = "the state is imported for every event"
+file = "dispatcher/core.py"
+old = '''        self.session: Session | None = None
+'''
+new = '''        self.session: Session | None = None
+        import state.session
+'''
+tests = ["tests.test_wiring.Light.test_neither_module_is_imported_unasked"]

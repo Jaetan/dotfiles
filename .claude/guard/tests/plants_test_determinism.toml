@@ -1,0 +1,327 @@
+# The plants that show rules/test_determinism.py held by tests/test_test_determinism.py, one or more per line of the
+# rule:
+#   testing/plants.py tests/plants_test_determinism.toml --out DIR
+
+[[plant]]
+name = "the rule judges PreToolUse"
+file = "rules/test_determinism.py"
+old = '''frozenset({"PostToolUse"})'''
+new = '''frozenset({"PreToolUse"})'''
+tests = ["tests.test_test_determinism.Writes.test_each_edit_tool_hands_its_test_and_notes_it_on_a_clean_answer"]
+
+[[plant]]
+name = "READ and BASH swapped"
+file = "rules/test_determinism.py"
+old = '''READ, BASH = ToolName("Read"), ToolName("Bash")'''
+new = '''READ, BASH = ToolName("Bash"), ToolName("Read")'''
+tests = ["tests.test_test_determinism.Reads.test_a_bash_command_naming_a_test_by_a_path_is_noted", "tests.test_test_determinism.Reads.test_a_read_of_a_test_is_noted_and_of_a_non_test_silent"]
+
+[[plant]]
+name = "Read left out of TOOLS"
+file = "rules/test_determinism.py"
+old = '''{READ, ToolName("Edit")'''
+new = '''{ToolName("Edit")'''
+tests = ["tests.test_test_determinism.Reads.test_a_read_of_a_test_is_noted_and_of_a_non_test_silent"]
+
+[[plant]]
+name = "Edit left out of TOOLS"
+file = "rules/test_determinism.py"
+old = '''ToolName("Edit"), ToolName("Write")'''
+new = '''ToolName("Write")'''
+tests = ["tests.test_test_determinism.Writes.test_each_edit_tool_hands_its_test_and_notes_it_on_a_clean_answer"]
+
+[[plant]]
+name = "Write left out of TOOLS"
+file = "rules/test_determinism.py"
+old = '''ToolName("Write"), ToolName("MultiEdit")'''
+new = '''ToolName("MultiEdit")'''
+tests = ["tests.test_test_determinism.Writes.test_each_edit_tool_hands_its_test_and_notes_it_on_a_clean_answer"]
+
+[[plant]]
+name = "MultiEdit left out of TOOLS"
+file = "rules/test_determinism.py"
+old = '''ToolName("MultiEdit"), BASH})'''
+new = '''BASH})'''
+tests = ["tests.test_test_determinism.Writes.test_each_edit_tool_hands_its_test_and_notes_it_on_a_clean_answer"]
+
+[[plant]]
+name = "Bash left out of TOOLS"
+file = "rules/test_determinism.py"
+old = '''ToolName("MultiEdit"), BASH})'''
+new = '''ToolName("MultiEdit")})'''
+tests = ["tests.test_test_determinism.Writes.test_a_bash_calls_changed_tests_are_asked_once_and_handed_one_by_one"]
+
+[[plant]]
+name = "a suffix never read"
+file = "rules/test_determinism.py"
+old = '''SUFFIX = re.compile(r"\w\.\w+$")'''
+new = '''SUFFIX = re.compile(r"\w\.\w+x$")'''
+tests = ["tests.test_test_determinism.Reads.test_a_bash_command_naming_a_test_by_a_path_is_noted"]
+
+[[plant]]
+name = "a bare word read as a suffix"
+file = "rules/test_determinism.py"
+old = '''SUFFIX = re.compile(r"\w\.\w+$")'''
+new = '''SUFFIX = re.compile(r"\w+$")'''
+tests = ["tests.test_test_determinism.Reads.test_a_word_that_is_no_path_or_names_nothing_is_silent"]
+
+[[plant]]
+name = "the note cites no rule source"
+file = "rules/test_determinism.py"
+old = '''power ({source})'''
+new = '''power (AGENTS.md)'''
+tests = ["tests.test_test_determinism.Writes.test_each_edit_tool_hands_its_test_and_notes_it_on_a_clean_answer"]
+
+[[plant]]
+name = "the note's text cut"
+file = "rules/test_determinism.py"
+old = '''drive it step by step.'''
+new = '''drive it.'''
+tests = ["tests.test_test_determinism.Writes.test_each_edit_tool_hands_its_test_and_notes_it_on_a_clean_answer"]
+
+[[plant]]
+name = "the refusal's text cut"
+file = "rules/test_determinism.py"
+old = '''so rewrite each now:'''
+new = '''so rewrite each:'''
+tests = ["tests.test_test_determinism.Writes.test_a_written_test_is_refused_on_a_finding_or_an_unreadable_answer_with_its_text"]
+
+[[plant]]
+name = "the hints gate asked"
+file = "rules/test_determinism.py"
+old = '''.project.test_determinism'''
+new = '''.project.precise_hints'''
+tests = ["tests.test_test_determinism.Writes.test_each_edit_tool_hands_its_test_and_notes_it_on_a_clean_answer"]
+
+[[plant]]
+name = "a path no gate takes asked"
+file = "rules/test_determinism.py"
+old = '''        if handed is not None:
+'''
+new = '''        if True:
+'''
+tests = ["tests.test_test_determinism.Reads.test_a_project_with_no_gate_is_silent"]
+
+[[plant]]
+name = "the REL a bare name"
+file = "rules/test_determinism.py"
+old = '''asked.setdefault(handed[0], {})[path] = handed[1]'''
+new = '''asked.setdefault(handed[0], {})[path] = RelPath(path.name)'''
+tests = ["tests.test_test_determinism.Writes.test_each_edit_tool_hands_its_test_and_notes_it_on_a_clean_answer"]
+
+[[plant]]
+name = "every asked path a test"
+file = "rules/test_determinism.py"
+old = '''for path in tests(gate, tuple(rels))}'''
+new = '''for path in tuple(rels)}'''
+tests = ["tests.test_test_determinism.Writes.test_a_written_non_test_passes_with_no_note"]
+
+[[plant]]
+name = "an unknown directory joined"
+file = "rules/test_determinism.py"
+old = '''    if cwd is None:
+        return
+'''
+new = '''    if False:
+        return
+'''
+tests = ["tests.test_test_determinism.Reads.test_a_word_that_is_no_path_or_names_nothing_is_silent"]
+
+[[plant]]
+name = "an unknown word read"
+file = "rules/test_determinism.py"
+old = '''if value is not None and ("/" in value'''
+new = '''if ("/" in value'''
+tests = ["tests.test_test_determinism.Reads.test_a_word_that_is_no_path_or_names_nothing_is_silent"]
+
+[[plant]]
+name = "a slash no path"
+file = "rules/test_determinism.py"
+old = '''("/" in value or SUFFIX.search(value))'''
+new = '''(SUFFIX.search(value))'''
+tests = ["tests.test_test_determinism.Reads.test_a_bash_command_naming_a_test_by_a_path_is_noted"]
+
+[[plant]]
+name = "a path naming nothing read"
+file = "rules/test_determinism.py"
+old = '''            if path.exists():
+'''
+new = '''            if True:
+'''
+tests = ["tests.test_test_determinism.Reads.test_a_word_that_is_no_path_or_names_nothing_is_silent"]
+
+[[plant]]
+name = "a path not normalised"
+file = "rules/test_determinism.py"
+old = '''path = Path(normpath(join(cwd, value)))'''
+new = '''path = Path(join(cwd, value))'''
+tests = ["tests.test_test_determinism.Reads.test_a_bash_command_naming_a_test_by_a_path_is_noted"]
+
+[[plant]]
+name = "a Bash call read as a Read"
+file = "rules/test_determinism.py"
+old = '''    if event.tool == BASH:
+        return tuple('''
+new = '''    if event.tool != BASH:
+        return tuple('''
+tests = ["tests.test_test_determinism.Reads.test_a_bash_command_naming_a_test_by_a_path_is_noted", "tests.test_test_determinism.Reads.test_a_read_of_a_test_is_noted_and_of_a_non_test_silent"]
+
+[[plant]]
+name = "a Read's input not an object"
+file = "rules/test_determinism.py"
+old = '''given.get("file_path") if isinstance(given, dict) else None'''
+new = '''given.get("file_path") if True else None'''
+tests = ["tests.test_test_determinism.Reads.test_a_read_whose_input_is_no_object_is_silent"]
+
+[[plant]]
+name = "a Read's path of another type"
+file = "rules/test_determinism.py"
+old = '''if isinstance(path, str) and isabs(path) else ()'''
+new = '''if isabs(path) else ()'''
+tests = ["tests.test_test_determinism.Reads.test_no_other_event_or_tool_is_judged"]
+
+[[plant]]
+name = "a Read's relative path"
+file = "rules/test_determinism.py"
+old = '''if isinstance(path, str) and isabs(path) else ()'''
+new = '''if isinstance(path, str) else ()'''
+tests = ["tests.test_test_determinism.Reads.test_a_read_of_a_test_is_noted_and_of_a_non_test_silent"]
+
+[[plant]]
+name = "the note's tests joined by a space"
+file = "rules/test_determinism.py"
+old = '''paths=", ".join(rels)'''
+new = '''paths=" ".join(rels)'''
+tests = ["tests.test_test_determinism.Writes.test_a_bash_calls_changed_tests_are_asked_once_and_handed_one_by_one"]
+
+[[plant]]
+name = "the note's verb always is"
+file = "rules/test_determinism.py"
+old = '''verb="is" if len(rels) == 1 else "are each"'''
+new = '''verb="is"'''
+tests = ["tests.test_test_determinism.Writes.test_a_bash_calls_changed_tests_are_asked_once_and_handed_one_by_one"]
+
+[[plant]]
+name = "the note cites the gate's folder"
+file = "rules/test_determinism.py"
+old = '''source=gate.rule_source) for gate'''
+new = '''source=gate.cwd) for gate'''
+tests = ["tests.test_test_determinism.Writes.test_each_edit_tool_hands_its_test_and_notes_it_on_a_clean_answer"]
+
+[[plant]]
+name = "two gates' sentences on one line"
+file = "rules/test_determinism.py"
+old = '''context(Prose("\n".join(RULE.format('''
+new = '''context(Prose(" ".join(RULE.format('''
+tests = ["tests.test_test_determinism.Reads.test_tests_of_two_gates_get_a_sentence_each_citing_its_rule"]
+
+[[plant]]
+name = "a gate's tests a sentence each"
+file = "rules/test_determinism.py"
+old = '''by_gate.setdefault(gate, []).append(as_rel)'''
+new = '''by_gate[gate] = [as_rel]'''
+tests = ["tests.test_test_determinism.Writes.test_a_bash_calls_changed_tests_are_asked_once_and_handed_one_by_one"]
+
+[[plant]]
+name = "an unreadable answer passes"
+file = "rules/test_determinism.py"
+old = '''if answer.kind != "clean":'''
+new = '''if answer.kind == "finding":'''
+tests = ["tests.test_test_determinism.Writes.test_a_written_test_is_refused_on_a_finding_or_an_unreadable_answer_with_its_text"]
+
+[[plant]]
+name = "the last answer alone refused"
+file = "rules/test_determinism.py"
+old = '''refused.append(said(path, found[path], answer, FINDING))'''
+new = '''refused = [said(path, found[path], answer, FINDING)]'''
+tests = ["tests.test_test_determinism.Writes.test_every_finding_and_unreadable_answer_is_refused_together"]
+
+[[plant]]
+name = "the refused answers joined on one line"
+file = "rules/test_determinism.py"
+old = '''WRITTEN.format(answers="\n".join(refused))'''
+new = '''WRITTEN.format(answers="".join(refused))'''
+tests = ["tests.test_test_determinism.Writes.test_every_finding_and_unreadable_answer_is_refused_together"]
+
+[[plant]]
+name = "every test handed"
+file = "rules/test_determinism.py"
+old = '''first, rest = limited(tuple(found))'''
+new = '''first, rest = tuple(found), ()'''
+tests = ["tests.test_test_determinism.Writes.test_five_changed_tests_refuse_the_fifth_as_unchecked"]
+
+[[plant]]
+name = "the unchecked passed"
+file = "rules/test_determinism.py"
+old = '''    if rest:
+'''
+new = '''    if False:
+'''
+tests = ["tests.test_test_determinism.Writes.test_five_changed_tests_refuse_the_fifth_as_unchecked"]
+
+[[plant]]
+name = "a clean write not noted"
+file = "rules/test_determinism.py"
+old = '''if refused else note(found)'''
+new = '''if refused else None'''
+tests = ["tests.test_test_determinism.Writes.test_each_edit_tool_hands_its_test_and_notes_it_on_a_clean_answer"]
+
+[[plant]]
+name = "a folder asked as a changed file"
+file = "rules/test_determinism.py"
+old = '''if path.is_file()))'''
+new = '''if path.exists()))'''
+tests = ["tests.test_test_determinism.Writes.test_a_deleted_test_and_one_outside_as_from_are_not_asked"]
+
+[[plant]]
+name = "the write arm never taken"
+file = "rules/test_determinism.py"
+old = '''    if found:
+        return written(found)'''
+new = '''    if False:
+        return written(found)'''
+tests = ["tests.test_test_determinism.Writes.test_each_edit_tool_hands_its_test_and_notes_it_on_a_clean_answer"]
+
+[[plant]]
+name = "an edit's file read"
+file = "rules/test_determinism.py"
+old = '''    if event.tool not in (READ, BASH):
+        return None'''
+new = '''    if False:
+        return None'''
+tests = ["tests.test_test_determinism.Writes.test_a_written_non_test_passes_with_no_note"]
+
+[[plant]]
+name = "an empty note given"
+file = "rules/test_determinism.py"
+old = '''return note(found) if found else None'''
+new = '''return note(found)'''
+tests = ["tests.test_test_determinism.Reads.test_a_read_of_a_test_is_noted_and_of_a_non_test_silent"]
+
+[[plant]]
+name = "the read arm asks nothing"
+file = "rules/test_determinism.py"
+old = '''found = tests_of(event, named(event))'''
+new = '''found = tests_of(event, ())'''
+tests = ["tests.test_test_determinism.Reads.test_a_read_of_a_test_is_noted_and_of_a_non_test_silent"]
+
+[[plant]]
+name = "a site finding said as a hint"
+file = "rules/test_determinism.py"
+old = '''FindingVerb("refuses a site")'''
+new = '''FindingVerb("refuses a hint")'''
+tests = ["tests.test_test_determinism.Writes.test_a_written_test_is_refused_on_a_finding_or_an_unreadable_answer_with_its_text"]
+
+[[plant]]
+name = "the unchecked tests called files"
+file = "rules/test_determinism.py"
+old = '''Noun("tests")'''
+new = '''Noun("files")'''
+tests = ["tests.test_test_determinism.Writes.test_five_changed_tests_refuse_the_fifth_as_unchecked"]
+
+[[plant]]
+name = "the handed tests refused as unchecked"
+file = "rules/test_determinism.py"
+old = '''unchecked(rest, found, NOUN)'''
+new = '''unchecked(first, found, NOUN)'''
+tests = ["tests.test_test_determinism.Writes.test_five_changed_tests_refuse_the_fifth_as_unchecked"]

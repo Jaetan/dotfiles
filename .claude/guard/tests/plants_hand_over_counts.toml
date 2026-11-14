@@ -1,0 +1,340 @@
+# The plants that show rules/hand_over_counts.py held by tests/test_hand_over_counts.py, one or more per line of the
+# rule:
+#   testing/plants.py tests/plants_hand_over_counts.toml --out DIR
+
+[[plant]]
+name = "SessionStart is no event of the rule"
+file = "rules/hand_over_counts.py"
+old = '''frozenset({"SessionStart", "Stop"})'''
+new = '''frozenset({"Stop"})'''
+tests = ["tests.test_hand_over_counts"]
+
+[[plant]]
+name = "a SubagentStop is judged"
+file = "rules/hand_over_counts.py"
+old = '''frozenset({"SessionStart", "Stop"})'''
+new = '''frozenset({"SessionStart", "Stop", "SubagentStop"})'''
+tests = ["tests.test_hand_over_counts"]
+
+[[plant]]
+name = "the rule names an empty set of tools"
+file = "rules/hand_over_counts.py"
+old = '''TOOLS = None'''
+new = '''TOOLS = frozenset()'''
+tests = ["tests.test_hand_over_counts"]
+
+[[plant]]
+name = "the ids are kept as a run"
+file = "rules/hand_over_counts.py"
+old = '''KIND: Final = "notice"'''
+new = '''KIND: Final = "run"'''
+tests = ["tests.test_hand_over_counts"]
+
+[[plant]]
+name = "the notice takes another id"
+file = "rules/hand_over_counts.py"
+old = '''IDENT: Final = "task-ids"'''
+new = '''IDENT: Final = "task-id"'''
+tests = ["tests.test_hand_over_counts"]
+
+[[plant]]
+name = "the notice's field takes another name"
+file = "rules/hand_over_counts.py"
+old = '''FIELD: Final = "ids"'''
+new = '''FIELD: Final = "id"'''
+tests = ["tests.test_hand_over_counts"]
+
+[[plant]]
+name = "the task list is looked for under another name"
+file = "rules/hand_over_counts.py"
+old = '''TASKS = Path("memory") / "TASKS.md"'''
+new = '''TASKS = Path("memory") / "TASK.md"'''
+tests = ["tests.test_hand_over_counts"]
+
+[[plant]]
+name = "a task id holds one digit"
+file = "rules/hand_over_counts.py"
+old = '''_TASK_ID = re.compile(r"\b[A-Z]\.[0-9]+\b")'''
+new = '''_TASK_ID = re.compile(r"\b[A-Z]\.[0-9]\b")'''
+tests = ["tests.test_hand_over_counts"]
+
+[[plant]]
+name = "a count followed by pass is not read"
+file = "rules/hand_over_counts.py"
+old = '''(?:pass|passes|passed|passing|green|succeeded)\b",'''
+new = '''(?:passes|passed|passing|green|succeeded)\b",'''
+tests = ["tests.test_hand_over_counts"]
+
+[[plant]]
+name = "a count followed by its pass is read in lower case alone"
+file = "rules/hand_over_counts.py"
+old = '''    re.IGNORECASE)
+_PASS_THEN_COUNT'''
+new = '''    0)
+_PASS_THEN_COUNT'''
+tests = ["tests.test_hand_over_counts"]
+
+[[plant]]
+name = "a count after passed is not read"
+file = "rules/hand_over_counts.py"
+old = '''_PASS_THEN_COUNT = re.compile(r"\b(?:pass|passes|passed|green|succeeded)\b'''
+new = '''_PASS_THEN_COUNT = re.compile(r"\b(?:pass|passes|green|succeeded)\b'''
+tests = ["tests.test_hand_over_counts"]
+
+[[plant]]
+name = "a count after its pass is read in lower case alone"
+file = "rules/hand_over_counts.py"
+old = '''                              re.IGNORECASE)'''
+new = '''                              0)'''
+tests = ["tests.test_hand_over_counts"]
+
+[[plant]]
+name = "queued disposes of nothing"
+file = "rules/hand_over_counts.py"
+old = '''(?:pending|still running|queued|in progress)\b", re.IGNORECASE)'''
+new = '''(?:pending|still running|in progress)\b", re.IGNORECASE)'''
+tests = ["tests.test_hand_over_counts"]
+
+[[plant]]
+name = "a not-ended word is read in lower case alone"
+file = "rules/hand_over_counts.py"
+old = '''(?:pending|still running|queued|in progress)\b", re.IGNORECASE)'''
+new = '''(?:pending|still running|queued|in progress)\b", 0)'''
+tests = ["tests.test_hand_over_counts"]
+
+[[plant]]
+name = "a code span is read"
+file = "rules/hand_over_counts.py"
+old = '''_CITED = re.compile(r"`[^`]*`|\"[^\"]*\"|“[^”]*”")'''
+new = '''_CITED = re.compile(r"\"[^\"]*\"|“[^”]*”")'''
+tests = ["tests.test_hand_over_counts"]
+
+[[plant]]
+name = "a straight quotation is read"
+file = "rules/hand_over_counts.py"
+old = '''_CITED = re.compile(r"`[^`]*`|\"[^\"]*\"|“[^”]*”")'''
+new = '''_CITED = re.compile(r"`[^`]*`|“[^”]*”")'''
+tests = ["tests.test_hand_over_counts"]
+
+[[plant]]
+name = "a curly quotation is read"
+file = "rules/hand_over_counts.py"
+old = '''_CITED = re.compile(r"`[^`]*`|\"[^\"]*\"|“[^”]*”")'''
+new = '''_CITED = re.compile(r"`[^`]*`|\"[^\"]*\"")'''
+tests = ["tests.test_hand_over_counts"]
+
+[[plant]]
+name = "a dash item is no unit of its own"
+file = "rules/hand_over_counts.py"
+old = '''_ITEM = re.compile(r"^\s*(?:[-*+]|[0-9]+[.)])\s")'''
+new = '''_ITEM = re.compile(r"^\s*(?:[*+]|[0-9]+[.)])\s")'''
+tests = ["tests.test_hand_over_counts"]
+
+[[plant]]
+name = "a numbered item is no unit of its own"
+file = "rules/hand_over_counts.py"
+old = '''_ITEM = re.compile(r"^\s*(?:[-*+]|[0-9]+[.)])\s")'''
+new = '''_ITEM = re.compile(r"^\s*(?:[-*+])\s")'''
+tests = ["tests.test_hand_over_counts"]
+
+[[plant]]
+name = "the hand-over refusal names no way out"
+file = "rules/hand_over_counts.py"
+old = '''fix it, or open a task for it and name its new id in the'''
+new = '''fix it, in the'''
+tests = ["tests.test_hand_over_counts"]
+
+[[plant]]
+name = "a blank line ends no paragraph"
+file = "rules/hand_over_counts.py"
+old = '''        if not line.strip():'''
+new = '''        if False:'''
+tests = ["tests.test_hand_over_counts"]
+
+[[plant]]
+name = "a list item continues its paragraph"
+file = "rules/hand_over_counts.py"
+old = '''        elif _ITEM.match(line) or not found:'''
+new = '''        elif not found:'''
+tests = ["tests.test_hand_over_counts"]
+
+[[plant]]
+name = "a first line opens no unit"
+file = "rules/hand_over_counts.py"
+old = '''        elif _ITEM.match(line) or not found:'''
+new = '''        elif _ITEM.match(line):'''
+tests = ["tests.test_hand_over_counts"]
+
+[[plant]]
+name = "a paragraph's next line is a unit of its own"
+file = "rules/hand_over_counts.py"
+old = '''            found[-1].append(line)'''
+new = '''            found.append([line])'''
+tests = ["tests.test_hand_over_counts"]
+
+[[plant]]
+name = "only the first unit is judged"
+file = "rules/hand_over_counts.py"
+old = '''    return [Prose(" ".join(unit)) for unit in found]'''
+new = '''    return [Prose(" ".join(unit)) for unit in found[:1]]'''
+tests = ["tests.test_hand_over_counts"]
+
+[[plant]]
+name = "a not-ended word disposes of nothing"
+file = "rules/hand_over_counts.py"
+old = '''        if _NOT_ENDED.search(unit) or new.intersection(_TASK_ID.findall(unit)):'''
+new = '''        if new.intersection(_TASK_ID.findall(unit)):'''
+tests = ["tests.test_hand_over_counts"]
+
+[[plant]]
+name = "a new task id disposes of nothing"
+file = "rules/hand_over_counts.py"
+old = '''        if _NOT_ENDED.search(unit) or new.intersection(_TASK_ID.findall(unit)):'''
+new = '''        if _NOT_ENDED.search(unit):'''
+tests = ["tests.test_hand_over_counts"]
+
+[[plant]]
+name = "cited text is read"
+file = "rules/hand_over_counts.py"
+old = '''        reported = _CITED.sub(" ", unit)'''
+new = '''        reported = unit'''
+tests = ["tests.test_hand_over_counts"]
+
+[[plant]]
+name = "a full count is refused"
+file = "rules/hand_over_counts.py"
+old = '''                if int(match[1]) < int(match[2]):'''
+new = '''                if int(match[1]) <= int(match[2]):'''
+tests = ["tests.test_hand_over_counts"]
+
+[[plant]]
+name = "the finding names another text than the count"
+file = "rules/hand_over_counts.py"
+old = '''found.append(Prose(f"  * '{match[0]}' leaves'''
+new = '''found.append(Prose(f"  * '{match[1]}' leaves'''
+tests = ["tests.test_hand_over_counts"]
+
+[[plant]]
+name = "the finding names the total as what is left"
+file = "rules/hand_over_counts.py"
+old = '''leaves {int(match[2]) - int(match[1])} without a '''
+new = '''leaves {int(match[2])} without a '''
+tests = ["tests.test_hand_over_counts"]
+
+[[plant]]
+name = "no finding is returned"
+file = "rules/hand_over_counts.py"
+old = '''    return found'''
+new = '''    return []'''
+tests = ["tests.test_hand_over_counts"]
+
+[[plant]]
+name = "a Stop naming no transcript is read"
+file = "rules/hand_over_counts.py"
+old = '''    if event.transcript is None or not (tasks'''
+new = '''    if not (tasks'''
+tests = ["tests.test_hand_over_counts"]
+
+[[plant]]
+name = "a session with a task list is judged as nothing"
+file = "rules/hand_over_counts.py"
+old = '''or not (tasks := Path(event.transcript).parent / TASKS).is_file():'''
+new = '''or (tasks := Path(event.transcript).parent / TASKS).is_file():'''
+tests = ["tests.test_hand_over_counts"]
+
+[[plant]]
+name = "the list holds no id"
+file = "rules/hand_over_counts.py"
+old = '''    held = frozenset(ListedId(ident) for ident in _TASK_ID.findall(tasks.read_text(encoding="utf-8")))'''
+new = '''    held = frozenset[ListedId]()'''
+tests = ["tests.test_hand_over_counts"]
+
+[[plant]]
+name = "a Stop is not judged"
+file = "rules/hand_over_counts.py"
+old = '''    if event.name == "Stop":'''
+new = '''    if event.name == "SessionStart":'''
+tests = ["tests.test_hand_over_counts"]
+
+[[plant]]
+name = "the kept notice is never found"
+file = "rules/hand_over_counts.py"
+old = '''if record.ident == IDENT]'''
+new = '''if record.ident != IDENT]'''
+tests = ["tests.test_hand_over_counts"]
+
+[[plant]]
+name = "an id the list held disposes"
+file = "rules/hand_over_counts.py"
+old = '''        new = held - frozenset(kept[0].split()) if kept else frozenset[ListedId]()'''
+new = '''        new = held if kept else frozenset[ListedId]()'''
+tests = ["tests.test_hand_over_counts"]
+
+[[plant]]
+name = "with nothing kept every listed id disposes"
+file = "rules/hand_over_counts.py"
+old = '''        new = held - frozenset(kept[0].split()) if kept else frozenset[ListedId]()'''
+new = '''        new = held - frozenset(kept[0].split()) if kept else held'''
+tests = ["tests.test_hand_over_counts"]
+
+[[plant]]
+name = "the kept ids are read as one"
+file = "rules/hand_over_counts.py"
+old = '''frozenset(kept[0].split())'''
+new = '''frozenset(kept[0].split(","))'''
+tests = ["tests.test_hand_over_counts"]
+
+[[plant]]
+name = "the last message is read under another key"
+file = "rules/hand_over_counts.py"
+old = '''event.payload.get("last_assistant_message")'''
+new = '''event.payload.get("last_message")'''
+tests = ["tests.test_hand_over_counts"]
+
+[[plant]]
+name = "an absent message is read as it is"
+file = "rules/hand_over_counts.py"
+old = '''findings(Prose(said if isinstance(said, str) else ""), new)'''
+new = '''findings(Prose(said), new)'''
+tests = ["tests.test_hand_over_counts"]
+
+[[plant]]
+name = "a finding refuses nothing"
+file = "rules/hand_over_counts.py"
+old = '''            return refuse(Prose(ADVICE.format(findings="\n".join(found))))'''
+new = '''            return None'''
+tests = ["tests.test_hand_over_counts"]
+
+[[plant]]
+name = "the ids are kept at no event"
+file = "rules/hand_over_counts.py"
+old = '''    session.record(KIND, RecordId(IDENT), {FieldName(FIELD): FieldValue(" ".join(sorted(held)))})
+    return None'''
+new = '''    return None'''
+tests = ["tests.test_hand_over_counts"]
+
+[[plant]]
+name = "the ids are kept joined by commas"
+file = "rules/hand_over_counts.py"
+old = '''FieldValue(" ".join(sorted(held)))'''
+new = '''FieldValue(",".join(sorted(held)))'''
+tests = ["tests.test_hand_over_counts"]
+
+[[plant]]
+name = "a refused Stop keeps the ids"
+file = "rules/hand_over_counts.py"
+old = '''    session = event.state()
+    if event.name == "Stop":'''
+new = '''    session = event.state()
+    session.record(KIND, RecordId(IDENT), {FieldName(FIELD): FieldValue(" ".join(sorted(held)))})
+    if event.name == "Stop":'''
+tests = ["tests.test_hand_over_counts"]
+
+[[plant]]
+name = "a passed Stop refuses"
+file = "rules/hand_over_counts.py"
+old = '''    session.record(KIND, RecordId(IDENT), {FieldName(FIELD): FieldValue(" ".join(sorted(held)))})
+    return None'''
+new = '''    session.record(KIND, RecordId(IDENT), {FieldName(FIELD): FieldValue(" ".join(sorted(held)))})
+    return refuse(Prose("x"))'''
+tests = ["tests.test_hand_over_counts"]

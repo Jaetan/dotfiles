@@ -1,0 +1,537 @@
+# The plants that show the session state's tests hold its code: run
+#   testing/plants.py tests/plants_state.toml --out DIR
+# Every plant is killed when each line of state/session.py they break is held by a test.
+
+[[plant]]
+name = "the boot id keeps its dashes"
+file = "state/session.py"
+old = 'return BootId(text.strip().replace("-", ""))'
+new = 'return BootId(text.strip())'
+tests = ["tests.test_session_state.Keys.test_the_key_reads_the_named_process",
+         "tests.test_session_state.Keys.test_the_key_of_a_real_process"]
+
+[[plant]]
+name = "a missing boot id is no fault"
+file = "state/session.py"
+old = 'except (OSError, UnicodeDecodeError) as fault:'
+new = 'except UnicodeDecodeError as fault:'
+tests = ["tests.test_session_state.Keys.test_no_key"]
+
+[[plant]]
+name = "a boot id not ASCII is no fault"
+file = "state/session.py"
+old = 'except (OSError, UnicodeDecodeError) as fault:'
+new = 'except OSError as fault:'
+tests = ["tests.test_session_state.Keys.test_no_key"]
+
+[[plant]]
+name = "the stat file is split at the first closing parenthesis"
+file = "state/session.py"
+old = 'text[text.rindex(")") + 1:]'
+new = 'text[text.index(")") + 1:]'
+tests = ["tests.test_session_state.Keys.test_the_key_reads_the_named_process"]
+
+[[plant]]
+name = "the start time is read from field 21"
+file = "state/session.py"
+old = '.split()[19]))'
+new = '.split()[18]))'
+tests = ["tests.test_session_state.Keys.test_the_key_reads_the_named_process",
+         "tests.test_session_state.Keys.test_the_key_of_a_real_process"]
+
+[[plant]]
+name = "a pid with no stat file is not a process gone"
+file = "state/session.py"
+old = '''    except (FileNotFoundError, ProcessLookupError):
+        return None'''
+new = '''    except ProcessLookupError:
+        return None'''
+tests = ["tests.test_session_state.Sweep.test_the_sweep_removes_only_ended_processes",
+         "tests.test_session_state.Sweep.test_a_real_process_is_kept_until_it_ends"]
+
+[[plant]]
+name = "a stat file with no command name is no fault"
+file = "state/session.py"
+old = '''    except (ValueError, IndexError):
+        raise StateFault'''
+new = '''    except IndexError:
+        raise StateFault'''
+tests = ["tests.test_session_state.Keys.test_no_key"]
+
+[[plant]]
+name = "a stat file too short is no fault"
+file = "state/session.py"
+old = '''    except (ValueError, IndexError):
+        raise StateFault'''
+new = '''    except ValueError:
+        raise StateFault'''
+tests = ["tests.test_session_state.Keys.test_no_key",
+         "tests.test_session_state.Sweep.test_the_sweep_removes_only_ended_processes"]
+
+[[plant]]
+name = "a CLAUDE_PID of digits not ASCII is taken"
+file = "state/session.py"
+old = 'if not (spelled.isascii() and spelled.isdigit()):'
+new = 'if not spelled.isdigit():'
+tests = ["tests.test_session_state.Keys.test_no_key"]
+
+[[plant]]
+name = "a CLAUDE_PID that is no number is taken"
+file = "state/session.py"
+old = 'if not (spelled.isascii() and spelled.isdigit()):'
+new = 'if not spelled.isascii():'
+tests = ["tests.test_session_state.Keys.test_no_key"]
+
+[[plant]]
+name = "an unreadable CLAUDE_PID process is no fault"
+file = "state/session.py"
+old = '''    except OSError as fault:
+        raise StateFault(Prose(f"process {pid}'''
+new = '''    except ZeroDivisionError as fault:
+        raise StateFault(Prose(f"process {pid}'''
+tests = ["tests.test_session_state.Keys.test_no_key"]
+
+[[plant]]
+name = "a CLAUDE_PID naming no process gives a key"
+file = "state/session.py"
+old = '''    if start is None:
+        raise StateFault'''
+new = '''    if False:
+        raise StateFault'''
+tests = ["tests.test_session_state.Keys.test_no_key"]
+
+[[plant]]
+name = "the sweep takes a name that does not render back to its key"
+file = "state/session.py"
+old = 'return key if key.name == name and boot.isascii()'
+new = 'return key if boot.isascii()'
+tests = ["tests.test_session_state.Sweep.test_the_sweep_removes_only_ended_processes"]
+
+[[plant]]
+name = "the sweep takes a boot that is not letters and digits"
+file = "state/session.py"
+old = 'and boot.isascii() and boot.isalnum() else None'
+new = 'and boot.isascii() else None'
+tests = ["tests.test_session_state.Sweep.test_the_sweep_removes_only_ended_processes"]
+
+[[plant]]
+name = "the sweep takes a boot not ASCII"
+file = "state/session.py"
+old = 'and boot.isascii() and boot.isalnum() else None'
+new = 'and boot.isalnum() else None'
+tests = ["tests.test_session_state.Sweep.test_the_sweep_removes_only_ended_processes"]
+
+[[plant]]
+name = "a name of no three parts breaks the sweep"
+file = "state/session.py"
+old = '    except ValueError:  # not three parts'
+new = '    except ZeroDivisionError:  # not three parts'
+tests = ["tests.test_session_state.Sweep.test_the_sweep_removes_only_ended_processes"]
+
+[[plant]]
+name = "a process of another boot has not ended"
+file = "state/session.py"
+old = '''    if key.boot != boot:
+        return True'''
+new = '''    if False:
+        return True'''
+tests = ["tests.test_session_state.Sweep.test_the_sweep_removes_only_ended_processes"]
+
+[[plant]]
+name = "a process whose start time changed has not ended"
+file = "state/session.py"
+old = 'return started(key.pid, proc) != key.start'
+new = 'return started(key.pid, proc) is None'
+tests = ["tests.test_session_state.Sweep.test_the_sweep_removes_only_ended_processes"]
+
+[[plant]]
+name = "a process that cannot be read has ended"
+file = "state/session.py"
+old = '''    except (OSError, StateFault):
+        return False'''
+new = '''    except (OSError, StateFault):
+        return True'''
+tests = ["tests.test_session_state.Sweep.test_the_sweep_removes_only_ended_processes"]
+
+[[plant]]
+name = "a stat file that is no stat file breaks the sweep"
+file = "state/session.py"
+old = '''    except (OSError, StateFault):
+        return False'''
+new = '''    except OSError:
+        return False'''
+tests = ["tests.test_session_state.Sweep.test_the_sweep_removes_only_ended_processes"]
+
+[[plant]]
+name = "a stat file that cannot be read breaks the sweep"
+file = "state/session.py"
+old = '''    except (OSError, StateFault):
+        return False'''
+new = '''    except StateFault:
+        return False'''
+tests = ["tests.test_session_state.Sweep.test_the_sweep_removes_only_ended_processes"]
+
+[[plant]]
+name = "the sweep fails with no sessions folder"
+file = "state/session.py"
+old = '''    except FileNotFoundError:
+        return ()
+    removed'''
+new = '''    except ZeroDivisionError:
+        return ()
+    removed'''
+tests = ["tests.test_session_state.Sweep.test_no_sessions_folder"]
+
+[[plant]]
+name = "the sweep removes nothing"
+file = "state/session.py"
+old = 'shutil.rmtree(places.sessions / name, ignore_errors=True)'
+new = '_ = places.sessions / name'
+tests = ["tests.test_session_state.Sweep.test_the_sweep_removes_only_ended_processes",
+         "tests.test_session_state.Sweep.test_a_real_process_is_kept_until_it_ends"]
+
+[[plant]]
+name = "the sweep removes a live process"
+file = "state/session.py"
+old = 'if key is not None and ended(key, boot, places.proc):'
+new = 'if key is not None:'
+tests = ["tests.test_session_state.Sweep.test_the_sweep_removes_only_ended_processes",
+         "tests.test_session_state.Sweep.test_a_real_process_is_kept_until_it_ends"]
+
+[[plant]]
+name = "a row that is no object is not refused"
+file = "state/session.py"
+old = '''    if not isinstance(row, dict):
+        return False'''
+new = '''    if False:
+        return False'''
+tests = ["tests.test_session_state.Faults.test_an_unreadable_state_refuses"]
+
+[[plant]]
+name = "a row of any kind is taken"
+file = "state/session.py"
+old = 'return (row.get("kind") in KINDS and isinstance'
+new = 'return (isinstance'
+tests = ["tests.test_session_state.Faults.test_an_unreadable_state_refuses"]
+
+[[plant]]
+name = "a row of any id is taken"
+file = "state/session.py"
+old = 'isinstance(row.get("id"), str) and isinstance(fields, dict)'
+new = 'isinstance(fields, dict)'
+tests = ["tests.test_session_state.Faults.test_an_unreadable_state_refuses"]
+
+[[plant]]
+name = "a row whose fields are no object is taken"
+file = "state/session.py"
+old = '''str) and isinstance(fields, dict)
+            and all'''
+new = '''str)
+            and all'''
+tests = ["tests.test_session_state.Faults.test_an_unreadable_state_refuses"]
+
+[[plant]]
+name = "a row whose field is no string is taken"
+file = "state/session.py"
+old = '''            and all(isinstance(value, str) for value in fields.values())
+            and "agent"'''
+new = '''            and "agent"'''
+tests = ["tests.test_session_state.Faults.test_an_unreadable_state_refuses"]
+
+[[plant]]
+name = "a row with no agent is taken"
+file = "state/session.py"
+old = '"agent" in row and (row["agent"] is None or isinstance(row["agent"], str))'
+new = '(row.get("agent") is None or isinstance(row.get("agent"), str))'
+tests = ["tests.test_session_state.Faults.test_an_unreadable_state_refuses"]
+
+[[plant]]
+name = "a row of any agent is taken"
+file = "state/session.py"
+old = '(row["agent"] is None or isinstance(row["agent"], str))'
+new = 'True'
+tests = ["tests.test_session_state.Faults.test_an_unreadable_state_refuses"]
+
+[[plant]]
+name = "a missing state file is a fault"
+file = "state/session.py"
+old = '''    except FileNotFoundError:
+        return []'''
+new = '''    except ZeroDivisionError:
+        return []'''
+tests = ["tests.test_session_state.Layout.test_one_file_per_agent",
+         "tests.test_session_state.Records.test_every_agent_reads_every_agent"]
+
+[[plant]]
+name = "a state file that cannot be opened is no fault"
+file = "state/session.py"
+old = '    except (OSError, ValueError) as fault:  # a text'
+new = '    except ValueError as fault:  # a text'
+tests = ["tests.test_session_state.Faults.test_an_unreadable_state_refuses"]
+
+[[plant]]
+name = "a state file that is no JSON is no fault"
+file = "state/session.py"
+old = '    except (OSError, ValueError) as fault:  # a text'
+new = '    except OSError as fault:  # a text'
+tests = ["tests.test_session_state.Faults.test_an_unreadable_state_refuses"]
+
+[[plant]]
+name = "a state file that is no object is taken"
+file = "state/session.py"
+old = 'rows = stored.get("records") if isinstance(stored, dict) else None'
+new = 'rows = stored.get("records")'
+tests = ["tests.test_session_state.Faults.test_an_unreadable_state_refuses"]
+
+[[plant]]
+name = "records that are no list are taken"
+file = "state/session.py"
+old = 'if not isinstance(rows, list) or not all('
+new = 'if rows is None or not all('
+tests = ["tests.test_session_state.Faults.test_an_unreadable_state_refuses"]
+
+[[plant]]
+name = "rows are not checked"
+file = "state/session.py"
+old = 'or not all(well_formed(row) for row in rows):'
+new = ':'
+tests = ["tests.test_session_state.Faults.test_an_unreadable_state_refuses"]
+
+[[plant]]
+name = "the temporary file is made outside the folder"
+file = "state/session.py"
+old = 'tempfile.mkstemp(dir=path.parent, prefix'
+new = 'tempfile.mkstemp(prefix'
+tests = ["tests.test_session_state.Layout.test_a_write_renames_a_temporary_file_from_the_folder"]
+
+[[plant]]
+name = "the temporary file is named as a state file"
+file = "state/session.py"
+old = 'suffix=".tmp")'
+new = 'suffix=".json")'
+tests = ["tests.test_session_state.Layout.test_a_write_renames_a_temporary_file_from_the_folder"]
+
+[[plant]]
+name = "a state file is written in place"
+file = "state/session.py"
+old = '''        os.replace(temporary, path)
+'''
+new = '''        os.unlink(temporary)
+        _ = path.write_text(json.dumps(stored), encoding="utf-8")
+'''
+tests = ["tests.test_session_state.Contention.test_many_writers_lose_nothing_and_tear_nothing"]
+
+[[plant]]
+name = "a failed write leaves its temporary file"
+file = "state/session.py"
+old = '''        with contextlib.suppress(FileNotFoundError):
+            os.unlink(temporary)
+        raise'''
+new = '''        raise'''
+tests = ["tests.test_session_state.Layout.test_a_failed_write_leaves_no_temporary_file"]
+
+[[plant]]
+name = "a change takes no lock"
+file = "state/session.py"
+old = 'fcntl.flock(handle, fcntl.LOCK_EX)'
+new = '_ = handle'
+tests = ["tests.test_session_state.Contention.test_many_writers_lose_nothing_and_tear_nothing"]
+
+[[plant]]
+name = "a missing lock file is not made"
+file = "state/session.py"
+old = 'os.O_RDWR | os.O_CREAT | os.O_CLOEXEC'
+new = 'os.O_RDWR | os.O_CLOEXEC'
+tests = ["tests.test_session_state.Layout.test_one_file_per_agent"]
+
+[[plant]]
+name = "a change is not written back"
+file = "state/session.py"
+old = '            written(path, Stored(records=rows))'
+new = '            _ = path'
+tests = ["tests.test_session_state.Records.test_every_agent_reads_every_agent"]
+
+[[plant]]
+name = "the sessions folder is not made"
+file = "state/session.py"
+old = 'self.folder.mkdir(parents=True, exist_ok=True)'
+new = 'self.folder.mkdir(exist_ok=True)'
+tests = ["tests.test_session_state.Layout.test_one_file_per_agent"]
+
+[[plant]]
+name = "a process folder that exists fails a write"
+file = "state/session.py"
+old = 'self.folder.mkdir(parents=True, exist_ok=True)'
+new = 'self.folder.mkdir(parents=True)'
+tests = ["tests.test_session_state.Layout.test_one_file_per_agent"]
+
+[[plant]]
+name = "the shared file is the agent's own"
+file = "state/session.py"
+old = '''        if shared:
+            return SHARED'''
+new = '''        if False:
+            return SHARED'''
+tests = ["tests.test_session_state.Records.test_the_shared_file",
+         "tests.test_session_state.Layout.test_one_file_per_agent"]
+
+[[plant]]
+name = "the main thread has no file of its own"
+file = "state/session.py"
+old = '''        if self.agent is None:
+            return MAIN'''
+new = '''        if False:
+            return MAIN'''
+tests = ["tests.test_session_state.Layout.test_one_file_per_agent"]
+
+[[plant]]
+name = "an agent's file is named by its id as it is spelled"
+file = "state/session.py"
+old = 'FileStem("agent-" + self.agent.encode().hex())'
+new = 'FileStem("agent-" + self.agent)'
+tests = ["tests.test_session_state.Layout.test_one_file_per_agent"]
+
+[[plant]]
+name = "an event's agent is not read"
+file = "state/session.py"
+old = 'agent if isinstance(agent, str) and agent else None)'
+new = 'None)'
+tests = ["tests.test_session_state.Records.test_the_event_agent"]
+
+[[plant]]
+name = "an empty agent id is an agent"
+file = "state/session.py"
+old = 'agent if isinstance(agent, str) and agent else None)'
+new = 'agent if isinstance(agent, str) else None)'
+tests = ["tests.test_session_state.Records.test_the_event_agent"]
+
+[[plant]]
+name = "the state is keyed by the session id, which a /clear changes"
+file = "state/session.py"
+old = 'return cls(places, process_key(event.reading.env, places.proc),'
+new = 'return cls(places._replace(sessions=places.sessions / str(event.payload.get("session_id"))), process_key(event.reading.env, places.proc),'
+tests = ["tests.test_session_state.Keys.test_a_clear_keeps_the_state"]
+
+[[plant]]
+name = "a record does not replace its kind and id"
+file = "state/session.py"
+old = '''            rows[:] = [row for row in rows if (row["kind"], row["id"]) != (kind, ident)]
+            rows.append('''
+new = '''            rows.append('''
+tests = ["tests.test_session_state.Records.test_a_record_replaces_its_kind_and_id"]
+
+[[plant]]
+name = "a record replaces its id of every kind"
+file = "state/session.py"
+old = '''            rows[:] = [row for row in rows if (row["kind"], row["id"]) != (kind, ident)]
+            rows.append('''
+new = '''            rows[:] = [row for row in rows if row["id"] != ident]
+            rows.append('''
+tests = ["tests.test_session_state.Records.test_a_record_replaces_its_kind_and_id"]
+
+[[plant]]
+name = "a record does not name its agent"
+file = "state/session.py"
+old = 'agent=self.agent))'
+new = 'agent=None))'
+tests = ["tests.test_session_state.Records.test_every_agent_reads_every_agent"]
+
+[[plant]]
+name = "forget removes its id of every kind"
+file = "state/session.py"
+old = '''            before = len(rows)
+            rows[:] = [row for row in rows if (row["kind"], row["id"]) != (kind, ident)]'''
+new = '''            before = len(rows)
+            rows[:] = [row for row in rows if row["id"] != ident]'''
+tests = ["tests.test_session_state.Records.test_forget"]
+
+[[plant]]
+name = "forget removes nothing"
+file = "state/session.py"
+old = '''            before = len(rows)
+            rows[:] = [row for row in rows if (row["kind"], row["id"]) != (kind, ident)]'''
+new = '''            before = len(rows)'''
+tests = ["tests.test_session_state.Records.test_forget"]
+
+[[plant]]
+name = "forget always says one was kept"
+file = "state/session.py"
+old = 'return len(rows) != before'
+new = 'return True'
+tests = ["tests.test_session_state.Records.test_forget", "tests.test_session_state.Records.test_the_shared_file"]
+
+[[plant]]
+name = "a process with no folder fails a read"
+file = "state/session.py"
+old = '''        except FileNotFoundError:
+            return ()
+        return tuple('''
+new = '''        except ZeroDivisionError:
+            return ()
+        return tuple('''
+tests = ["tests.test_session_state.Records.test_a_fresh_process_keeps_nothing",
+         "tests.test_session_state.Keys.test_two_processes_never_share_a_key"]
+
+[[plant]]
+name = "a read takes the lock files for state files"
+file = "state/session.py"
+old = 'for name in names if name.endswith(".json")'
+new = 'for name in names'
+tests = ["tests.test_session_state.Records.test_every_agent_reads_every_agent"]
+
+[[plant]]
+name = "a read gives every kind"
+file = "state/session.py"
+old = 'if row["kind"] == kind)'
+new = ')'
+tests = ["tests.test_session_state.Records.test_records_by_kind"]
+
+[[plant]]
+name = "a notice is no kind of record"
+file = "state/session.py"
+old = 'Kind = Literal["run", "watch", "workflow", "notice"]'
+new = 'Kind = Literal["run", "watch", "workflow"]'
+tests = ["tests.test_session_state.Records.test_records_by_kind"]
+
+[[plant]]
+name = "a process folder's name leaves out the start time"
+file = "state/session.py"
+old = 'return FileStem(f"{self.pid}-{self.start}-{self.boot}")'
+new = 'return FileStem(f"{self.pid}-0-{self.boot}")'
+tests = ["tests.test_session_state.Keys.test_two_processes_never_share_a_key"]
+
+[[plant]]
+name = "a process folder's name leaves out the boot"
+file = "state/session.py"
+old = 'return FileStem(f"{self.pid}-{self.start}-{self.boot}")'
+new = 'return FileStem(f"{self.pid}-{self.start}-0")'
+tests = ["tests.test_session_state.Keys.test_two_processes_never_share_a_key"]
+
+[[plant]]
+name = "every process shares one folder"
+file = "state/session.py"
+old = 'self.folder = places.sessions / process.name'
+new = 'self.folder = places.sessions'
+tests = ["tests.test_session_state.Keys.test_two_processes_never_share_a_key",
+         "tests.test_session_state.Layout.test_one_file_per_agent"]
+
+[[plant]]
+name = "the state lives in /tmp"
+file = "state/session.py"
+old = 'SESSIONS = Path.home() / ".local" / "state" / "claude-guard" / "sessions"'
+new = 'SESSIONS = Path("/tmp") / "claude-guard" / "sessions"'
+tests = ["tests.test_session_state.Keys.test_the_default_places"]
+
+[[plant]]
+name = "processes are read from another tree"
+file = "state/session.py"
+old = 'PROC = Path("/proc")'
+new = 'PROC = Path("/")'
+tests = ["tests.test_session_state.Keys.test_the_default_places"]
+
+[[plant]]
+name = "a state fault is no kit fault"
+file = "state/session.py"
+old = 'class StateFault(KitFault):'
+new = 'class StateFault(Exception):'
+tests = ["tests.test_session_state.Keys.test_no_key"]

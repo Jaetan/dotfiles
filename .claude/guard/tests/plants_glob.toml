@@ -1,0 +1,289 @@
+[[plant]]
+name = "a space does not split"
+file = "dispatcher/words.py"
+old = 'SPLIT = frozenset(" \t\n")'
+new = 'SPLIT = frozenset("\t\n")'
+tests = ["tests.test_model.Words.test_values"]
+
+[[plant]]
+name = "a double-quoted part closes a bracket"
+file = "dispatcher/words.py"
+old = 'QUOTED: frozenset[NodeType] = frozenset({"single", "double", "ansi_c"})'
+new = 'QUOTED: frozenset[NodeType] = frozenset({"single", "ansi_c"})'
+tests = ["tests.test_model.Words.test_values"]
+
+[[plant]]
+name = "an escape masks the backslash alone"
+file = "dispatcher/words.py"
+old = 'ESCAPED = re.compile(r"\\.")'
+new = 'ESCAPED = re.compile(r"\\")'
+tests = ["tests.test_model.Words.test_values"]
+
+[[plant]]
+name = "a literal's backslash quotes nothing"
+file = "dispatcher/words.py"
+old = 'plain = ESCAPED.sub("  ", text) if escapes else text'
+new = 'plain = text'
+tests = ["tests.test_model.Words.test_values"]
+
+[[plant]]
+name = "a question mark is no glob"
+file = "dispatcher/words.py"
+old = 'starts = [plain.index(char) for char in "*?" if char in plain]'
+new = 'starts = [plain.index(char) for char in "*" if char in plain]'
+tests = ["tests.test_model.Words.test_values"]
+
+[[plant]]
+name = "a bracket is sought at a close"
+file = "dispatcher/words.py"
+old = 'bracket = plain.find("[")'
+new = 'bracket = plain.find("]")'
+tests = ["tests.test_model.Words.test_values", "tests.test_model.Prefixes.test_prefix_and_folder"]
+
+[[plant]]
+name = "a close before the bracket pairs it"
+file = "dispatcher/words.py"
+old = 'if bracket >= 0 and (closed or "]" in plain[bracket:]):'
+new = 'if bracket >= 0 and (closed or "]" in plain):'
+tests = ["tests.test_model.Words.test_a_bracket_no_later_bracket_closes_is_literal"]
+
+[[plant]]
+name = "a later part never closes a bracket"
+file = "dispatcher/words.py"
+old = 'if bracket >= 0 and (closed or "]" in plain[bracket:]):'
+new = 'if bracket >= 0 and "]" in plain[bracket:]:'
+tests = ["tests.test_model.Words.test_values", "tests.test_model.Words.test_a_bracket_no_later_bracket_closes_is_literal", "tests.test_model.Prefixes.test_prefix_and_folder", "tests.test_model.Scripts.test_a_scripts_positional_parameters"]
+
+[[plant]]
+name = "a paired bracket is no glob"
+file = "dispatcher/words.py"
+old = '        starts.append(bracket)'
+new = '        pass'
+tests = ["tests.test_model.Words.test_values"]
+
+[[plant]]
+name = "an earlier part's bracket is ignored"
+file = "dispatcher/words.py"
+old = 'if opened and "]" in plain:'
+new = 'if False:'
+tests = ["tests.test_model.Scripts.test_a_scripts_positional_parameters"]
+
+[[plant]]
+name = "any text after an earlier part globs"
+file = "dispatcher/words.py"
+old = 'if opened and "]" in plain:'
+new = 'if opened:'
+tests = ["tests.test_model.Scripts.test_a_scripts_positional_parameters"]
+
+[[plant]]
+name = "an earlier bracket's close starts no glob"
+file = "dispatcher/words.py"
+old = '        starts.append(0)'
+new = '        pass'
+tests = ["tests.test_model.Scripts.test_a_scripts_positional_parameters"]
+
+[[plant]]
+name = "the last glob character cuts"
+file = "dispatcher/words.py"
+old = 'return min(starts, default=None)'
+new = 'return max(starts, default=None)'
+tests = ["tests.test_model.Prefixes.test_prefix_and_folder"]
+
+[[plant]]
+name = "a later literal's close is ignored"
+file = "dispatcher/words.py"
+old = 'if kind not in QUOTED and not (kind == "lit" and isinstance(raw, str) and "]" not in raw):'
+new = 'if kind not in QUOTED and kind != "lit":'
+tests = ["tests.test_model.Words.test_values", "tests.test_model.Prefixes.test_prefix_and_folder"]
+
+[[plant]]
+name = "a later expansion closes nothing"
+file = "dispatcher/words.py"
+old = 'if kind not in QUOTED and not (kind == "lit" and isinstance(raw, str) and "]" not in raw):'
+new = 'if kind == "lit" and isinstance(raw, str) and "]" in raw:'
+tests = ["tests.test_model.Words.test_a_bracket_no_later_bracket_closes_is_literal", "tests.test_model.Prefixes.test_prefix_and_folder"]
+
+[[plant]]
+name = "the end of a word closes a bracket"
+file = "dispatcher/words.py"
+old = '''            return True
+    return False'''
+new = '''            return True
+    return True'''
+tests = ["tests.test_model.Words.test_values", "tests.test_model.Words.test_a_bracket_no_later_bracket_closes_is_literal"]
+
+[[plant]]
+name = "no later part closes a bracket"
+file = "dispatcher/words.py"
+old = '''            return True
+    return False'''
+new = '''            return False
+    return False'''
+tests = ["tests.test_model.Words.test_values", "tests.test_model.Prefixes.test_prefix_and_folder"]
+
+[[plant]]
+name = "a literal's glob ignores later parts"
+file = "dispatcher/words.py"
+old = 'if glob_at(raw, closed=closed, escapes=True) is not None:'
+new = 'if glob_at(raw, escapes=True) is not None:'
+tests = ["tests.test_model.Words.test_values"]
+
+[[plant]]
+name = "a literal's glob ignores its escapes"
+file = "dispatcher/words.py"
+old = 'if glob_at(raw, closed=closed, escapes=True) is not None:'
+new = 'if glob_at(raw, closed=closed) is not None:'
+tests = ["tests.test_model.Words.test_values"]
+
+[[plant]]
+name = "a value's glob ignores later parts"
+file = "dispatcher/words.py"
+old = 'if value is None or (not quoted and (SPLIT.intersection(value) or glob_at(value, closed=closed) is not None)):'
+new = 'if value is None or (not quoted and (SPLIT.intersection(value) or glob_at(value) is not None)):'
+tests = ["tests.test_model.Words.test_a_bracket_no_later_bracket_closes_is_literal"]
+
+[[plant]]
+name = "an unquoted value globs nothing"
+file = "dispatcher/words.py"
+old = 'if value is None or (not quoted and (SPLIT.intersection(value) or glob_at(value, closed=closed) is not None)):'
+new = 'if value is None or (not quoted and SPLIT.intersection(value)):'
+tests = ["tests.test_model.Words.test_a_bracket_no_later_bracket_closes_is_literal"]
+
+[[plant]]
+name = "a literal part ignores later parts"
+file = "dispatcher/words.py"
+old = 'return in_double(raw) if quoted else unquoted(raw, closed)'
+new = 'return in_double(raw) if quoted else unquoted(raw, False)'
+tests = ["tests.test_model.Words.test_values"]
+
+[[plant]]
+name = "a parameter part ignores later parts"
+file = "dispatcher/words.py"
+old = 'return parameter(part, state, env, quoted, closed)'
+new = 'return parameter(part, state, env, quoted, False)'
+tests = ["tests.test_model.Words.test_a_bracket_no_later_bracket_closes_is_literal", "tests.test_model.Prefixes.test_prefix_and_folder"]
+
+[[plant]]
+name = "a word's parts are closed from one too far"
+file = "dispatcher/words.py"
+old = '''    for index, part in enumerate(parts):
+        value = part_value('''
+new = '''    for index, part in enumerate(parts, 1):
+        value = part_value('''
+tests = ["tests.test_model.Words.test_a_bracket_no_later_bracket_closes_is_literal"]
+
+[[plant]]
+name = "a part closes itself"
+file = "dispatcher/words.py"
+old = 'value = part_value(part, state, env, quoted, closes(parts[index + 1:]))'
+new = 'value = part_value(part, state, env, quoted, closes(parts[index:]))'
+tests = ["tests.test_model.Words.test_a_bracket_no_later_bracket_closes_is_literal"]
+
+[[plant]]
+name = "a prefix's parts are closed from one too far"
+file = "dispatcher/words.py"
+old = '''    for index, part in enumerate(parts):
+        raw = part.get("value")
+        closed ='''
+new = '''    for index, part in enumerate(parts, 1):
+        raw = part.get("value")
+        closed ='''
+tests = ["tests.test_model.Prefixes.test_prefix_and_folder"]
+
+[[plant]]
+name = "a prefix part closes itself"
+file = "dispatcher/words.py"
+old = 'closed = closes(parts[index + 1:])'
+new = 'closed = closes(parts[index:])'
+tests = ["tests.test_model.Prefixes.test_prefix_and_folder"]
+
+[[plant]]
+name = "a prefix literal ignores later parts"
+file = "dispatcher/words.py"
+old = 'value, cut = pattern_free(raw, closed)'
+new = 'value, cut = pattern_free(raw, False)'
+tests = ["tests.test_model.Prefixes.test_prefix_and_folder"]
+
+[[plant]]
+name = "a prefix parameter ignores later parts"
+file = "dispatcher/words.py"
+old = 'known = part_value(part, state, env, quoted, closed)'
+new = 'known = part_value(part, state, env, quoted, False)'
+tests = ["tests.test_model.Prefixes.test_prefix_and_folder"]
+
+[[plant]]
+name = "a prefix's glob ignores later parts"
+file = "dispatcher/words.py"
+old = 'glob = glob_at(raw, closed=closed, escapes=True)'
+new = 'glob = glob_at(raw, escapes=True)'
+tests = ["tests.test_model.Prefixes.test_prefix_and_folder"]
+
+[[plant]]
+name = "a prefix's glob ignores its escapes"
+file = "dispatcher/words.py"
+old = 'glob = glob_at(raw, closed=closed, escapes=True)'
+new = 'glob = glob_at(raw, closed=closed)'
+tests = ["tests.test_model.Prefixes.test_prefix_and_folder"]
+
+[[plant]]
+name = "a prefix keeps its glob character"
+file = "dispatcher/words.py"
+old = 'chars = iter(raw if glob is None else raw[:glob])'
+new = 'chars = iter(raw if glob is None else raw[:glob + 1])'
+tests = ["tests.test_model.Prefixes.test_prefix_and_folder"]
+
+[[plant]]
+name = "a closing brace cuts a prefix"
+file = "dispatcher/words.py"
+old = 'elif char == "{":'
+new = 'elif char == "}":'
+tests = ["tests.test_model.Prefixes.test_prefix_and_folder"]
+
+[[plant]]
+name = "a brace cut is no cut"
+file = "dispatcher/words.py"
+old = 'return ShellText("".join(out)), "expansion"'
+new = 'return ShellText("".join(out)), None'
+tests = ["tests.test_model.Prefixes.test_prefix_and_folder"]
+
+[[plant]]
+name = "a glob cut is an expansion cut"
+file = "dispatcher/words.py"
+old = 'return ShellText("".join(out)), None if glob is None else "glob"'
+new = 'return ShellText("".join(out)), None if glob is None else "expansion"'
+tests = ["tests.test_model.Prefixes.test_prefix_and_folder"]
+
+[[plant]]
+name = "a spread value is closed after"
+file = "dispatcher/scripts.py"
+old = 'or glob_at(value) is not None for value in at.params):'
+new = 'or glob_at(value, closed=True) is not None for value in at.params):'
+tests = ["tests.test_model.Scripts.test_a_scripts_positional_parameters"]
+
+[[plant]]
+name = "a spread value globs nothing"
+file = "dispatcher/scripts.py"
+old = 'if not quoted and any(not value or SPLIT.intersection(value) or glob_at(value) is not None for value in at.params):'
+new = 'if not quoted and any(not value or SPLIT.intersection(value) for value in at.params):'
+tests = ["tests.test_model.Scripts.test_a_scripts_positional_parameters"]
+
+[[plant]]
+name = "a bound value splits nothing"
+file = "dispatcher/scripts.py"
+old = 'if value is None or (not quoted and (not value or SPLIT.intersection(value)'
+new = 'if value is None or (not quoted and (not value'
+tests = ["tests.test_model.Scripts.test_a_scripts_positional_parameters"]
+
+[[plant]]
+name = "a bound value has no earlier bracket"
+file = "dispatcher/scripts.py"
+old = 'or glob_at(value, opened=True, closed=True) is not None)):'
+new = 'or glob_at(value, closed=True) is not None)):'
+tests = ["tests.test_model.Scripts.test_a_scripts_positional_parameters"]
+
+[[plant]]
+name = "a bound value has no later close"
+file = "dispatcher/scripts.py"
+old = 'or glob_at(value, opened=True, closed=True) is not None)):'
+new = 'or glob_at(value, opened=True) is not None)):'
+tests = ["tests.test_model.Scripts.test_a_scripts_positional_parameters"]

@@ -1,0 +1,178 @@
+# The plants that show dispatcher/scripts.py's options walk, one per line, and operand and input_parameters
+# reading it, held by tests/test_model.py:
+#   testing/plants.py tests/plants_noexec.toml --out DIR
+
+[[plant]]
+name = "a shell starts reading its input"
+file = "dispatcher/scripts.py"
+old = "    index, runs, stdin, text, stops = 1, True, False, False, False"
+new = "    index, runs, stdin, text, stops = 1, True, True, False, False"
+tests = ["tests.test_model.Scripts.test_an_interpreters_operand"]
+
+[[plant]]
+name = "the last word is never walked"
+file = "dispatcher/scripts.py"
+old = "    while index < len(values):"
+new = "    while index + 1 < len(values):"
+tests = ["tests.test_model.Scripts.test_an_interpreter_that_runs_nothing_on_its_input"]
+
+[[plant]]
+name = "the walk reads the word before"
+file = "dispatcher/scripts.py"
+old = "        value = values[index]"
+new = "        value = values[index - 1]"
+tests = ["tests.test_model.Scripts.test_a_script_run_under_noexec"]
+
+[[plant]]
+name = "a - word is no option word"
+file = "dispatcher/scripts.py"
+old = "        if value is None or value[:1] not in (\"-\", \"+\"):"
+new = "        if value is None or value[:1] not in (\"+\",):"
+tests = ["tests.test_model.Scripts.test_a_script_run_under_noexec"]
+
+[[plant]]
+name = "the word ending the options is skipped"
+file = "dispatcher/scripts.py"
+old = "        if value is None or value[:1] not in (\"-\", \"+\"):\n            break"
+new = "        if value is None or value[:1] not in (\"-\", \"+\"):\n            return Options(Count(index + 1), runs, stdin, text, stops)"
+tests = ["tests.test_model.Scripts.test_an_interpreters_operand"]
+
+[[plant]]
+name = "each option word skips the next"
+file = "dispatcher/scripts.py"
+old = "        index += 1\n        if value in (\"--\", \"-\"):"
+new = "        index += 2\n        if value in (\"--\", \"-\"):"
+tests = ["tests.test_model.Scripts.test_an_interpreters_operand"]
+
+[[plant]]
+name = "a lone + ends the options"
+file = "dispatcher/scripts.py"
+old = "        if value in (\"--\", \"-\"):"
+new = "        if value in (\"--\", \"-\", \"+\"):"
+tests = ["tests.test_model.Scripts.test_an_interpreters_operand"]
+
+[[plant]]
+name = "-- and a lone - are walked past"
+file = "dispatcher/scripts.py"
+old = "        if value in (\"--\", \"-\"):\n            break"
+new = "        if value in (\"--\", \"-\"):\n            continue"
+tests = ["tests.test_model.Scripts.test_an_interpreters_operand"]
+
+[[plant]]
+name = "every option word is long"
+file = "dispatcher/scripts.py"
+old = "        if value.startswith(\"--\"):"
+new = "        if value.startswith(\"-\"):"
+tests = ["tests.test_model.Scripts.test_a_script_run_under_noexec"]
+
+[[plant]]
+name = "every long option takes a value"
+file = "dispatcher/scripts.py"
+old = "            index += 1 if value in INTERPRETER_VALUED else 0"
+new = "            index += 1 if value in INTERPRETER_VALUED else 1"
+tests = ["tests.test_model.Scripts.test_an_interpreters_operand"]
+
+[[plant]]
+name = "a long option but --help and --version stops"
+file = "dispatcher/scripts.py"
+old = "            stops = stops or value in INTERPRETER_STOPS"
+new = "            stops = stops or value not in INTERPRETER_STOPS"
+tests = ["tests.test_model.Scripts.test_a_script_on_an_interpreters_input"]
+
+[[plant]]
+name = "a long option ends the options"
+file = "dispatcher/scripts.py"
+old = "            continue\n        for letter in value[1:]:"
+new = "            break\n        for letter in value[1:]:"
+tests = ["tests.test_model.Scripts.test_a_script_on_an_interpreters_input"]
+
+[[plant]]
+name = "an option word's last letter is not read"
+file = "dispatcher/scripts.py"
+old = "        for letter in value[1:]:"
+new = "        for letter in value[1:-1]:"
+tests = ["tests.test_model.Scripts.test_a_script_run_under_noexec"]
+
+[[plant]]
+name = "an o takes no value"
+file = "dispatcher/scripts.py"
+old = "            if letter in \"oO\":"
+new = "            if letter in \"O\":"
+tests = ["tests.test_model.Scripts.test_a_script_run_under_noexec"]
+
+[[plant]]
+name = "an o takes its own word"
+file = "dispatcher/scripts.py"
+old = "                taken = values[index] if index < len(values) else None"
+new = "                taken = values[index - 1] if index < len(values) else None"
+tests = ["tests.test_model.Scripts.test_a_script_run_under_noexec"]
+
+[[plant]]
+name = "an o or O takes no value word"
+file = "dispatcher/scripts.py"
+old = "                index += 1\n                runs = value[0] == \"+\" if letter == \"o\" and taken == \"noexec\" else runs"
+new = "                runs = value[0] == \"+\" if letter == \"o\" and taken == \"noexec\" else runs"
+tests = ["tests.test_model.Scripts.test_a_script_run_under_noexec"]
+
+[[plant]]
+name = "a bundle's o reads no noexec"
+file = "dispatcher/scripts.py"
+old = "                runs = value[0] == \"+\" if letter == \"o\" and taken == \"noexec\" else runs"
+new = "                runs = runs"
+tests = ["tests.test_model.Scripts.test_a_script_run_under_noexec"]
+
+[[plant]]
+name = "n sets nothing"
+file = "dispatcher/scripts.py"
+old = "            runs = value[0] == \"+\" if letter == \"n\" else runs"
+new = "            runs = runs"
+tests = ["tests.test_model.Scripts.test_a_script_run_under_noexec"]
+
+[[plant]]
+name = "-s is never read"
+file = "dispatcher/scripts.py"
+old = "            stdin = stdin or (value[0] == \"-\" and letter == \"s\")"
+new = "            stdin = stdin and (value[0] == \"-\" and letter == \"s\")"
+tests = ["tests.test_model.Scripts.test_a_script_on_an_interpreters_input"]
+
+[[plant]]
+name = "-s runs a text"
+file = "dispatcher/scripts.py"
+old = "            text = text or letter == \"c\""
+new = "            text = text or letter in \"cs\""
+tests = ["tests.test_model.Scripts.test_a_script_on_an_interpreters_input"]
+
+[[plant]]
+name = "the walk forgets noexec"
+file = "dispatcher/scripts.py"
+old = "    return Options(Count(index), runs, stdin, text, stops)"
+new = "    return Options(Count(index), True, stdin, text, stops)"
+tests = ["tests.test_model.Scripts.test_a_script_run_under_noexec"]
+
+[[plant]]
+name = "a script runs under noexec"
+file = "dispatcher/scripts.py"
+old = "    return read.end if read.runs and not (read.stdin or read.text) and read.end < len(values) else None"
+new = "    return read.end if not (read.stdin or read.text) and read.end < len(values) else None"
+tests = ["tests.test_model.Scripts.test_a_script_run_under_noexec"]
+
+[[plant]]
+name = "-s runs its operand"
+file = "dispatcher/scripts.py"
+old = "    return read.end if read.runs and not (read.stdin or read.text) and read.end < len(values) else None"
+new = "    return read.end if read.runs and not read.text and read.end < len(values) else None"
+tests = ["tests.test_model.Scripts.test_a_script_on_an_interpreters_input", "tests.test_model.Scripts.test_an_interpreters_input_the_call_does_not_make_known"]
+
+[[plant]]
+name = "-c runs its operand"
+file = "dispatcher/scripts.py"
+old = "    return read.end if read.runs and not (read.stdin or read.text) and read.end < len(values) else None"
+new = "    return read.end if read.runs and not read.stdin and read.end < len(values) else None"
+tests = ["tests.test_model.Scripts.test_an_interpreters_operand"]
+
+[[plant]]
+name = "--help reads its input"
+file = "dispatcher/scripts.py"
+old = "    return read.end if read.runs and not (read.text or read.stops) else None"
+new = "    return read.end if read.runs and not read.text else None"
+tests = ["tests.test_model.Scripts.test_an_interpreter_that_runs_nothing_on_its_input"]

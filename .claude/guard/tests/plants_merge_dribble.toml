@@ -1,0 +1,401 @@
+# The plants that show rules/merge_dribble.py held by tests/test_merge_dribble.py:
+#   testing/plants.py tests/plants_merge_dribble.toml --out DIR
+
+[[plant]]
+name = "the rule judges no PostToolUse"
+file = "rules/merge_dribble.py"
+old = '''frozenset({"PostToolUse"})'''
+new = '''frozenset({"PreToolUse"})'''
+tests = ["tests.test_merge_dribble.Reading.test_each_tool_that_writes_reads_it"]
+
+[[plant]]
+name = "the rule judges every tool"
+file = "rules/merge_dribble.py"
+old = '''TOOLS = frozenset({ToolName("Bash"), ToolName("Edit"), ToolName("Write"), ToolName("MultiEdit")})'''
+new = '''TOOLS = None'''
+tests = ["tests.test_merge_dribble.Reading.test_other_tools_and_events_read_nothing"]
+
+[[plant]]
+name = "the rule judges no Bash call"
+file = "rules/merge_dribble.py"
+old = '''frozenset({ToolName("Bash"), ToolName("Edit")'''
+new = '''frozenset({ToolName("Edit")'''
+tests = ["tests.test_merge_dribble.Reading.test_each_tool_that_writes_reads_it"]
+
+[[plant]]
+name = "the rule judges no Edit call"
+file = "rules/merge_dribble.py"
+old = '''ToolName("Bash"), ToolName("Edit"), '''
+new = '''ToolName("Bash"), '''
+tests = ["tests.test_merge_dribble.Reading.test_each_tool_that_writes_reads_it"]
+
+[[plant]]
+name = "the rule judges no Write call"
+file = "rules/merge_dribble.py"
+old = '''ToolName("Edit"), ToolName("Write"), '''
+new = '''ToolName("Edit"), '''
+tests = ["tests.test_merge_dribble.Reading.test_each_tool_that_writes_reads_it"]
+
+[[plant]]
+name = "the rule judges no MultiEdit call"
+file = "rules/merge_dribble.py"
+old = ''', ToolName("MultiEdit")})'''
+new = '''})'''
+tests = ["tests.test_merge_dribble.Reading.test_each_tool_that_writes_reads_it"]
+
+[[plant]]
+name = "the dribble is another file"
+file = "rules/merge_dribble.py"
+old = '''DRIBBLE = ".commands-to-run.sh"'''
+new = '''DRIBBLE = ".commands.sh"'''
+tests = ["tests.test_merge_dribble.Reading.test_each_tool_that_writes_reads_it"]
+
+[[plant]]
+name = "pr-all-green is not recognised"
+file = "rules/merge_dribble.py"
+old = '''MERGER = ShellText("pr-all-green")'''
+new = '''MERGER = ShellText("pr-all-gren")'''
+tests = ["tests.test_merge_dribble.Refused.test_the_merge_without_errexit_is_refused"]
+
+[[plant]]
+name = "--stops counts as the merge option"
+file = "rules/merge_dribble.py"
+old = '''SQUASH = "--sq"'''
+new = '''SQUASH = "--s"'''
+tests = ["tests.test_merge_dribble.Passed.test_a_dribble_holding_no_merge_passes"]
+
+[[plant]]
+name = "an abbreviated merge option is missed"
+file = "rules/merge_dribble.py"
+old = '''SQUASH = "--sq"'''
+new = '''SQUASH = "--squash-with-body"'''
+tests = ["tests.test_merge_dribble.Refused.test_the_merge_without_errexit_is_refused"]
+
+[[plant]]
+name = "the REST merge path is missed"
+file = "rules/merge_dribble.py"
+old = '''r"pulls/[^/]+/merge"'''
+new = '''r"pulls/[^/]+/merged"'''
+tests = ["tests.test_merge_dribble.Refused.test_a_rest_merge_path_is_refused"]
+
+[[plant]]
+name = "the auto-merge mutation is missed"
+file = "rules/merge_dribble.py"
+old = '''r"mergePullRequest|enablePullRequestAutoMerge"'''
+new = '''r"mergePullRequest"'''
+tests = ["tests.test_merge_dribble.Refused.test_a_graphql_merge_mutation_is_refused"]
+
+[[plant]]
+name = "the gh merge reason is another"
+file = "rules/merge_dribble.py"
+old = '''GH_MERGE = Prose("merges with `gh pr merge`, past'''
+new = '''GH_MERGE = Prose("merges by `gh pr merge`, past'''
+tests = ["tests.test_merge_dribble.Refused.test_gh_pr_merge_is_refused_whatever_its_flags"]
+
+[[plant]]
+name = "the errexit reason is another"
+file = "rules/merge_dribble.py"
+old = '''so the script runs "
+                "on past a refusal")'''
+new = '''so the script runs "
+                "on")'''
+tests = ["tests.test_merge_dribble.Refused.test_the_merge_without_errexit_is_refused"]
+
+[[plant]]
+name = "the form names no CLEAN state"
+file = "rules/merge_dribble.py"
+old = '''the merge state is CLEAN, and its refusal
+stops'''
+new = '''the merge state is GREEN, and its refusal
+stops'''
+tests = ["tests.test_merge_dribble.Refused.test_the_refusal_names_the_dribble_each_command_and_the_form"]
+
+[[plant]]
+name = "no command is a set"
+file = "rules/merge_dribble.py"
+old = '''    if base(words) != "set":'''
+new = '''    if base(words) != "sett":'''
+tests = ["tests.test_merge_dribble.Passed.test_the_merge_under_errexit_passes"]
+
+[[plant]]
+name = "an unknown word is read as an option"
+file = "rules/merge_dribble.py"
+old = '''if value is None or len(value) < 2'''
+new = '''if len(value or '-e') < 2'''
+tests = ["tests.test_merge_dribble.Refused.test_a_set_not_turning_errexit_on_leaves_it_off"]
+
+[[plant]]
+name = "a lone - does not end set's options"
+file = "rules/merge_dribble.py"
+old = '''or len(value) < 2 or value[0]'''
+new = '''or value[0]'''
+tests = ["tests.test_merge_dribble.Refused.test_a_set_not_turning_errexit_on_leaves_it_off"]
+
+[[plant]]
+name = "an operand does not end the options"
+file = "rules/merge_dribble.py"
+old = '''value[0] not in "-+" or'''
+new = '''value[0] not in "-+x" or'''
+tests = ["tests.test_merge_dribble.Refused.test_a_set_not_turning_errexit_on_leaves_it_off"]
+
+[[plant]]
+name = "-- does not end the options"
+file = "rules/merge_dribble.py"
+old = ''' or value == "--":'''
+new = ''':'''
+tests = ["tests.test_merge_dribble.Refused.test_a_set_not_turning_errexit_on_leaves_it_off"]
+
+[[plant]]
+name = "a bundle's e is missed"
+file = "rules/merge_dribble.py"
+old = '''if "e" in value[1:]:'''
+new = '''if "e" in value[2:]:'''
+tests = ["tests.test_merge_dribble.Passed.test_the_merge_under_errexit_passes"]
+
+[[plant]]
+name = "+e turns errexit on"
+file = "rules/merge_dribble.py"
+old = '''        if "e" in value[1:]:
+            left = value[0] == "-"'''
+new = '''        if "e" in value[1:]:
+            left = True'''
+tests = ["tests.test_merge_dribble.Refused.test_set_plus_e_turns_errexit_off_again"]
+
+[[plant]]
+name = "-o takes no option name"
+file = "rules/merge_dribble.py"
+old = '''range(value.count("o"))'''
+new = '''range(0)'''
+tests = ["tests.test_merge_dribble.Passed.test_the_merge_under_errexit_passes"]
+
+[[plant]]
+name = "-o errexit is missed"
+file = "rules/merge_dribble.py"
+old = '''if next(values, None) == "errexit":'''
+new = '''if next(values, None) == "pipefail":'''
+tests = ["tests.test_merge_dribble.Passed.test_the_merge_under_errexit_passes"]
+
+[[plant]]
+name = "+o errexit turns errexit on"
+file = "rules/merge_dribble.py"
+old = '''"errexit":
+                left = value[0] == "-"'''
+new = '''"errexit":
+                left = True'''
+tests = ["tests.test_merge_dribble.Refused.test_set_plus_e_turns_errexit_off_again"]
+
+[[plant]]
+name = "a set leaves errexit untouched"
+file = "rules/merge_dribble.py"
+old = '''    return left
+'''
+new = '''    return None
+'''
+tests = ["tests.test_merge_dribble.Passed.test_the_merge_under_errexit_passes"]
+
+[[plant]]
+name = "pr-all-green is a merge without its option"
+file = "rules/merge_dribble.py"
+old = '''return MERGER in names and any('''
+new = '''return MERGER in names or any('''
+tests = ["tests.test_merge_dribble.Passed.test_a_dribble_holding_no_merge_passes"]
+
+[[plant]]
+name = "pr-all-green by a path is missed"
+file = "rules/merge_dribble.py"
+old = '''names = [word.spelled.rsplit("/", 1)[-1] for word in words]'''
+new = '''names = [word.spelled for word in words]'''
+tests = ["tests.test_merge_dribble.Refused.test_the_merge_without_errexit_is_refused"]
+
+[[plant]]
+name = "no command is gh"
+file = "rules/merge_dribble.py"
+old = '''    if base(words) != "gh":'''
+new = '''    if base(words) != "ghx":'''
+tests = ["tests.test_merge_dribble.Refused.test_gh_pr_merge_is_refused_whatever_its_flags"]
+
+[[plant]]
+name = "gh pr merge is missed"
+file = "rules/merge_dribble.py"
+old = '''if ("pr", "merge") in zip('''
+new = '''if ("pr", "mergex") in zip('''
+tests = ["tests.test_merge_dribble.Refused.test_gh_pr_merge_is_refused_whatever_its_flags"]
+
+[[plant]]
+name = "a gh command that is no api call is read as one"
+file = "rules/merge_dribble.py"
+old = '''    if "api" not in spelled:
+        return None
+'''
+new = '''    if False:
+        return None
+'''
+tests = ["tests.test_merge_dribble.Passed.test_a_dribble_holding_no_merge_passes"]
+
+[[plant]]
+name = "the REST path is given the gh reason"
+file = "rules/merge_dribble.py"
+old = '''        return REST
+'''
+new = '''        return GH_MERGE
+'''
+tests = ["tests.test_merge_dribble.Refused.test_a_rest_merge_path_is_refused"]
+
+[[plant]]
+name = "a REST call is read as a GraphQL one"
+file = "rules/merge_dribble.py"
+old = '''    if "graphql" not in spelled:
+        return None
+'''
+new = '''    if False:
+        return None
+'''
+tests = ["tests.test_merge_dribble.Passed.test_a_dribble_holding_no_merge_passes"]
+
+[[plant]]
+name = "a GraphQL mutation is given the unread reason"
+file = "rules/merge_dribble.py"
+old = '''        return GRAPHQL
+'''
+new = '''        return UNREAD
+'''
+tests = ["tests.test_merge_dribble.Refused.test_a_graphql_merge_mutation_is_refused"]
+
+[[plant]]
+name = "an unknown word is read as a written query"
+file = "rules/merge_dribble.py"
+old = '''if any(word.value is None or'''
+new = '''if any('''
+tests = ["tests.test_merge_dribble.Refused.test_a_graphql_query_read_from_elsewhere_is_refused"]
+
+[[plant]]
+name = "a query file is read as a written query"
+file = "rules/merge_dribble.py"
+old = '''value is None or "=@" in word.value or'''
+new = '''value is None or'''
+tests = ["tests.test_merge_dribble.Refused.test_a_graphql_query_read_from_elsewhere_is_refused"]
+
+[[plant]]
+name = "--input is read as a written query"
+file = "rules/merge_dribble.py"
+old = '''.split("=")[0] == "--input"'''
+new = '''.split("=")[0] == "--inputx"'''
+tests = ["tests.test_merge_dribble.Refused.test_a_graphql_query_read_from_elsewhere_is_refused"]
+
+[[plant]]
+name = "a set is kept for the call's own shell"
+file = "rules/merge_dribble.py"
+old = '''            on[command.processes] = left'''
+new = '''            on[()] = left'''
+tests = ["tests.test_merge_dribble.Passed.test_the_merge_under_errexit_passes"]
+
+[[plant]]
+name = "errexit from any shell counts"
+file = "rules/merge_dribble.py"
+old = '''if not on.get(command.processes, False):'''
+new = '''if not any(on.values()):'''
+tests = ["tests.test_merge_dribble.Refused.test_errexit_counts_in_the_merge_own_shell"]
+
+[[plant]]
+name = "a merge without errexit is not named"
+file = "rules/merge_dribble.py"
+old = '''                yield command, ERREXIT'''
+new = '''                pass'''
+tests = ["tests.test_merge_dribble.Refused.test_the_merge_without_errexit_is_refused"]
+
+[[plant]]
+name = "a gh merge is not named"
+file = "rules/merge_dribble.py"
+old = '''            yield command, why'''
+new = '''            pass'''
+tests = ["tests.test_merge_dribble.Refused.test_gh_pr_merge_is_refused_whatever_its_flags"]
+
+[[plant]]
+name = "an event naming no folder is read"
+file = "rules/merge_dribble.py"
+old = '''    if event.cwd is None:
+        return None
+'''
+new = '''    if False:
+        return None
+'''
+tests = ["tests.test_merge_dribble.Passed.test_an_event_naming_no_folder_passes"]
+
+[[plant]]
+name = "the work tree is the call's folder"
+file = "rules/merge_dribble.py"
+old = '''root = tree(Path(event.cwd))'''
+new = '''root = Path(event.cwd)'''
+tests = ["tests.test_merge_dribble.Reading.test_a_call_from_a_subfolder_reads_the_root_dribble"]
+
+[[plant]]
+name = "a folder outside every work tree is read"
+file = "rules/merge_dribble.py"
+old = '''if not (root / ".git").exists() or not dribble.is_file():'''
+new = '''if not dribble.is_file():'''
+tests = ["tests.test_merge_dribble.Passed.test_a_call_outside_any_work_tree_passes"]
+
+[[plant]]
+name = "a missing dribble is read"
+file = "rules/merge_dribble.py"
+old = ''' or not dribble.is_file():'''
+new = ''':'''
+tests = ["tests.test_merge_dribble.Passed.test_a_work_tree_with_no_dribble_passes"]
+
+[[plant]]
+name = "an unreadable dribble passes"
+file = "rules/merge_dribble.py"
+old = '''        raise KitFault(Prose(f"the dribble {dribble} cannot be read: {fault}")) from None'''
+new = '''        return None'''
+tests = ["tests.test_merge_dribble.Passed.test_an_unreadable_dribble_is_a_fault_of_the_kit"]
+
+[[plant]]
+name = "the version is the dribble's length"
+file = "rules/merge_dribble.py"
+old = '''hashlib.sha256(dribble.read_bytes()).hexdigest()'''
+new = '''str(len(dribble.read_bytes()))'''
+tests = ["tests.test_merge_dribble.Reading.test_an_unchanged_dribble_is_not_read_again"]
+
+[[plant]]
+name = "a version read is read again"
+file = "rules/merge_dribble.py"
+old = '''record.fields.get(field) == seen'''
+new = '''record.fields.get(field) != seen'''
+tests = ["tests.test_merge_dribble.Reading.test_an_unchanged_dribble_is_not_read_again"]
+
+[[plant]]
+name = "the dribble is read from no folder"
+file = "rules/_dribble.py"
+old = '''Directory(str(dribble.parent)), event.reading)'''
+new = '''None, event.reading)'''
+tests = ["tests.test_merge_dribble.Refused.test_errexit_counts_in_the_merge_own_shell"]
+
+[[plant]]
+name = "the version is kept in the agent's own file"
+file = "rules/merge_dribble.py"
+old = '''{field: seen}, shared=True)'''
+new = '''{field: seen})'''
+tests = ["tests.test_merge_dribble.Reading.test_a_version_read_before_another_agent_read_the_next_is_read_again"]
+
+[[plant]]
+name = "the version read is not kept"
+file = "rules/merge_dribble.py"
+old = '''    session.record(KIND, ident, {field: seen}, shared=True)
+'''
+new = '''    pass
+'''
+tests = ["tests.test_merge_dribble.Reading.test_an_unchanged_dribble_is_not_read_again"]
+
+[[plant]]
+name = "the version is kept as another kind"
+file = "rules/merge_dribble.py"
+old = '''session.record(KIND, ident,'''
+new = '''session.record("run", ident,'''
+tests = ["tests.test_merge_dribble.Reading.test_an_unchanged_dribble_is_not_read_again"]
+
+[[plant]]
+name = "no dribble is refused"
+file = "rules/merge_dribble.py"
+old = '''return refuse(Prose(ADVICE.format('''
+new = '''return None and refuse(Prose(ADVICE.format('''
+tests = ["tests.test_merge_dribble.Refused.test_gh_pr_merge_is_refused_whatever_its_flags"]

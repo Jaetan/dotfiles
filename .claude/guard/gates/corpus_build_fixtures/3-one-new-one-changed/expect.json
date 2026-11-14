@@ -1,0 +1,15 @@
+{
+ "index": {
+  "proj/s1/subagents/agent-a1.jsonl": {"kind": "agent", "bad_lines": 0, "calls": [["a1", "ls -la"], ["a2", "pwd"]]},
+  "proj/s3.jsonl": {"kind": "main", "bad_lines": 0, "calls": [["n1", "make test"], ["n2", "echo hi"]]}
+ },
+ "corpus": [
+  {"n": 2, "cmd": "ls -la"},
+  {"n": 1, "cmd": "pwd"},
+  {"n": 1, "cmd": "git status"},
+  {"n": 1, "cmd": "make all"},
+  {"n": 1, "cmd": "cd /p && make all"},
+  {"n": 1, "cmd": "make test"},
+  {"n": 2, "cmd": "echo hi"}
+ ]
+}

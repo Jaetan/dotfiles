@@ -1,0 +1,245 @@
+# The plants that show the testing module's tests hold its code: run
+#   testing/plants.py tests/plants_testing.toml --out DIR
+# Every plant is killed when each line of testing/runner.py and testing/plants.py they break is held by a test.
+
+[[plant]]
+name = "the runner accepts a temporary folder inside a git tree"
+file = "testing/runner.py"
+old = 'if (tree := tree_holding(base)) is not None:'
+new = 'if (tree := None) is not None:'
+tests = ["tests.test_runner.Refusals.test_temporary_folder_in_a_git_tree"]
+
+[[plant]]
+name = "the in-tree check reads the temporary folder alone, not the folders holding it"
+file = "testing/runner.py"
+old = 'for d in (path, *path.parents) if'
+new = 'for d in (path,) if'
+tests = ["tests.test_runner.Refusals.test_temporary_folder_in_a_git_tree"]
+
+[[plant]]
+name = "a run in which no test ran is not refused"
+file = "testing/runner.py"
+old = 'if counts.unrun == counts.tests and not counts.errors:'
+new = 'if False:'
+tests = ["tests.test_runner.Refusals.test_no_test_found", "tests.test_runner.Refusals.test_no_test_started"]
+
+[[plant]]
+name = "a passing selection exits 0"
+file = "testing/runner.py"
+old = 'return 3 if names else 0'
+new = 'return 0'
+tests = ["tests.test_runner.Selection.test_a_passing_subset_exits_three"]
+
+[[plant]]
+name = "a whole suite that passes exits 3"
+file = "testing/runner.py"
+old = 'return 3 if names else 0'
+new = 'return 3'
+tests = ["tests.test_runner.WholeSuite.test_every_test_passing_exits_zero"]
+
+[[plant]]
+name = "a name selects only the test whose whole id it is"
+file = "testing/runner.py"
+old = 'return test.id() == name or test.id().startswith(name + ".")'
+new = 'return test.id() == name'
+tests = ["tests.test_runner.Selection.test_a_class_name_selects_its_tests"]
+
+[[plant]]
+name = "the closing line of a subset does not name its selection"
+file = "testing/runner.py"
+old = '''    if names:
+        return Prose(f"selection'''
+new = '''    if False:
+        return Prose(f"selection'''
+tests = ["tests.test_runner.Selection.test_a_passing_subset_exits_three"]
+
+[[plant]]
+name = "a skip counts as a pass"
+file = "testing/runner.py"
+old = 'if counts.failed + counts.errors + counts.skipped + counts.unrun:'
+new = 'if counts.failed + counts.errors + counts.unrun:'
+tests = ["tests.test_runner.WholeSuite.test_a_skip_is_a_failure"]
+
+[[plant]]
+name = "a test that never starts counts as a pass"
+file = "testing/runner.py"
+old = 'if counts.failed + counts.errors + counts.skipped + counts.unrun:'
+new = 'if counts.failed + counts.errors + counts.skipped:'
+tests = ["tests.test_runner.WholeSuite.test_a_test_that_never_starts_is_a_failure"]
+
+[[plant]]
+name = "a failure counts as a pass"
+file = "testing/runner.py"
+old = 'if counts.failed + counts.errors + counts.skipped + counts.unrun:'
+new = 'if counts.errors + counts.skipped + counts.unrun:'
+tests = ["tests.test_runner.WholeSuite.test_a_failure_exits_one"]
+
+[[plant]]
+name = "an expected failure counts as a pass"
+file = "testing/runner.py"
+old = 'got.count("failed") + got.count("expected failure") + got.count("unexpected success")'
+new = 'got.count("failed") + got.count("unexpected success")'
+tests = ["tests.test_runner.WholeSuite.test_an_expected_failure_is_a_failure"]
+
+[[plant]]
+name = "an unexpected success counts as a pass"
+file = "testing/runner.py"
+old = 'got.count("failed") + got.count("expected failure") + got.count("unexpected success")'
+new = 'got.count("failed") + got.count("expected failure")'
+tests = ["tests.test_runner.WholeSuite.test_an_unexpected_success_is_a_failure"]
+
+[[plant]]
+name = "a fixture's error is not counted"
+file = "testing/runner.py"
+old = 'Count(got.count("error") + len(fixture_errors(result)))'
+new = 'Count(got.count("error"))'
+tests = ["tests.test_runner.WholeSuite.test_a_fixture_error_exits_one_though_no_test_ran"]
+
+[[plant]]
+name = "a failed subtest is not its test's"
+file = "testing/runner.py"
+old = 'found: unittest.TestCase = getattr(entry, "test_case", entry)'
+new = 'found: unittest.TestCase = entry'
+tests = ["tests.test_runner.WholeSuite.test_a_failed_subtest_fails_its_test"]
+
+[[plant]]
+name = "a module that cannot be imported is left out of a selection"
+file = "testing/runner.py"
+old = 'if test.id().startswith(FAILED_IMPORT) or any('
+new = 'if any('
+tests = ["tests.test_runner.WholeSuite.test_an_unimportable_module_errors_any_selection"]
+
+[[plant]]
+name = "a selection naming no test is not refused"
+file = "testing/runner.py"
+old = '''    if idle:
+'''
+new = '''    if False:
+'''
+tests = ["tests.test_runner.Refusals.test_a_selection_naming_no_test"]
+
+[[plant]]
+name = "a name selects any test whose id it begins"
+file = "testing/runner.py"
+old = 'return test.id() == name or test.id().startswith(name + ".")'
+new = 'return test.id().startswith(name)'
+tests = ["tests.test_runner.Refusals.test_a_name_selects_at_a_dot_only"]
+
+[[plant]]
+name = "a suite folder that is no package is not refused"
+file = "testing/runner.py"
+old = 'except ImportError as fault:'
+new = 'except KeyError as fault:'
+tests = ["tests.test_runner.Refusals.test_a_suite_folder_that_is_no_package"]
+
+[[plant]]
+name = "the tests are not given their own folder as TMPDIR"
+file = "testing/runner.py"
+old = '''        os.environ["TMPDIR"] = str(scratch)
+'''
+new = '''        pass
+'''
+tests = ["tests.test_runner.WholeSuite.test_the_tests_get_a_temporary_folder_of_their_own"]
+
+[[plant]]
+name = "the tests' folder outlives the run"
+file = "testing/runner.py"
+old = 'shutil.rmtree(scratch, ignore_errors=True)'
+new = 'pass'
+tests = ["tests.test_runner.WholeSuite.test_the_tests_get_a_temporary_folder_of_their_own"]
+
+[[plant]]
+name = "no report is written"
+file = "testing/runner.py"
+old = 'if arguments.report is not None:'
+new = 'if False:'
+tests = ["tests.test_runner.WholeSuite.test_the_report_holds_each_outcome"]
+
+[[plant]]
+name = "a survivor is judged killed"
+file = "testing/plants.py"
+old = 'if ran.status == 1 and ran.died:'
+new = 'if ran.status in (1, 3):'
+tests = ["tests.test_plants.Verdicts.test_killed_and_survived"]
+
+[[plant]]
+name = "a pass past its limit gives no verdict"
+file = "testing/plants.py"
+old = 'return Judgement(plant, "killed", (), Prose(f"its tests outran'
+new = 'return Judgement(plant, "no verdict", (), Prose(f"its tests outran'
+tests = ["tests.test_plants.Outran.test_a_pass_past_its_limit_is_killed"]
+
+[[plant]]
+name = "every pass shares one bytecode prefix"
+file = "testing/plants.py"
+old = 'prefix = Path(tempfile.mkdtemp(prefix="pyc-", dir=work))'
+new = '''prefix = work / "pyc"
+    prefix.mkdir(exist_ok=True)'''
+tests = ["tests.test_plants.Verdicts.test_each_pass_has_a_fresh_prefix_removed_after_it"]
+
+[[plant]]
+name = "a pass's bytecode prefix outlives it"
+file = "testing/plants.py"
+old = 'shutil.rmtree(prefix, ignore_errors=True)'
+new = 'pass'
+tests = ["tests.test_plants.Verdicts.test_each_pass_has_a_fresh_prefix_removed_after_it"]
+
+[[plant]]
+name = "a plant whose old text is not found once is run"
+file = "testing/plants.py"
+old = '''    for plant in plants:
+        placed(plant, kit)'''
+new = '''    for plant in plants:
+        pass'''
+tests = ["tests.test_plants.Refusals.test_an_old_text_not_found_once"]
+
+[[plant]]
+name = "a red baseline is not refused"
+file = "testing/plants.py"
+old = 'if baseline.status != 3:'
+new = 'if False:'
+tests = ["tests.test_plants.Refusals.test_a_red_baseline"]
+
+[[plant]]
+name = "the plant lands in the real kit"
+file = "testing/plants.py"
+old = 'apply(plant, copy)'
+new = 'apply(plant, kit)'
+tests = ["tests.test_plants.Verdicts.test_the_real_kit_is_only_read"]
+
+[[plant]]
+name = "the harness leaves its copies behind"
+file = "testing/plants.py"
+old = '''    finally:
+        shutil.rmtree(work, ignore_errors=True)'''
+new = '''    finally:
+        pass'''
+tests = ["tests.test_plants.Verdicts.test_the_real_kit_is_only_read"]
+
+[[plant]]
+name = "a copy keeps the kit's bytecode"
+file = "testing/plants.py"
+old = 'SKIPPED_NAMES = frozenset({"__pycache__", ".ruff_cache", ".git"})'
+new = 'SKIPPED_NAMES = frozenset({".ruff_cache", ".git"})'
+tests = ["tests.test_plants.Verdicts.test_killed_and_survived"]
+
+[[plant]]
+name = "a copy keeps the Go build cache"
+file = "testing/plants.py"
+old = 'SKIPPED_PATHS = (Path("bin") / "go",)'
+new = 'SKIPPED_PATHS = ()'
+tests = ["tests.test_plants.Verdicts.test_killed_and_survived"]
+
+[[plant]]
+name = "a plant file holding no plant is not refused by name"
+file = "testing/plants.py"
+old = 'if not plants:'
+new = 'if False:'
+tests = ["tests.test_plants.Refusals.test_a_plant_file_holding_no_plant"]
+
+[[plant]]
+name = "a plant naming no test is not refused"
+file = "testing/plants.py"
+old = 'isinstance(tests, list) or not tests'
+new = 'isinstance(tests, list)'
+tests = ["tests.test_plants.Refusals.test_a_plant_naming_no_test"]

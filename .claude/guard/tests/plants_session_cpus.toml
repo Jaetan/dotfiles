@@ -1,0 +1,378 @@
+# The plants that show rules/session_cpus.py held by tests/test_session_cpus.py, one or more per line of the rule:
+#   testing/plants.py tests/plants_session_cpus.toml --out DIR
+
+[[plant]]
+name = "PostToolUse is judged too"
+file = "rules/session_cpus.py"
+old = '''EVENTS: frozenset[HookEvent] = frozenset({"PreToolUse"})'''
+new = '''EVENTS: frozenset[HookEvent] = frozenset({"PreToolUse", "PostToolUse"})'''
+tests = ["tests.test_session_cpus.Reach.test_another_event"]
+
+[[plant]]
+name = "Monitor is not judged"
+file = "rules/session_cpus.py"
+old = '''TOOLS = frozenset({ToolName("Bash"), ToolName("Monitor")})'''
+new = '''TOOLS = frozenset({ToolName("Bash")})'''
+tests = ["tests.test_session_cpus.Refused.test_monitor"]
+
+[[plant]]
+name = "every tool is judged"
+file = "rules/session_cpus.py"
+old = '''TOOLS = frozenset({ToolName("Bash"), ToolName("Monitor")})'''
+new = '''TOOLS = None'''
+tests = ["tests.test_session_cpus.Reach.test_another_tool"]
+
+[[plant]]
+name = "the cgroup path is the first line, whatever its hierarchy"
+file = "rules/session_cpus.py"
+old = '''UNIFIED = Prefix("0::")'''
+new = '''UNIFIED = Prefix("")'''
+tests = ["tests.test_session_cpus.Refused.test_a_v1_line_in_the_slice_beside_a_unified_line_outside",
+         "tests.test_session_cpus.Refused.test_no_unified_line"]
+
+[[plant]]
+name = "the CPU list is read from Cpus_allowed, the mask"
+file = "rules/session_cpus.py"
+old = '''CPU_LIST = Prefix("Cpus_allowed_list:")'''
+new = '''CPU_LIST = Prefix("Cpus_allowed")'''
+tests = ["tests.test_session_cpus.Passes.test_the_measured_shape"]
+
+[[plant]]
+name = "the refusal names no machine file"
+file = "rules/session_cpus.py"
+old = '''outside what the machine file {file} declares.'''
+new = '''outside what the machine file declares.'''
+tests = ["tests.test_session_cpus.Refused.test_the_refusal_names_the_machine_file_and_the_way_out"]
+
+[[plant]]
+name = "the refusal names no way out"
+file = "rules/session_cpus.py"
+old = '''Start claude through ~/.local/bin/session-limits, which the shell function `claude` runs:'''
+new = '''Start claude in the slice:'''
+tests = ["tests.test_session_cpus.Refused.test_the_refusal_names_the_machine_file_and_the_way_out"]
+
+[[plant]]
+name = "every CPU is a run of its own"
+file = "rules/session_cpus.py"
+old = '''lambda pair: pair[1] - pair[0])]'''
+new = '''lambda pair: pair[1])]'''
+tests = ["tests.test_session_cpus.Refused.test_a_cpu_outside_the_agents"]
+
+[[plant]]
+name = "a lone CPU is spelled as a range"
+file = "rules/session_cpus.py"
+old = '''str(run[0]) if len(run) == 1 else f"{run[0]}-{run[-1]}"'''
+new = '''f"{run[0]}-{run[-1]}"'''
+tests = ["tests.test_session_cpus.Refused.test_a_range_list_with_commas_outside"]
+
+[[plant]]
+name = "an absent slice is held"
+file = "rules/session_cpus.py"
+old = '''    return None if declared is None else Prose(f"{declared}, the machine's slice ([slice] name)")'''
+new = '''    return Prose(f"{declared}, the machine's slice ([slice] name)")'''
+tests = ["tests.test_session_cpus.Absent.test_neither"]
+
+[[plant]]
+name = "absent agents' CPUs are held"
+file = "rules/session_cpus.py"
+old = '''    return None if agents is None else Prose(f"{spelled(agents)}, the agents' CPUs ([cpus] agents)")'''
+new = '''    return Prose(f"{spelled(agents)}, the agents' CPUs ([cpus] agents)")'''
+tests = ["tests.test_session_cpus.Absent.test_neither"]
+
+[[plant]]
+name = "the seam reads the cgroup file whatever is asked"
+file = "rules/session_cpus.py"
+old = '''    return ProcText((proc / str(pid) / name).read_text('''
+new = '''    return ProcText((proc / str(pid) / "cgroup").read_text('''
+tests = ["tests.test_session_cpus.Passes.test_the_measured_shape"]
+
+[[plant]]
+name = "a file not UTF-8 faults the rule"
+file = "rules/session_cpus.py"
+old = '''read_text(encoding="utf-8", errors="replace"))'''
+new = '''read_text(encoding="utf-8"))'''
+tests = ["tests.test_session_cpus.Passes.test_a_scope_whose_name_is_not_utf8"]
+
+[[plant]]
+name = "a value keeps its whitespace"
+file = "rules/session_cpus.py"
+old = '''ProcText(line.removeprefix(prefix).strip())'''
+new = '''ProcText(line.removeprefix(prefix))'''
+tests = ["tests.test_session_cpus.Passes.test_the_measured_shape"]
+
+[[plant]]
+name = "a file without the line gives an empty value"
+file = "rules/session_cpus.py"
+old = '''if line.startswith(prefix)),
+                None)'''
+new = '''if line.startswith(prefix)),
+                "")'''
+tests = ["tests.test_session_cpus.Refused.test_no_unified_line"]
+
+[[plant]]
+name = "an absent slice still reads the cgroup"
+file = "rules/session_cpus.py"
+old = '''    if declared is None:
+        return None
+    held = slice_held(declared)'''
+new = '''    held = slice_held(declared)'''
+tests = ["tests.test_session_cpus.Absent.test_no_slice"]
+
+[[plant]]
+name = "a slice line names the slice without its fact"
+file = "rules/session_cpus.py"
+old = '''    held = slice_held(declared)'''
+new = '''    held = declared'''
+tests = ["tests.test_session_cpus.Refused.test_outside_the_slice"]
+
+[[plant]]
+name = "the slice is judged from the status file"
+file = "rules/session_cpus.py"
+old = '''        path = after(read(proc, pid, "cgroup"), UNIFIED)'''
+new = '''        path = after(read(proc, pid, "status"), UNIFIED)'''
+tests = ["tests.test_session_cpus.Passes.test_the_measured_shape"]
+
+[[plant]]
+name = "a cgroup that cannot be read faults the rule"
+file = "rules/session_cpus.py"
+old = '''UNIFIED)
+    except OSError as fault:'''
+new = '''UNIFIED)
+    except ValueError as fault:'''
+tests = ["tests.test_session_cpus.Refused.test_a_cgroup_that_cannot_be_read"]
+
+[[plant]]
+name = "an unreadable cgroup is not said why"
+file = "rules/session_cpus.py"
+old = '''the cgroup of claude, process {pid}, cannot be read ({fault})'''
+new = '''the cgroup of claude, process {pid}, cannot be read'''
+tests = ["tests.test_session_cpus.Refused.test_a_cgroup_that_cannot_be_read"]
+
+[[plant]]
+name = "a cgroup file without a unified line faults the rule"
+file = "rules/session_cpus.py"
+old = '''    if path is None:'''
+new = '''    if path is None and False:'''
+tests = ["tests.test_session_cpus.Refused.test_no_unified_line"]
+
+[[plant]]
+name = "a missing unified line is not named"
+file = "rules/session_cpus.py"
+old = '''has no unified `0::` line'''
+new = '''has no line'''
+tests = ["tests.test_session_cpus.Refused.test_no_unified_line"]
+
+[[plant]]
+name = "the slice is found anywhere in the path"
+file = "rules/session_cpus.py"
+old = '''    if declared in path.split("/"):'''
+new = '''    if declared in path:'''
+tests = ["tests.test_session_cpus.Refused.test_a_segment_only_holding_the_slices_name"]
+
+[[plant]]
+name = "a process in the slice is refused"
+file = "rules/session_cpus.py"
+old = '''    if declared in path.split("/"):
+        return None'''
+new = '''    if declared in path.split("/"):
+        pass'''
+tests = ["tests.test_session_cpus.Passes.test_the_measured_shape"]
+
+[[plant]]
+name = "a process outside the slice is not told its fact"
+file = "rules/session_cpus.py"
+old = '''runs in the cgroup {path}, outside {held}")'''
+new = '''runs in the cgroup {path}, outside")'''
+tests = ["tests.test_session_cpus.Refused.test_outside_the_slice"]
+
+[[plant]]
+name = "absent agents' CPUs still read the status"
+file = "rules/session_cpus.py"
+old = '''    if agents is None:
+        return None
+    held = cpus_held(agents)'''
+new = '''    held = cpus_held(agents)'''
+tests = ["tests.test_session_cpus.Absent.test_no_agents_cpus"]
+
+[[plant]]
+name = "a CPU line names the CPUs without their fact"
+file = "rules/session_cpus.py"
+old = '''    held = cpus_held(agents)'''
+new = '''    held = agents'''
+tests = ["tests.test_session_cpus.Refused.test_a_cpu_outside_the_agents"]
+
+[[plant]]
+name = "the CPU list is looked for under the unified prefix"
+file = "rules/session_cpus.py"
+old = '''        listed = after(read(proc, pid, "status"), CPU_LIST)'''
+new = '''        listed = after(read(proc, pid, "status"), UNIFIED)'''
+tests = ["tests.test_session_cpus.Passes.test_the_measured_shape"]
+
+[[plant]]
+name = "a status that cannot be read faults the rule"
+file = "rules/session_cpus.py"
+old = '''CPU_LIST)
+    except OSError as fault:'''
+new = '''CPU_LIST)
+    except ValueError as fault:'''
+tests = ["tests.test_session_cpus.Refused.test_a_status_that_cannot_be_read"]
+
+[[plant]]
+name = "an unreadable status is not said why"
+file = "rules/session_cpus.py"
+old = '''the status of claude, process {pid}, cannot be read ({fault})'''
+new = '''the status of claude, process {pid}, cannot be read'''
+tests = ["tests.test_session_cpus.Refused.test_a_status_that_cannot_be_read"]
+
+[[plant]]
+name = "a status without a CPU list bounds nothing"
+file = "rules/session_cpus.py"
+old = '''    if listed is None:'''
+new = '''    if listed is None and False:'''
+tests = ["tests.test_session_cpus.Refused.test_no_cpu_list"]
+
+[[plant]]
+name = "a missing CPU list is not named"
+file = "rules/session_cpus.py"
+old = '''has no Cpus_allowed_list, so'''
+new = '''has no CPUs, so'''
+tests = ["tests.test_session_cpus.Refused.test_no_cpu_list"]
+
+[[plant]]
+name = "the CPU list is fixed at the agents'"
+file = "rules/session_cpus.py"
+old = '''TomlText(listed), TomlKey'''
+new = '''TomlText("0-19"), TomlKey'''
+tests = ["tests.test_session_cpus.Refused.test_a_cpu_outside_the_agents"]
+
+[[plant]]
+name = "a CPU list that is no list faults the rule"
+file = "rules/session_cpus.py"
+old = '''    except KitFault:'''
+new = '''    except ValueError:'''
+tests = ["tests.test_session_cpus.Refused.test_a_cpu_list_that_is_no_list"]
+
+[[plant]]
+name = "a CPU list that is no list is not quoted"
+file = "rules/session_cpus.py"
+old = '''lists {listed!r} as its CPUs'''
+new = '''lists {listed} as its CPUs'''
+tests = ["tests.test_session_cpus.Refused.test_a_cpu_list_that_is_no_list"]
+
+[[plant]]
+name = "no CPU is outside"
+file = "rules/session_cpus.py"
+old = '''    outside = (allowed or frozenset()) - agents'''
+new = '''    outside = frozenset[CpuNumber]()'''
+tests = ["tests.test_session_cpus.Refused.test_a_cpu_outside_the_agents"]
+
+[[plant]]
+name = "a process on the agents' CPUs is refused"
+file = "rules/session_cpus.py"
+old = '''    if not outside:
+        return None'''
+new = '''    if not outside:
+        pass'''
+tests = ["tests.test_session_cpus.Passes.test_the_measured_shape"]
+
+[[plant]]
+name = "the CPUs outside are not named"
+file = "rules/session_cpus.py"
+old = '''{spelled(outside)} of them off {held}'''
+new = '''{listed} of them off {held}'''
+tests = ["tests.test_session_cpus.Refused.test_a_cpu_outside_the_agents"]
+
+[[plant]]
+name = "the machine's slice goes unread"
+file = "rules/session_cpus.py"
+old = '''    machine = event.machine()'''
+new = '''    machine = event.machine()._replace(slice=None)'''
+tests = ["tests.test_session_cpus.Refused.test_outside_the_slice"]
+
+[[plant]]
+name = "an absent fact is held"
+file = "rules/session_cpus.py"
+old = '''cpus_held(machine.agent_cpus)) if fact is not None]'''
+new = '''cpus_held(machine.agent_cpus))]'''
+tests = ["tests.test_session_cpus.Absent.test_neither"]
+
+[[plant]]
+name = "a machine declaring neither fact still reads the process"
+file = "rules/session_cpus.py"
+old = '''    if not held:
+        return None'''
+new = '''    if not held:
+        pass'''
+tests = ["tests.test_session_cpus.Absent.test_neither"]
+
+[[plant]]
+name = "the live proc tree is read whatever the seam says"
+file = "rules/session_cpus.py"
+old = '''    proc = state_places(event.places).proc'''
+new = '''    proc = Path("/proc")'''
+tests = ["tests.test_session_cpus.Passes.test_the_measured_shape", "tests.test_session_cpus.Refused.test_no_unified_line"]
+
+[[plant]]
+name = "the process is not CLAUDE_PID's"
+file = "rules/session_cpus.py"
+old = '''        pid = process_key(event.reading.env, proc).pid'''
+new = '''        pid = Pid(4242)'''
+tests = ["tests.test_session_cpus.Refused.test_a_missing_claude_pid", "tests.test_session_cpus.Refused.test_a_process_gone"]
+
+[[plant]]
+name = "a process the kit cannot key faults the rule"
+file = "rules/session_cpus.py"
+old = '''    except StateFault as fault:'''
+new = '''    except ValueError as fault:'''
+tests = ["tests.test_session_cpus.Refused.test_a_missing_claude_pid"]
+
+[[plant]]
+name = "a process the kit cannot key is not told the facts"
+file = "rules/session_cpus.py"
+old = '''{fault.reason}; nothing holds the claude process to {' and '.join(held)}'''
+new = '''{fault.reason}'''
+tests = ["tests.test_session_cpus.Refused.test_a_missing_claude_pid"]
+
+[[plant]]
+name = "the CPUs are not judged"
+file = "rules/session_cpus.py"
+old = '''        found = (in_slice(proc, pid, machine.slice), on_cpus(proc, pid, machine.agent_cpus))'''
+new = '''        found = (in_slice(proc, pid, machine.slice), None)'''
+tests = ["tests.test_session_cpus.Refused.test_a_cpu_outside_the_agents"]
+
+[[plant]]
+name = "the slice is not judged"
+file = "rules/session_cpus.py"
+old = '''        found = (in_slice(proc, pid, machine.slice), on_cpus(proc, pid, machine.agent_cpus))'''
+new = '''        found = (None, on_cpus(proc, pid, machine.agent_cpus))'''
+tests = ["tests.test_session_cpus.Refused.test_outside_the_slice"]
+
+[[plant]]
+name = "a check finding nothing is kept"
+file = "rules/session_cpus.py"
+old = '''        problems = [problem for problem in found if problem is not None]'''
+new = '''        problems = list(found)'''
+tests = ["tests.test_session_cpus.Passes.test_the_measured_shape"]
+
+[[plant]]
+name = "a call with no problem is refused"
+file = "rules/session_cpus.py"
+old = '''    if not problems:
+        return None'''
+new = '''    if not problems:
+        pass'''
+tests = ["tests.test_session_cpus.Passes.test_the_measured_shape"]
+
+[[plant]]
+name = "the machine file is not the one read"
+file = "rules/session_cpus.py"
+old = '''file=event.declarations_of().machine_file'''
+new = '''file="~/.config/claude-guard/machine.toml"'''
+tests = ["tests.test_session_cpus.Refused.test_the_refusal_names_the_machine_file_and_the_way_out"]
+
+[[plant]]
+name = "the problems share one line"
+file = "rules/session_cpus.py"
+old = '''problems="\n".join(problems)'''
+new = '''problems=" ".join(problems)'''
+tests = ["tests.test_session_cpus.Refused.test_both_named"]

@@ -1,0 +1,259 @@
+# The plants that show dispatcher/notices.py is held by tests/test_notices.py and tests/test_payload.py: run
+#   testing/plants.py tests/plants_notices.toml --out DIR
+# Every plant is killed when each line of dispatcher/notices.py they break is held by a test.
+
+[[plant]]
+name = "the task id pattern matches no notice"
+file = "dispatcher/notices.py"
+old = 'TASK = re.compile(r"<task-id>([^<]*)</task-id>")'
+new = 'TASK = re.compile(r"<task-id>([^<]*)</task-ix>")'
+tests = ["tests.test_notices.Notices.test_each_ending_status_ends_its_task"]
+
+[[plant]]
+name = "the status pattern matches no status"
+file = "dispatcher/notices.py"
+old = 'STATUS = re.compile(r"<status>([^<]*)</status>")'
+new = 'STATUS = re.compile(r"<status>([^<]*)</statux>")'
+tests = ["tests.test_notices.Notices.test_each_ending_status_ends_its_task"]
+
+[[plant]]
+name = "the expiry opening misspelt"
+file = "dispatcher/notices.py"
+old = 'EXPIRED = "[Monitor expired"'
+new = 'EXPIRED = "[Monitor expires"'
+tests = ["tests.test_notices.Notices.test_an_expiry_ends_a_watch"]
+
+[[plant]]
+name = "the over limit opening misspelt"
+file = "dispatcher/notices.py"
+old = 'OVER_LIMIT = "OVER LIMIT"'
+new = 'OVER_LIMIT = "OVER LIMITS"'
+tests = ["tests.test_notices.Notices.test_an_over_limit_line_reports_over_limit"]
+
+[[plant]]
+name = "any status ends its task"
+file = "dispatcher/notices.py"
+old = 'return self.status in TERMINAL'
+new = 'return self.status is not None'
+tests = ["tests.test_notices.Notices.test_a_running_status_or_none_ends_no_task"]
+
+[[plant]]
+name = "a watch ends only when every event line expires"
+file = "dispatcher/notices.py"
+old = 'return any(line.startswith(EXPIRED) for line in self.events)'
+new = 'return all(line.startswith(EXPIRED) for line in self.events)'
+tests = ["tests.test_notices.Notices.test_an_expiry_ends_a_watch"]
+
+[[plant]]
+name = "over limit only when every event line says so"
+file = "dispatcher/notices.py"
+old = 'return any(line.startswith(OVER_LIMIT) for line in self.events)'
+new = 'return all(line.startswith(OVER_LIMIT) for line in self.events)'
+tests = ["tests.test_notices.Notices.test_an_over_limit_line_reports_over_limit"]
+
+[[plant]]
+name = "an unclosed last event is read"
+file = "dispatcher/notices.py"
+old = 'text.split("</event>")[:-1]'
+new = 'text.split("</event>")[:]'
+tests = ["tests.test_notices.Notices.test_only_the_lines_of_a_closed_event_are_read"]
+
+[[plant]]
+name = "text before a stray closing tag is read"
+file = "dispatcher/notices.py"
+old = 'if "<event>" in part'
+new = 'if True'
+tests = ["tests.test_notices.Notices.test_only_the_lines_of_a_closed_event_are_read"]
+
+[[plant]]
+name = "an event is read from the first opening before its close"
+file = "dispatcher/notices.py"
+old = 'part.rpartition("<event>")'
+new = 'part.partition("<event>")'
+tests = ["tests.test_notices.Notices.test_only_the_lines_of_a_closed_event_are_read"]
+
+[[plant]]
+name = "only an event's last line is read"
+file = "dispatcher/notices.py"
+old = '.splitlines())'
+new = '.splitlines()[-1:])'
+tests = ["tests.test_notices.Notices.test_an_expiry_ends_a_watch"]
+
+[[plant]]
+name = "a text holding the opening anywhere is a notice"
+file = "dispatcher/notices.py"
+old = 'if not content.startswith(NOTICE_START):'
+new = 'if not content:'
+tests = ["tests.test_notices.Lines.test_a_line_of_another_type_or_operation_or_content_is_skipped"]
+
+[[plant]]
+name = "the head runs to the last summary"
+file = "dispatcher/notices.py"
+old = 'content.partition("<summary>")'
+new = 'content.rpartition("<summary>")'
+tests = ["tests.test_notices.Notices.test_a_notice_quoted_in_a_summary_is_not_read"]
+
+[[plant]]
+name = "the task id is read from the whole text"
+file = "dispatcher/notices.py"
+old = 'task, status = TASK.search(head), STATUS.search(head)'
+new = 'task, status = TASK.search(content), STATUS.search(head)'
+tests = ["tests.test_notices.Notices.test_a_notice_quoted_in_a_summary_is_not_read"]
+
+[[plant]]
+name = "the status is read from the whole text"
+file = "dispatcher/notices.py"
+old = 'task, status = TASK.search(head), STATUS.search(head)'
+new = 'task, status = TASK.search(head), STATUS.search(content)'
+tests = ["tests.test_notices.Notices.test_a_notice_quoted_in_a_summary_is_not_read"]
+
+[[plant]]
+name = "a notice without a task id is read"
+file = "dispatcher/notices.py"
+old = '''    if task is None:
+        return None'''
+new = '''    if False:
+        return None'''
+tests = ["tests.test_notices.Notices.test_a_notice_quoted_in_a_summary_is_not_read"]
+
+[[plant]]
+name = "a missing status reads as empty"
+file = "dispatcher/notices.py"
+old = 'if status else None'
+new = 'if status else TaskStatus("")'
+tests = ["tests.test_notices.Notices.test_a_running_status_or_none_ends_no_task"]
+
+[[plant]]
+name = "the event lines are read from the head"
+file = "dispatcher/notices.py"
+old = 'event_lines(Prose(rest))'
+new = 'event_lines(Prose(head))'
+tests = ["tests.test_notices.Notices.test_an_expiry_ends_a_watch"]
+
+[[plant]]
+name = "a transcript as long as the offset is read again"
+file = "dispatcher/notices.py"
+old = 'if path.stat().st_size < offset:'
+new = 'if path.stat().st_size <= offset:'
+tests = ["tests.test_notices.Offsets.test_a_transcript_shorter_than_the_offset_is_read_from_0"]
+
+[[plant]]
+name = "a shorter transcript is not read again"
+file = "dispatcher/notices.py"
+old = '        offset = Offset(0)'
+new = '        offset = Offset(offset)'
+tests = ["tests.test_notices.Offsets.test_a_transcript_shorter_than_the_offset_is_read_from_0"]
+
+[[plant]]
+name = "reading starts at 0 whatever the offset"
+file = "dispatcher/notices.py"
+old = 'handle.seek(offset)'
+new = 'handle.seek(0)'
+tests = ["tests.test_notices.Offsets.test_a_partial_last_line_is_kept_for_the_next_read"]
+
+[[plant]]
+name = "a partial last line is read"
+file = "dispatcher/notices.py"
+old = '                break'
+new = '                pass'
+tests = ["tests.test_notices.Offsets.test_a_partial_last_line_is_kept_for_the_next_read"]
+
+[[plant]]
+name = "the offset falls a byte short of each line"
+file = "dispatcher/notices.py"
+old = 'offset = Offset(offset + len(raw))'
+new = 'offset = Offset(offset + len(raw) - 1)'
+tests = ["tests.test_notices.Offsets.test_a_partial_last_line_is_kept_for_the_next_read"]
+
+[[plant]]
+name = "every line is parsed"
+file = "dispatcher/notices.py"
+old = 'if NOTICE_START.encode() not in raw:'
+new = 'if False:'
+tests = ["tests.test_notices.Lines.test_a_line_without_the_notice_opening_is_never_parsed"]
+
+[[plant]]
+name = "a line that is not JSON stops the read"
+file = "dispatcher/notices.py"
+old = 'except (ValueError, RecursionError):'
+new = 'except RecursionError:'
+tests = ["tests.test_notices.Lines.test_a_line_that_is_not_a_json_object_is_skipped"]
+
+[[plant]]
+name = "a line nested past the parser's depth stops the read"
+file = "dispatcher/notices.py"
+old = 'except (ValueError, RecursionError):'
+new = 'except ValueError:'
+tests = ["tests.test_notices.Lines.test_a_line_that_is_not_a_json_object_is_skipped"]
+
+[[plant]]
+name = "a JSON value that is no object is read as one"
+file = "dispatcher/notices.py"
+old = 'cast("QueueEntry", entry) if isinstance(entry, dict) else QueueEntry()'
+new = 'cast("QueueEntry", entry)'
+tests = ["tests.test_notices.Lines.test_a_line_that_is_not_a_json_object_is_skipped"]
+
+[[plant]]
+name = "a line of any type is read"
+file = "dispatcher/notices.py"
+old = 'queued.get("type") == "queue-operation" and queued.get("operation") == "enqueue"'
+new = 'queued.get("operation") == "enqueue"'
+tests = ["tests.test_notices.Lines.test_a_line_of_another_type_or_operation_or_content_is_skipped"]
+
+[[plant]]
+name = "a removed notice is read"
+file = "dispatcher/notices.py"
+old = 'queued.get("operation") == "enqueue"'
+new = 'queued.get("operation") in ("enqueue", "remove")'
+tests = ["tests.test_notices.Lines.test_a_line_of_another_type_or_operation_or_content_is_skipped"]
+
+[[plant]]
+name = "a content that is not text is read"
+file = "dispatcher/notices.py"
+old = 'and isinstance(content, str) and (notice'
+new = 'and (notice'
+tests = ["tests.test_notices.Lines.test_a_line_of_another_type_or_operation_or_content_is_skipped"]
+
+[[plant]]
+name = "a line holding no notice gives None"
+file = "dispatcher/notices.py"
+old = '''and (notice := notice_in(content)) is not None:
+                found.append(notice)'''
+new = ''':
+                found.append(notice_in(content))'''
+tests = ["tests.test_notices.Notices.test_a_notice_quoted_in_a_summary_is_not_read"]
+
+[[plant]]
+name = "the offset returned is 0"
+file = "dispatcher/notices.py"
+old = 'return found, offset'
+new = 'return found, Offset(0)'
+tests = ["tests.test_notices.Offsets.test_a_partial_last_line_is_kept_for_the_next_read"]
+
+[[plant]]
+name = "completed is not terminal"
+file = "dispatcher/notices.py"
+old = '''TaskStatus("completed"), '''
+new = '''TaskStatus("completed-not"), '''
+tests = ["tests.test_payload.InFlight.test_a_task_of_each_terminal_status_has_ended", "tests.test_notices.Notices.test_each_ending_status_ends_its_task"]
+
+[[plant]]
+name = "failed is not terminal"
+file = "dispatcher/notices.py"
+old = '''TaskStatus("failed"), '''
+new = '''TaskStatus("failed-not"), '''
+tests = ["tests.test_payload.InFlight.test_a_task_of_each_terminal_status_has_ended", "tests.test_notices.Notices.test_each_ending_status_ends_its_task"]
+
+[[plant]]
+name = "killed is not terminal"
+file = "dispatcher/notices.py"
+old = '''TaskStatus("killed"), '''
+new = '''TaskStatus("killed-not"), '''
+tests = ["tests.test_payload.InFlight.test_a_task_of_each_terminal_status_has_ended", "tests.test_notices.Notices.test_each_ending_status_ends_its_task"]
+
+[[plant]]
+name = "stopped is not terminal"
+file = "dispatcher/notices.py"
+old = ''', TaskStatus("stopped")})'''
+new = '''})'''
+tests = ["tests.test_payload.InFlight.test_a_task_of_each_terminal_status_has_ended", "tests.test_notices.Notices.test_each_ending_status_ends_its_task"]

@@ -1,0 +1,189 @@
+# The corpus commands bash accepts and the pinned shell reader refuses, each with the reason the refusal stands.
+# A row is the command's key (the sha256 of its text: the corpus stays out of every repository), the reader's
+# message as it refuses it, and why. corpus_gate.py fails on a refusal no row records with the same message, so a
+# new pin that refuses another command, or the same one for another reason, needs a row of its own.
+
+[[refusal]]
+sha256 = "a010f3515a8914be5069bcb8e8bb469c28d75537e129dd838bf74da3520a29b1"
+reader_error = "1:955: invalid parameter name"
+reason = "zsh's ${=name} word-splitting flag: bash parses it and fails it only when it expands it (bad substitution), which ends the call there; the reader refuses it as an invalid parameter name"
+
+[[refusal]]
+sha256 = "502eed3878a61fd0ac388d673048ba461138a6ad513c3c7b7ac682ae187634d0"
+reader_error = "1:942: invalid parameter name"
+reason = "zsh's ${=name} word-splitting flag: bash parses it and fails it only when it expands it (bad substitution), which ends the call there; the reader refuses it as an invalid parameter name"
+
+[[refusal]]
+sha256 = "c8a94f45c33ba0c95e9580e222ce9ba9bcad6677efebd055ac84d0c4a495b52b"
+reader_error = "1:326: invalid parameter name"
+reason = "zsh's ${=name} word-splitting flag: bash parses it and fails it only when it expands it (bad substitution), which ends the call there; the reader refuses it as an invalid parameter name"
+
+[[refusal]]
+sha256 = "f7a77e1cd9864ac97b2b1f6607500817deb105ac1648b331a7f66f583a371754"
+reader_error = "1:364: invalid parameter name"
+reason = "zsh's ${=name} word-splitting flag: bash parses it and fails it only when it expands it (bad substitution), which ends the call there; the reader refuses it as an invalid parameter name"
+
+[[refusal]]
+sha256 = "a8f160a2b9b536170004ab15b836c30e6c8d4e1aa197a0778dbb890a6e1f3121"
+reader_error = "1:583: invalid parameter name"
+reason = "zsh's ${=name} word-splitting flag: bash parses it and fails it only when it expands it (bad substitution), which ends the call there; the reader refuses it as an invalid parameter name"
+
+[[refusal]]
+sha256 = "6b7606f117aca664a79ce081b9530e5a417b502d3a89e955b71e247e101ad669"
+reader_error = "1:27: unclosed here-document `PYEOF`"
+reason = "a heredoc whose delimiter line never comes (the body's last line is EOF, not the delimiter): bash reads the body to the end of the text with a warning (here-document delimited by end-of-file), the reader refuses it as unclosed"
+
+[[refusal]]
+sha256 = "2c59bf51e96c4010fa836f2201b15877589f9f02a24a77ff931553fd53234596"
+reader_error = "1:65: unclosed here-document `PYEOF`"
+reason = "a heredoc whose delimiter line never comes (the body's last line is EOF, not the delimiter): bash reads the body to the end of the text with a warning (here-document delimited by end-of-file), the reader refuses it as unclosed"
+
+[[refusal]]
+sha256 = "84f823311f46e21d0da98f9159dfd0f25f0eb75e605bdecfab564526287e6269"
+reader_error = "1:257: invalid parameter name"
+reason = "zsh's ${=name} word-splitting flag: bash parses it and fails it only when it expands it (bad substitution), which ends the call there; the reader refuses it as an invalid parameter name"
+
+[[refusal]]
+sha256 = "903b4a9a1ce6ed7a1f107bc330d3a989d3bc12bfa386270a8cdf4957105ced9d"
+reader_error = "9:246: invalid parameter name"
+reason = "zsh's ${=name} word-splitting flag: bash parses it and fails it only when it expands it (bad substitution), which ends the call there; the reader refuses it as an invalid parameter name"
+
+[[refusal]]
+sha256 = "44694f8520a204509ebd4d313f405f314777bc39322f8b418cd2106a3be73630"
+reader_error = "1:197: invalid parameter name"
+reason = "zsh's ${=name} word-splitting flag: bash parses it and fails it only when it expands it (bad substitution), which ends the call there; the reader refuses it as an invalid parameter name"
+
+[[refusal]]
+sha256 = "8db18e2f523729b27928f385777a8f253655c87a173f90c88db170c1455fac4d"
+reader_error = "1:485: invalid parameter name"
+reason = "zsh's ${=name} word-splitting flag: bash parses it and fails it only when it expands it (bad substitution), which ends the call there; the reader refuses it as an invalid parameter name"
+
+[[refusal]]
+sha256 = "2cf9b30bbc5f8bdac6d8e8fe1649c96334080d3b4e8bebcabf318f05f985ef40"
+reader_error = "1:389: invalid parameter name"
+reason = "zsh's ${=name} word-splitting flag: bash parses it and fails it only when it expands it (bad substitution), which ends the call there; the reader refuses it as an invalid parameter name"
+
+[[refusal]]
+sha256 = "8980231ee9c7aca72937a50d1c60b9e245ed95a30e0f63a6cd610bb6360e6078"
+reader_error = "3:12: invalid parameter name"
+reason = "zsh's ${=name} word-splitting flag: bash parses it and fails it only when it expands it (bad substitution), which ends the call there; the reader refuses it as an invalid parameter name"
+
+[[refusal]]
+sha256 = "458e83353451a0328542f9a4e1859fd19e52d29b3ed6085613284a4ed550566b"
+reader_error = "1:490: invalid parameter name"
+reason = "zsh's ${=name} word-splitting flag: bash parses it and fails it only when it expands it (bad substitution), which ends the call there; the reader refuses it as an invalid parameter name"
+
+[[refusal]]
+sha256 = "77a8bd9b3d9a350c17003c0b764086fe5f8f0eb549de7965deb4e858a95def16"
+reader_error = "1:210: unclosed here-document `PY`"
+reason = "two heredocs on one line with one body and one delimiter line between them: bash reads the second body to the end of the text with a warning (here-document delimited by end-of-file), the reader refuses it as unclosed"
+
+[[refusal]]
+sha256 = "75073d0a91e05f0947c53f3071bd718e9271d4ac45c25259a11acdb273d4b551"
+reader_error = "1:1211: invalid parameter name"
+reason = "zsh's ${=name} word-splitting flag: bash parses it and fails it only when it expands it (bad substitution), which ends the call there; the reader refuses it as an invalid parameter name"
+
+[[refusal]]
+sha256 = "4a36903b722b897877625e6d99ea26c4371ee7f6d25b13b773672355570f06db"
+reader_error = "1:1249: invalid parameter name"
+reason = "zsh's ${=name} word-splitting flag: bash parses it and fails it only when it expands it (bad substitution), which ends the call there; the reader refuses it as an invalid parameter name"
+
+[[refusal]]
+sha256 = "2d44537a877dbc3a9568dde0397bd1a6c3514dd6de8ef07d481dc64def04e646"
+reader_error = "1:202: invalid parameter name"
+reason = "zsh's ${=name} word-splitting flag: bash parses it and fails it only when it expands it (bad substitution), which ends the call there; the reader refuses it as an invalid parameter name"
+
+[[refusal]]
+sha256 = "852e15a4560a7cf04c3d93020fab21c34801cb6767cbc0c71eba0a48fa0d957e"
+reader_error = "1:240: invalid parameter name"
+reason = "zsh's ${=name} word-splitting flag: bash parses it and fails it only when it expands it (bad substitution), which ends the call there; the reader refuses it as an invalid parameter name"
+
+[[refusal]]
+sha256 = "3f14e3cb83fc98ed2274d34940894f807ba862ef62f36f0a8328e4dd43636cd5"
+reader_error = "1:202: invalid parameter name"
+reason = "zsh's ${=name} word-splitting flag: bash parses it and fails it only when it expands it (bad substitution), which ends the call there; the reader refuses it as an invalid parameter name"
+
+[[refusal]]
+sha256 = "5d6f967c33a9ee3609f8e292c68b00d709c133e3261487c8f1cf1488a321f551"
+reader_error = "1:240: invalid parameter name"
+reason = "zsh's ${=name} word-splitting flag: bash parses it and fails it only when it expands it (bad substitution), which ends the call there; the reader refuses it as an invalid parameter name"
+
+[[refusal]]
+sha256 = "ff7f1df311ea32c017773782b2959dd4b9b61eb7e7639a92950cbb264587d698"
+reader_error = "1:204: invalid parameter name"
+reason = "zsh's ${=name} word-splitting flag: bash parses it and fails it only when it expands it (bad substitution), which ends the call there; the reader refuses it as an invalid parameter name"
+
+[[refusal]]
+sha256 = "10322f929a9e01bfbed5b25d3d48917640bb08a9ad100cd2620778843b9eac12"
+reader_error = "1:242: invalid parameter name"
+reason = "zsh's ${=name} word-splitting flag: bash parses it and fails it only when it expands it (bad substitution), which ends the call there; the reader refuses it as an invalid parameter name"
+
+[[refusal]]
+sha256 = "d28b6d998c891f27d2314bb1e0fc8269c0bbd23051aa05bc4c7280fff3911eba"
+reader_error = "110:346: invalid parameter name"
+reason = "zsh's ${=name} word-splitting flag: bash parses it and fails it only when it expands it (bad substitution), which ends the call there; the reader refuses it as an invalid parameter name"
+
+[[refusal]]
+sha256 = "47f2a45d5f08f00520d70f12984d7ebee4ea431b08eb80ecb6022fb9597d8036"
+reader_error = "1:347: invalid parameter name"
+reason = "zsh's ${=name} word-splitting flag: bash parses it and fails it only when it expands it (bad substitution), which ends the call there; the reader refuses it as an invalid parameter name"
+
+[[refusal]]
+sha256 = "be8c2e7731e08bb6ef3d9f757131d7ac10237cdb0299ac4c0ac0782e3d0c76b2"
+reader_error = "1:231: invalid parameter name"
+reason = "zsh's ${=name} word-splitting flag: bash parses it and fails it only when it expands it (bad substitution), which ends the call there; the reader refuses it as an invalid parameter name"
+
+[[refusal]]
+sha256 = "8bf4b2a55bb21751fc369185c10bfeeaa117790738d9cfdb78f1fdc061be5f95"
+reader_error = "1:633: invalid parameter name"
+reason = "zsh's ${=name} word-splitting flag: bash parses it and fails it only when it expands it (bad substitution), which ends the call there; the reader refuses it as an invalid parameter name"
+
+[[refusal]]
+sha256 = "40155c1dc3ce72ae8a1fd4a636fb023d1cfe621866789f703bba416212f35d60"
+reader_error = "1:530: invalid parameter name"
+reason = "zsh's ${=name} word-splitting flag: bash parses it and fails it only when it expands it (bad substitution), which ends the call there; the reader refuses it as an invalid parameter name"
+
+[[refusal]]
+sha256 = "d2a2043b97236bb7aa3b20b402c080eff2620b33c855992947e9b964ad78a002"
+reader_error = "1:157: parameter expansion flags are a zsh feature; tried parsing as bash"
+reason = "zsh's ${(f)name} parameter flags: bash parses them and fails them only when it expands them (bad substitution), which ends the call there; the reader refuses them by name"
+
+[[refusal]]
+sha256 = "043419d4c4e551c381737f48d2f15ffb44f008f8a2d74520c76b1918433668fb"
+reader_error = "1:206: parameter expansion flags are a zsh feature; tried parsing as bash"
+reason = "zsh's ${(f)name} parameter flags: bash parses them and fails them only when it expands them (bad substitution), which ends the call there; the reader refuses them by name"
+
+[[refusal]]
+sha256 = "8d24f4ec40ce5d62a4b79e4ba3e0c08e4af5272268ad165211dbff56dcf28fac"
+reader_error = "1:460: invalid parameter name"
+reason = "zsh's ${=name} word-splitting flag: bash parses it and fails it only when it expands it (bad substitution), which ends the call there; the reader refuses it as an invalid parameter name"
+
+[[refusal]]
+sha256 = "18f6a107dd603c7d4dd5dbc020e2d4c4157bf01b5a6985c630c998c2f80edb9b"
+reader_error = "1:459: invalid parameter name"
+reason = "zsh's ${=name} word-splitting flag: bash parses it and fails it only when it expands it (bad substitution), which ends the call there; the reader refuses it as an invalid parameter name"
+
+[[refusal]]
+sha256 = "6c3e1e40001f5334272dfc896887782fd83670160da5efb0ef77ebd8ce7f01ef"
+reader_error = "1:289: invalid parameter name"
+reason = "zsh's ${=name} word-splitting flag: bash parses it and fails it only when it expands it (bad substitution), which ends the call there; the reader refuses it as an invalid parameter name"
+
+[[refusal]]
+sha256 = "bfa7f113624a0c85d7f7c697400fa5eda83edba56672169afaf671f4a829b7e2"
+reader_error = "1:258: invalid parameter name"
+reason = "zsh's ${=name} word-splitting flag: bash parses it and fails it only when it expands it (bad substitution), which ends the call there; the reader refuses it as an invalid parameter name"
+
+[[refusal]]
+sha256 = "682a58f4101ac0c70f6eabe53aa1b9dab62400f86cdb6d984dcf9e31fc7ba58f"
+reader_error = "1:238: invalid parameter name"
+reason = "zsh's ${=name} word-splitting flag: bash parses it and fails it only when it expands it (bad substitution), which ends the call there; the reader refuses it as an invalid parameter name"
+
+[[refusal]]
+sha256 = "794c7a71d1f58bec1e69abd74c932d321bc0db67b8dd400f35bad0a75f9936ef"
+reader_error = "1:278: invalid parameter name"
+reason = "zsh's ${=name} word-splitting flag: bash parses it and fails it only when it expands it (bad substitution), which ends the call there; the reader refuses it as an invalid parameter name"
+
+[[refusal]]
+sha256 = "5bfec18e4792eefa71bc3d7c4917246d18dbbeccd3082c0d9179d432ca0c5bc3"
+reader_error = "1:227: invalid parameter name"
+reason = "zsh's ${=name} word-splitting flag: bash parses it and fails it only when it expands it (bad substitution), which ends the call there; the reader refuses it as an invalid parameter name"

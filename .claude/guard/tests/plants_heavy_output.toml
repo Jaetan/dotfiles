@@ -1,0 +1,891 @@
+# The plants that show rules/heavy_output.py held by tests/test_heavy_output.py, one or more per line of the rule:
+#   testing/plants.py tests/plants_heavy_output.toml --out DIR
+
+[[plant]]
+name = "PostToolUse is judged too"
+file = "rules/heavy_output.py"
+old = '''EVENTS: frozenset[HookEvent] = frozenset({"PreToolUse"})'''
+new = '''EVENTS: frozenset[HookEvent] = frozenset({"PreToolUse", "PostToolUse"})'''
+tests = ["tests.test_heavy_output.Reach.test_another_event"]
+
+[[plant]]
+name = "Monitor is not judged"
+file = "rules/heavy_output.py"
+old = '''TOOLS = frozenset({ToolName("Bash"), ToolName("Monitor")})'''
+new = '''TOOLS = frozenset({ToolName("Bash")})'''
+tests = ["tests.test_heavy_output.Monitor.test_a_logged_run"]
+
+[[plant]]
+name = "every tool is judged"
+file = "rules/heavy_output.py"
+old = '''TOOLS = frozenset({ToolName("Bash"), ToolName("Monitor")})'''
+new = '''TOOLS = None'''
+tests = ["tests.test_heavy_output.Reach.test_another_tool"]
+
+[[plant]]
+name = "the Monitor tool is misnamed"
+file = "rules/heavy_output.py"
+old = '''MONITOR = ToolName("Monitor")'''
+new = '''MONITOR = ToolName("monitor")'''
+tests = ["tests.test_heavy_output.Monitor.test_a_logged_run"]
+
+[[plant]]
+name = "a proc file keeps a stream"
+file = "rules/heavy_output.py"
+old = '''DEVICES = ("/dev/", "/proc/")'''
+new = '''DEVICES = ("/dev/",)'''
+tests = ["tests.test_heavy_output.Ends.test_a_device_and_a_proc_file"]
+
+[[plant]]
+name = "a device keeps a stream"
+file = "rules/heavy_output.py"
+old = '''DEVICES = ("/dev/", "/proc/")'''
+new = '''DEVICES = ("/proc/",)'''
+tests = ["tests.test_heavy_output.Ends.test_a_device_and_a_proc_file"]
+
+[[plant]]
+name = "/dev/null is misnamed"
+file = "rules/heavy_output.py"
+old = '''"null": Prose("/dev/null")'''
+new = '''"null": Prose("/dev/zero")'''
+tests = ["tests.test_heavy_output.Ends.test_closed_and_null"]
+
+[[plant]]
+name = "a pipe is misnamed"
+file = "rules/heavy_output.py"
+old = '''"pipe": Prose("a pipe")'''
+new = '''"pipe": Prose("a fifo")'''
+tests = ["tests.test_heavy_output.Ends.test_a_pipe"]
+
+[[plant]]
+name = "a substitution is misnamed"
+file = "rules/heavy_output.py"
+old = '''Prose("a command or process substitution")'''
+new = '''Prose("a substitution")'''
+tests = ["tests.test_heavy_output.Ends.test_a_substitution"]
+
+[[plant]]
+name = "the tool result is misnamed"
+file = "rules/heavy_output.py"
+old = '''"call": Prose("the tool result")'''
+new = '''"call": Prose("the terminal")'''
+tests = ["tests.test_heavy_output.Ends.test_the_tool_result"]
+
+[[plant]]
+name = "a here-string is misnamed"
+file = "rules/heavy_output.py"
+old = '''Prose("a heredoc or here-string")'''
+new = '''Prose("a heredoc")'''
+tests = ["tests.test_heavy_output.Ends.test_a_here_string"]
+
+[[plant]]
+name = "a closed descriptor is misnamed"
+file = "rules/heavy_output.py"
+old = '''Prose("a closed descriptor")'''
+new = '''Prose("nowhere")'''
+tests = ["tests.test_heavy_output.Ends.test_closed_and_null"]
+
+[[plant]]
+name = "an unknown end is misnamed"
+file = "rules/heavy_output.py"
+old = '''Prose("an end the call does not make known")'''
+new = '''Prose("somewhere")'''
+tests = ["tests.test_heavy_output.Ends.test_an_end_the_call_does_not_make_known"]
+
+[[plant]]
+name = "the refusal's lead is changed"
+file = "rules/heavy_output.py"
+old = '''this call runs heavy commands without keeping their output whole in a log read in later calls.'''
+new = '''this call starts heavy commands without keeping their output whole in a log read in later calls.'''
+tests = ["tests.test_heavy_output.Ends.test_the_tool_result"]
+
+[[plant]]
+name = "the problems are not listed on lines of their own"
+file = "rules/heavy_output.py"
+old = '''{{problems}}'''
+new = '''{{problems}}.'''
+tests = ["tests.test_heavy_output.Ends.test_the_tool_result"]
+
+[[plant]]
+name = "the reason for a log is changed"
+file = "rules/heavy_output.py"
+old = '''so a long run never has to run twice to be read'''
+new = '''so a long run never has to run again to be read'''
+tests = ["tests.test_heavy_output.Refusal.test_the_whole_text"]
+
+[[plant]]
+name = "run_in_background is not named"
+file = "rules/heavy_output.py"
+old = '''call of its own, run with run_in_background, in the form'''
+new = '''call of its own, in the form'''
+tests = ["tests.test_heavy_output.Refusal.test_the_whole_text"]
+
+[[plant]]
+name = "the form names taskset"
+file = "rules/heavy_output.py"
+old = '''  <heavy command> > "$LOG" 2>&1; echo "EXIT=$?" >> "$LOG"'''
+new = '''  taskset -c 0-19 <heavy command> > "$LOG" 2>&1; echo "EXIT=$?" >> "$LOG"'''
+tests = ["tests.test_heavy_output.Refusal.test_the_whole_text"]
+
+[[plant]]
+name = "the input and the log's place are not named"
+file = "rules/heavy_output.py"
+old = '''its input no pipe, its log a file outside /dev/ and /proc/, no command beside it but'''
+new = '''no command beside it but'''
+tests = ["tests.test_heavy_output.Refusal.test_the_whole_text"]
+
+[[plant]]
+name = "the Monitor clause is cut"
+file = "rules/heavy_output.py"
+old = '''A Monitor call watches work and starts none."""'''
+new = '''A Monitor call watches work."""'''
+tests = ["tests.test_heavy_output.Refusal.test_the_whole_text"]
+
+[[plant]]
+name = "a file's unknown value is placed"
+file = "rules/heavy_output.py"
+old = '''if word.value is None or (cwd is None and not word.value.startswith("/")):'''
+new = '''if cwd is None and not word.value.startswith("/"):'''
+tests = ["tests.test_heavy_output.Paths.test_the_form_that_passes"]
+
+[[plant]]
+name = "a relative path from an unknown directory is placed against /"
+file = "rules/heavy_output.py"
+old = '''if word.value is None or (cwd is None and not word.value.startswith("/")):'''
+new = '''if word.value is None:'''
+tests = ["tests.test_heavy_output.Paths.test_relative_from_a_directory_the_call_does_not_make_known"]
+
+[[plant]]
+name = "an unknown value names /dev/null"
+file = "rules/heavy_output.py"
+old = '''startswith("/")):
+        return None'''
+new = '''startswith("/")):
+        return PathText("/dev/null")'''
+tests = ["tests.test_heavy_output.Paths.test_the_form_that_passes"]
+
+[[plant]]
+name = "a leading // is kept"
+file = "rules/heavy_output.py"
+old = '''PathText("/" + normpath(join(cwd or "/", word.value)).lstrip("/"))'''
+new = '''PathText(normpath(join(cwd or "/", word.value)))'''
+tests = ["tests.test_heavy_output.Paths.test_a_doubled_slash"]
+
+[[plant]]
+name = "a path is not normalised"
+file = "rules/heavy_output.py"
+old = '''PathText("/" + normpath(join(cwd or "/", word.value)).lstrip("/"))'''
+new = '''PathText("/" + join(cwd or "/", word.value).lstrip("/"))'''
+tests = ["tests.test_heavy_output.Paths.test_out_of_shm_by_dot_dot"]
+
+[[plant]]
+name = "a relative path is placed against /"
+file = "rules/heavy_output.py"
+old = '''PathText("/" + normpath(join(cwd or "/", word.value)).lstrip("/"))'''
+new = '''PathText("/" + normpath(join("/", word.value)).lstrip("/"))'''
+tests = ["tests.test_heavy_output.Paths.test_relative_to_the_commands_directory"]
+
+[[plant]]
+name = "/dev/null keeps a stream"
+file = "rules/heavy_output.py"
+old = '''if end.reach != "file":'''
+new = '''if end.reach not in ("file", "null"):'''
+tests = ["tests.test_heavy_output.Ends.test_closed_and_null"]
+
+[[plant]]
+name = "every reach but a file keeps a stream"
+file = "rules/heavy_output.py"
+old = '''return WHERE[end.reach]'''
+new = '''return None'''
+tests = ["tests.test_heavy_output.Ends.test_the_tool_result"]
+
+[[plant]]
+name = "a file's path is not placed against the command's directory"
+file = "rules/heavy_output.py"
+old = '''placed(end.file, cwd)'''
+new = '''placed(end.file, None)'''
+tests = ["tests.test_heavy_output.Paths.test_relative_to_the_commands_directory"]
+
+[[plant]]
+name = "an unplaced path is judged as a path"
+file = "rules/heavy_output.py"
+old = '''if path is None or not path.startswith(DEVICES)'''
+new = '''if not path.startswith(DEVICES)'''
+tests = ["tests.test_heavy_output.Paths.test_the_form_that_passes"]
+
+[[plant]]
+name = "a device keeps a stream and a log loses it"
+file = "rules/heavy_output.py"
+old = '''not path.startswith(DEVICES)'''
+new = '''path.startswith(DEVICES)'''
+tests = ["tests.test_heavy_output.Paths.test_a_log_passes"]
+
+[[plant]]
+name = "a log loses its stream"
+file = "rules/heavy_output.py"
+old = '''startswith(DEVICES):
+        return None'''
+new = '''startswith(DEVICES):
+        return Prose("x")'''
+tests = ["tests.test_heavy_output.Paths.test_a_log_passes"]
+
+[[plant]]
+name = "a device or proc path keeps its stream"
+file = "rules/heavy_output.py"
+old = '''return Prose(path)'''
+new = '''return None'''
+tests = ["tests.test_heavy_output.Ends.test_a_device_and_a_proc_file"]
+
+[[plant]]
+name = "a refusal line is found before any command"
+file = "rules/heavy_output.py"
+old = '''found: list[Prose] = []'''
+new = '''found: list[Prose] = [Prose("  * x")]'''
+tests = ["tests.test_heavy_output.Monitor.test_light"]
+
+[[plant]]
+name = "the first command alone is judged"
+file = "rules/heavy_output.py"
+old = '''event.call().commands:'''
+new = '''event.call().commands[:1]:'''
+tests = ["tests.test_heavy_output.Carried.test_the_old_cases"]
+
+[[plant]]
+name = "the session's declaration is read before the command's"
+file = "rules/heavy_output.py"
+old = '''Path(command.cwd or event.cwd or "/")'''
+new = '''Path(event.cwd or command.cwd or "/")'''
+tests = ["tests.test_heavy_output.Reach.test_the_commands_own_declaration"]
+
+[[plant]]
+name = "the root's declaration is read where the directory is unknown"
+file = "rules/heavy_output.py"
+old = '''Path(command.cwd or event.cwd or "/")'''
+new = '''Path(command.cwd or "/")'''
+tests = ["tests.test_heavy_output.Reach.test_the_sessions_declaration_where_the_directory_is_unknown"]
+
+[[plant]]
+name = "a light command is judged"
+file = "rules/heavy_output.py"
+old = '''            continue'''
+new = '''            pass'''
+tests = ["tests.test_heavy_output.Carried.test_the_old_cases"]
+
+[[plant]]
+name = "the errors are read where the output ends"
+file = "rules/heavy_output.py"
+old = '''streams = command.streams'''
+new = '''streams = command.streams._replace(errors=command.streams.output)'''
+tests = ["tests.test_heavy_output.Ends.test_errors_alone"]
+
+[[plant]]
+name = "the output's fault is misworded"
+file = "rules/heavy_output.py"
+old = '''("its output ends in",'''
+new = '''("its output goes to",'''
+tests = ["tests.test_heavy_output.Ends.test_the_tool_result"]
+
+[[plant]]
+name = "the errors' fault is misworded"
+file = "rules/heavy_output.py"
+old = '''("its errors end in",'''
+new = '''("its errors go to",'''
+tests = ["tests.test_heavy_output.Ends.test_the_tool_result"]
+
+[[plant]]
+name = "the output is judged by the errors' end"
+file = "rules/heavy_output.py"
+old = '''lost(streams.output, command.cwd)'''
+new = '''lost(streams.errors, command.cwd)'''
+tests = ["tests.test_heavy_output.Ends.test_errors_alone"]
+
+[[plant]]
+name = "the errors are judged by the output's end"
+file = "rules/heavy_output.py"
+old = '''lost(streams.errors, command.cwd)'''
+new = '''lost(streams.output, command.cwd)'''
+tests = ["tests.test_heavy_output.Ends.test_errors_alone"]
+
+[[plant]]
+name = "a kept stream is listed"
+file = "rules/heavy_output.py"
+old = '''if where is not None]'''
+new = '''if where is None]'''
+tests = ["tests.test_heavy_output.Ends.test_the_tool_result"]
+
+[[plant]]
+name = "a fault is spelled with a colon"
+file = "rules/heavy_output.py"
+old = '''f"{what} {where}"'''
+new = '''f"{what}: {where}"'''
+tests = ["tests.test_heavy_output.Ends.test_the_tool_result"]
+
+[[plant]]
+name = "a piped input passes"
+file = "rules/heavy_output.py"
+old = '''streams.input.reach == "pipe"'''
+new = '''streams.input.reach == "text"'''
+tests = ["tests.test_heavy_output.Input.test_a_pipe"]
+
+[[plant]]
+name = "the pipe's fault is misworded"
+file = "rules/heavy_output.py"
+old = '''Prose("its input is a pipe")'''
+new = '''Prose("its input is piped")'''
+tests = ["tests.test_heavy_output.Input.test_a_pipe"]
+
+[[plant]]
+name = "every call but a Monitor call is a Monitor start"
+file = "rules/heavy_output.py"
+old = '''if event.tool == MONITOR:'''
+new = '''if event.tool != MONITOR:'''
+tests = ["tests.test_heavy_output.Monitor.test_a_logged_run"]
+
+[[plant]]
+name = "the Monitor fault is misworded"
+file = "rules/heavy_output.py"
+old = '''faults.append(Prose("a Monitor call starts it"))'''
+new = '''faults.append(Prose("Monitor starts it"))'''
+tests = ["tests.test_heavy_output.Monitor.test_a_logged_run"]
+
+[[plant]]
+name = "a heavy command with no fault is listed"
+file = "rules/heavy_output.py"
+old = '''        if faults:'''
+new = '''        if True:'''
+tests = ["tests.test_heavy_output.Carried.test_the_old_cases"]
+
+[[plant]]
+name = "the faults are joined by a semicolon"
+file = "rules/heavy_output.py"
+old = '''{', '.join(faults)}'''
+new = '''{'; '.join(faults)}'''
+tests = ["tests.test_heavy_output.Ends.test_the_tool_result"]
+
+[[plant]]
+name = "a call with no fault is refused and one with a fault passes"
+file = "rules/heavy_output.py"
+old = '''if not found:'''
+new = '''if found:'''
+tests = ["tests.test_heavy_output.Ends.test_the_tool_result"]
+
+[[plant]]
+name = "a call with no fault is refused"
+file = "rules/heavy_output.py"
+old = '''if not found:
+        return None'''
+new = '''if not found:
+        return refuse(Prose("x"))'''
+tests = ["tests.test_heavy_output.Reach.test_the_commands_own_declaration"]
+
+[[plant]]
+name = "the refusal is dropped"
+file = "rules/heavy_output.py"
+old = '''return refuse(Prose(ADVICE.format(problems="\n".join(found))))'''
+new = '''return None'''
+tests = ["tests.test_heavy_output.Ends.test_the_tool_result"]
+
+[[plant]]
+name = "the problems share a line"
+file = "rules/heavy_output.py"
+old = '''problems="\n".join(found)'''
+new = '''problems=" ".join(found)'''
+tests = ["tests.test_heavy_output.Refusal.test_every_heavy_command_and_no_other"]
+
+[[plant]]
+name = "a name of the first line no longer passes beside a run"
+file = "rules/heavy_output.py"
+old = '''"cd", "pushd",'''
+new = '''"pushd",'''
+tests = ["tests.test_heavy_output.Beside.test_the_names_that_pass"]
+
+[[plant]]
+name = "a name of the second line no longer passes beside a run"
+file = "rules/heavy_output.py"
+old = '''"true", ":")))'''
+new = '''"true")))'''
+tests = ["tests.test_heavy_output.Beside.test_the_names_that_pass"]
+
+[[plant]]
+name = "head is misnamed"
+file = "rules/heavy_output.py"
+old = '''HEAD = ShellText("head")'''
+new = '''HEAD = ShellText("tail")'''
+tests = ["tests.test_heavy_output.Head.test_in_the_calls_text"]
+
+[[plant]]
+name = "a script's commands are the call's own"
+file = "rules/heavy_output.py"
+old = '''frozenset({"script", PYTHON})'''
+new = '''frozenset({PYTHON})'''
+tests = ["tests.test_heavy_output.Beside.test_a_script"]
+
+[[plant]]
+name = "Python's commands are the call's own"
+file = "rules/heavy_output.py"
+old = '''frozenset({"script", PYTHON})'''
+new = '''frozenset({"script"})'''
+tests = ["tests.test_heavy_output.Beside.test_python", "tests.test_heavy_output.Python.test_a_start_whose_interpreter_has_a_log"]
+
+[[plant]]
+name = "the names that pass are not listed"
+file = "rules/heavy_output.py"
+old = '''{beside}, a substitution only before it and no head in the call,'''
+new = '''a substitution only before it and no head in the call,'''
+tests = ["tests.test_heavy_output.Refusal.test_the_whole_text"]
+
+[[plant]]
+name = "the queries are not named"
+file = "rules/heavy_output.py"
+old = '''and query the log in later calls with grep -c, grep -n or sed -n of a range.'''
+new = '''and query the log in later calls.'''
+tests = ["tests.test_heavy_output.Refusal.test_the_whole_text"]
+
+[[plant]]
+name = "the names that pass share no comma"
+file = "rules/heavy_output.py"
+old = '''format(beside=", ".join('''
+new = '''format(beside=" ".join('''
+tests = ["tests.test_heavy_output.Refusal.test_the_whole_text"]
+
+[[plant]]
+name = "a wrapper is other work"
+file = "rules/heavy_output.py"
+old = '''return wraps(command, after) or (starts_shell'''
+new = '''return (starts_shell'''
+tests = ["tests.test_heavy_output.Beside.test_a_wrapper"]
+
+[[plant]]
+name = "a start is other work"
+file = "rules/heavy_output.py"
+old = '''or (starts_shell(command, after) or acts(command, after)) and ('''
+new = '''or (False or acts(command, after)) and ('''
+tests = ["tests.test_heavy_output.Beside.test_a_carrier"]
+
+[[plant]]
+name = "a carrier start running no heavy command is other work"
+file = "rules/heavy_output.py"
+old = '''        after.shells[-1] == "carrier" or after.processes[-1]'''
+new = '''        False or after.processes[-1]'''
+tests = ["tests.test_heavy_output.Beside.test_a_carrier"]
+
+[[plant]]
+name = "a script start running a heavy command is other work"
+file = "rules/heavy_output.py"
+old = '''or after.processes[-1] in inside)'''
+new = '''or False)'''
+tests = ["tests.test_heavy_output.Beside.test_a_script", "tests.test_heavy_output.Python.test_a_start_whose_interpreter_has_a_log"]
+
+[[plant]]
+name = "a call with no heavy command is read for other work"
+file = "rules/heavy_output.py"
+old = '''if not runs:'''
+new = '''if False:'''
+tests = ["tests.test_heavy_output.Beside.test_no_heavy_run"]
+
+[[plant]]
+name = "the last heavy command bounds the substitutions that pass"
+file = "rules/heavy_output.py"
+old = '''commands.index(runs[0])'''
+new = '''commands.index(runs[-1])'''
+tests = ["tests.test_heavy_output.Beside.test_a_substitution_between_two_runs"]
+
+[[plant]]
+name = "no process holds a heavy command"
+file = "rules/heavy_output.py"
+old = '''for run in runs for process'''
+new = '''for run in runs[:0] for process'''
+tests = ["tests.test_heavy_output.Beside.test_a_script", "tests.test_heavy_output.Python.test_a_start_whose_interpreter_has_a_log"]
+
+[[plant]]
+name = "the first command alone is read for other work"
+file = "rules/heavy_output.py"
+old = '''for at, command in enumerate(commands)'''
+new = '''for at, command in enumerate(commands[:1])'''
+tests = ["tests.test_heavy_output.Beside.test_other_work_is_named"]
+
+[[plant]]
+name = "other work is named by its name"
+file = "rules/heavy_output.py"
+old = '''others = [spelled(command) for'''
+new = '''others = [str(command.name) for'''
+tests = ["tests.test_heavy_output.Beside.test_other_work_is_named"]
+
+[[plant]]
+name = "a command of no words is other work"
+file = "rules/heavy_output.py"
+old = '''if (command.words or read_whole(command) is not None) and command not in runs'''
+new = '''if command not in runs'''
+tests = ["tests.test_heavy_output.Beside.test_a_command_of_no_words"]
+
+[[plant]]
+name = "a heavy command is other work"
+file = "rules/heavy_output.py"
+old = "and command not in runs\n"
+new = "\n"
+tests = ["tests.test_heavy_output.Beside.test_other_work_is_named"]
+
+[[plant]]
+name = "a name by its path is other work"
+file = "rules/heavy_output.py"
+old = '''base(command.words) not in BESIDE'''
+new = '''command.name not in BESIDE'''
+tests = ["tests.test_heavy_output.Beside.test_a_name_by_its_path"]
+
+[[plant]]
+name = "a substitution after the run passes"
+file = "rules/heavy_output.py"
+old = '''not (at < first and "substitution"'''
+new = '''not ("substitution"'''
+tests = ["tests.test_heavy_output.Beside.test_a_substitution_after_the_run"]
+
+[[plant]]
+name = "a command before the run passes"
+file = "rules/heavy_output.py"
+old = '''(at < first and "substitution" in command.shells)'''
+new = '''(at < first)'''
+tests = ["tests.test_heavy_output.Beside.test_a_command_before_the_run"]
+
+[[plant]]
+name = "no command only runs what follows it"
+file = "rules/heavy_output.py"
+old = '''and only_runs(command, commands[at + 1], inside))]'''
+new = '''and False)]'''
+tests = ["tests.test_heavy_output.Beside.test_a_wrapper"]
+
+[[plant]]
+name = "the last command reads past the end"
+file = "rules/heavy_output.py"
+old = '''(at + 1 < len(commands) and'''
+new = '''(at + 1 <= len(commands) and'''
+tests = ["tests.test_heavy_output.Beside.test_other_work_is_named"]
+
+[[plant]]
+name = "head by its path is missed"
+file = "rules/heavy_output.py"
+old = '''if base(command.words) == HEAD]'''
+new = '''if command.name == HEAD]'''
+tests = ["tests.test_heavy_output.Head.test_in_a_script_by_a_wrapper_and_a_path"]
+
+[[plant]]
+name = "head in Python code is missed"
+file = "rules/heavy_output.py"
+old = '''cuts = [command.text for command in commands if'''
+new = '''cuts = [command.text for command in commands if OUTSIDE.isdisjoint(command.shells) and'''
+tests = ["tests.test_heavy_output.Head.test_in_python"]
+
+[[plant]]
+name = "a command is named each time it runs"
+file = "rules/heavy_output.py"
+old = '''for text in dict.fromkeys(texts))'''
+new = '''for text in texts)'''
+tests = ["tests.test_heavy_output.Beside.test_each_named_once_in_the_order_it_runs"]
+
+[[plant]]
+name = "the named commands share no comma"
+file = "rules/heavy_output.py"
+old = '''{', '.join(f'`{text}`' for'''
+new = '''{' '.join(f'`{text}`' for'''
+tests = ["tests.test_heavy_output.Beside.test_each_named_once_in_the_order_it_runs"]
+
+[[plant]]
+name = "the other work is misworded"
+file = "rules/heavy_output.py"
+old = '''("it runs other work beside them", others)'''
+new = '''("it runs other work", others)'''
+tests = ["tests.test_heavy_output.Beside.test_other_work_is_named"]
+
+[[plant]]
+name = "the head line is misworded"
+file = "rules/heavy_output.py"
+old = '''("it runs head, which reads output cut short", cuts))'''
+new = '''("it runs head", cuts))'''
+tests = ["tests.test_heavy_output.Head.test_in_the_calls_text"]
+
+[[plant]]
+name = "a kind with no command is listed"
+file = "rules/heavy_output.py"
+old = '''cuts)) if texts]'''
+new = '''cuts)) if True]'''
+tests = ["tests.test_heavy_output.Beside.test_other_work_is_named"]
+
+[[plant]]
+name = "a light first command counts as a heavy one"
+file = "rules/heavy_output.py"
+old = '''runs: list[Command] = []'''
+new = '''runs: list[Command] = list(event.call().commands[:1])'''
+tests = ["tests.test_heavy_output.Beside.test_a_command_before_the_run"]
+
+[[plant]]
+name = "no heavy command is recorded"
+file = "rules/heavy_output.py"
+old = '''        runs.append(command)'''
+new = '''        pass'''
+tests = ["tests.test_heavy_output.Beside.test_other_work_is_named"]
+
+[[plant]]
+name = "the other work and the heads are not listed"
+file = "rules/heavy_output.py"
+old = '''found.extend(shared(event.call().commands, runs))'''
+new = '''found.extend([])'''
+tests = ["tests.test_heavy_output.Beside.test_other_work_is_named", "tests.test_heavy_output.Head.test_in_the_calls_text"]
+
+[[plant]]
+name = "a command with words reads a file whole"
+file = "rules/heavy_output.py"
+old = '''    if command.words or command.shells[-1:]'''
+new = '''    if command.shells[-1:]'''
+tests = ["tests.test_heavy_output.Beside.test_a_file_read_whole"]
+
+[[plant]]
+name = "a substitution's subshell reads a file whole"
+file = "rules/heavy_output.py"
+old = '''command.shells[-1:] != ("substitution",) or command.streams.output != SUBSTITUTED:'''
+new = '''command.streams.output != SUBSTITUTED:'''
+tests = ["tests.test_heavy_output.Beside.test_what_reads_no_file_whole"]
+
+[[plant]]
+name = "a process substitution reads a file whole"
+file = "rules/heavy_output.py"
+old = ''' or command.streams.output != SUBSTITUTED:'''
+new = ''':'''
+tests = ["tests.test_heavy_output.Beside.test_what_reads_no_file_whole"]
+
+[[plant]]
+name = "any command reaches the redirections"
+file = "rules/heavy_output.py"
+old = "        return None\n    match command.redirs:"
+new = "        pass\n    match command.redirs:"
+tests = ["tests.test_heavy_output.Beside.test_a_file_read_whole"]
+
+[[plant]]
+name = "a `<` onto fd 0 spelled is no read"
+file = "rules/heavy_output.py"
+old = '''fd=None | "0", target'''
+new = '''fd=None, target'''
+tests = ["tests.test_heavy_output.Beside.test_a_file_read_whole"]
+
+[[plant]]
+name = "a `<>` reads a file whole"
+file = "rules/heavy_output.py"
+old = '''case (Redirect(op="<",'''
+new = '''case (Redirect(op="<" | "<>",'''
+tests = ["tests.test_heavy_output.Beside.test_what_reads_no_file_whole"]
+
+[[plant]]
+name = "a read with more redirections reads a file whole"
+file = "rules/heavy_output.py"
+old = '''target=target),):'''
+new = '''target=target), *_):'''
+tests = ["tests.test_heavy_output.Beside.test_what_reads_no_file_whole"]
+
+[[plant]]
+name = "a read whole names no file"
+file = "rules/heavy_output.py"
+old = "            return target.text\n"
+new = "            return None\n"
+tests = ["tests.test_heavy_output.Beside.test_a_file_read_whole", "tests.test_heavy_output.Carried.test_the_old_cases"]
+
+[[plant]]
+name = "every command of no words reads a file whole"
+file = "rules/heavy_output.py"
+old = "        case _:\n            return None\n"
+new = "        case _:\n            return ShellText(\"\")\n"
+tests = ["tests.test_heavy_output.Beside.test_a_command_of_no_words"]
+
+[[plant]]
+name = "a read whole is spelled by its text"
+file = "rules/heavy_output.py"
+old = "    file = read_whole(command)\n"
+new = "    file = None\n"
+tests = ["tests.test_heavy_output.Beside.test_a_file_read_whole"]
+
+[[plant]]
+name = "a read whole is spelled otherwise"
+file = "rules/heavy_output.py"
+old = '''ShellText(f"$(< {file})")'''
+new = '''ShellText(f"$(<{file})")'''
+tests = ["tests.test_heavy_output.Beside.test_a_file_read_whole"]
+
+[[plant]]
+name = "a read whole is no other work"
+file = "rules/heavy_output.py"
+old = '''(command.words or read_whole(command) is not None)'''
+new = '''command.words'''
+tests = ["tests.test_heavy_output.Beside.test_a_file_read_whole", "tests.test_heavy_output.Carried.test_the_old_cases"]
+
+[[plant]]
+name = "SHELL never reaches a case's environment"
+file = "tests/test_heavy_output.py"
+old = '''env = {VarName("HOME"): ShellText(str(at.home))} | ({VarName("SHELL"): shell} if shell else {})'''
+new = '''env = {VarName("HOME"): ShellText(str(at.home))}'''
+tests = ["tests.test_heavy_output.Carried.test_the_old_cases_inside_a_carrier"]
+
+[[plant]]
+name = "the kit's unreadable refusal is misspelled"
+file = "tests/test_heavy_output.py"
+old = '''UNREADABLE = Prose("guard kit: this call cannot be read: ")'''
+new = '''UNREADABLE = Prose("guard kit: this call cannot be judged: ")'''
+tests = ["tests.test_heavy_output.Carried.test_the_old_cases_inside_a_carrier"]
+
+[[plant]]
+name = "the two sources' marks are swapped"
+file = "tests/test_heavy_output.py"
+old = '''SOURCES: dict[Source, Prose] = {"heavy-output": MARK, "unreadable": UNREADABLE}'''
+new = '''SOURCES: dict[Source, Prose] = {"heavy-output": UNREADABLE, "unreadable": MARK}'''
+tests = ["tests.test_heavy_output.Carried.test_the_old_cases_inside_a_carrier"]
+
+[[plant]]
+name = "a find never starts its action"
+file = "rules/heavy_output.py"
+old = '''    return wraps(command, after) or (starts_shell(command, after) or acts(command, after)) and ('''
+new = '''    return wraps(command, after) or (starts_shell(command, after) or False) and ('''
+tests = ["tests.test_heavy_output.Beside.test_a_find_action"]
+
+[[plant]]
+name = "a find action is read as a carrier's"
+file = "rules/heavy_output.py"
+old = '''            and after.shells[-1] == "find")'''
+new = '''            and after.shells[-1] == "carrier")'''
+tests = ["tests.test_heavy_output.Beside.test_a_find_action"]
+
+[[plant]]
+name = "an action is read at any depth"
+file = "rules/heavy_output.py"
+old = '''    return (len(after.processes) == len(command.processes) + 1 and after.processes[:-1] == command.processes'''
+new = '''    return (after.processes[:-1] == command.processes'''
+tests = ["tests.test_heavy_output"]
+
+[[plant]]
+name = "a name the call does not make known passes"
+file = "rules/heavy_output.py"
+old = '''if heavy(command, event.declaration(Path(command.cwd or event.cwd or "/"))) is None:'''
+new = '''if heavy(command, event.declaration(Path(command.cwd or event.cwd or "/"))) in (None, "unknown"):'''
+tests = ["tests.test_heavy_output.Unknown.test_piped_is_refused", "tests.test_heavy_output.Changed.test_the_cases", "tests.test_heavy_output.Monitor.test_unknown"]
+
+[[plant]]
+name = "every command is heavy"
+file = "rules/heavy_output.py"
+old = '''if heavy(command, event.declaration(Path(command.cwd or event.cwd or "/"))) is None:'''
+new = '''if heavy(command, event.declaration(Path(command.cwd or event.cwd or "/"))) is None and False:'''
+tests = ["tests.test_heavy_output.Unknown.test_a_bracket_test_is_known"]
+
+[[plant]]
+name = "a name the call does not make known is refused whatever its streams"
+file = "rules/heavy_output.py"
+old = '''if heavy(command, event.declaration(Path(command.cwd or event.cwd or "/"))) is None:'''
+new = '''if (matched := heavy(command, event.declaration(Path(command.cwd or event.cwd or "/")))) == "unknown":
+            found.append(Prose("  * unknown"))
+        if matched is None:'''
+tests = ["tests.test_heavy_output.Unknown.test_logged_alone_passes"]
+
+# A heavy command Python code starts: refused whatever its streams, named with the form that passes.
+
+[[plant]]
+name = "the Python shell is misnamed"
+file = "rules/heavy_output.py"
+old = '''PYTHON: Shell = "python"'''
+new = '''PYTHON: Shell = "Python"'''
+tests = ["tests.test_heavy_output.Python.test_a_start_writing_a_log", "tests.test_heavy_output.Python.test_a_start_whose_interpreter_has_a_log"]
+
+[[plant]]
+name = "the Python fault is misworded"
+file = "rules/heavy_output.py"
+old = '''STARTED = Prose('Python code starts it, so run it from the shell'''
+new = '''STARTED = Prose('Python starts it, so run it from the shell'''
+tests = ["tests.test_heavy_output.Python.test_a_start_writing_a_log"]
+
+[[plant]]
+name = "a heavy command Python code starts is judged by its streams"
+file = "rules/heavy_output.py"
+old = '''python = PYTHON in command.shells'''
+new = '''python = False'''
+tests = ["tests.test_heavy_output.Python.test_a_start_whose_interpreter_has_a_log", "tests.test_heavy_output.Python.test_a_carrier_python_starts"]
+
+[[plant]]
+name = "only a heavy command Python starts itself is Python's"
+file = "rules/heavy_output.py"
+old = '''python = PYTHON in command.shells'''
+new = '''python = PYTHON in command.shells[-1:]'''
+tests = ["tests.test_heavy_output.Python.test_a_carrier_python_starts"]
+
+[[plant]]
+name = "every heavy command is Python's"
+file = "rules/heavy_output.py"
+old = '''python = PYTHON in command.shells'''
+new = '''python = True'''
+tests = ["tests.test_heavy_output.Refusal.test_the_whole_text"]
+
+[[plant]]
+name = "a heavy command Python code starts is named for its streams too"
+file = "rules/heavy_output.py"
+old = '''faults = [] if python else streamed(command)'''
+new = '''faults = streamed(command)'''
+tests = ["tests.test_heavy_output.Python.test_a_start_writing_a_log"]
+
+[[plant]]
+name = "the Python fault is never given"
+file = "rules/heavy_output.py"
+old = '''        if python:
+            faults.append(STARTED)'''
+new = '''        if False:
+            faults.append(STARTED)'''
+tests = ["tests.test_heavy_output.Python.test_a_start_writing_a_log"]
+
+[[plant]]
+name = "the Python fault comes before the Monitor one"
+file = "rules/heavy_output.py"
+old = '''        if event.tool == MONITOR:
+            faults.append(Prose("a Monitor call starts it"))
+        if python:
+            faults.append(STARTED)
+'''
+new = '''        if python:
+            faults.append(STARTED)
+        if event.tool == MONITOR:
+            faults.append(Prose("a Monitor call starts it"))
+'''
+tests = ["tests.test_heavy_output.Python.test_in_a_monitor_call"]
+
+[[plant]]
+name = "an input pipe is no fault"
+file = "rules/heavy_output.py"
+old = '''return faults + [Prose("its input is a pipe")] if streams.input.reach == "pipe" else faults'''
+new = '''return faults'''
+tests = ["tests.test_heavy_output.Input.test_a_pipe"]
+
+[[plant]]
+name = "a log under /dev/shm is a file again"
+file = "rules/heavy_output.py"
+old = '''    if path is None or not path.startswith(DEVICES):'''
+new = '''    if path is None or not path.startswith(DEVICES) or path.startswith("/dev/shm/"):'''
+tests = ["tests.test_heavy_output.Changed.test_the_cases", "tests.test_heavy_output.Paths.test_a_log_under_dev_shm", "tests.test_heavy_output.Paths.test_relative_to_the_commands_directory"]
+
+[[plant]]
+name = "an exec of no other word runs beside a heavy command again"
+file = "rules/heavy_output.py"
+old = '''              and base(command.words) not in BESIDE and OUTSIDE.isdisjoint(command.shells)'''
+new = '''              and base(command.words) not in BESIDE and OUTSIDE.isdisjoint(command.shells)
+              and tuple(word.value for word in command.words) != ("exec",)'''
+tests = ["tests.test_heavy_output.Changed.test_the_cases", "tests.test_heavy_output.Beside.test_an_exec_that_only_redirects"]
+
+[[plant]]
+name = "a command a script runs is the call's own"
+file = "rules/heavy_output.py"
+old = '''not in BESIDE and OUTSIDE.isdisjoint(command.shells)'''
+new = '''not in BESIDE'''
+tests = ["tests.test_heavy_output.Beside.test_a_script"]
+
+[[plant]]
+name = "a substitution before the run is other work"
+file = "rules/heavy_output.py"
+old = '''              and not (at < first and "substitution" in command.shells)'''
+new = '''              and not (at < 0 and "substitution" in command.shells)'''
+tests = ["tests.test_heavy_output.Beside.test_a_substitution_before_the_run"]
+
+[[plant]]
+name = "the advice keeps /dev/shm as a file"
+file = "rules/heavy_output.py"
+old = '''its input no pipe, its log a file outside /dev/ and /proc/, no command beside it but'''
+new = '''its input no pipe, its log a file outside /dev/ and /proc/ (/dev/shm/ is one), no command beside it but'''
+tests = ["tests.test_heavy_output.Refusal.test_the_whole_text"]

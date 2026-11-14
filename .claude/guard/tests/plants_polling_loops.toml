@@ -1,0 +1,653 @@
+# The plants that show rules/polling_loops.py held by tests/test_polling_loops.py, one or more per line of the
+# rule:
+#   testing/plants.py tests/plants_polling_loops.toml --out DIR
+
+[[plant]]
+name = "the rule refuses nothing"
+file = "rules/polling_loops.py"
+old = '''    return refuse(Prose(ADVICE.format('''
+new = '''    return None and refuse(Prose(ADVICE.format('''
+tests = ["tests.test_polling_loops.Refused.test_the_old_cases",
+         "tests.test_polling_loops.Refused.test_a_sleep_or_a_timed_wait_in_any_loop",
+         "tests.test_polling_loops.Refused.test_a_loop_that_spins",
+         "tests.test_polling_loops.Refused.test_a_loop_of_checks",
+         "tests.test_polling_loops.Refused.test_a_sleep_in_a_function_the_loop_calls"]
+
+[[plant]]
+name = "PostToolUse is judged too"
+file = "rules/polling_loops.py"
+old = '''frozenset({"PreToolUse"})'''
+new = '''frozenset({"PreToolUse", "PostToolUse"})'''
+tests = ["tests.test_polling_loops.Reach.test_another_event"]
+
+[[plant]]
+name = "Monitor is judged too"
+file = "rules/polling_loops.py"
+old = '''TOOLS = frozenset({ToolName("Bash")})'''
+new = '''TOOLS = frozenset({ToolName("Bash"), ToolName("Monitor")})'''
+tests = ["tests.test_polling_loops.Passes.test_a_monitor_polls_by_design"]
+
+[[plant]]
+name = "tail under timeout does not wait"
+file = "rules/polling_loops.py"
+old = '''("tail", "cat", "read", "inotifywait", "pidwait")'''
+new = '''("cat", "read", "inotifywait", "pidwait")'''
+tests = ["tests.test_polling_loops.Refused.test_the_old_cases",
+         "tests.test_polling_loops.Refused.test_a_sleep_or_a_timed_wait_in_any_loop"]
+
+[[plant]]
+name = "cat under timeout does not wait"
+file = "rules/polling_loops.py"
+old = '''("tail", "cat", "read", "inotifywait", "pidwait")'''
+new = '''("tail", "read", "inotifywait", "pidwait")'''
+tests = ["tests.test_polling_loops.Refused.test_a_sleep_or_a_timed_wait_in_any_loop"]
+
+[[plant]]
+name = "read under timeout does not wait"
+file = "rules/polling_loops.py"
+old = '''("tail", "cat", "read", "inotifywait", "pidwait")'''
+new = '''("tail", "cat", "inotifywait", "pidwait")'''
+tests = ["tests.test_polling_loops.Refused.test_a_sleep_or_a_timed_wait_in_any_loop"]
+
+[[plant]]
+name = "inotifywait under timeout does not wait"
+file = "rules/polling_loops.py"
+old = '''("tail", "cat", "read", "inotifywait", "pidwait")'''
+new = '''("tail", "cat", "read", "pidwait")'''
+tests = ["tests.test_polling_loops.Refused.test_a_sleep_or_a_timed_wait_in_any_loop"]
+
+[[plant]]
+name = "pidwait under timeout does not wait"
+file = "rules/polling_loops.py"
+old = '''("tail", "cat", "read", "inotifywait", "pidwait")'''
+new = '''("tail", "cat", "read", "inotifywait")'''
+tests = ["tests.test_polling_loops.Refused.test_a_sleep_or_a_timed_wait_in_any_loop"]
+
+[[plant]]
+name = "a body of : does not spin"
+file = "rules/polling_loops.py"
+old = '''(":", "true", "continue")'''
+new = '''("true", "continue")'''
+tests = ["tests.test_polling_loops.Refused.test_the_old_cases",
+         "tests.test_polling_loops.Refused.test_a_loop_that_spins"]
+
+[[plant]]
+name = "a body of true does not spin"
+file = "rules/polling_loops.py"
+old = '''(":", "true", "continue")'''
+new = '''(":", "continue")'''
+tests = ["tests.test_polling_loops.Refused.test_a_loop_that_spins"]
+
+[[plant]]
+name = "a body of continue does not spin"
+file = "rules/polling_loops.py"
+old = '''(":", "true", "continue")'''
+new = '''(":", "true")'''
+tests = ["tests.test_polling_loops.Refused.test_the_old_cases",
+         "tests.test_polling_loops.Refused.test_a_loop_that_spins"]
+
+[[plant]]
+name = ": is no check"
+file = "rules/polling_loops.py"
+old = '''(":", "true", "test", "[", "kill", "pgrep", "pidof", "ps", "grep",
+                                                "stat", "ls", "false"))'''
+new = '''("true", "test", "[", "kill", "pgrep", "pidof", "ps", "grep",
+                                                "stat", "ls", "false"))'''
+tests = ["tests.test_polling_loops.Refused.test_a_loop_of_checks"]
+
+[[plant]]
+name = "true is no check"
+file = "rules/polling_loops.py"
+old = '''(":", "true", "test", "[", "kill", "pgrep", "pidof", "ps", "grep",
+                                                "stat", "ls", "false"))'''
+new = '''(":", "test", "[", "kill", "pgrep", "pidof", "ps", "grep",
+                                                "stat", "ls", "false"))'''
+tests = ["tests.test_polling_loops.Refused.test_a_loop_of_checks"]
+
+[[plant]]
+name = "test is no check"
+file = "rules/polling_loops.py"
+old = '''(":", "true", "test", "[", "kill", "pgrep", "pidof", "ps", "grep",
+                                                "stat", "ls", "false"))'''
+new = '''(":", "true", "[", "kill", "pgrep", "pidof", "ps", "grep",
+                                                "stat", "ls", "false"))'''
+tests = ["tests.test_polling_loops.Refused.test_a_loop_of_checks"]
+
+[[plant]]
+name = "[ is no check"
+file = "rules/polling_loops.py"
+old = '''(":", "true", "test", "[", "kill", "pgrep", "pidof", "ps", "grep",
+                                                "stat", "ls", "false"))'''
+new = '''(":", "true", "test", "kill", "pgrep", "pidof", "ps", "grep",
+                                                "stat", "ls", "false"))'''
+tests = ["tests.test_polling_loops.Refused.test_a_loop_of_checks"]
+
+[[plant]]
+name = "kill is no check"
+file = "rules/polling_loops.py"
+old = '''(":", "true", "test", "[", "kill", "pgrep", "pidof", "ps", "grep",
+                                                "stat", "ls", "false"))'''
+new = '''(":", "true", "test", "[", "pgrep", "pidof", "ps", "grep",
+                                                "stat", "ls", "false"))'''
+tests = ["tests.test_polling_loops.Refused.test_a_loop_of_checks"]
+
+[[plant]]
+name = "pgrep is no check"
+file = "rules/polling_loops.py"
+old = '''(":", "true", "test", "[", "kill", "pgrep", "pidof", "ps", "grep",
+                                                "stat", "ls", "false"))'''
+new = '''(":", "true", "test", "[", "kill", "pidof", "ps", "grep",
+                                                "stat", "ls", "false"))'''
+tests = ["tests.test_polling_loops.Refused.test_a_loop_of_checks"]
+
+[[plant]]
+name = "pidof is no check"
+file = "rules/polling_loops.py"
+old = '''(":", "true", "test", "[", "kill", "pgrep", "pidof", "ps", "grep",
+                                                "stat", "ls", "false"))'''
+new = '''(":", "true", "test", "[", "kill", "pgrep", "ps", "grep",
+                                                "stat", "ls", "false"))'''
+tests = ["tests.test_polling_loops.Refused.test_a_loop_of_checks"]
+
+[[plant]]
+name = "ps is no check"
+file = "rules/polling_loops.py"
+old = '''(":", "true", "test", "[", "kill", "pgrep", "pidof", "ps", "grep",
+                                                "stat", "ls", "false"))'''
+new = '''(":", "true", "test", "[", "kill", "pgrep", "pidof", "grep",
+                                                "stat", "ls", "false"))'''
+tests = ["tests.test_polling_loops.Refused.test_a_loop_of_checks"]
+
+[[plant]]
+name = "grep is no check"
+file = "rules/polling_loops.py"
+old = '''(":", "true", "test", "[", "kill", "pgrep", "pidof", "ps", "grep",
+                                                "stat", "ls", "false"))'''
+new = '''(":", "true", "test", "[", "kill", "pgrep", "pidof", "ps",
+                                                "stat", "ls", "false"))'''
+tests = ["tests.test_polling_loops.Refused.test_a_loop_of_checks"]
+
+[[plant]]
+name = "stat is no check"
+file = "rules/polling_loops.py"
+old = '''(":", "true", "test", "[", "kill", "pgrep", "pidof", "ps", "grep",
+                                                "stat", "ls", "false"))'''
+new = '''(":", "true", "test", "[", "kill", "pgrep", "pidof", "ps", "grep",
+                                                "ls", "false"))'''
+tests = ["tests.test_polling_loops.Refused.test_a_loop_of_checks"]
+
+[[plant]]
+name = "ls is no check"
+file = "rules/polling_loops.py"
+old = '''(":", "true", "test", "[", "kill", "pgrep", "pidof", "ps", "grep",
+                                                "stat", "ls", "false"))'''
+new = '''(":", "true", "test", "[", "kill", "pgrep", "pidof", "ps", "grep",
+                                                "stat", "false"))'''
+tests = ["tests.test_polling_loops.Refused.test_a_loop_of_checks"]
+
+[[plant]]
+name = "false is no check"
+file = "rules/polling_loops.py"
+old = '''(":", "true", "test", "[", "kill", "pgrep", "pidof", "ps", "grep",
+                                                "stat", "ls", "false"))'''
+new = '''(":", "true", "test", "[", "kill", "pgrep", "pidof", "ps", "grep",
+                                                "stat", "ls"))'''
+tests = ["tests.test_polling_loops.Refused.test_a_loop_of_checks"]
+
+[[plant]]
+name = "read's -d takes no value"
+file = "rules/polling_loops.py"
+old = '''for letter in "adinNptu"'''
+new = '''for letter in "ainNptu"'''
+tests = ["tests.test_polling_loops.Passes.test_options_that_set_no_timeout"]
+
+[[plant]]
+name = "inotifywait's -e takes no value"
+file = "rules/polling_loops.py"
+old = '''for letter in "eot"'''
+new = '''for letter in "ot"'''
+tests = ["tests.test_polling_loops.Passes.test_options_that_set_no_timeout"]
+
+[[plant]]
+name = "the advice names no first line"
+file = "rules/polling_loops.py"
+old = '''ADVICE = """this call polls in a loop.'''
+new = '''ADVICE = """this call polls.'''
+tests = ["tests.test_polling_loops.Refused.test_the_old_cases"]
+
+[[plant]]
+name = "the advice names no background run"
+file = "rules/polling_loops.py"
+old = '''  * Run the work with run_in_background:'''
+new = '''  * Run the work:'''
+tests = ["tests.test_polling_loops.Refused.test_the_refusal_names_the_ways_to_wait"]
+
+[[plant]]
+name = "the advice names no Monitor"
+file = "rules/polling_loops.py"
+old = '''watch it with the Monitor tool'''
+new = '''watch it'''
+tests = ["tests.test_polling_loops.Refused.test_the_refusal_names_the_ways_to_wait"]
+
+[[plant]]
+name = "a name keeps its folder"
+file = "rules/polling_loops.py"
+old = '''ShellText(basename(command.words[0].spelled))'''
+new = '''ShellText(command.words[0].spelled)'''
+tests = ["tests.test_polling_loops.Refused.test_a_sleep_or_a_timed_wait_in_any_loop"]
+
+[[plant]]
+name = "a name is its text as written"
+file = "rules/polling_loops.py"
+old = '''ShellText(basename(command.words[0].spelled))'''
+new = '''ShellText(basename(command.words[0].text))'''
+tests = ["tests.test_polling_loops.Refused.test_a_sleep_or_a_timed_wait_in_any_loop"]
+
+[[plant]]
+name = "a command of no words is named"
+file = "rules/polling_loops.py"
+old = '''.spelled)) if command.words else None'''
+new = '''.spelled))'''
+tests = ["tests.test_polling_loops.Passes.test_the_old_cases"]
+
+[[plant]]
+name = "a command is spelled as written"
+file = "rules/polling_loops.py"
+old = '''ShellText(" ".join(word.spelled for word in command.words))'''
+new = '''ShellText(" ".join(word.text for word in command.words))'''
+tests = ["tests.test_polling_loops.Refused.test_each_line_names_what_polls"]
+
+[[plant]]
+name = "the options start at the name"
+file = "rules/polling_loops.py"
+old = '''    index = 1
+'''
+new = '''    index = 0
+'''
+tests = ["tests.test_polling_loops.Refused.test_the_old_cases"]
+
+[[plant]]
+name = "the last word is no option"
+file = "rules/polling_loops.py"
+old = '''    while index < len(words):'''
+new = '''    while index < len(words) - 1:'''
+tests = ["tests.test_polling_loops.Refused.test_a_sleep_or_a_timed_wait_in_any_loop"]
+
+[[plant]]
+name = "-- ends nothing"
+file = "rules/polling_loops.py"
+old = '''        if word == "--":'''
+new = '''        if word == "---":'''
+tests = ["tests.test_polling_loops.Passes.test_options_that_set_no_timeout"]
+
+[[plant]]
+name = "--timeout= is no timeout"
+file = "rules/polling_loops.py"
+old = '''if word.split("=", 1)[0] == long:'''
+new = '''if word == long:'''
+tests = ["tests.test_polling_loops.Refused.test_a_sleep_or_a_timed_wait_in_any_loop"]
+
+[[plant]]
+name = "a long option is a cluster"
+file = "rules/polling_loops.py"
+old = '''if not word.startswith("-") or word.startswith("--"):'''
+new = '''if not word.startswith("-"):'''
+tests = ["tests.test_polling_loops.Passes.test_options_that_set_no_timeout"]
+
+[[plant]]
+name = "an operand is a cluster"
+file = "rules/polling_loops.py"
+old = '''if not word.startswith("-") or word.startswith("--"):'''
+new = '''if word.startswith("+") or word.startswith("--"):'''
+tests = ["tests.test_polling_loops.Passes.test_options_that_set_no_timeout"]
+
+[[plant]]
+name = "read's options go on past its names"
+file = "rules/polling_loops.py"
+old = '''            if long is None:
+                return False'''
+new = '''            if long is not None:
+                return False'''
+tests = ["tests.test_polling_loops.Passes.test_options_that_set_no_timeout"]
+
+[[plant]]
+name = "an operand is read as letters"
+file = "rules/polling_loops.py"
+old = '''            continue
+        for at, letter'''
+new = '''            pass
+        for at, letter'''
+tests = ["tests.test_polling_loops.Passes.test_the_old_cases"]
+
+[[plant]]
+name = "a cluster's letters are counted from 1"
+file = "rules/polling_loops.py"
+old = '''enumerate(word[1:], 2)'''
+new = '''enumerate(word[1:], 1)'''
+tests = ["tests.test_polling_loops.Passes.test_options_that_set_no_timeout"]
+
+[[plant]]
+name = "t is no timeout"
+file = "rules/polling_loops.py"
+old = '''            if letter == "t":'''
+new = '''            if letter == "T":'''
+tests = ["tests.test_polling_loops.Refused.test_the_old_cases"]
+
+[[plant]]
+name = "a letter taking a value is one taking none"
+file = "rules/polling_loops.py"
+old = '''            if letter in valued:'''
+new = '''            if letter not in valued:'''
+tests = ["tests.test_polling_loops.Refused.test_the_old_cases"]
+
+[[plant]]
+name = "a value is never the next word"
+file = "rules/polling_loops.py"
+old = '''index += at == len(word)'''
+new = '''index += at != len(word)'''
+tests = ["tests.test_polling_loops.Passes.test_options_that_set_no_timeout"]
+
+[[plant]]
+name = "a value letter does not end its cluster"
+file = "rules/polling_loops.py"
+old = '''                break
+    return False'''
+new = '''                continue
+    return False'''
+tests = ["tests.test_polling_loops.Passes.test_options_that_set_no_timeout"]
+
+[[plant]]
+name = "words with no option time out"
+file = "rules/polling_loops.py"
+old = '''                break
+    return False
+'''
+new = '''                break
+    return True
+'''
+tests = ["tests.test_polling_loops.Passes.test_the_old_cases"]
+
+[[plant]]
+name = "sleep does not wait"
+file = "rules/polling_loops.py"
+old = '''    if command.pauses or name == "sleep" or'''
+new = '''    if command.pauses or name == "sleeps" or'''
+tests = ["tests.test_polling_loops.Refused.test_the_old_cases"]
+
+[[plant]]
+name = "nothing under timeout waits"
+file = "rules/polling_loops.py"
+old = ''' or name in TIMED and ShellText("timeout") in command.wrappers:'''
+new = ''':'''
+tests = ["tests.test_polling_loops.Refused.test_the_old_cases"]
+
+[[plant]]
+name = "taskset is the timeout"
+file = "rules/polling_loops.py"
+old = '''ShellText("timeout") in command.wrappers'''
+new = '''ShellText("taskset") in command.wrappers'''
+tests = ["tests.test_polling_loops.Refused.test_a_sleep_or_a_timed_wait_in_any_loop"]
+
+[[plant]]
+name = "read is not read"
+file = "rules/polling_loops.py"
+old = '''    if name == "read":'''
+new = '''    if name == "reads":'''
+tests = ["tests.test_polling_loops.Refused.test_the_old_cases"]
+
+[[plant]]
+name = "read takes inotifywait's values"
+file = "rules/polling_loops.py"
+old = '''timed(command.words, READ_VALUED, None)'''
+new = '''timed(command.words, INOTIFY_VALUED, None)'''
+tests = ["tests.test_polling_loops.Passes.test_options_that_set_no_timeout"]
+
+[[plant]]
+name = "inotifywait is not read"
+file = "rules/polling_loops.py"
+old = '''return name == "inotifywait" and'''
+new = '''return name == "inotifywaits" and'''
+tests = ["tests.test_polling_loops.Refused.test_the_old_cases"]
+
+[[plant]]
+name = "inotifywait has no --timeout"
+file = "rules/polling_loops.py"
+old = '''INOTIFY_VALUED, ShellText("--timeout"))'''
+new = '''INOTIFY_VALUED, None)'''
+tests = ["tests.test_polling_loops.Refused.test_the_old_cases"]
+
+[[plant]]
+name = "a loop's command calls no function"
+file = "rules/polling_loops.py"
+old = '''    names = {command.name}
+'''
+new = '''    names: set[ShellText | None] = set()
+'''
+tests = ["tests.test_polling_loops.Refused.test_a_sleep_in_a_function_the_loop_calls"]
+
+[[plant]]
+name = "a body's calls are not followed"
+file = "rules/polling_loops.py"
+old = '''    for _ in bodies:
+'''
+new = '''    for _ in ():
+'''
+tests = ["tests.test_polling_loops.Refused.test_a_sleep_in_a_function_the_loop_calls"]
+
+[[plant]]
+name = "a round forgets the names before it"
+file = "rules/polling_loops.py"
+old = '''        names |= {run.name'''
+new = '''        names = {run.name'''
+tests = ["tests.test_polling_loops.Refused.test_a_sleep_in_a_function_the_loop_calls"]
+
+[[plant]]
+name = "the loop's own command is not judged"
+file = "rules/polling_loops.py"
+old = '''    yield command
+'''
+new = '''    pass
+'''
+tests = ["tests.test_polling_loops.Refused.test_the_old_cases"]
+
+[[plant]]
+name = "no body is judged"
+file = "rules/polling_loops.py"
+old = '''    yield from (run for name in names for run in bodies.get(name, []))'''
+new = '''    yield from ()'''
+tests = ["tests.test_polling_loops.Refused.test_a_sleep_in_a_function_the_loop_calls"]
+
+[[plant]]
+name = "every loop is a while"
+file = "rules/polling_loops.py"
+old = '''    kind = held[0][0].kind'''
+new = '''    kind = "while"'''
+tests = ["tests.test_polling_loops.Refused.test_each_line_names_what_polls"]
+
+[[plant]]
+name = "the route is never named"
+file = "rules/polling_loops.py"
+old = '''route = "" if run is command else'''
+new = '''route = "" if True else'''
+tests = ["tests.test_polling_loops.Refused.test_each_line_names_what_polls"]
+
+[[plant]]
+name = "the part is always the body"
+file = "rules/polling_loops.py"
+old = '''in the {loop.part} of the {kind} '''
+new = '''in the body of the {kind} '''
+tests = ["tests.test_polling_loops.Refused.test_each_line_names_what_polls"]
+
+[[plant]]
+name = "a for loop spins"
+file = "rules/polling_loops.py"
+old = '''if kind not in ("while", "until"):'''
+new = '''if kind not in ("while", "until", "for"):'''
+tests = ["tests.test_polling_loops.Passes.test_the_old_cases"]
+
+[[plant]]
+name = "an until loop never spins"
+file = "rules/polling_loops.py"
+old = '''if kind not in ("while", "until"):'''
+new = '''if kind not in ("while",):'''
+tests = ["tests.test_polling_loops.Refused.test_the_old_cases"]
+
+[[plant]]
+name = "a wrapper is a command of the loop"
+file = "rules/polling_loops.py"
+old = ''' for loop, command in held if name_of(command) not in WRAPPERS]'''
+new = ''' for loop, command in held]'''
+tests = ["tests.test_polling_loops.Refused.test_a_loop_that_spins"]
+
+[[plant]]
+name = "the body holds the condition"
+file = "rules/polling_loops.py"
+old = '''body = [name for part, name in ran if part == "body"]'''
+new = '''body = [name for part, name in ran if part in ("body", "condition")]'''
+tests = ["tests.test_polling_loops.Refused.test_the_old_cases"]
+
+[[plant]]
+name = "the condition is the body"
+file = "rules/polling_loops.py"
+old = '''condition = [name for part, name in ran if part == "condition"]'''
+new = '''condition = [name for part, name in ran if part == "body"]'''
+tests = ["tests.test_polling_loops.Passes.test_the_old_cases"]
+
+[[plant]]
+name = "an empty body spins"
+file = "rules/polling_loops.py"
+old = '''    if body and all(name in SPINS'''
+new = '''    if all(name in SPINS'''
+tests = ["tests.test_polling_loops.Passes.test_the_new_cases"]
+
+[[plant]]
+name = "one spinning command spins the body"
+file = "rules/polling_loops.py"
+old = '''all(name in SPINS for name in body)'''
+new = '''any(name in SPINS for name in body)'''
+tests = ["tests.test_polling_loops.Passes.test_the_new_cases"]
+
+[[plant]]
+name = "an empty condition only reads"
+file = "rules/polling_loops.py"
+old = '''not (condition and all(name == "read"'''
+new = '''not (all(name == "read"'''
+tests = ["tests.test_polling_loops.Refused.test_a_loop_that_spins"]
+
+[[plant]]
+name = "read does not read"
+file = "rules/polling_loops.py"
+old = '''all(name == "read" for name in condition)'''
+new = '''all(name == "reads" for name in condition)'''
+tests = ["tests.test_polling_loops.Passes.test_the_old_cases"]
+
+[[plant]]
+name = "the spin line names every repeat"
+file = "rules/polling_loops.py"
+old = '''{'`, `'.join(dict.fromkeys(map(str, body)))}'''
+new = '''{'`, `'.join(map(str, body))}'''
+tests = ["tests.test_polling_loops.Refused.test_each_line_names_what_polls"]
+
+[[plant]]
+name = "an empty body is checks"
+file = "rules/polling_loops.py"
+old = '''    elif body and condition and all('''
+new = '''    elif condition and all('''
+tests = ["tests.test_polling_loops.Passes.test_the_new_cases"]
+
+[[plant]]
+name = "an empty condition is checks"
+file = "rules/polling_loops.py"
+old = '''    elif body and condition and all('''
+new = '''    elif body and all('''
+tests = ["tests.test_polling_loops.Passes.test_the_new_cases"]
+
+[[plant]]
+name = "one check makes the loop checks"
+file = "rules/polling_loops.py"
+old = '''all(name in CHECKS for name in body + condition)'''
+new = '''any(name in CHECKS for name in body + condition)'''
+tests = ["tests.test_polling_loops.Passes.test_the_new_cases"]
+
+[[plant]]
+name = "the checks line names every repeat"
+file = "rules/polling_loops.py"
+old = '''{'`, `'.join(dict.fromkeys(map(str, condition + body)))}'''
+new = '''{'`, `'.join(map(str, condition + body))}'''
+tests = ["tests.test_polling_loops.Refused.test_each_line_names_what_polls"]
+
+[[plant]]
+name = "the checks line starts at the body"
+file = "rules/polling_loops.py"
+old = '''dict.fromkeys(map(str, condition + body))'''
+new = '''dict.fromkeys(map(str, body + condition))'''
+tests = ["tests.test_polling_loops.Refused.test_each_line_names_what_polls"]
+
+[[plant]]
+name = "a function's body is not gathered"
+file = "rules/polling_loops.py"
+old = '''        if command.function is not None:'''
+new = '''        if command.function is None:'''
+tests = ["tests.test_polling_loops.Refused.test_a_sleep_in_a_function_the_loop_calls"]
+
+[[plant]]
+name = "every loop is one loop"
+file = "rules/polling_loops.py"
+old = '''loops.setdefault(loop.loop, [])'''
+new = '''loops.setdefault(LoopId(0), [])'''
+tests = ["tests.test_polling_loops.Refused.test_the_old_cases"]
+
+[[plant]]
+name = "a Python sleep is not judged"
+file = "rules/polling_loops.py"
+old = '''for sleeping in command.sleeps)'''
+new = '''for sleeping in command.sleeps[1:])'''
+tests = ["tests.test_polling_loops.Refused.test_the_old_cases"]
+
+[[plant]]
+name = "a Python line names no line"
+file = "rules/polling_loops.py"
+old = '''whose loop at line {sleeping.line} sleeps'''
+new = '''whose loop sleeps'''
+tests = ["tests.test_polling_loops.Refused.test_each_line_names_what_polls"]
+
+[[plant]]
+name = "the first loop is not judged"
+file = "rules/polling_loops.py"
+old = '''    for held in loops.values():'''
+new = '''    for held in list(loops.values())[1:]:'''
+tests = ["tests.test_polling_loops.Refused.test_the_old_cases"]
+
+[[plant]]
+name = "a call that polls passes"
+file = "rules/polling_loops.py"
+old = '''    if not found:
+        return None'''
+new = '''    if found:
+        return None'''
+tests = ["tests.test_polling_loops.Refused.test_the_old_cases",
+         "tests.test_polling_loops.Passes.test_the_old_cases"]
+
+[[plant]]
+name = "a repeated line is kept"
+file = "rules/polling_loops.py"
+old = '''"\n".join(dict.fromkeys(found))'''
+new = '''"\n".join(found)'''
+tests = ["tests.test_polling_loops.Refused.test_each_line_names_what_polls"]
+
+[[plant]]
+name = "a pause is no sleep"
+file = "rules/polling_loops.py"
+old = '''if command.pauses or name'''
+new = '''if name'''
+tests = ["tests.test_polling_loops.Refused.test_the_old_cases",
+         "tests.test_polling_loops.Refused.test_code_in_no_work_tree",
+         "tests.test_polling_loops.Refused.test_code_in_a_work_tree"]
+
+[[plant]]
+name = "the first command alone is judged"
+file = "rules/polling_loops.py"
+old = '''for command in event.call().commands:'''
+new = '''for command in event.call().commands[:1]:'''
+tests = ["tests.test_polling_loops.Refused.test_the_old_cases",
+         "tests.test_polling_loops.Refused.test_a_sleep_in_a_function_the_loop_calls"]

@@ -1,0 +1,575 @@
+# The plants that show rules/route_check.py held by tests/test_route_check.py, one or more per line of the rule:
+#   testing/plants.py tests/plants_route_check.toml --out DIR
+
+[[plant]]
+name = "PostToolBatch is judged too"
+file = "rules/route_check.py"
+old = '''EVENTS: frozenset[HookEvent] = frozenset({"PreToolUse", "PostToolUse", "PostToolUseFailure"})'''
+new = '''EVENTS: frozenset[HookEvent] = frozenset({"PreToolUse", "PostToolUse", "PostToolUseFailure", "PostToolBatch"})'''
+tests = ["tests.test_route_check.Reach.test_another_event"]
+
+[[plant]]
+name = "Monitor is not judged"
+file = "rules/route_check.py"
+old = '''TOOLS = frozenset({ToolName("Bash"), ToolName("Monitor")})'''
+new = '''TOOLS = frozenset({ToolName("Bash")})'''
+tests = ["tests.test_route_check.Everyone.test_monitor"]
+
+[[plant]]
+name = "every tool is judged"
+file = "rules/route_check.py"
+old = '''TOOLS = frozenset({ToolName("Bash"), ToolName("Monitor")})'''
+new = '''TOOLS = None'''
+tests = ["tests.test_route_check.Reach.test_another_tool"]
+
+[[plant]]
+name = "the shell is read from SHELL"
+file = "rules/route_check.py"
+old = '''SHELL = VarName("CLAUDE_CODE_SHELL")'''
+new = '''SHELL = VarName("SHELL")'''
+tests = ["tests.test_route_check.Passes.test_the_wrapper"]
+
+[[plant]]
+name = "the shell's name must be sh"
+file = "rules/route_check.py"
+old = '''NAME = "bash"'''
+new = '''NAME = "sh"'''
+tests = ["tests.test_route_check.Passes.test_the_wrapper"]
+
+[[plant]]
+name = "the prefix is read under another name"
+file = "rules/route_check.py"
+old = '''    VarName("CLAUDE_CODE_SHELL_PREFIX"): Prose('''
+new = '''    VarName("CLAUDE_CODE_PREFIX"): Prose('''
+tests = ["tests.test_route_check.SecondRoutes.test_a_prefix"]
+
+[[plant]]
+name = "the prefix's line says nothing of what it breaks"
+file = "rules/route_check.py"
+old = '''"so every call reaches the wrapper as the prefix's line, which it never hands to claude-call"),'''
+new = '''"so it is set"),'''
+tests = ["tests.test_route_check.SecondRoutes.test_a_prefix"]
+
+[[plant]]
+name = "BASH_ENV is read under another name"
+file = "rules/route_check.py"
+old = '''    VarName("BASH_ENV"): Prose('''
+new = '''    VarName("ENV"): Prose('''
+tests = ["tests.test_route_check.SecondRoutes.test_bash_env"]
+
+[[plant]]
+name = "BASH_ENV's line says nothing of what it breaks"
+file = "rules/route_check.py"
+old = '''Prose("so every bash the session starts runs that file first, a second route beside the wrapper"),'''
+new = '''Prose("so it is set"),'''
+tests = ["tests.test_route_check.SecondRoutes.test_bash_env"]
+
+[[plant]]
+name = "the refusal names another switch file"
+file = "rules/route_check.py"
+old = '''SWITCH = RuleName("route-check")'''
+new = '''SWITCH = RuleName("route")'''
+tests = ["tests.test_route_check.Everyone.test_the_refusal_names_the_ways_out"]
+
+[[plant]]
+name = "the live switch folder is another"
+file = "rules/route_check.py"
+old = '''LIVE_OFF = FolderPath("~/.config/claude-guard/off")'''
+new = '''LIVE_OFF = FolderPath("~/.config/claude-guard")'''
+tests = ["tests.test_route_check.Everyone.test_an_event_built_without_the_dispatcher_names_the_live_switches"]
+
+[[plant]]
+name = "the refusal names no consequence"
+file = "rules/route_check.py"
+old = '''claude-call's scope, memory cap, view and log.'''
+new = '''claude-call.'''
+tests = ["tests.test_route_check.Shell.test_unset"]
+
+[[plant]]
+name = "the refusal names no wrapper in its first line"
+file = "rules/route_check.py"
+old = '''never reaches the wrapper {wrapper} runs outside'''
+new = '''never reaches the wrapper runs outside'''
+tests = ["tests.test_route_check.Shell.test_unset"]
+
+[[plant]]
+name = "the refusal names no way out by the variables"
+file = "rules/route_check.py"
+old = '''Set CLAUDE_CODE_SHELL to {wrapper}, unset CLAUDE_CODE_SHELL_PREFIX and BASH_ENV, and start a new claude process,'''
+new = '''Set CLAUDE_CODE_SHELL to the wrapper and start a new claude process,'''
+tests = ["tests.test_route_check.Everyone.test_the_refusal_names_the_ways_out"]
+
+[[plant]]
+name = "the refusal says nothing of the shell chosen once"
+file = "rules/route_check.py"
+old = '''since Claude Code picks its shell once per process.'''
+new = '''since it helps.'''
+tests = ["tests.test_route_check.Everyone.test_the_refusal_names_the_ways_out"]
+
+[[plant]]
+name = "the wrapper is compared unresolved"
+file = "rules/route_check.py"
+old = '''    wrapper = os.path.realpath(route.WRAPPER)'''
+new = '''    wrapper = str(route.WRAPPER)'''
+tests = ["tests.test_route_check.Passes.test_a_wrapper_named_through_a_symlinked_folder"]
+
+[[plant]]
+name = "an empty shell is not caught first"
+file = "rules/route_check.py"
+old = '''    if not shell:'''
+new = '''    if shell == "unset":'''
+tests = ["tests.test_route_check.Shell.test_unset", "tests.test_route_check.Shell.test_empty"]
+
+[[plant]]
+name = "the empty line names no fallback"
+file = "rules/route_check.py"
+old = '''broken = "no path, so Claude Code picks a shell of its own"'''
+new = '''broken = "no path"'''
+tests = ["tests.test_route_check.Shell.test_unset"]
+
+[[plant]]
+name = "a relative path is not refused"
+file = "rules/route_check.py"
+old = '''    elif not os.path.isabs(shell):'''
+new = '''    elif False:'''
+tests = ["tests.test_route_check.Shell.test_relative"]
+
+[[plant]]
+name = "the relative line says another thing"
+file = "rules/route_check.py"
+old = '''broken = "not an absolute path"'''
+new = '''broken = "relative"'''
+tests = ["tests.test_route_check.Shell.test_relative"]
+
+[[plant]]
+name = "the shell's name is not checked"
+file = "rules/route_check.py"
+old = '''    elif os.path.basename(shell) != NAME:'''
+new = '''    elif False:'''
+tests = ["tests.test_route_check.Shell.test_named_bash2", "tests.test_route_check.Shell.test_named_zsh"]
+
+[[plant]]
+name = "the name check accepts a name holding bash"
+file = "rules/route_check.py"
+old = '''    elif os.path.basename(shell) != NAME:'''
+new = '''    elif NAME not in os.path.basename(shell):'''
+tests = ["tests.test_route_check.Shell.test_named_bash2"]
+
+[[plant]]
+name = "the name line names no name"
+file = "rules/route_check.py"
+old = '''broken = f"named {os.path.basename(shell)!r}, not `{NAME}`"'''
+new = '''broken = "misnamed"'''
+tests = ["tests.test_route_check.Shell.test_named_zsh"]
+
+[[plant]]
+name = "the shell is not resolved to the wrapper"
+file = "rules/route_check.py"
+old = '''    elif (resolved := os.path.realpath(shell)) != wrapper:'''
+new = '''    elif (resolved := os.path.realpath(shell)) == "":'''
+tests = ["tests.test_route_check.Shell.test_the_systems_bash"]
+
+[[plant]]
+name = "the shell is compared unresolved"
+file = "rules/route_check.py"
+old = '''    elif (resolved := os.path.realpath(shell)) != wrapper:'''
+new = '''    elif (resolved := shell) != wrapper:'''
+tests = ["tests.test_route_check.Passes.test_a_symlink_named_bash_to_it"]
+
+[[plant]]
+name = "the resolving line names no path"
+file = "rules/route_check.py"
+old = '''broken = f"resolving to {resolved}, not the wrapper's {wrapper}"'''
+new = '''broken = "elsewhere"'''
+tests = ["tests.test_route_check.Shell.test_the_systems_bash"]
+
+[[plant]]
+name = "a directory passes"
+file = "rules/route_check.py"
+old = '''    elif not (os.path.isfile(shell) and os.access(shell, os.X_OK)):'''
+new = '''    elif not os.access(shell, os.X_OK):'''
+tests = ["tests.test_route_check.Shell.test_a_directory_named_bash"]
+
+[[plant]]
+name = "a file not executable passes"
+file = "rules/route_check.py"
+old = '''    elif not (os.path.isfile(shell) and os.access(shell, os.X_OK)):'''
+new = '''    elif not os.path.isfile(shell):'''
+tests = ["tests.test_route_check.Shell.test_a_wrapper_not_executable"]
+
+[[plant]]
+name = "a path that exists passes"
+file = "rules/route_check.py"
+old = '''    elif not (os.path.isfile(shell) and os.access(shell, os.X_OK)):'''
+new = '''    elif not (os.path.exists(shell) and os.access(shell, os.X_OK)):'''
+tests = ["tests.test_route_check.Shell.test_a_directory_named_bash"]
+
+[[plant]]
+name = "the executable line says another thing"
+file = "rules/route_check.py"
+old = '''broken = "not an executable file, so Claude Code passes it over"'''
+new = '''broken = "not executable"'''
+tests = ["tests.test_route_check.Shell.test_a_wrapper_removed"]
+
+[[plant]]
+name = "the shell's line names no value"
+file = "rules/route_check.py"
+old = '''return Prose(f"  * {SHELL} is {shell!r}, {broken}, and the wrapper is never reached")'''
+new = '''return Prose(f"  * {SHELL} is wrong, {broken}, and the wrapper is never reached")'''
+tests = ["tests.test_route_check.Shell.test_relative"]
+
+[[plant]]
+name = "the shell's line says not that the wrapper is never reached"
+file = "rules/route_check.py"
+old = '''return Prose(f"  * {SHELL} is {shell!r}, {broken}, and the wrapper is never reached")'''
+new = '''return Prose(f"  * {SHELL} is {shell!r}, {broken}")'''
+tests = ["tests.test_route_check.Shell.test_the_systems_bash"]
+
+[[plant]]
+name = "an unset shell is read as a name"
+file = "rules/route_check.py"
+old = '''    found = [shell_problem(env.get(SHELL, ShellText("")))]'''
+new = '''    found = [shell_problem(env.get(SHELL, ShellText("bash")))]'''
+tests = ["tests.test_route_check.Shell.test_unset"]
+
+[[plant]]
+name = "an empty second route passes"
+file = "rules/route_check.py"
+old = '''for name, broken in SECOND_ROUTES.items() if name in env]'''
+new = '''for name, broken in SECOND_ROUTES.items() if env.get(name)]'''
+tests = ["tests.test_route_check.SecondRoutes.test_an_empty_prefix", "tests.test_route_check.SecondRoutes.test_an_empty_bash_env"]
+
+[[plant]]
+name = "a second route drops the shell's line"
+file = "rules/route_check.py"
+old = '''    found += [Prose('''
+new = '''    found = [Prose('''
+tests = ["tests.test_route_check.SecondRoutes.test_all_three_named"]
+
+[[plant]]
+name = "a second route's line names no value"
+file = "rules/route_check.py"
+old = '''Prose(f"  * {name} is {env[name]!r}, {broken}")'''
+new = '''Prose(f"  * {name} is set, {broken}")'''
+tests = ["tests.test_route_check.SecondRoutes.test_a_prefix"]
+
+[[plant]]
+name = "a problem None is kept"
+file = "rules/route_check.py"
+old = '''    return [problem for problem in found if problem is not None]'''
+new = '''    return found'''
+tests = ["tests.test_route_check.Passes.test_the_wrapper"]
+
+[[plant]]
+name = "the hook's environment is not read"
+file = "rules/route_check.py"
+old = '''    found = problems(event.reading.env)'''
+new = '''    found = problems({})'''
+tests = ["tests.test_route_check.Passes.test_the_wrapper"]
+
+[[plant]]
+name = "a call with no problem is refused"
+file = "rules/route_check.py"
+old = '''    found = problems(event.reading.env)
+    if found:'''
+new = '''    found = problems(event.reading.env)
+    if found != ["none"]:'''
+tests = ["tests.test_route_check.Passes.test_the_wrapper"]
+
+[[plant]]
+name = "the dispatcher's switch folder is not named"
+file = "rules/route_check.py"
+old = '''    off = LIVE_OFF if event.off is None else event.off'''
+new = '''    off = LIVE_OFF'''
+tests = ["tests.test_route_check.Everyone.test_the_refusal_names_the_ways_out"]
+
+[[plant]]
+name = "an event with no switch folder is not given the live one"
+file = "rules/route_check.py"
+old = '''    off = LIVE_OFF if event.off is None else event.off'''
+new = '''    off = FolderPath(str(event.off))'''
+tests = ["tests.test_route_check.Everyone.test_an_event_built_without_the_dispatcher_names_the_live_switches"]
+
+[[plant]]
+name = "only the first problem is named"
+file = "rules/route_check.py"
+old = '''problems="\n".join(found),'''
+new = '''problems=found[0],'''
+tests = ["tests.test_route_check.SecondRoutes.test_all_three_named"]
+
+[[plant]]
+name = "the kit's switch is not named"
+file = "rules/route_check.py"
+old = '''kit=os.path.join(off, WHOLE_KIT)'''
+new = '''kit=os.path.join(off, SWITCH)'''
+tests = ["tests.test_route_check.Everyone.test_the_refusal_names_the_ways_out"]
+
+[[plant]]
+name = "the refusal is a note"
+file = "rules/route_check.py"
+old = '''    return refuse(Prose(ADVICE.format('''
+new = '''    return context(Prose(ADVICE.format('''
+tests = ["tests.test_route_check.Shell.test_unset"]
+
+[[plant]]
+name = "the rule as the static arm alone, red first"
+file = "rules/route_check.py"
+old = '''def judge(event: Event) -> Verdict | None:
+    """At PreToolUse, refuse a call while the flag stands or its shell has no route, else keep the ledger's end; after
+    the call, set the flag and refuse where the ledger holds no line of it."""
+    off = LIVE_OFF if event.off is None else event.off
+    places = state_places(event.places)
+    ledger = route.ledger(places, process_key(event.reading.env, places.proc))
+    session = event.state()
+    given = event.payload.get("tool_use_id")
+    call = ToolUseId(given) if isinstance(given, str) else None
+    kept = None if call is None else RecordId(OFFSET + call)
+    if event.name == "PreToolUse":
+        return before(event, session, ledger, kept, off)
+    offset = next((route.Offset(int(record.fields[AT])) for record in session.records("notice")
+                   if record.ident == kept), route.Offset(0))
+    if kept is not None:
+        _ = session.forget("notice", kept)
+    text = event.payload.get("tool_input", ToolInput()).get("command", ShellText(""))
+    if route.awaited(ledger, offset, route.digest(text)):
+        return None
+    flag = {TEXT: FieldValue(text[:KEPT]), CALL: FieldValue(call or ""), LEDGER: FieldValue(str(ledger))}
+    session.record("notice", FLAG, flag, shared=True)
+    return unrecorded(flag, off)
+
+
+def before(event: Event, session: Session, ledger: Path, kept: RecordId | None, off: FolderPath) -> Verdict | None:
+    """The PreToolUse arm: the flag's refusal, else the route's, else None with the ledger's end kept as ``kept``."""
+    flag = next((record.fields for record in session.records("notice") if record.ident == FLAG), None)
+    if flag is not None:
+        return unrecorded(flag, off)
+    found = problems(event.reading.env)
+    if found:
+        return refuse(Prose(ADVICE.format(wrapper=route.WRAPPER, problems="\n".join(found),
+                                          rule=os.path.join(off, SWITCH), kit=os.path.join(off, WHOLE_KIT))))
+    if kept is not None:
+        session.record("notice", kept, {AT: FieldValue(str(route.end(ledger)))})
+    return None
+'''
+new = '''def judge(event: Event) -> Verdict | None:
+    """The static arm alone, as the rule stood before the flag."""
+    if event.name != "PreToolUse":
+        return None
+    found = problems(event.reading.env)
+    if not found:
+        return None
+    off = LIVE_OFF if event.off is None else event.off
+    return refuse(Prose(ADVICE.format(wrapper=route.WRAPPER, problems="\n".join(found),
+                                      rule=os.path.join(off, SWITCH), kit=os.path.join(off, WHOLE_KIT))))
+'''
+tests = ["tests.test_route_check.Recorded.test_a_line_before_its_post_tool_use", "tests.test_route_check.Unrecorded.test_no_line_sets_the_flag_and_refuses_every_later_call", "tests.test_route_check.Unrecorded.test_a_post_tool_use_failure_alike", "tests.test_route_check.Unrecorded.test_the_flag_outlives_a_clear"]
+
+[[plant]]
+name = "PostToolUse is not judged"
+file = "rules/route_check.py"
+old = '''"PreToolUse", "PostToolUse", "PostToolUseFailure"})'''
+new = '''"PreToolUse", "PostToolUseFailure"})'''
+tests = ["tests.test_route_check.Unrecorded.test_no_line_sets_the_flag_and_refuses_every_later_call"]
+
+[[plant]]
+name = "PostToolUseFailure is not judged"
+file = "rules/route_check.py"
+old = '''"PreToolUse", "PostToolUse", "PostToolUseFailure"})'''
+new = '''"PreToolUse", "PostToolUse"})'''
+tests = ["tests.test_route_check.Unrecorded.test_a_post_tool_use_failure_alike"]
+
+[[plant]]
+name = "PostToolUseFailure judged as PreToolUse"
+file = "rules/route_check.py"
+old = '''if event.name == "PreToolUse":'''
+new = '''if event.name != "PostToolUse":'''
+tests = ["tests.test_route_check.Unrecorded.test_a_post_tool_use_failure_alike", "tests.test_route_check.Recorded.test_a_post_tool_use_failure_alike"]
+
+[[plant]]
+name = "the flag never refuses at PreToolUse"
+file = "rules/route_check.py"
+old = '''    if flag is not None:
+        return unrecorded(flag, off)
+'''
+new = '''    if False:
+        return unrecorded(flag, off)
+'''
+tests = ["tests.test_route_check.Unrecorded.test_no_line_sets_the_flag_and_refuses_every_later_call"]
+
+[[plant]]
+name = "the flag kept in the agent's own file"
+file = "rules/route_check.py"
+old = '''FLAG, flag, shared=True)'''
+new = '''FLAG, flag, shared=False)'''
+tests = ["tests.test_route_check.Unrecorded.test_the_flag_outlives_the_agent_that_set_it"]
+
+[[plant]]
+name = "the flag never kept"
+file = "rules/route_check.py"
+old = '''session.record("notice", FLAG, flag, shared=True)'''
+new = '''_ = flag'''
+tests = ["tests.test_route_check.Unrecorded.test_no_line_sets_the_flag_and_refuses_every_later_call"]
+
+[[plant]]
+name = "no refusal at PostToolUse"
+file = "rules/route_check.py"
+old = '''shared=True)
+    return unrecorded(flag, off)'''
+new = '''shared=True)
+    return None'''
+tests = ["tests.test_route_check.Unrecorded.test_no_line_sets_the_flag_and_refuses_every_later_call"]
+
+[[plant]]
+name = "a recorded call refused too"
+file = "rules/route_check.py"
+old = '''route.digest(text)):
+        return None'''
+new = '''route.digest(text)):
+        pass'''
+tests = ["tests.test_route_check.Recorded.test_a_line_before_its_post_tool_use"]
+
+[[plant]]
+name = "301 characters kept"
+file = "rules/route_check.py"
+old = '''KEPT = 300
+'''
+new = '''KEPT = 301
+'''
+tests = ["tests.test_route_check.Unrecorded.test_the_flag_keeps_the_first_300_characters"]
+
+[[plant]]
+name = "the text and the id swapped"
+file = "rules/route_check.py"
+old = '''text=flag[TEXT], call=flag[CALL]'''
+new = '''text=flag[CALL], call=flag[TEXT]'''
+tests = ["tests.test_route_check.Unrecorded.test_the_refusal_names_the_ways_out"]
+
+[[plant]]
+name = "the ledger not named"
+file = "rules/route_check.py"
+old = '''ledger=flag[LEDGER]'''
+new = '''ledger=route.LEDGER'''
+tests = ["tests.test_route_check.Unrecorded.test_the_refusal_names_the_ways_out"]
+
+[[plant]]
+name = "the live switch named"
+file = "rules/route_check.py"
+old = '''rule=os.path.join(off, SWITCH))))'''
+new = '''rule=os.path.join(LIVE_OFF, SWITCH))))'''
+tests = ["tests.test_route_check.Unrecorded.test_the_refusal_names_the_ways_out"]
+
+[[plant]]
+name = "a missing id named otherwise"
+file = "rules/route_check.py"
+old = '''CALL: FieldValue(call or "")'''
+new = '''CALL: FieldValue(call or "none")'''
+tests = ["tests.test_route_check.Unrecorded.test_a_call_with_no_tool_use_id"]
+
+[[plant]]
+name = "no end kept"
+file = "rules/route_check.py"
+old = '''session.record("notice", kept, {AT: FieldValue(str(route.end(ledger)))})'''
+new = '''_ = ledger'''
+tests = ["tests.test_route_check.Unrecorded.test_an_identical_earlier_line_before_the_end_kept", "tests.test_route_check.Recorded.test_a_line_before_its_post_tool_use"]
+
+[[plant]]
+name = "the end kept as 0"
+file = "rules/route_check.py"
+old = '''FieldValue(str(route.end(ledger)))'''
+new = '''FieldValue(str(0))'''
+tests = ["tests.test_route_check.Unrecorded.test_an_identical_earlier_line_before_the_end_kept"]
+
+[[plant]]
+name = "an end kept with no tool_use_id"
+file = "rules/route_check.py"
+old = '''    if kept is not None:
+        session.record('''
+new = '''    if True:
+        session.record('''
+tests = ["tests.test_route_check.Recorded.test_a_call_with_no_tool_use_id_keeps_no_end"]
+
+[[plant]]
+name = "no tool_use_id read"
+file = "rules/route_check.py"
+old = '''ToolUseId(given) if isinstance(given, str) else None'''
+new = '''None'''
+tests = ["tests.test_route_check.Recorded.test_a_line_before_its_post_tool_use"]
+
+[[plant]]
+name = "the kept end never read"
+file = "rules/route_check.py"
+old = '''if record.ident == kept), route.Offset(0))'''
+new = '''if False), route.Offset(0))'''
+tests = ["tests.test_route_check.Unrecorded.test_an_identical_earlier_line_before_the_end_kept"]
+
+[[plant]]
+name = "no end kept reads from the ledger's end"
+file = "rules/route_check.py"
+old = '''if record.ident == kept), route.Offset(0))'''
+new = '''if record.ident == kept), route.end(ledger))'''
+tests = ["tests.test_route_check.Recorded.test_no_end_kept_reads_the_ledger_from_its_start"]
+
+[[plant]]
+name = "the kept end never forgotten"
+file = "rules/route_check.py"
+old = '''_ = session.forget("notice", kept)'''
+new = '''_ = kept'''
+tests = ["tests.test_route_check.Recorded.test_a_line_before_its_post_tool_use", "tests.test_route_check.NoEnd.test_the_flag_refusing"]
+
+[[plant]]
+name = "no wait for the line"
+file = "rules/route_check.py"
+old = '''route.awaited(ledger, offset,'''
+new = '''route.seen(ledger, offset,'''
+tests = ["tests.test_route_check.Recorded.test_a_line_appended_during_the_wait"]
+
+[[plant]]
+name = "the empty text's digest"
+file = "rules/route_check.py"
+old = '''route.digest(text)'''
+new = '''route.digest(ShellText(""))'''
+tests = ["tests.test_route_check.Recorded.test_a_line_before_its_post_tool_use"]
+
+[[plant]]
+name = "the route refuses before the flag"
+file = "rules/route_check.py"
+old = '''    if flag is not None:
+        return unrecorded(flag, off)
+    found = problems(event.reading.env)
+    if found:'''
+new = '''    found = problems(event.reading.env)
+    if flag is not None and not found:
+        return unrecorded(flag, off)
+    if found:'''
+tests = ["tests.test_route_check.Unrecorded.test_the_flag_refuses_before_the_route"]
+
+[[plant]]
+name = "an end kept before the route is judged"
+file = "rules/route_check.py"
+old = '''    found = problems(event.reading.env)
+    if found:'''
+new = '''    if kept is not None:
+        session.record("notice", kept, {AT: FieldValue("0")})
+    found = problems(event.reading.env)
+    if found:'''
+tests = ["tests.test_route_check.NoEnd.test_the_route_refusing"]
+
+[[plant]]
+name = "an end kept before the flag is judged"
+file = "rules/route_check.py"
+old = '''    flag = next((record.fields for record in session.records("notice") if record.ident == FLAG), None)
+'''
+new = '''    if kept is not None:
+        session.record("notice", kept, {AT: FieldValue("0")})
+    flag = next((record.fields for record in session.records("notice") if record.ident == FLAG), None)
+'''
+tests = ["tests.test_route_check.NoEnd.test_the_flag_refusing"]
+
+[[plant]]
+name = "the live state's places"
+file = "rules/route_check.py"
+old = '''    places = state_places(event.places)
+'''
+new = '''    places = state_places(None)
+'''
+tests = ["tests.test_route_check.Recorded.test_a_line_before_its_post_tool_use"]

@@ -1,0 +1,7 @@
+{"type":"system","tool":"Bash","message":"a message that is not an object"}
+{"type":"assistant","message":{"role":"assistant","content":[{"type":"text","text":"Two calls"},{"type":"tool_use","id":"t1","name":"Bash","input":{"command":"ls -la","description":"List"}},{"type":"tool_use","id":"t2","name":"Read","input":{"file_path":"/etc/hostname"}}]}}
+{"type":"user","message":{"role":"user","content":[{"type":"tool_result","tool_use_id":"t1","content":"total 0"}]}}
+{"type":"assistant","message":{"role":"assistant","content":[{"type":"tool_use","id":"t3","name":"Monitor","input":{"command":"tail -f build.log","description":"Watch"}},{"type":"tool_use","id":"t4","name":"Bash","input":{"command":"make all"}}]}}
+{"type":"assistant","message":{"role":"assistant","content":[{"type":"tool_use","id":"t1","name":"Bash","input":{"command":"ls -la","description":"List"}}]}}
+{"type":"assistant","message":{"role":"assistant","content":[{"type":"tool_use","id":"t4","name":"Bash","input":{"command":"cd /p && make all"}}]}}
+{"type":"assistant","message":{"content":[{"type":"tool_use","id":"t5","name":"Bash"

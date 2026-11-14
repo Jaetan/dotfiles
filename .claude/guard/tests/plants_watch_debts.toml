@@ -1,0 +1,793 @@
+# The plants that show the watch-debts rule is held by tests/test_watch_debts.py: run
+#   testing/plants.py tests/plants_watch_debts.toml --out DIR
+# Every plant is killed when each line of rules/watch_debts.py they break is held by a test.
+
+[[plant]]
+name = "the rule judges no PostToolUse"
+file = "rules/watch_debts.py"
+old = 'EVENTS: frozenset[HookEvent] = frozenset({"PreToolUse", "PostToolUse", "Stop"})'
+new = 'EVENTS: frozenset[HookEvent] = frozenset({"PreToolUse", "Stop"})'
+tests = ["tests.test_watch_debts.Stall.test_a_heavy_background_run_owes_a_stall_watch_on_its_log"]
+
+[[plant]]
+name = "the rule judges no PreToolUse"
+file = "rules/watch_debts.py"
+old = 'EVENTS: frozenset[HookEvent] = frozenset({"PreToolUse", "PostToolUse", "Stop"})'
+new = 'EVENTS: frozenset[HookEvent] = frozenset({"PostToolUse", "Stop"})'
+tests = ["tests.test_watch_debts.Stall.test_a_heavy_background_run_owes_a_stall_watch_on_its_log"]
+
+[[plant]]
+name = "the rule judges Read calls alone"
+file = "rules/watch_debts.py"
+old = '''TOOLS = None'''
+new = '''TOOLS = frozenset({ToolName("Read")})'''
+tests = ["tests.test_watch_debts.Token.test_a_workflow_owes_a_token_watch_on_its_folder"]
+
+[[plant]]
+name = "a Monitor is refused while a debt stands"
+file = "rules/watch_debts.py"
+old = '''PAYING = frozenset({MONITOR, TASK_STOP, ToolName("ToolSearch")})'''
+new = '''PAYING = frozenset({TASK_STOP, ToolName("ToolSearch")})'''
+tests = ["tests.test_watch_debts.Thread.test_monitor_taskstop_and_toolsearch_pass_while_a_debt_stands"]
+
+[[plant]]
+name = "a TaskStop is refused while a debt stands"
+file = "rules/watch_debts.py"
+old = '''PAYING = frozenset({MONITOR, TASK_STOP, ToolName("ToolSearch")})'''
+new = '''PAYING = frozenset({MONITOR, ToolName("ToolSearch")})'''
+tests = ["tests.test_watch_debts.Thread.test_monitor_taskstop_and_toolsearch_pass_while_a_debt_stands"]
+
+[[plant]]
+name = "a ToolSearch is refused while a debt stands"
+file = "rules/watch_debts.py"
+old = '''PAYING = frozenset({MONITOR, TASK_STOP, ToolName("ToolSearch")})'''
+new = '''PAYING = frozenset({MONITOR, TASK_STOP})'''
+tests = ["tests.test_watch_debts.Thread.test_monitor_taskstop_and_toolsearch_pass_while_a_debt_stands"]
+
+[[plant]]
+name = "a Bash run is read under the wrong key"
+file = "rules/watch_debts.py"
+old = '''{BASH: "backgroundTaskId",'''
+new = '''{BASH: "taskId",'''
+tests = ["tests.test_watch_debts.Stall.test_a_heavy_background_run_owes_a_stall_watch_on_its_log"]
+
+[[plant]]
+name = "a workflow is read under the wrong key"
+file = "rules/watch_debts.py"
+old = '''WORKFLOW: "taskId", MONITOR'''
+new = '''WORKFLOW: "backgroundTaskId", MONITOR'''
+tests = ["tests.test_watch_debts.Token.test_a_workflow_owes_a_token_watch_on_its_folder"]
+
+[[plant]]
+name = "a watch is read under the wrong key"
+file = "rules/watch_debts.py"
+old = '''MONITOR: "taskId"}'''
+new = '''MONITOR: "backgroundTaskId"}'''
+tests = ["tests.test_watch_debts.Stall.test_the_watch_pays_it_and_an_expiry_reopens_it_while_the_run_lives"]
+
+[[plant]]
+name = "a TaskStop forgets no watch"
+file = "rules/watch_debts.py"
+old = '''KEPT: tuple[Kind, ...] = ("run", "watch")'''
+new = '''KEPT: tuple[Kind, ...] = ("run",)'''
+tests = ["tests.test_watch_debts.Watches.test_what_is_a_stall_watch"]
+
+[[plant]]
+name = "a TaskStop forgets no run"
+file = "rules/watch_debts.py"
+old = '''KEPT: tuple[Kind, ...] = ("run", "watch")'''
+new = '''KEPT: tuple[Kind, ...] = ("watch",)'''
+tests = ["tests.test_watch_debts.Stall.test_taskstop_closes_it_by_its_task_or_shell_id"]
+
+[[plant]]
+name = "a whole number may end in x"
+file = "rules/watch_debts.py"
+old = '''WHOLE = re.compile(r"[0-9]+")'''
+new = '''WHOLE = re.compile(r"[0-9]+x?")'''
+tests = ["tests.test_watch_debts.Watches.test_what_is_no_stall_watch"]
+
+[[plant]]
+name = "an interval may carry an exponent"
+file = "rules/watch_debts.py"
+old = '''DECIMAL = re.compile(r"[0-9]+(?:\.[0-9]+)?")'''
+new = '''DECIMAL = re.compile(r"[0-9]+(?:[.e][0-9]+)?")'''
+tests = ["tests.test_watch_debts.Watches.test_what_is_no_stall_watch"]
+
+[[plant]]
+name = "an interval may carry no fraction"
+file = "rules/watch_debts.py"
+old = '''DECIMAL = re.compile(r"[0-9]+(?:\.[0-9]+)?")'''
+new = '''DECIMAL = re.compile(r"[0-9]+")'''
+tests = ["tests.test_watch_debts.Watches.test_what_is_a_stall_watch"]
+
+[[plant]]
+name = "an interval of 61 is taken"
+file = "rules/watch_debts.py"
+old = '''LONGEST = Seconds(60.0)'''
+new = '''LONGEST = Seconds(61.0)'''
+tests = ["tests.test_watch_debts.Watches.test_what_is_no_stall_watch"]
+
+[[plant]]
+name = "an interval of 60 is refused"
+file = "rules/watch_debts.py"
+old = '''LONGEST = Seconds(60.0)'''
+new = '''LONGEST = Seconds(59.0)'''
+tests = ["tests.test_watch_debts.Watches.test_what_is_a_stall_watch"]
+
+[[plant]]
+name = "a silence of 1801 is taken"
+file = "rules/watch_debts.py"
+old = '''Bound(1800), True'''
+new = '''Bound(1801), True'''
+tests = ["tests.test_watch_debts.Watches.test_what_is_no_stall_watch"]
+
+[[plant]]
+name = "a silence of 1800 is refused"
+file = "rules/watch_debts.py"
+old = '''Bound(1800), True'''
+new = '''Bound(1799), True'''
+tests = ["tests.test_watch_debts.Watches.test_what_is_a_stall_watch"]
+
+[[plant]]
+name = "the silence is not owed"
+file = "rules/watch_debts.py"
+old = '''Bound(1800), True'''
+new = '''Bound(1800), False'''
+tests = ["tests.test_watch_debts.Watches.test_what_is_no_stall_watch"]
+
+[[plant]]
+name = "the refusal names another silence"
+file = "rules/watch_debts.py"
+old = '''ShellText(" 900")'''
+new = '''ShellText(" 600")'''
+tests = ["tests.test_watch_debts.Stall.test_a_heavy_background_run_owes_a_stall_watch_on_its_log"]
+
+[[plant]]
+name = "the refusal names the heavy run otherwise"
+file = "rules/watch_debts.py"
+old = '''Prose("heavy background run")'''
+new = '''Prose("heavy run")'''
+tests = ["tests.test_watch_debts.Stall.test_a_heavy_background_run_owes_a_stall_watch_on_its_log"]
+
+[[plant]]
+name = "the stall row watches with the token watcher"
+file = "rules/watch_debts.py"
+old = '''ShellText("log-stall-watch"), Prose'''
+new = '''ShellText("workflow-token-watch"), Prose'''
+tests = ["tests.test_watch_debts.Stall.test_the_watch_pays_it_and_an_expiry_reopens_it_while_the_run_lives"]
+
+[[plant]]
+name = "a ceiling of 2,000,001 is taken"
+file = "rules/watch_debts.py"
+old = '''Bound(2_000_000)'''
+new = '''Bound(2_000_001)'''
+tests = ["tests.test_watch_debts.Watches.test_what_is_no_token_watch"]
+
+[[plant]]
+name = "a ceiling of 2,000,000 is refused"
+file = "rules/watch_debts.py"
+old = '''Bound(2_000_000)'''
+new = '''Bound(1_999_999)'''
+tests = ["tests.test_watch_debts.Watches.test_what_is_a_token_watch"]
+
+[[plant]]
+name = "the ceiling is owed"
+file = "rules/watch_debts.py"
+old = '''Bound(2_000_000), False'''
+new = '''Bound(2_000_000), True'''
+tests = ["tests.test_watch_debts.Watches.test_what_is_a_token_watch"]
+
+[[plant]]
+name = "the refusal names a ceiling"
+file = "rules/watch_debts.py"
+old = '''False, ShellText(""))}'''
+new = '''False, ShellText(" 5"))}'''
+tests = ["tests.test_watch_debts.Token.test_a_workflow_owes_a_token_watch_on_its_folder"]
+
+[[plant]]
+name = "the refusal names the workflow otherwise"
+file = "rules/watch_debts.py"
+old = '''Prose("workflow"), Bound'''
+new = '''Prose("flow"), Bound'''
+tests = ["tests.test_watch_debts.Token.test_a_workflow_owes_a_token_watch_on_its_folder"]
+
+[[plant]]
+name = "the token row watches with the stall watcher"
+file = "rules/watch_debts.py"
+old = '''ShellText("workflow-token-watch"), Prose'''
+new = '''ShellText("log-stall-watch"), Prose'''
+tests = ["tests.test_watch_debts.Watches.test_what_is_a_token_watch"]
+
+[[plant]]
+name = "a watch missing its owed number fits"
+file = "rules/watch_debts.py"
+old = '''        return not watcher.owed'''
+new = '''        return True'''
+tests = ["tests.test_watch_debts.Watches.test_what_is_no_stall_watch"]
+
+[[plant]]
+name = "two intervals fit"
+file = "rules/watch_debts.py"
+old = '''len(interval) <= 1'''
+new = '''len(interval) <= 2'''
+tests = ["tests.test_watch_debts.Watches.test_what_is_no_stall_watch"]
+
+[[plant]]
+name = "a number of 0 fits"
+file = "rules/watch_debts.py"
+old = '''1 <= int(whole)'''
+new = '''0 <= int(whole)'''
+tests = ["tests.test_watch_debts.Watches.test_what_is_no_stall_watch"]
+
+[[plant]]
+name = "an interval of 0 fits"
+file = "rules/watch_debts.py"
+old = '''0 < float(word)'''
+new = '''0 <= float(word)'''
+tests = ["tests.test_watch_debts.Watches.test_what_is_no_stall_watch"]
+
+[[plant]]
+name = "the whole number is not matched first"
+file = "rules/watch_debts.py"
+old = '''WHOLE.fullmatch(whole) is not None and 1'''
+new = '''1'''
+tests = ["tests.test_watch_debts.Watches.test_what_is_no_stall_watch"]
+
+[[plant]]
+name = "the interval is not matched first"
+file = "rules/watch_debts.py"
+old = '''DECIMAL.fullmatch(word) is not None and 0'''
+new = '''0'''
+tests = ["tests.test_watch_debts.Watches.test_what_is_no_stall_watch"]
+
+[[plant]]
+name = "a second command is a watch"
+file = "rules/watch_debts.py"
+old = '''if len(commands) != 1 or commands[0].redirs:'''
+new = '''if commands[0].redirs:'''
+tests = ["tests.test_watch_debts.Watches.test_what_is_no_stall_watch"]
+
+[[plant]]
+name = "a redirection is a watch"
+file = "rules/watch_debts.py"
+old = '''if len(commands) != 1 or commands[0].redirs:'''
+new = '''if len(commands) != 1:'''
+tests = ["tests.test_watch_debts.Watches.test_what_is_no_stall_watch"]
+
+[[plant]]
+name = "a word the call does not make known is left out"
+file = "rules/watch_debts.py"
+old = '''if len(known) != len(commands[0].words) or len(known) < 2'''
+new = '''if len(known) < 2'''
+tests = ["tests.test_watch_debts.Watches.test_what_is_no_stall_watch"]
+
+[[plant]]
+name = "the watcher alone is read"
+file = "rules/watch_debts.py"
+old = '''or len(known) < 2 or'''
+new = '''or'''
+tests = ["tests.test_watch_debts.Watches.test_what_is_no_stall_watch"]
+
+[[plant]]
+name = "a relative target is a watch"
+file = "rules/watch_debts.py"
+old = '''or not known[1].startswith("/"):'''
+new = ''':'''
+tests = ["tests.test_watch_debts.Watches.test_what_is_no_stall_watch"]
+
+[[plant]]
+name = "the home is read from another variable"
+file = "rules/watch_debts.py"
+old = '''VarName("HOME")'''
+new = '''VarName("HOMEX")'''
+tests = ["tests.test_watch_debts.Watches.test_what_is_a_stall_watch"]
+
+[[plant]]
+name = "a watcher of any folder is the watcher"
+file = "rules/watch_debts.py"
+old = 'if run == program(event, watcher) and fits(watcher, numbers):'
+new = 'if run.endswith(watcher.program) and fits(watcher, numbers):'
+tests = ["tests.test_watch_debts.Watches.test_what_is_no_stall_watch"]
+
+[[plant]]
+name = "the numbers are not checked"
+file = "rules/watch_debts.py"
+old = '''and fits(watcher, numbers):'''
+new = ''':'''
+tests = ["tests.test_watch_debts.Watches.test_what_is_no_stall_watch"]
+
+[[plant]]
+name = "the watch's target is not resolved"
+file = "rules/watch_debts.py"
+old = '''return row, Target(realpath(target))'''
+new = '''return row, Target(target)'''
+tests = ["tests.test_watch_debts.Token.test_its_folder_is_resolved"]
+
+[[plant]]
+name = "the log is not placed where the command runs"
+file = "rules/watch_debts.py"
+old = '''placed(end.file, command.cwd)'''
+new = '''placed(end.file, None)'''
+tests = ["tests.test_watch_debts.Stall.test_the_log_is_placed_and_resolved_where_the_command_runs"]
+
+[[plant]]
+name = "the log is not resolved"
+file = "rules/watch_debts.py"
+old = '''return None if path is None else Target(realpath(path))'''
+new = '''return None if path is None else Target(path)'''
+tests = ["tests.test_watch_debts.Stall.test_the_log_is_placed_and_resolved_where_the_command_runs"]
+
+[[plant]]
+name = "a light command is a run"
+file = "rules/watch_debts.py"
+old = '''event.cwd or "/"))) is not None]'''
+new = '''event.cwd or "/"))) is None]'''
+tests = ["tests.test_watch_debts.Stall.test_a_light_or_foreground_run_owes_nothing"]
+
+[[plant]]
+name = "the last heavy command names the log"
+file = "rules/watch_debts.py"
+old = '''("run", STALL, logs[0]) if logs else None'''
+new = '''("run", STALL, logs[-1]) if logs else None'''
+tests = ["tests.test_watch_debts.Stall.test_the_first_heavy_command_names_the_log"]
+
+[[plant]]
+name = "a call with no heavy command is a run"
+file = "rules/watch_debts.py"
+old = '''("run", STALL, logs[0]) if logs else None'''
+new = '''("run", STALL, logs[0] if logs else None)'''
+tests = ["tests.test_watch_debts.Stall.test_a_light_or_foreground_run_owes_nothing"]
+
+[[plant]]
+name = "a workflow's folder is not read"
+file = "rules/watch_debts.py"
+old = '''folder = event.response.get("transcriptDir")'''
+new = '''folder = None'''
+tests = ["tests.test_watch_debts.Token.test_a_workflow_owes_a_token_watch_on_its_folder"]
+
+[[plant]]
+name = "a workflow's folder is not resolved"
+file = "rules/watch_debts.py"
+old = '''None if folder is None else Target(realpath(folder))'''
+new = '''None if folder is None else Target(folder)'''
+tests = ["tests.test_watch_debts.Token.test_its_folder_is_resolved"]
+
+[[plant]]
+name = "a workflow is a stall run"
+file = "rules/watch_debts.py"
+old = '''return "run", TOKEN,'''
+new = '''return "run", STALL,'''
+tests = ["tests.test_watch_debts.Token.test_a_workflow_owes_a_token_watch_on_its_folder"]
+
+[[plant]]
+name = "a Monitor starts a run"
+file = "rules/watch_debts.py"
+old = '''("watch", *watch)'''
+new = '''("run", *watch)'''
+tests = ["tests.test_watch_debts.Stall.test_the_watch_pays_it_and_an_expiry_reopens_it_while_the_run_lives"]
+
+[[plant]]
+name = "another rule's records are read"
+file = "rules/watch_debts.py"
+old = '''[record for record in session.records(kind) if record.fields.get(ROW) in WATCHERS]'''
+new = '''list(session.records(kind))'''
+tests = ["tests.test_watch_debts.Thread.test_records_of_another_rule_are_left_alone"]
+
+[[plant]]
+name = "a new transcript is read from the old offset"
+file = "rules/watch_debts.py"
+old = '''if fields.get(TRANSCRIPT) == path else Offset(0)'''
+new = '''if fields else Offset(0)'''
+tests = ["tests.test_watch_debts.Thread.test_a_new_transcript_is_read_from_its_start"]
+
+[[plant]]
+name = "every notice is read again"
+file = "rules/watch_debts.py"
+old = '''start = Offset(int(fields[AT])) if fields.get(TRANSCRIPT) == path else Offset(0)'''
+new = '''start = Offset(0)'''
+tests = ["tests.test_watch_debts.Thread.test_a_notice_is_read_once"]
+
+[[plant]]
+name = "a missing transcript fails the rule"
+file = "rules/watch_debts.py"
+old = '''    except OSError:
+        return []'''
+new = '''    except ValueError:
+        return []'''
+tests = ["tests.test_watch_debts.Thread.test_a_missing_transcript_gives_no_notice"]
+
+[[plant]]
+name = "the offset is never kept"
+file = "rules/watch_debts.py"
+old = '''if (fields.get(TRANSCRIPT), fields.get(AT)) != (path, str(stop)):'''
+new = '''if False:'''
+tests = ["tests.test_watch_debts.Thread.test_the_offset_read_is_kept_beside_the_transcript"]
+
+[[plant]]
+name = "the offset kept is where reading started"
+file = "rules/watch_debts.py"
+old = '''AT: FieldValue(str(stop))})'''
+new = '''AT: FieldValue(str(start))})'''
+tests = ["tests.test_watch_debts.Thread.test_the_offset_read_is_kept_beside_the_transcript"]
+
+[[plant]]
+name = "every notice of a watch marks its runs over"
+file = "rules/watch_debts.py"
+old = '''if watch is not None and notice.over_limit:'''
+new = '''if watch is not None:'''
+tests = ["tests.test_watch_debts.Stall.test_the_watch_pays_it_and_an_expiry_reopens_it_while_the_run_lives"]
+
+[[plant]]
+name = "an OVER LIMIT marks every run over"
+file = "rules/watch_debts.py"
+old = '''if run.fields.get(TARGET) == watch.fields.get(TARGET):'''
+new = '''if True:'''
+tests = ["tests.test_watch_debts.Token.test_an_over_limit_marks_only_the_runs_on_its_target"]
+
+[[plant]]
+name = "an OVER LIMIT marks nothing"
+file = "rules/watch_debts.py"
+old = '''{**run.fields, OVER: FieldValue("yes")}'''
+new = '''{**run.fields}'''
+tests = ["tests.test_watch_debts.Token.test_an_over_limit_owes_a_taskstop"]
+
+[[plant]]
+name = "an expiry leaves the watch"
+file = "rules/watch_debts.py"
+old = '''(notice.ends_task or notice.ends_watch)'''
+new = '''(notice.ends_task)'''
+tests = ["tests.test_watch_debts.Stall.test_the_watch_pays_it_and_an_expiry_reopens_it_while_the_run_lives"]
+
+[[plant]]
+name = "the watch's end leaves the watch"
+file = "rules/watch_debts.py"
+old = '''(notice.ends_task or notice.ends_watch)'''
+new = '''(notice.ends_watch)'''
+tests = ["tests.test_watch_debts.Stall.test_the_end_of_the_watch_reopens_it"]
+
+[[plant]]
+name = "the run's end leaves the run"
+file = "rules/watch_debts.py"
+old = '''if notice.ends_task and any(run.ident == ident'''
+new = '''if notice.over_limit and any(run.ident == ident'''
+tests = ["tests.test_watch_debts.Stall.test_the_end_of_the_run_closes_it"]
+
+[[plant]]
+name = "the run's end forgets it only beside another"
+file = "rules/watch_debts.py"
+old = '''any(run.ident == ident for run in kept(session, "run"))'''
+new = '''any(run.ident != ident for run in kept(session, "run"))'''
+tests = ["tests.test_watch_debts.Stall.test_the_end_of_the_run_closes_it"]
+
+[[plant]]
+name = "no task ends at the event that reads its end"
+file = "rules/watch_debts.py"
+old = '''return frozenset(notice.task for notice in found if notice.ends_task)'''
+new = '''return frozenset()'''
+tests = ["tests.test_watch_debts.Stall.test_an_end_read_at_the_launch_is_never_recorded"]
+
+[[plant]]
+name = "a TaskStop's task_id is not read"
+file = "rules/watch_debts.py"
+old = '''stop = given.get("task_id") or given.get("shell_id") or ""'''
+new = '''stop = given.get("shell_id") or ""'''
+tests = ["tests.test_watch_debts.Stall.test_taskstop_closes_it_by_its_task_or_shell_id"]
+
+[[plant]]
+name = "a TaskStop's shell_id is not read"
+file = "rules/watch_debts.py"
+old = '''stop = given.get("task_id") or given.get("shell_id") or ""'''
+new = '''stop = given.get("task_id") or ""'''
+tests = ["tests.test_watch_debts.Stall.test_taskstop_closes_it_by_its_task_or_shell_id"]
+
+[[plant]]
+name = "a task ended at its launch is recorded"
+file = "rules/watch_debts.py"
+old = '''if task is None or task in ended or'''
+new = '''if task is None or'''
+tests = ["tests.test_watch_debts.Stall.test_an_end_read_at_the_launch_is_never_recorded"]
+
+[[plant]]
+name = "a run with no target names one"
+file = "rules/watch_debts.py"
+old = '''{ROW: row} | ({} if target is None else {TARGET: FieldValue(target)})'''
+new = '''{ROW: row, TARGET: FieldValue(str(target))}'''
+tests = ["tests.test_watch_debts.Stall.test_a_run_whose_output_ends_in_no_file_owes_until_it_ends"]
+
+[[plant]]
+name = "a watch of the other row pays"
+file = "rules/watch_debts.py"
+old = '''{(watch.fields.get(ROW), watch.fields.get(TARGET)) for watch'''
+new = '''{(STALL, watch.fields.get(TARGET)) for watch'''
+tests = ["tests.test_watch_debts.Watches.test_what_is_no_stall_watch"]
+
+[[plant]]
+name = "a run over its ceiling is named as owing a watch"
+file = "rules/watch_debts.py"
+old = '''elif OVER in run.fields:'''
+new = '''elif False:'''
+tests = ["tests.test_watch_debts.Token.test_an_over_limit_owes_a_taskstop"]
+
+[[plant]]
+name = "a watched run owes"
+file = "rules/watch_debts.py"
+old = '''elif (row, target) not in watched:'''
+new = '''elif True:'''
+tests = ["tests.test_watch_debts.Stall.test_the_watch_pays_it_and_an_expiry_reopens_it_while_the_run_lives"]
+
+[[plant]]
+name = "the target is named unquoted"
+file = "rules/watch_debts.py"
+old = '''{quote(target)}{watcher.named}'''
+new = '''{target}{watcher.named}'''
+tests = ["tests.test_watch_debts.Stall.test_a_target_is_quoted_in_the_monitor_named"]
+
+[[plant]]
+name = "the refusal's watch names no number"
+file = "rules/watch_debts.py"
+old = '''{quote(target)}{watcher.named}'''
+new = '''{quote(target)}'''
+tests = ["tests.test_watch_debts.Stall.test_a_heavy_background_run_owes_a_stall_watch_on_its_log"]
+
+[[plant]]
+name = "the refusal names no TaskStop for a run with no target"
+file = "rules/watch_debts.py"
+old = 'f"ends, or {stop}"), False))'
+new = 'f"ends"), False))'
+tests = ["tests.test_watch_debts.Stall.test_a_run_whose_output_ends_in_no_file_owes_until_it_ends"]
+
+[[plant]]
+name = "an agent's event is judged"
+file = "rules/watch_debts.py"
+old = '''if not event.main_thread or event.transcript is None:'''
+new = '''if event.transcript is None:'''
+tests = ["tests.test_watch_debts.Thread.test_an_agents_event_is_judged_as_nothing"]
+
+[[plant]]
+name = "an event naming no transcript is judged"
+file = "rules/watch_debts.py"
+old = '''if not event.main_thread or event.transcript is None:'''
+new = '''if not event.main_thread:'''
+tests = ["tests.test_watch_debts.Thread.test_an_event_naming_no_transcript_is_judged_as_nothing"]
+
+[[plant]]
+name = "a PostToolUse is refused as a PreToolUse"
+file = "rules/watch_debts.py"
+old = 'if event.name == "PostToolUse" or event.tool in PAYING or switching(event):'
+new = 'if event.tool in PAYING or switching(event):'
+tests = ["tests.test_watch_debts.Stall.test_the_watch_pays_it_and_an_expiry_reopens_it_while_the_run_lives"]
+
+[[plant]]
+name = "nothing is recorded"
+file = "rules/watch_debts.py"
+old = '''        record(event, session, ended)
+'''
+new = '''        pass
+'''
+tests = ["tests.test_watch_debts.Stall.test_a_heavy_background_run_owes_a_stall_watch_on_its_log"]
+
+[[plant]]
+name = "the calls that pay are refused too"
+file = "rules/watch_debts.py"
+old = 'if event.name == "PostToolUse" or event.tool in PAYING or switching(event):'
+new = 'if event.name == "PostToolUse" or switching(event):'
+tests = ["tests.test_watch_debts.Thread.test_monitor_taskstop_and_toolsearch_pass_while_a_debt_stands"]
+
+[[plant]]
+name = "the refusal says otherwise what passes"
+file = "rules/watch_debts.py"
+old = '''Every call but Monitor, TaskStop and ToolSearch is refused until each debt is paid.'''
+new = '''Every call is refused.'''
+tests = ["tests.test_watch_debts.Stall.test_a_heavy_background_run_owes_a_stall_watch_on_its_log"]
+
+[[plant]]
+name = "the rule does not judge a Stop"
+file = "rules/watch_debts.py"
+old = 'frozenset({"PreToolUse", "PostToolUse", "Stop"})'
+new = 'frozenset({"PreToolUse", "PostToolUse"})'
+tests = ["tests.test_watch_debts.Turn.test_a_debt_keeps_the_turn_going_once_then_lets_it_end"]
+
+[[plant]]
+name = "a missing watch keeps the turn going twice"
+file = "rules/watch_debts.py"
+old = '{False: Count(1), True: Count(3)}'
+new = '{False: Count(2), True: Count(3)}'
+tests = ["tests.test_watch_debts.Turn.test_a_debt_keeps_the_turn_going_once_then_lets_it_end"]
+
+[[plant]]
+name = "a run over its ceiling keeps the turn going four times"
+file = "rules/watch_debts.py"
+old = '{False: Count(1), True: Count(3)}'
+new = '{False: Count(1), True: Count(4)}'
+tests = ["tests.test_watch_debts.Turn.test_a_run_over_its_ceiling_keeps_it_going_three_times"]
+
+[[plant]]
+name = "a run over its ceiling keeps the turn going twice"
+file = "rules/watch_debts.py"
+old = '{False: Count(1), True: Count(3)}'
+new = '{False: Count(1), True: Count(2)}'
+tests = ["tests.test_watch_debts.Turn.test_a_run_over_its_ceiling_keeps_it_going_three_times"]
+
+[[plant]]
+name = "the count reads a run over its ceiling as one lacking a watch"
+file = "rules/watch_debts.py"
+old = 'STOPS_REFUSED[OVER in debt.run.fields]'
+new = 'STOPS_REFUSED[False]'
+tests = ["tests.test_watch_debts.Turn.test_a_run_over_its_ceiling_keeps_it_going_three_times"]
+
+[[plant]]
+name = "a Stop carrying no list ends every run"
+file = "rules/watch_debts.py"
+old = '''    if in_flight is None:
+        return
+'''
+new = '''    if in_flight is None:
+        in_flight = frozenset()
+'''
+tests = ["tests.test_watch_debts.Turn.test_a_stop_carrying_no_list_ends_nothing"]
+
+[[plant]]
+name = "a Stop ends the runs it lists"
+file = "rules/watch_debts.py"
+old = 'if each.ident not in in_flight:'
+new = 'if each.ident in in_flight:'
+tests = ["tests.test_watch_debts.Turn.test_a_run_the_stop_does_not_list_has_ended"]
+
+[[plant]]
+name = "a Stop ends no watch"
+file = "rules/watch_debts.py"
+old = '''    for kind in KEPT:
+        for each in kept(session, kind):'''
+new = '''    for kind in ("run",):
+        for each in kept(session, kind):'''
+tests = ["tests.test_watch_debts.Turn.test_a_watch_the_stop_does_not_list_has_ended"]
+
+[[plant]]
+name = "a Stop ends nothing"
+file = "rules/watch_debts.py"
+old = '        unlisted(session, event.in_flight)'
+new = '        pass'
+tests = ["tests.test_watch_debts.Turn.test_a_run_the_stop_does_not_list_has_ended",
+         "tests.test_watch_debts.Turn.test_a_watch_the_stop_does_not_list_has_ended"]
+
+[[plant]]
+name = "the count never starts again"
+file = "rules/watch_debts.py"
+old = '    counted(session, owed)'
+new = '    pass'
+tests = ["tests.test_watch_debts.Turn.test_the_count_starts_again_once_the_run_owes_nothing"]
+
+[[plant]]
+name = "the count starts again for a run that owes"
+file = "rules/watch_debts.py"
+old = 'if STOPS in run.fields and run.ident not in owing:'
+new = 'if STOPS in run.fields:'
+tests = ["tests.test_watch_debts.Turn.test_a_debt_keeps_the_turn_going_once_then_lets_it_end"]
+
+[[plant]]
+name = "the count is not raised"
+file = "rules/watch_debts.py"
+old = 'STOPS: FieldValue(str(stops(run) + 1))'
+new = 'STOPS: FieldValue(str(stops(run)))'
+tests = ["tests.test_watch_debts.Turn.test_a_debt_keeps_the_turn_going_once_then_lets_it_end"]
+
+[[plant]]
+name = "a turn is kept going one time more than allowed"
+file = "rules/watch_debts.py"
+old = 'stops(debt.run) < STOPS_REFUSED'
+new = 'stops(debt.run) <= STOPS_REFUSED'
+tests = ["tests.test_watch_debts.Turn.test_a_debt_keeps_the_turn_going_once_then_lets_it_end"]
+
+[[plant]]
+name = "a waived debt keeps the turn going"
+file = "rules/watch_debts.py"
+old = 'if not debt.waived and stops(debt.run)'
+new = 'if stops(debt.run)'
+tests = ["tests.test_watch_debts.Escapes.test_a_watcher_that_is_not_executable_is_demanded_of_no_call"]
+
+[[plant]]
+name = "a Stop is never refused"
+file = "rules/watch_debts.py"
+old = '        return refuse(advice(TURN, owed)) if kept_going(session, owed) else None'
+new = '        return None'
+tests = ["tests.test_watch_debts.Turn.test_a_debt_keeps_the_turn_going_once_then_lets_it_end"]
+
+[[plant]]
+name = "the Stop refusal leads as a call's"
+file = "rules/watch_debts.py"
+old = 'TURN = Prose("the turn does not end yet")'
+new = 'TURN = Prose("this call is refused")'
+tests = ["tests.test_watch_debts.Turn.test_a_debt_keeps_the_turn_going_once_then_lets_it_end"]
+
+[[plant]]
+name = "any tool's call of the switch file passes"
+file = "rules/watch_debts.py"
+old = '    if event.tool not in EDITS or event.off is None:'
+new = '    if event.off is None:'
+tests = ["tests.test_watch_debts.Escapes.test_the_switch_file_is_written_through_an_open_debt"]
+
+[[plant]]
+name = "a MultiEdit of the switch file is refused"
+file = "rules/watch_debts.py"
+old = '("Write", "Edit", "MultiEdit")'
+new = '("Write", "Edit")'
+tests = ["tests.test_watch_debts.Escapes.test_the_switch_file_is_written_through_an_open_debt"]
+
+[[plant]]
+name = "the whole kit's switch file is refused"
+file = "rules/watch_debts.py"
+old = 'SWITCHES = (RuleName("watch-debts"), WHOLE_KIT)'
+new = 'SWITCHES = (RuleName("watch-debts"),)'
+tests = ["tests.test_watch_debts.Escapes.test_the_switch_file_is_written_through_an_open_debt"]
+
+[[plant]]
+name = "the switch file is matched as spelled"
+file = "rules/watch_debts.py"
+old = '    return realpath(path) in {realpath(join(event.off, name)) for name in SWITCHES}'
+new = '    return path in {join(event.off, name) for name in SWITCHES}'
+tests = ["tests.test_watch_debts.Escapes.test_the_switch_file_is_written_through_an_open_debt"]
+
+[[plant]]
+name = "an event with no switch folder is not guarded"
+file = "rules/watch_debts.py"
+old = '    if event.tool not in EDITS or event.off is None:'
+new = '    if event.tool not in EDITS:'
+tests = ["tests.test_watch_debts.Escapes.test_an_event_built_without_the_dispatcher_names_no_switch_file"]
+
+[[plant]]
+name = "the switch write is not consulted"
+file = "rules/watch_debts.py"
+old = 'event.tool in PAYING or switching(event):'
+new = 'event.tool in PAYING:'
+tests = ["tests.test_watch_debts.Escapes.test_the_switch_file_is_written_through_an_open_debt"]
+
+[[plant]]
+name = "a watcher that exists counts as executable"
+file = "rules/watch_debts.py"
+old = 'if access(program(event, watcher), X_OK))'
+new = 'if access(program(event, watcher), 0))'
+tests = ["tests.test_watch_debts.Escapes.test_a_watcher_that_is_not_executable_is_demanded_of_no_call"]
+
+[[plant]]
+name = "a missing watch is never waived"
+file = "rules/watch_debts.py"
+old = 'elif (row, target) not in watched and row not in runnable:'
+new = 'elif False:'
+tests = ["tests.test_watch_debts.Escapes.test_a_watcher_that_is_not_executable_is_demanded_of_no_call"]
+
+[[plant]]
+name = "a waived debt does not say so"
+file = "rules/watch_debts.py"
+old = 'none is demanded while `~/.local/bin/{watcher.program}` is not executable'
+new = 'none is demanded'
+tests = ["tests.test_watch_debts.Escapes.test_a_watcher_that_is_not_executable_is_demanded_of_no_call"]
+
+[[plant]]
+name = "a run over its ceiling is waived"
+file = "rules/watch_debts.py"
+old = '''is over its ceiling: {stop}"),
+                              False))'''
+new = '''is over its ceiling: {stop}"),
+                              True))'''
+tests = ["tests.test_watch_debts.Escapes.test_a_run_over_its_ceiling_is_refused_whatever_its_watcher"]
+
+[[plant]]
+name = "a run with no target is waived"
+file = "rules/watch_debts.py"
+old = '''ends, or {stop}"), False))'''
+new = '''ends, or {stop}"), True))'''
+tests = ["tests.test_watch_debts.Escapes.test_a_run_with_no_target_is_refused_whatever_its_watcher"]
+
+[[plant]]
+name = "a waived debt refuses the call"
+file = "rules/watch_debts.py"
+old = '    if any(not debt.waived for debt in owed):'
+new = '    if owed:'
+tests = ["tests.test_watch_debts.Escapes.test_a_watcher_that_is_not_executable_is_demanded_of_no_call"]
+
+[[plant]]
+name = "a waived debt gives no note"
+file = "rules/watch_debts.py"
+old = '    return context(Prose(NOTE.format(problems="\n".join(debt.line for debt in owed)))) if owed else None'
+new = '    return None'
+tests = ["tests.test_watch_debts.Escapes.test_a_watcher_that_is_not_executable_is_demanded_of_no_call"]
