@@ -9,10 +9,14 @@ Vulture is required: where /usr/bin/vulture is missing, the test fails with the 
 Exceptions, the names alive though vulture sees nothing read them:
 - the test classes unittest discovers under tests/, run by discovery and named by no code: the case hands vulture
   their names, without which it reports every test class of the kit;
+- the cases of call/test_claude_call.py, the claude-call suite, which runs each top-level `case_*` function it holds
+  by name: the case reads their names from the file's syntax tree (importing it would make its scratch folder) and
+  hands them to vulture with the test classes;
 - the names in tests/dead_code_exemptions.py, read by vulture with the kit, each under the reason it is alive,
   without which it reports each of them.
 """
 
+import ast
 import subprocess
 import tempfile
 import unittest
@@ -24,8 +28,10 @@ from testing.runner import cases
 Finding = NewType("Finding", str)
 """A line vulture prints: a definition nothing reads, or a file it cannot parse."""
 ClassName = NewType("ClassName", str)
+CaseName = NewType("CaseName", str)
 
 KIT = Path(__file__).resolve().parents[1]
+CALL_SUITE = KIT / "call" / "test_claude_call.py"
 VULTURE = Path("/usr/bin/vulture")
 INSTALL = "sudo apt install vulture (version 2.16, from Debian unstable)"
 DEAD = """def used() -> None:
@@ -46,12 +52,19 @@ def discovered_classes() -> list[ClassName]:
     return sorted({ClassName(type(case).__name__) for case in cases(suite)})
 
 
+def call_suite_cases(suite: Path) -> list[CaseName]:
+    """The names of the top-level `case_*` functions the claude-call suite runs by name."""
+    tree = ast.parse(suite.read_text(encoding="utf-8"))
+    return sorted(CaseName(node.name) for node in tree.body
+                  if isinstance(node, ast.FunctionDef) and node.name.startswith("case_"))
+
+
 def findings(vulture: Path, folder: Path) -> list[Finding]:
     """What vulture prints for the Python files under ``folder``, the discovered test classes aside: none when clean."""
     if not vulture.is_file():
         raise AssertionError(f"{vulture} is missing, so nothing checks the kit for dead code: {INSTALL}")
     command = [str(vulture), str(folder), "--exclude", f"{KIT / 'bin'}/*,*/__pycache__/*",
-               "--ignore-names", ",".join(discovered_classes())]
+               "--ignore-names", ",".join([*discovered_classes(), *call_suite_cases(CALL_SUITE)])]
     run = subprocess.run(command, capture_output=True, text=True, check=False)
     return [Finding(line) for line in (run.stdout + run.stderr).splitlines()]
 
@@ -69,6 +82,14 @@ class DeadCode(unittest.TestCase):
             found = "\n".join(findings(VULTURE, Path(scratch)))
         self.assertIn("dead.py:5: unused function 'unused'", found)
         self.assertIn("broken.py:1: invalid syntax", found)
+
+    def test_the_call_suites_cases_are_read_from_its_tree(self) -> None:
+        with tempfile.TemporaryDirectory() as scratch:
+            suite = Path(scratch) / "suite.py"
+            suite.write_text("def case_a() -> None:\n    pass\n\n\ndef helper() -> None:\n    pass\n\n\n"
+                             "class C:\n    def case_b(self) -> None:\n        pass\n")
+            self.assertEqual(call_suite_cases(suite), ["case_a"])
+        self.assertIn("case_cd_persists", call_suite_cases(CALL_SUITE))
 
     def test_a_missing_vulture_fails_with_its_install_line(self) -> None:
         with self.assertRaises(AssertionError) as raised:

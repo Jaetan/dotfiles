@@ -990,9 +990,10 @@ tests = ["tests.test_dispatcher.Switches.test_a_rule_switched_off",
 [[plant]]
 name = "a rule's switch keeps its underscores"
 file = "dispatcher/core.py"
-old = 'name = RuleName(stem.replace("_", "-"))'
-new = 'name = RuleName(stem)'
-tests = ["tests.test_dispatcher.Switches.test_a_rule_switched_off"]
+old = '''found.append(RuleEntry(RuleFile(entry), RuleName(stem.replace("_", "-"))))'''
+new = '''found.append(RuleEntry(RuleFile(entry), RuleName(stem)))'''
+tests = ["tests.test_dispatcher.Switches.test_a_rule_switched_off", "tests.test_registration.Events.test_a_rule_that_cannot_load_is_a_fault"]
+
 
 [[plant]]
 name = "a rule may take a reserved switch name"
@@ -1004,9 +1005,10 @@ tests = ["tests.test_dispatcher.Faults.test_a_reserved_name"]
 [[plant]]
 name = "a module starting with an underscore is loaded as a rule"
 file = "dispatcher/core.py"
-old = 'if suffix != ".py" or stem.startswith("_"):'
-new = 'if suffix != ".py":'
-tests = ["tests.test_dispatcher.Faults.test_a_reserved_name"]
+old = '''if suffix == ".py" and not stem.startswith("_"):'''
+new = '''if suffix == ".py":'''
+tests = ["tests.test_dispatcher.Faults.test_a_reserved_name", "tests.test_registration.Events.test_each_event_takes_the_matcher_its_rules_need"]
+
 
 [[plant]]
 name = "a rule runs for every tool"
@@ -1235,10 +1237,11 @@ tests = ["tests.test_dispatcher.Entry.test_the_switch_folder_is_under_home"]
 
 [[plant]]
 name = "the kit's own rules folder is not the default"
-file = "dispatcher/dispatch.py"
-old = 'FolderPath(options.get(Option("--rules"), os.path.join(KIT, "rules"))),'
-new = 'FolderPath(options.get(Option("--rules"), os.path.join(KIT, "tests"))),'
-tests = ["tests.test_dispatcher.Entry.test_the_kits_own_rules_refuse"]
+file = "dispatcher/core.py"
+old = '''RULES = FolderPath(os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__))), "rules"))'''
+new = '''RULES = FolderPath(os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__))), "tests"))'''
+tests = ["tests.test_dispatcher.Entry.test_the_kits_own_rules_refuse", "tests.test_registration.KitRules.test_the_settings_entries_makes_miss_nothing"]
+
 
 [[plant]]
 name = "an answer that cannot be written exits as written"
@@ -5403,3 +5406,27 @@ file = "dispatcher/core.py"
 old = '{"systemMessage": text}'
 new = '{"systemMessage": texts[0]}'
 tests = ["tests.test_dispatcher.Faults.test_every_fault_at_a_stop_kept_going_is_in_its_one_message"]
+
+[[plant]]
+name = "a file that is no .py is loaded as a rule"
+file = "dispatcher/core.py"
+old = '''if suffix == ".py" and not stem.startswith("_"):'''
+new = '''if not stem.startswith("_"):'''
+tests = ["tests.test_registration.Events.test_each_event_takes_the_matcher_its_rules_need"]
+
+
+[[plant]]
+name = "rule files are read in the folder's own order"
+file = "dispatcher/core.py"
+old = '''for entry in sorted(os.listdir(folder)):'''
+new = '''for entry in os.listdir(folder):'''
+tests = ["tests.test_dispatcher.RuleFiles.test_rule_files_come_in_name_order"]
+
+
+[[plant]]
+name = "the dispatcher reads no rule file"
+file = "dispatcher/core.py"
+old = '''for entry, name in rule_files(settings.rules):'''
+new = '''for entry, name in []:'''
+tests = ["tests.test_dispatcher.Entry.test_the_kits_own_rules_refuse", "tests.test_dispatcher.Switches.test_a_rule_switched_off"]
+

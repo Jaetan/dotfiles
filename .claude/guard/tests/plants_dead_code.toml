@@ -117,7 +117,7 @@ tests = ["tests.test_dead_code.DeadCode.test_the_kit_holds_no_dead_code"]
 [[plant]]
 name = "vulture is given no discovered test class"
 file = "tests/test_dead_code.py"
-old = "\n               \"--ignore-names\", \",\".join(discovered_classes())]"
+old = "\n               \"--ignore-names\", \",\".join([*discovered_classes(), *call_suite_cases(CALL_SUITE)])]"
 new = "]"
 tests = ["tests.test_dead_code.DeadCode.test_the_kit_holds_no_dead_code"]
 
@@ -155,3 +155,26 @@ file = "tests/test_dead_code.py"
 old = "for dead code: {INSTALL}"
 new = "for dead code"
 tests = ["tests.test_dead_code.DeadCode.test_a_missing_vulture_fails_with_its_install_line"]
+
+[[plant]]
+name = "the call suite's cases are not handed to vulture"
+file = "tests/test_dead_code.py"
+old = '''",".join([*discovered_classes(), *call_suite_cases(CALL_SUITE)])'''
+new = '''",".join(discovered_classes())'''
+tests = ["tests.test_dead_code.DeadCode.test_the_kit_holds_no_dead_code"]
+
+[[plant]]
+name = "every top-level function of the call suite counts as a case"
+file = "tests/test_dead_code.py"
+old = '''if isinstance(node, ast.FunctionDef) and node.name.startswith("case_"))'''
+new = '''if isinstance(node, ast.FunctionDef))'''
+tests = ["tests.test_dead_code.DeadCode.test_the_call_suites_cases_are_read_from_its_tree"]
+
+[[plant]]
+name = "a method named case_ counts as a suite case"
+file = "tests/test_dead_code.py"
+old = '''for node in tree.body
+                  if isinstance(node, ast.FunctionDef)'''
+new = '''for node in ast.walk(tree)
+                  if isinstance(node, ast.FunctionDef)'''
+tests = ["tests.test_dead_code.DeadCode.test_the_call_suites_cases_are_read_from_its_tree"]

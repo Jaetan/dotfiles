@@ -1,0 +1,18 @@
+#!/usr/bin/bash
+# The Bash tool's shell: CLAUDE_CODE_SHELL names this file, state/route.py's WRAPPER. It sends one start to the
+# kit's claude-call: Claude Code's own call line, `-c LINE` and nothing more, LINE in the tool's shape, from a claude
+# process (CLAUDECODE set) not already inside claude-call (CLAUDE_CALL unset), the off file absent, claude-call and
+# its interpreter executable. Every other start runs in /usr/bin/bash as it came.
+call="${0%/bin/route/bash}/call/claude-call"
+if [[ $# -eq 2 ]] &&
+    [[ $1 == -c ]] &&
+    [[ -n ${CLAUDECODE:-} ]] &&
+    [[ -z ${CLAUDE_CALL:-} ]] &&
+    [[ ! -e ${CLAUDE_CALL_OFF:-$HOME/.claude/claude-call.off} ]] &&
+    [[ $2 == 'source '*/shell-snapshots/snapshot-bash-* ]] &&
+    [[ $2 == *'&& pwd -P >| '* ]] &&
+    [[ -x $call ]] &&
+    [[ -x /home/nicolas/.local/bin/python3.14 ]]; then
+    exec "$call" "$2"
+fi
+exec /usr/bin/bash "$@"

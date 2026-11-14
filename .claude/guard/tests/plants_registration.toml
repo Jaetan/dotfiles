@@ -1,0 +1,234 @@
+# The plants that show dispatcher/registration.py held by tests/test_registration.py, one or more per line:
+#   testing/plants.py tests/plants_registration.toml --out DIR
+
+[[plant]]
+name = "the events are not sorted"
+file = "dispatcher/registration.py"
+old = '''for event in sorted({event for rule in rules for event in rule.events}):'''
+new = '''for event in sorted({event for rule in rules for event in rule.events}, reverse=True):'''
+tests = ["tests.test_registration.Events.test_each_event_takes_the_matcher_its_rules_need"]
+
+[[plant]]
+name = "an event carrying no tool reads the rules' tools"
+file = "dispatcher/registration.py"
+old = '''None if event not in TOOL_EVENTS or any('''
+new = '''None if any('''
+tests = ["tests.test_registration.Missing.test_an_event_carrying_no_tool_is_not_covered_by_names"]
+
+[[plant]]
+name = "a rule with TOOLS None reads no tool"
+file = "dispatcher/registration.py"
+old = '''or any(rule.tools is None for rule in at)'''
+new = '''or False'''
+tests = ["tests.test_registration.Events.test_each_event_takes_the_matcher_its_rules_need", "tests.test_registration.Missing.test_a_rule_reading_every_tool_is_not_covered_by_names"]
+
+[[plant]]
+name = "an event reads the first rule's tools only"
+file = "dispatcher/registration.py"
+old = '''for rule in at for tool in rule.tools or ()'''
+new = '''for rule in at[:1] for tool in rule.tools or ()'''
+tests = ["tests.test_registration.Events.test_each_event_takes_the_matcher_its_rules_need"]
+
+[[plant]]
+name = "an event carrying no tool takes a matcher"
+file = "dispatcher/registration.py"
+old = '''None if event not in TOOL_EVENTS else EVERY_TOOL if tools is None'''
+new = '''EVERY_TOOL if tools is None'''
+tests = ["tests.test_registration.Events.test_each_event_takes_the_matcher_its_rules_need", "tests.test_registration.Entries.test_the_command_stands_under_each_event"]
+
+[[plant]]
+name = "a matcher's tools reversed"
+file = "dispatcher/registration.py"
+old = '''Matcher("|".join(sorted(tools)))'''
+new = '''Matcher("|".join(sorted(tools, reverse=True)))'''
+tests = ["tests.test_registration.Events.test_each_event_takes_the_matcher_its_rules_need"]
+
+[[plant]]
+name = "the every-tool matcher spelt .*"
+file = "dispatcher/registration.py"
+old = '''EVERY_TOOL = Matcher("*")'''
+new = '''EVERY_TOOL = Matcher(".*")'''
+tests = ["tests.test_registration.Events.test_each_event_takes_the_matcher_its_rules_need"]
+
+[[plant]]
+name = "PostToolUse carries no tool"
+file = "dispatcher/registration.py"
+old = '''"PreToolUse", "PostToolUse", "PostToolUseFailure"'''
+new = '''"PreToolUse", "PostToolUseFailure"'''
+tests = ["tests.test_registration.Events.test_each_event_takes_the_matcher_its_rules_need"]
+
+[[plant]]
+name = "PostToolUseFailure carries no tool"
+file = "dispatcher/registration.py"
+old = '''"PostToolUse", "PostToolUseFailure", "PostToolBatch"'''
+new = '''"PostToolUse", "PostToolBatch"'''
+tests = ["tests.test_registration.Events.test_each_event_takes_the_matcher_its_rules_need"]
+
+[[plant]]
+name = "PostToolBatch carries no tool"
+file = "dispatcher/registration.py"
+old = '''"PostToolUseFailure", "PostToolBatch"})'''
+new = '''"PostToolUseFailure"})'''
+tests = ["tests.test_registration.Events.test_each_event_takes_the_matcher_its_rules_need"]
+
+[[plant]]
+name = "PreToolUse carries no tool"
+file = "dispatcher/registration.py"
+old = '''frozenset({"PreToolUse", "PostToolUse",'''
+new = '''frozenset({"PostToolUse",'''
+tests = ["tests.test_registration.Events.test_each_event_takes_the_matcher_its_rules_need"]
+
+[[plant]]
+name = "an entry keeps a matcher of None"
+file = "dispatcher/registration.py"
+old = '''        if matcher is not None:
+            entry["matcher"] = matcher'''
+new = '''        if True:
+            entry["matcher"] = matcher'''
+tests = ["tests.test_registration.Entries.test_the_command_stands_under_each_event"]
+
+[[plant]]
+name = "the hook kind misspelt"
+file = "dispatcher/registration.py"
+old = '''COMMAND = HookKind("command")'''
+new = '''COMMAND = HookKind("commands")'''
+tests = ["tests.test_registration.Entries.test_the_command_stands_under_each_event"]
+
+[[plant]]
+name = "an entry runs another command"
+file = "dispatcher/registration.py"
+old = '''{"hooks": [{"type": COMMAND, "command": command}]}'''
+new = '''{"hooks": [{"type": COMMAND, "command": Command(command + " ")}]}'''
+tests = ["tests.test_registration.Entries.test_the_command_stands_under_each_event"]
+
+[[plant]]
+name = "an absent matcher matches no tool"
+file = "dispatcher/registration.py"
+old = '''if matcher is None or matcher in MATCH_ALL:'''
+new = '''if matcher in MATCH_ALL:'''
+tests = ["tests.test_registration.Missing.test_the_settings_entries_makes_miss_nothing"]
+
+[[plant]]
+name = "a match-all spelling matches no tool"
+file = "dispatcher/registration.py"
+old = '''if matcher is None or matcher in MATCH_ALL:'''
+new = '''if matcher is None:'''
+tests = ["tests.test_registration.Missing.test_the_settings_entries_makes_miss_nothing"]
+
+[[plant]]
+name = "an empty matcher is no match-all"
+file = "dispatcher/registration.py"
+old = '''MATCH_ALL = frozenset({Matcher(""), EVERY_TOOL, Matcher(".*")})'''
+new = '''MATCH_ALL = frozenset({EVERY_TOOL, Matcher(".*")})'''
+tests = ["tests.test_registration.Missing.test_a_match_all_matcher_covers_every_tool_each_way"]
+
+[[plant]]
+name = "a .* matcher is no match-all"
+file = "dispatcher/registration.py"
+old = '''MATCH_ALL = frozenset({Matcher(""), EVERY_TOOL, Matcher(".*")})'''
+new = '''MATCH_ALL = frozenset({Matcher(""), EVERY_TOOL})'''
+tests = ["tests.test_registration.Missing.test_a_match_all_matcher_covers_every_tool_each_way"]
+
+[[plant]]
+name = "a * matcher is no match-all"
+file = "dispatcher/registration.py"
+old = '''MATCH_ALL = frozenset({Matcher(""), EVERY_TOOL, Matcher(".*")})'''
+new = '''MATCH_ALL = frozenset({Matcher(""), Matcher(".*")})'''
+tests = ["tests.test_registration.Missing.test_the_settings_entries_makes_miss_nothing"]
+
+[[plant]]
+name = "a matcher of names covers every tool"
+file = "dispatcher/registration.py"
+old = '''    if tool is None:
+        return False'''
+new = '''    if tool is None:
+        return True'''
+tests = ["tests.test_registration.Missing.test_a_rule_reading_every_tool_is_not_covered_by_names"]
+
+[[plant]]
+name = "a matcher covers a part of a name"
+file = "dispatcher/registration.py"
+old = '''re.fullmatch(matcher, tool)'''
+new = '''re.search(matcher, tool)'''
+tests = ["tests.test_registration.Missing.test_a_tool_its_matcher_does_not_cover_is_named"]
+
+[[plant]]
+name = "a matcher that is no regular expression covers every name"
+file = "dispatcher/registration.py"
+old = '''    except re.error:
+        return False'''
+new = '''    except re.error:
+        return True'''
+tests = ["tests.test_registration.Missing.test_a_tool_its_matcher_does_not_cover_is_named"]
+
+[[plant]]
+name = "settings without hooks are a fault"
+file = "dispatcher/registration.py"
+old = '''settings.get("hooks", {}).get(event, [])'''
+new = '''settings["hooks"].get(event, [])'''
+tests = ["tests.test_registration.Missing.test_an_event_left_out_is_named"]
+
+[[plant]]
+name = "a hook of another kind runs the command"
+file = "dispatcher/registration.py"
+old = '''if any(hook["type"] == COMMAND and hook["command"] == command'''
+new = '''if any(hook["command"] == command'''
+tests = ["tests.test_registration.Missing.test_an_entry_running_another_command_covers_nothing"]
+
+[[plant]]
+name = "a hook running a longer command counts"
+file = "dispatcher/registration.py"
+old = '''hook["command"] == command for hook'''
+new = '''hook["command"].startswith(command) for hook'''
+tests = ["tests.test_registration.Missing.test_an_entry_running_another_command_covers_nothing"]
+
+[[plant]]
+name = "an entry's first hook alone counts"
+file = "dispatcher/registration.py"
+old = '''for hook in entry["hooks"])]'''
+new = '''for hook in entry["hooks"][:1])]'''
+tests = ["tests.test_registration.Missing.test_an_entry_running_another_command_covers_nothing"]
+
+[[plant]]
+name = "an event left out gives no line"
+file = "dispatcher/registration.py"
+old = '''            lines.append(Prose(f"{event}: no hook runs {command}"))
+            continue'''
+new = '''            continue'''
+tests = ["tests.test_registration.Missing.test_an_event_left_out_is_named"]
+
+[[plant]]
+name = "every tool is read as no tool"
+file = "dispatcher/registration.py"
+old = '''for tool in [None] if tools is None else sorted(tools):'''
+new = '''for tool in sorted(tools or ()):'''
+tests = ["tests.test_registration.Missing.test_a_rule_reading_every_tool_is_not_covered_by_names"]
+
+[[plant]]
+name = "the tools a line names reversed"
+file = "dispatcher/registration.py"
+old = '''for tool in [None] if tools is None else sorted(tools):'''
+new = '''for tool in [None] if tools is None else sorted(tools, reverse=True):'''
+tests = ["tests.test_registration.Missing.test_a_tool_its_matcher_does_not_cover_is_named"]
+
+[[plant]]
+name = "an event's first entry alone counts"
+file = "dispatcher/registration.py"
+old = '''if not any(covers(matcher, tool) for matcher in matchers):'''
+new = '''if not covers(matchers[0], tool):'''
+tests = ["tests.test_registration.Missing.test_a_tool_its_matcher_does_not_cover_is_named"]
+
+[[plant]]
+name = "the every-tool line misspelt"
+file = "dispatcher/registration.py"
+old = '''{tool or 'every tool'}'''
+new = '''{tool or 'all tools'}'''
+tests = ["tests.test_registration.Missing.test_a_rule_reading_every_tool_is_not_covered_by_names"]
+
+[[plant]]
+name = "the registration loads no rule"
+file = "dispatcher/registration.py"
+old = '''return [loaded(FolderPath(os.path.join(folder, entry)), name) for entry, name in rule_files(folder)]'''
+new = '''return []'''
+tests = ["tests.test_registration.KitRules.test_every_rule_is_covered"]
+

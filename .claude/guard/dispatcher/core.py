@@ -64,6 +64,8 @@ ToolName = NewType("ToolName", str)
 AgentId = NewType("AgentId", str)
 SessionId = NewType("SessionId", str)
 FolderPath = NewType("FolderPath", str)
+RuleFile = NewType("RuleFile", str)
+"""A rule file's name in its rules folder, `<name>.py`."""
 EventBytes = NewType("EventBytes", bytes)
 ExitStatus = Literal[0, 2]
 TaskKey = Literal["taskId", "backgroundTaskId", "task_id"]
@@ -73,6 +75,8 @@ SHELL_TOOLS = frozenset({ToolName("Bash"), ToolName("Monitor")})
 WHOLE_KIT = RuleName("all")
 UNREADABLE = RuleName("unreadable")
 RESERVED = frozenset({WHOLE_KIT, UNREADABLE})
+RULES = FolderPath(os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__))), "rules"))
+"""The kit's own rules folder: the dispatcher's default and the registration's."""
 FAULT_TAIL = "The call is refused, since a kit that cannot judge a call passes nothing."
 
 ToolInput = TypedDict("ToolInput", {"command": ShellText, "run_in_background": bool, "description": Prose,
@@ -286,15 +290,29 @@ def loaded(path: FolderPath, name: RuleName) -> Rule:
     return Rule(name, events, tools, judge)
 
 
+class RuleEntry(NamedTuple):
+    """A rule file of a rules folder and the rule's name."""
+
+    file: RuleFile
+    name: RuleName
+
+
+def rule_files(folder: FolderPath) -> list[RuleEntry]:
+    """Each rule file of ``folder`` in name order with its rule's name: a ``.py`` file whose name opens with no
+    underscore, the name its stem with each ``_`` read as ``-``."""
+    found: list[RuleEntry] = []
+    for entry in sorted(os.listdir(folder)):
+        stem, suffix = os.path.splitext(entry)
+        if suffix == ".py" and not stem.startswith("_"):
+            found.append(RuleEntry(RuleFile(entry), RuleName(stem.replace("_", "-"))))
+    return found
+
+
 def rules_for(event: Event, settings: Settings) -> tuple[list[Rule], list[Prose]]:
     """The rules switched on that judge ``event``, and a fault line for each rule that cannot load."""
     found: list[Rule] = []
     faults: list[Prose] = []
-    for entry in sorted(os.listdir(settings.rules)):
-        stem, suffix = os.path.splitext(entry)
-        if suffix != ".py" or stem.startswith("_"):
-            continue
-        name = RuleName(stem.replace("_", "-"))
+    for entry, name in rule_files(settings.rules):
         if name in RESERVED:
             faults.append(Prose(f"the rule file {entry} takes a switch name the kit reserves"))
             continue

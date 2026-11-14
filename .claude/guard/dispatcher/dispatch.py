@@ -1,5 +1,6 @@
 #!/home/nicolas/.local/bin/python3.14 -IS
-"""The guard kit's one hook command: registered under every hook event, it reads the event on stdin and answers it.
+"""The guard kit's one hook command: registered under each hook event a rule reads, as dispatcher/registration.py
+derives them, it reads the event on stdin and answers it.
 
 Before reading, the process lowers its address space to CAP bytes, which the shell reader it runs inherits, and arms
 a wall-time limit of WALL seconds; the event is read whole, at most MAX_EVENT bytes. core.answer judges it with the
@@ -27,8 +28,8 @@ KIT = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 sys.path.insert(0, KIT)
 
 try:
-    from dispatcher.core import (Answer, EventBytes, ExitStatus, FolderPath, Settings, answer, environment, fault_text,
-                                 kept_going, noted, payload_of)
+    from dispatcher.core import (RULES, Answer, EventBytes, ExitStatus, FolderPath, Settings, answer, environment,
+                                 fault_text, kept_going, noted, payload_of)
     from dispatcher.model import ReadSettings
     from dispatcher.tree import ReaderPath, Seconds
     from dispatcher.verdict import KitFault, Prose
@@ -111,7 +112,7 @@ def judged(argv: list[Option]) -> Answer:
             return refusal(Prose(f"the hook event is longer than {MAX_EVENT >> 20} MiB"))
         home = os.environ.get("HOME", "/")
         settings = Settings(
-            FolderPath(options.get(Option("--rules"), os.path.join(KIT, "rules"))),
+            FolderPath(options.get(Option("--rules"), RULES)),
             FolderPath(os.path.join(home, ".config", "claude-guard", "off")),
             ReadSettings(ReaderPath(os.path.join(KIT, "bin", "shell-reader")), READER_TIMEOUT, environment()))
         return answer(raw, settings)

@@ -230,7 +230,7 @@ class Faults(unittest.TestCase):
         self.addCleanup(shutil.rmtree, root)
         file = root / ".claude" / "guard.toml"
         file.parent.mkdir()
-        facts = Facts(lambda: Machine(None, None, None, None, ()), NO_PROJECT, file, root)
+        facts = Facts(lambda: Machine(None, None, None, None, (), None), NO_PROJECT, file, root)
         said = GitAnswer(b".gitignore\x002\x00.claude/\x00.claude/guard.toml\x00")
         cases = {
             "it outran its limit": (subprocess.TimeoutExpired(["git"], 10.0), None,

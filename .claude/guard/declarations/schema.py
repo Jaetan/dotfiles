@@ -74,9 +74,12 @@ The machine declares, in `~/.config/claude-guard/machine.toml`, what only the ma
     [records]
     paths = [PATH, ...]         run-record folders outside every repository, `~/` from the home folder or absolute;
                                 at least one
+    [rewrite]
+    hook = [WORD, ...]          the command line of the PreToolUse hook that rewrites a Bash call's command, as
+                                settings.json registers it: its first word an absolute path or a name found on PATH
 
 A repository's keys are optional but `schema`, and a path no repository declares gets the machine's facts alone. The
-machine file is required, and each of its four tables, so no rule holding a machine fact passes a call because the
+machine file is required, and each of its five tables, so no rule holding a machine fact passes a call because the
 fact went unread: a table holds its facts, each one above required but `heavy_max`, or holds `absent = "<why>"`
 alone, naming why this machine has none of them: its facts are then None, its record folders none.
 """
@@ -175,6 +178,7 @@ MACHINE_TABLES: dict[TomlKey, FactTable] = {
     TomlKey("slice"): FactTable((TomlKey("name"),), ()),
     TomlKey("memory"): FactTable((TomlKey("call_max"),), (TomlKey("heavy_max"),)),
     TomlKey("records"): FactTable((TomlKey("paths"),), ()),
+    TomlKey("rewrite"): FactTable((TomlKey("hook"),), ()),
 }
 MACHINE_KEYS = frozenset({TomlKey("schema"), *MACHINE_TABLES})
 
@@ -187,6 +191,7 @@ class Machine(NamedTuple):
     call_max: ByteCount | None
     heavy_max: ByteCount | None
     records: tuple[Path, ...]
+    rewrite_hook: tuple[Word, ...] | None
 
     @property
     def job_bound(self) -> Count | None:
@@ -349,7 +354,7 @@ def size(reading: Reading, text: TomlText | None, key: TomlKey) -> ByteCount | N
     """The bytes a size like `24G` names, None where absent."""
     if text is None:
         return None
-    digits, unit = (text[:-1], text[-1]) if text[-1:] in SIZE_UNITS else (text, "")
+    digits, unit = (text[:-1], text[-1:]) if text[-1:] in SIZE_UNITS else (text, "")
     if not digits.isdecimal() or not int(digits):
         raise reading.fault(key, Prose(f"{text!r} is not a size like 512M or 24G"))
     return ByteCount(int(digits) * SIZE_UNITS[unit])
@@ -399,8 +404,16 @@ def machine_facts(raw: TomlTable, file: Path, home: Path) -> Machine:
     if records and not paths:
         raise reading.fault(TomlKey("records.paths"), Prose('it must name a folder, or the table holds '
                                                             '`absent = "<why>"` alone'))
+    rewrite = fact_table(reading, top, TomlKey("rewrite"))
+    hook = reading.words(rewrite, TomlKey("hook"), TomlKey("rewrite"))
+    if rewrite and not hook:
+        raise reading.fault(TomlKey("rewrite.hook"), Prose("it must name the hook's command line, or the table holds "
+                                                           '`absent = "<why>"` alone'))
+    if hook and "/" in hook[0] and not hook[0].startswith("/"):
+        raise reading.fault(TomlKey("rewrite.hook"), Prose(f"{hook[0]!r} is neither an absolute path nor a name found "
+                                                           "on PATH"))
     return Machine(agents, SliceName(name) if name else None, call, call if heavy is None else heavy,
-                   tuple(at_home(path, home) for path in paths))
+                   tuple(at_home(path, home) for path in paths), hook or None)
 
 
 def at_home(path: PathText, home: Path) -> Path:

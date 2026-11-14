@@ -11,19 +11,20 @@ import tempfile
 import unittest
 from pathlib import Path
 from typing import NamedTuple, NewType
+from unittest import mock
 
 from declarations.lookup import MACHINE_FILE, Declarations
-from dispatcher.core import Answer, EventBytes, FolderPath, Settings, answer, fault_text
+from dispatcher.core import (Answer, EventBytes, FolderPath, RuleEntry, RuleFile, Settings, answer, fault_text,
+                             rule_files)
 from dispatcher.model import FOREIGN_FORM, GAP_FORM, ReadSettings
 from dispatcher.tree import PARSE_FORM, ReaderPath, Seconds, ShellText
-from dispatcher.verdict import KitFault, Prose
+from dispatcher.verdict import KitFault, Prose, RuleName
 from dispatcher.words import VarName
 from tests.test_declarations import NONE_DECLARED, TomlSource, machine_text
 
 KIT = Path(__file__).resolve().parents[1]
 ENTRY = KIT / "dispatcher" / "dispatch.py"
 READER = ReaderPath(str(KIT / "bin" / "shell-reader"))
-RuleFile = NewType("RuleFile", str)
 RuleSource = NewType("RuleSource", str)
 ExitCode = NewType("ExitCode", int)
 Field = NewType("Field", str)
@@ -338,6 +339,17 @@ class Switches(KitCase):
 def unknown(holder: Prose, text: ShellText) -> Prose:
     """The refusal's naming of a gap: the text ``holder`` runs is not known from the call ``text``."""
     return Prose(f"the text {holder} runs is not known from the call: `{text}`")
+
+
+class RuleFiles(unittest.TestCase):
+    """A rules folder's rule files come in name order whatever order the folder lists them in, each with its name."""
+
+    def test_rule_files_come_in_name_order(self) -> None:
+        listed = ["b_rule.py", "_helper.py", "notes.txt", "a.py"]
+        with mock.patch("dispatcher.core.os.listdir", return_value=listed):
+            got = rule_files(FolderPath("/rules"))
+        self.assertEqual(got, [RuleEntry(RuleFile("a.py"), RuleName("a")),
+                               RuleEntry(RuleFile("b_rule.py"), RuleName("b-rule"))])
 
 
 class Gaps(KitCase):

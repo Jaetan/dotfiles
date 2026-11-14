@@ -3,13 +3,15 @@
 The rule: while core.answer judges one trivial event over the kit's own rules, every process the kit starts is counted
 by the program it names; each case holds each program to the bound written beside it and every program it does not name
 to none. The work tree declares both gates a project can declare, a stand-in that no case names but the last exception,
-so a trivial event runs no gate. A count does not move with machine load, so this gate never flakes: the wall time of a
-trivial call is measured and printed at each close, never gated. A rule that adds work to every call turns a case red,
-and a bound rises only by an edit here.
+so a trivial event runs no gate, and the machine file declares a rewrite hook, a stand-in that prints nothing, which
+rules/memory_tier.py starts once at each PreToolUse of a Bash call. A count does not move with machine load, so this
+gate never flakes: the wall time of a trivial call is measured and printed at each close, never gated. A rule that
+adds work to every call turns a case red, and a bound rises only by an edit here.
 
 The cases, each bound measured once and written as an upper bound: PreToolUse and PostToolUse of a Bash `true` and of
-a Read, a PreToolUse Write of a `.md` file and a Stop, in a work tree with no dribble; and a PostToolUse Bash `true` in
-a work tree whose commit dribble is pending, which the two rules reading it parse once for the event.
+a Read, a PreToolUse Write of a `.md` file and a Stop, in a work tree with no dribble; a PreToolUse Bash `true` under a
+machine file declaring its rewrite hook absent; and a PostToolUse Bash `true` in a work tree whose commit dribble is
+pending, which the two rules reading it parse once for the event.
 
 Each case has its session state, a proc tree naming one claude process, its switch folder, its home and a git work
 tree whose one commit is dated 2020-01-01 and which holds the file read in a temporary folder, and counts every
@@ -42,6 +44,8 @@ from dispatcher.tree import Count, ReaderPath, Seconds, ShellText
 from dispatcher.verdict import Prose
 from dispatcher.words import VarName
 from state.session import Pid, Places, StartTicks
+from declarations.lookup import MACHINE_FILE
+from tests.test_declarations import NONE_DECLARED, TomlSource, declaring
 from tests.test_dispatcher import machine_home
 from tests.test_entry_points import GIT, HEAD
 from tests.test_precise_hints import Json, JsonKey, JsonText
@@ -57,6 +61,7 @@ type Fields = dict[JsonKey, Json]
 KIT = Path(__file__).resolve().parents[1]
 READER = ReaderPath(str(KIT / "bin" / "shell-reader"))
 SHELL_READER, GIT_PROGRAM, GATE = Program("shell-reader"), Program("git"), Program("stand-in-gate")
+REWRITE = Program("stand-in-rewrite")
 OFF = ("route-check", "launch-guard")
 DRIBBLE = ".commands-to-run.sh"
 NOTES = "notes.md"
@@ -76,7 +81,8 @@ protocol = "determinism-1"
 rule_source = "the determinism page"
 """
 
-PRE_BASH: Bounds = {SHELL_READER: Count(1), GIT_PROGRAM: Count(2)}
+PRE_BASH: Bounds = {SHELL_READER: Count(1), GIT_PROGRAM: Count(2), REWRITE: Count(1)}
+PRE_BASH_NO_HOOK: Bounds = {SHELL_READER: Count(1), GIT_PROGRAM: Count(2)}
 POST_BASH: Bounds = {SHELL_READER: Count(1), GIT_PROGRAM: Count(1)}
 PRE_READ: Bounds = {GIT_PROGRAM: Count(2)}
 POST_READ: Bounds = {GIT_PROGRAM: Count(1), GATE: Count(1)}
@@ -107,9 +113,10 @@ class Trivial(unittest.TestCase):
         for line in ("init -q", "commit -q --allow-empty -m c"):
             _ = subprocess.run([*GIT, "-C", str(self.repo), *shlex.split(line)], env=env, check=True,
                                capture_output=True, timeout=30)
-        gate = self.root / GATE
-        _ = gate.write_text("#!/bin/sh\nexit 0\n", encoding="utf-8")
-        gate.chmod(0o755)
+        gate, rewrite = self.root / GATE, self.root / REWRITE
+        for stand_in in (gate, rewrite):
+            _ = stand_in.write_text("#!/bin/sh\nexit 0\n", encoding="utf-8")
+            stand_in.chmod(0o755)
         (self.repo / ".claude").mkdir()
         _ = (self.repo / ".claude" / "guard.toml").write_text(DECLARED.format(gate=json.dumps(str(gate))),
                                                               encoding="utf-8")
@@ -117,10 +124,11 @@ class Trivial(unittest.TestCase):
         self.transcript = self.root / "transcript.jsonl"
         _ = self.transcript.write_text("", encoding="utf-8")
         places = Places(self.root / "sessions", proc_tree(self.root, BOOT, {PID: stat_line(PID, START)}))
-        home = machine_home(self)
-        reading = ReadSettings(READER, Seconds(5.0), {VarName("HOME"): ShellText(str(home)),
+        hook = TomlSource(f"[rewrite]\nhook = [{json.dumps(str(rewrite))}]\n")
+        self.home = machine_home(self, declaring(rewrite=hook))
+        reading = ReadSettings(READER, Seconds(5.0), {VarName("HOME"): ShellText(str(self.home)),
                                                       VarName("CLAUDE_PID"): ShellText(str(PID))})
-        self.settings = Settings(FolderPath(str(KIT / "rules")), FolderPath(str(off)), reading, home, places)
+        self.settings = Settings(FolderPath(str(KIT / "rules")), FolderPath(str(off)), reading, self.home, places)
 
     def counted(self, fields: Fields, bounds: Bounds) -> None:
         """Judge the event of ``fields`` in the work tree, which passes, and hold each program it starts to
@@ -154,6 +162,10 @@ class Trivial(unittest.TestCase):
 
     def test_a_pretooluse_bash_true(self) -> None:
         self.counted(self.bash("PreToolUse"), PRE_BASH)
+
+    def test_a_pretooluse_bash_true_with_no_rewrite_hook(self) -> None:
+        _ = (self.home / MACHINE_FILE).write_text(NONE_DECLARED, encoding="utf-8")
+        self.counted(self.bash("PreToolUse"), PRE_BASH_NO_HOOK)
 
     def test_a_posttooluse_bash_true(self) -> None:
         self.counted(self.bash("PostToolUse"), POST_BASH)

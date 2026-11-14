@@ -964,3 +964,104 @@ file = "declarations/examples/aletheia.toml"
 old = '''probes/aletheia/timings.tsv'''
 new = '''probes/timings.tsv'''
 tests = ["tests.test_declarations.Examples.test_the_aletheia_example"]
+
+[[plant]]
+name = "an empty size is read past its end"
+file = "declarations/schema.py"
+old = '''digits, unit = (text[:-1], text[-1:]) if text[-1:] in SIZE_UNITS else (text, "")'''
+new = '''digits, unit = (text[:-1], text[-1]) if text[-1:] in SIZE_UNITS else (text, "")'''
+tests = ["tests.test_declarations.Refusals.test_an_empty_size_is_refused_by_the_size_reader_itself"]
+
+[[plant]]
+name = "the machine file has no rewrite table"
+file = "declarations/schema.py"
+old = '''    TomlKey("rewrite"): FactTable((TomlKey("hook"),), ()),
+'''
+new = '''    # no rewrite table
+'''
+tests = ["tests.test_declarations.Refusals.test_a_missing_table",
+         "tests.test_declarations.Machines.test_a_rewrite_hook_is_read_as_its_words"]
+
+[[plant]]
+name = "the machine's facts carry the hook under another name"
+file = "declarations/schema.py"
+old = '''    rewrite_hook: tuple[Word, ...] | None
+'''
+new = '''    hook: tuple[Word, ...] | None
+'''
+tests = ["tests.test_declarations.Machines.test_a_rewrite_hook_is_read_as_its_words",
+         "tests.test_memory_tier.Rewrites.test_a_rewritten_call_writes_its_tier_under_both_texts"]
+
+[[plant]]
+name = "the rewrite table is read without its checks"
+file = "declarations/schema.py"
+old = '''    rewrite = fact_table(reading, top, TomlKey("rewrite"))'''
+new = '''    rewrite = top.get(TomlKey("rewrite"), {})'''
+tests = ["tests.test_declarations.Refusals.test_a_missing_table",
+         "tests.test_declarations.Refusals.test_absent_forms",
+         "tests.test_declarations.Refusals.test_misspellings",
+         "tests.test_declarations.Machines.test_each_table_declares_its_facts_absent"]
+
+[[plant]]
+name = "the hook is not checked as a list of words"
+file = "declarations/schema.py"
+old = '''    hook = reading.words(rewrite, TomlKey("hook"), TomlKey("rewrite"))'''
+new = '''    hook = tuple(rewrite.get(TomlKey("hook"), []))'''
+tests = ["tests.test_declarations.Refusals.test_types"]
+
+[[plant]]
+name = "an empty hook is taken as none"
+file = "declarations/schema.py"
+old = '''    if rewrite and not hook:'''
+new = '''    if False:'''
+tests = ["tests.test_declarations.Refusals.test_a_missing_fact"]
+
+[[plant]]
+name = "an empty hook is refused in other words"
+file = "declarations/schema.py"
+old = '''Prose("it must name the hook's command line, or the table holds "'''
+new = '''Prose("it must name a hook, or the table holds "'''
+tests = ["tests.test_declarations.Refusals.test_a_missing_fact"]
+
+[[plant]]
+name = "a relative first word with a slash is taken"
+file = "declarations/schema.py"
+old = '''    if hook and "/" in hook[0] and not hook[0].startswith("/"):'''
+new = '''    if False:'''
+tests = ["tests.test_declarations.Refusals.test_types"]
+
+[[plant]]
+name = "an absolute first word is refused"
+file = "declarations/schema.py"
+old = '''    if hook and "/" in hook[0] and not hook[0].startswith("/"):'''
+new = '''    if hook and "/" in hook[0]:'''
+tests = ["tests.test_declarations.Machines.test_a_rewrite_hook_is_read_as_its_words",
+         "tests.test_declarations.Machines.test_the_example"]
+
+[[plant]]
+name = "a table without a hook is read at its first word"
+file = "declarations/schema.py"
+old = '''    if hook and "/" in hook[0] and not hook[0].startswith("/"):'''
+new = '''    if "/" in hook[0] and not hook[0].startswith("/"):'''
+tests = ["tests.test_declarations.Machines.test_each_table_declares_its_facts_absent"]
+
+[[plant]]
+name = "the relative-path refusal says something else"
+file = "declarations/schema.py"
+old = '''is neither an absolute path nor a name found "'''
+new = '''is not a hook "'''
+tests = ["tests.test_declarations.Refusals.test_types"]
+
+[[plant]]
+name = "an absent hook is an empty one"
+file = "declarations/schema.py"
+old = '''tuple(at_home(path, home) for path in paths), hook or None)'''
+new = '''tuple(at_home(path, home) for path in paths), hook)'''
+tests = ["tests.test_declarations.Machines.test_each_table_declares_its_facts_absent"]
+
+[[plant]]
+name = "the example declares another hook"
+file = "declarations/examples/machine.toml"
+old = '''hook = ["/home/nicolas/.local/bin/rtk", "hook", "claude"]'''
+new = '''hook = ["rtk", "hook", "claude"]'''
+tests = ["tests.test_declarations.Machines.test_the_example"]

@@ -1,0 +1,430 @@
+# The plants that show state/tiers.py and rules/memory_tier.py held by tests/test_tiers.py and
+# tests/test_memory_tier.py, one or more per line of the two modules:
+#   testing/plants.py tests/plants_memory_tier.toml --out DIR
+
+[[plant]]
+name = "tiers re-exports no digest"
+file = "state/tiers.py"
+old = 'from state.route import digest as digest'
+new = 'from state.route import Digest as digest'
+tests = ["tests.test_tiers.Tiers.test_the_digest_is_route_s"]
+
+[[plant]]
+name = "the tier file is a json file Session.records reads"
+file = "state/tiers.py"
+old = 'TIERS = "tiers.jsonl"'
+new = 'TIERS = "tiers.json"'
+tests = ["tests.test_tiers.Tiers.test_the_tier_file_is_tiers_jsonl_beside_the_ledger"]
+
+[[plant]]
+name = "the tier file is outside the process folder"
+file = "state/tiers.py"
+old = 'return places.sessions / key.name / TIERS'
+new = 'return places.sessions / TIERS'
+tests = ["tests.test_tiers.Tiers.test_the_tier_file_is_tiers_jsonl_beside_the_ledger"]
+
+[[plant]]
+name = "the line names its tier under another key"
+file = "state/tiers.py"
+old = 'json.dumps({"sha256": sha256, "tier": tier})'
+new = 'json.dumps({"sha256": sha256, "kind": tier})'
+tests = ["tests.test_tiers.Tiers.test_a_line_is_the_digest_and_the_tier_as_json_and_a_newline"]
+
+[[plant]]
+name = "the line has no newline"
+file = "state/tiers.py"
+old = '"tier": tier}) + "\n").encode("ascii")'
+new = '"tier": tier}) + "").encode("ascii")'
+tests = ["tests.test_tiers.Tiers.test_a_line_is_the_digest_and_the_tier_as_json_and_a_newline"]
+
+[[plant]]
+name = "the folder is not made"
+file = "state/tiers.py"
+old = 'path.parent.mkdir(parents=True, exist_ok=True)'
+new = 'path.parent.exists()'
+tests = ["tests.test_tiers.Tiers.test_a_whole_line_is_appended_its_folder_made_and_a_later_one_after_it",
+         "tests.test_memory_tier.Writes.test_a_heavy_call_writes_heavy"]
+
+[[plant]]
+name = "a folder already made refuses the next line"
+file = "state/tiers.py"
+old = 'path.parent.mkdir(parents=True, exist_ok=True)'
+new = 'path.parent.mkdir(parents=True, exist_ok=False)'
+tests = ["tests.test_tiers.Tiers.test_a_whole_line_is_appended_its_folder_made_and_a_later_one_after_it",
+         "tests.test_memory_tier.Writes.test_a_light_call_writes_light_after_the_lines_before_it"]
+
+[[plant]]
+name = "a line replaces the lines before it"
+file = "state/tiers.py"
+old = 'with path.open("ab", buffering=0) as tier_file:'
+new = 'with path.open("wb", buffering=0) as tier_file:'
+tests = ["tests.test_tiers.Tiers.test_a_whole_line_is_appended_its_folder_made_and_a_later_one_after_it",
+         "tests.test_memory_tier.Writes.test_a_light_call_writes_light_after_the_lines_before_it"]
+
+[[plant]]
+name = "a line is written cut short"
+file = "state/tiers.py"
+old = '_ = tier_file.write(line)'
+new = '_ = tier_file.write(line[:-1])'
+tests = ["tests.test_tiers.Tiers.test_a_whole_line_is_appended_its_folder_made_and_a_later_one_after_it"]
+
+[[plant]]
+name = "a PostToolUse writes a line"
+file = "rules/memory_tier.py"
+old = 'EVENTS: frozenset[HookEvent] = frozenset({"PreToolUse"})'
+new = 'EVENTS: frozenset[HookEvent] = frozenset({"PreToolUse", "PostToolUse"})'
+tests = ["tests.test_memory_tier.Passes.test_a_post_tool_use_writes_nothing"]
+
+[[plant]]
+name = "a Monitor call writes nothing"
+file = "rules/memory_tier.py"
+old = 'TOOLS = frozenset({ToolName("Bash"), ToolName("Monitor")})'
+new = 'TOOLS = frozenset({ToolName("Bash")})'
+tests = ["tests.test_memory_tier.Writes.test_a_monitor_call_writes_alike"]
+
+[[plant]]
+name = "a Bash call writes nothing"
+file = "rules/memory_tier.py"
+old = 'TOOLS = frozenset({ToolName("Bash"), ToolName("Monitor")})'
+new = 'TOOLS = frozenset({ToolName("Monitor")})'
+tests = ["tests.test_memory_tier.Writes.test_a_heavy_call_writes_heavy",
+         "tests.test_memory_tier.Writes.test_an_agents_call_writes_alike"]
+
+[[plant]]
+name = "the note does not say the cap still holds"
+file = "rules/memory_tier.py"
+old = 'so claude-call finds no line and caps this call at heavy_max."'
+new = 'so this call runs."'
+tests = ["tests.test_memory_tier.Passes.test_a_file_that_cannot_be_written_is_a_note_naming_it_and_no_refusal"]
+
+[[plant]]
+name = "a heavy call writes light"
+file = "rules/memory_tier.py"
+old = 'return "heavy" if any('
+new = 'return "light" if any('
+tests = ["tests.test_memory_tier.Writes.test_a_heavy_call_writes_heavy"]
+
+[[plant]]
+name = "a light call writes heavy"
+file = "rules/memory_tier.py"
+old = 'for command in event.call().commands) else "light"'
+new = 'for command in event.call().commands) else "heavy"'
+tests = ["tests.test_memory_tier.Writes.test_a_light_call_writes_light_after_the_lines_before_it",
+         "tests.test_memory_tier.Writes.test_an_agents_call_writes_alike"]
+
+[[plant]]
+name = "a command the kit cannot name writes light"
+file = "rules/memory_tier.py"
+old = 'event.cwd or "/"))) is not None'
+new = 'event.cwd or "/"))) not in (None, "unknown")'
+tests = ["tests.test_memory_tier.Writes.test_a_call_naming_a_program_the_kit_cannot_name_writes_heavy"]
+
+[[plant]]
+name = "only a call whose every command is heavy writes heavy"
+file = "rules/memory_tier.py"
+old = 'return "heavy" if any('
+new = 'return "heavy" if all('
+tests = ["tests.test_memory_tier.Writes.test_a_heavy_command_anywhere_in_the_call_writes_heavy"]
+
+[[plant]]
+name = "the declaration is the root's, not the call's directory's"
+file = "rules/memory_tier.py"
+old = 'event.declaration(Path(command.cwd or event.cwd or "/"))'
+new = 'event.declaration(Path("/"))'
+tests = ["tests.test_memory_tier.Writes.test_a_command_its_declaration_calls_light_writes_light"]
+
+[[plant]]
+name = "a file that cannot be written refuses the call"
+file = "rules/memory_tier.py"
+old = '''    except OSError as fault:
+        return context(Prose(UNWRITTEN'''
+new = '''    except ValueError as fault:
+        return context(Prose(UNWRITTEN'''
+tests = ["tests.test_memory_tier.Passes.test_a_file_that_cannot_be_written_is_a_note_naming_it_and_no_refusal"]
+
+[[plant]]
+name = "a file that cannot be written gives no note"
+file = "rules/memory_tier.py"
+old = 'return context(Prose(UNWRITTEN.format(path=path, fault=fault.strerror or fault)))'
+new = 'return None'
+tests = ["tests.test_memory_tier.Passes.test_a_file_that_cannot_be_written_is_a_note_naming_it_and_no_refusal"]
+
+[[plant]]
+name = "the note names the fault with its path again"
+file = "rules/memory_tier.py"
+old = 'fault=fault.strerror or fault)'
+new = 'fault=fault)'
+tests = ["tests.test_memory_tier.Passes.test_a_file_that_cannot_be_written_is_a_note_naming_it_and_no_refusal"]
+
+[[plant]]
+name = "the line is of another text than the call's command"
+file = "rules/memory_tier.py"
+old = '''tiers.line(tiers.digest(text), kind)'''
+new = '''tiers.line(tiers.digest(text + " "), kind)'''
+tests = ["tests.test_memory_tier.Writes.test_a_heavy_call_writes_heavy"]
+
+[[plant]]
+name = "the line ignores the tier"
+file = "rules/memory_tier.py"
+old = '''tiers.line(tiers.digest(text), kind)'''
+new = '''tiers.line(tiers.digest(text), "light")'''
+tests = ["tests.test_memory_tier.Writes.test_a_heavy_call_writes_heavy"]
+
+[[plant]]
+name = "a written line is a note too"
+file = "rules/memory_tier.py"
+old = '''        return context(Prose(UNWRITTEN.format(path=path, fault=fault.strerror or fault)))
+    return None'''
+new = '''        return context(Prose(UNWRITTEN.format(path=path, fault=fault.strerror or fault)))
+    return context(Prose("written"))'''
+tests = ["tests.test_memory_tier.Writes.test_a_heavy_call_writes_heavy"]
+
+[[plant]]
+name = "a Monitor call goes to the hook"
+file = "rules/memory_tier.py"
+old = '''    if hook is None or event.tool != REWRITTEN:'''
+new = '''    if hook is None:'''
+tests = ["tests.test_memory_tier.Rewrites.test_a_monitor_call_starts_no_hook"]
+
+[[plant]]
+name = "the hook is the Monitor tool's"
+file = "rules/memory_tier.py"
+old = '''REWRITTEN = ToolName("Bash")'''
+new = '''REWRITTEN = ToolName("Monitor")'''
+tests = ["tests.test_memory_tier.Rewrites.test_a_monitor_call_starts_no_hook",
+         "tests.test_memory_tier.Rewrites.test_a_rewritten_call_writes_its_tier_under_both_texts"]
+
+[[plant]]
+name = "the hook runs for three seconds"
+file = "rules/memory_tier.py"
+old = '''HOOK_TIMEOUT = Seconds(2.0)'''
+new = '''HOOK_TIMEOUT = Seconds(3.0)'''
+tests = ["tests.test_memory_tier.Rewrites.test_the_hook_runs_for_two_seconds_at_most"]
+
+[[plant]]
+name = "the note names no fault"
+file = "rules/memory_tier.py"
+old = '''UNREAD = ("the rewrite hook {hook} {fault}, so'''
+new = '''UNREAD = ("the rewrite hook {hook}, so'''
+tests = ["tests.test_memory_tier.Passes.test_a_hook_that_exits_non_zero_is_a_note"]
+
+[[plant]]
+name = "an answer naming no command is called something else"
+file = "rules/memory_tier.py"
+old = '''UNANSWERED = "printed no hookSpecificOutput.updatedInput.command"'''
+new = '''UNANSWERED = "printed no command"'''
+tests = ["tests.test_memory_tier.Passes.test_a_hook_printing_no_command_is_a_note"]
+
+[[plant]]
+name = "an absent table still runs a hook"
+file = "rules/memory_tier.py"
+old = '''    if hook is None or event.tool != REWRITTEN:'''
+new = '''    if event.tool != REWRITTEN:'''
+tests = ["tests.test_memory_tier.Rewrites.test_a_machine_declaring_no_hook_starts_none"]
+
+[[plant]]
+name = "the note names the hook's first word alone"
+file = "rules/memory_tier.py"
+old = '''    named = shlex.join(hook)'''
+new = '''    named = hook[0]'''
+tests = ["tests.test_memory_tier.Passes.test_a_hook_that_exits_non_zero_is_a_note"]
+
+[[plant]]
+name = "the hook is run without its words"
+file = "rules/memory_tier.py"
+old = '''subprocess.run([*hook], input='''
+new = '''subprocess.run([hook[0]], input='''
+tests = ["tests.test_memory_tier.Rewrites.test_a_rewritten_call_writes_its_tier_under_both_texts"]
+
+[[plant]]
+name = "the hook is handed no payload"
+file = "rules/memory_tier.py"
+old = '''input=json.dumps(event.payload).encode(), stdout=subprocess.PIPE,'''
+new = '''stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,'''
+tests = ["tests.test_memory_tier.Rewrites.test_a_rewritten_call_writes_its_tier_under_both_texts"]
+
+[[plant]]
+name = "the hook's stdout is not read"
+file = "rules/memory_tier.py"
+old = '''input=json.dumps(event.payload).encode(), stdout=subprocess.PIPE,'''
+new = '''input=json.dumps(event.payload).encode(), stdout=subprocess.DEVNULL,'''
+tests = ["tests.test_memory_tier.Rewrites.test_a_rewritten_call_writes_its_tier_under_both_texts"]
+
+[[plant]]
+name = "the hook's stderr reaches the dispatcher's"
+file = "rules/memory_tier.py"
+old = '''stderr=subprocess.DEVNULL, cwd=event.cwd,'''
+new = '''cwd=event.cwd,'''
+tests = ["tests.test_memory_tier.Rewrites.test_the_hooks_stderr_goes_nowhere"]
+
+[[plant]]
+name = "the hook runs in the dispatcher's folder"
+file = "rules/memory_tier.py"
+old = '''stderr=subprocess.DEVNULL, cwd=event.cwd,'''
+new = '''stderr=subprocess.DEVNULL,'''
+tests = ["tests.test_memory_tier.Rewrites.test_a_rewritten_call_writes_its_tier_under_both_texts"]
+
+[[plant]]
+name = "the hook inherits the dispatcher's own environment"
+file = "rules/memory_tier.py"
+old = '''env=dict(event.reading.env),
+                              timeout=HOOK_TIMEOUT'''
+new = '''
+                              timeout=HOOK_TIMEOUT'''
+tests = ["tests.test_memory_tier.Rewrites.test_a_rewritten_call_writes_its_tier_under_both_texts"]
+
+[[plant]]
+name = "the hook runs without a limit"
+file = "rules/memory_tier.py"
+old = '''                              timeout=HOOK_TIMEOUT, check=False)'''
+new = '''                              check=False)'''
+tests = ["tests.test_memory_tier.Passes.test_a_hook_that_outruns_its_limit_is_a_note"]
+
+[[plant]]
+name = "a non-zero exit raises"
+file = "rules/memory_tier.py"
+old = '''                              timeout=HOOK_TIMEOUT, check=False)'''
+new = '''                              timeout=HOOK_TIMEOUT, check=True)'''
+tests = ["tests.test_memory_tier.Passes.test_a_hook_that_exits_non_zero_is_a_note"]
+
+[[plant]]
+name = "a hook outrunning its limit is called something else"
+file = "rules/memory_tier.py"
+old = '''fault=f"outran its {HOOK_TIMEOUT:g} s limit"'''
+new = '''fault="outran its limit"'''
+tests = ["tests.test_memory_tier.Passes.test_a_hook_that_outruns_its_limit_is_a_note"]
+
+[[plant]]
+name = "a hook outrunning its limit is no note"
+file = "rules/memory_tier.py"
+old = '''    except subprocess.TimeoutExpired:
+        return Rewrite(None, Prose('''
+new = '''    except subprocess.TimeoutExpired:
+        return Rewrite(None, None)
+        return Rewrite(None, Prose('''
+tests = ["tests.test_memory_tier.Passes.test_a_hook_that_outruns_its_limit_is_a_note"]
+
+[[plant]]
+name = "a hook that cannot start is named by its exception"
+file = "rules/memory_tier.py"
+old = '''fault=f"cannot start ({fault.strerror or fault})"'''
+new = '''fault=f"cannot start ({fault})"'''
+tests = ["tests.test_memory_tier.Passes.test_a_hook_that_cannot_start_is_a_note"]
+
+[[plant]]
+name = "a hook that cannot start is no note"
+file = "rules/memory_tier.py"
+old = '''    except OSError as fault:
+        return Rewrite(None, Prose(UNREAD'''
+new = '''    except OSError as fault:
+        return Rewrite(None, None)
+        return Rewrite(None, Prose(UNREAD'''
+tests = ["tests.test_memory_tier.Passes.test_a_hook_that_cannot_start_is_a_note"]
+
+[[plant]]
+name = "a non-zero exit is read as an answer"
+file = "rules/memory_tier.py"
+old = '''    if done.returncode != 0:'''
+new = '''    if done.returncode > 1:'''
+tests = ["tests.test_memory_tier.Passes.test_a_hook_that_exits_non_zero_is_a_note"]
+
+[[plant]]
+name = "a non-zero exit is named without its code"
+file = "rules/memory_tier.py"
+old = '''fault=f"exited {done.returncode}"'''
+new = '''fault="exited"'''
+tests = ["tests.test_memory_tier.Passes.test_a_hook_that_exits_non_zero_is_a_note"]
+
+[[plant]]
+name = "an empty stdout is a note"
+file = "rules/memory_tier.py"
+old = '''    if not done.stdout:
+        return Rewrite(None, None)'''
+new = '''    if False:
+        return Rewrite(None, None)'''
+tests = ["tests.test_memory_tier.Rewrites.test_a_kept_call_writes_one_line"]
+
+[[plant]]
+name = "white space alone keeps the call"
+file = "rules/memory_tier.py"
+old = '''    if not done.stdout:
+        return Rewrite(None, None)'''
+new = '''    if not done.stdout.strip():
+        return Rewrite(None, None)'''
+tests = ["tests.test_memory_tier.Passes.test_a_hook_printing_no_command_is_a_note"]
+
+[[plant]]
+name = "an answer naming no command is no note"
+file = "rules/memory_tier.py"
+old = '''    if text is None:
+        return Rewrite(None, Prose(UNREAD.format(hook=named, fault=UNANSWERED)))'''
+new = '''    if text is None:
+        return Rewrite(None, None)'''
+tests = ["tests.test_memory_tier.Passes.test_a_hook_printing_no_command_is_a_note"]
+
+[[plant]]
+name = "the call's own text is written twice"
+file = "rules/memory_tier.py"
+old = '''    return Rewrite(None if text == event.command() else text, None)'''
+new = '''    return Rewrite(text, None)'''
+tests = ["tests.test_memory_tier.Rewrites.test_a_kept_call_writes_one_line"]
+
+[[plant]]
+name = "a stdout that is not JSON is read as an empty command"
+file = "rules/memory_tier.py"
+old = '''    except ValueError:
+        return None
+    output'''
+new = '''    except ValueError:
+        return ShellText("")
+    output'''
+tests = ["tests.test_memory_tier.Passes.test_a_hook_printing_no_command_is_a_note"]
+
+[[plant]]
+name = "an answer that is not an object is read as one"
+file = "rules/memory_tier.py"
+old = '''    output = said.get("hookSpecificOutput") if isinstance(said, dict) else None'''
+new = '''    output = said.get("hookSpecificOutput")'''
+tests = ["tests.test_memory_tier.Passes.test_a_hook_printing_no_command_is_a_note"]
+
+[[plant]]
+name = "a hookSpecificOutput that is not an object is read as one"
+file = "rules/memory_tier.py"
+old = '''    given = output.get("updatedInput") if isinstance(output, dict) else None'''
+new = '''    given = output.get("updatedInput") if output is not None else None'''
+tests = ["tests.test_memory_tier.Passes.test_a_hook_printing_no_command_is_a_note"]
+
+[[plant]]
+name = "an updatedInput that is not an object is read as one"
+file = "rules/memory_tier.py"
+old = '''    text = given.get("command") if isinstance(given, dict) else None'''
+new = '''    text = given.get("command") if given is not None else None'''
+tests = ["tests.test_memory_tier.Passes.test_a_hook_printing_no_command_is_a_note"]
+
+[[plant]]
+name = "a command that is not text is taken"
+file = "rules/memory_tier.py"
+old = '''    return text if isinstance(text, str) else None'''
+new = '''    return text'''
+tests = ["tests.test_memory_tier.Passes.test_a_hook_printing_no_command_is_a_note"]
+
+[[plant]]
+name = "the rewritten text gets no line"
+file = "rules/memory_tier.py"
+old = '''        for text in (event.command(), *(() if done.text is None else (done.text,))):'''
+new = '''        for text in (event.command(),):'''
+tests = ["tests.test_memory_tier.Rewrites.test_a_rewritten_call_writes_its_tier_under_both_texts"]
+
+[[plant]]
+name = "the rewritten text is written light"
+file = "rules/memory_tier.py"
+old = '''            tiers.append(path, tiers.line(tiers.digest(text), kind))'''
+new = '''            tiers.append(path, tiers.line(tiers.digest(text), kind if text == event.command() else "light"))'''
+tests = ["tests.test_memory_tier.Rewrites.test_a_rewritten_call_writes_its_tier_under_both_texts"]
+
+[[plant]]
+name = "the hook's note is dropped"
+file = "rules/memory_tier.py"
+old = '''    return None if done.note is None else context(done.note)'''
+new = '''    return None'''
+tests = ["tests.test_memory_tier.Passes.test_a_hook_that_exits_non_zero_is_a_note"]

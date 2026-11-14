@@ -24,8 +24,11 @@ from declarations.schema import (
     ProgramName,
     SliceName,
     Suffix,
+    Reading,
     TomlKey,
+    TomlText,
     Word,
+    size,
 )
 from dispatcher.core import FAULT_TAIL, WHOLE_KIT, EventBytes, FolderPath, Settings, answer
 from dispatcher.gate_run import rel
@@ -77,6 +80,7 @@ TABLES: dict[TomlKey, TomlSource] = {
     TomlKey("slice"): TomlSource('[slice]\nname = "claude.slice"\n'),
     TomlKey("memory"): TomlSource('[memory]\ncall_max = "512M"\nheavy_max = "2G"\n'),
     TomlKey("records"): TomlSource('[records]\npaths = ["~/logs", "/var/kept"]\n'),
+    TomlKey("rewrite"): TomlSource('[rewrite]\nhook = ["rtk", "hook", "claude"]\n'),
 }
 
 
@@ -98,13 +102,14 @@ def declaring(**tables: TomlSource) -> TomlSource:
 
 MACHINE = machine_text()
 NONE_DECLARED = declaring()
-NO_FACTS = Machine(None, None, None, None, ())
+NO_FACTS = Machine(None, None, None, None, (), None)
 
 
 def declared(home: Path) -> Machine:
     """The facts MACHINE declares, under the home folder ``home``."""
     return Machine(frozenset(CpuNumber(cpu) for cpu in (0, 1, 2, 3, 8)), SliceName("claude.slice"),
-                   ByteCount(512 << 20), ByteCount(2 << 30), (home / "logs", Path("/var/kept")))
+                   ByteCount(512 << 20), ByteCount(2 << 30), (home / "logs", Path("/var/kept")),
+                   (Word("rtk"), Word("hook"), Word("claude")))
 
 
 def git(cwd: Path, *words: Word) -> None:
@@ -305,7 +310,7 @@ class Machines(unittest.TestCase):
                 self.assertEqual(caught.exception.reason, (
                     f"the machine file {folder / 'no-such.toml'} is missing: it declares schema = 1 and the tables "
                     "[cpus] (agents), [slice] (name), [memory] (call_max, optionally heavy_max), "
-                    '[records] (paths), each holding its facts or `absent = "<why>"` alone naming why this machine '
+                    '[records] (paths), [rewrite] (hook), each holding its facts or `absent = "<why>"` alone naming why this machine '
                     f"has none, as {EXAMPLES / 'machine.toml'} does; the file {switch} switches the whole kit off"))
 
     def test_a_paths_project_facts_never_read_the_machine_file(self) -> None:
@@ -329,7 +334,8 @@ class Machines(unittest.TestCase):
         cases = {TomlKey("cpus"): full._replace(agent_cpus=None),
                  TomlKey("slice"): full._replace(slice=None),
                  TomlKey("memory"): full._replace(call_max=None, heavy_max=None),
-                 TomlKey("records"): full._replace(records=())}
+                 TomlKey("records"): full._replace(records=()),
+                 TomlKey("rewrite"): full._replace(rewrite_hook=None)}
         for table, want in cases.items():
             with self.subTest(table=table):
                 folder = scratch(self)
@@ -348,7 +354,8 @@ class Machines(unittest.TestCase):
         home = scratch(self)
         got = Declarations(EXAMPLES / "machine.toml", home).machine()
         self.assertEqual(got, Machine(frozenset(CpuNumber(cpu) for cpu in range(20)), SliceName("claude.slice"),
-                                      None, None, (home / "dev" / "logs",)))
+                                      None, None, (home / "dev" / "logs",),
+                                      (Word("/home/nicolas/.local/bin/rtk"), Word("hook"), Word("claude"))))
         self.assertEqual(got.job_bound, 20)
 
     def test_sizes_and_tiers(self) -> None:
@@ -362,6 +369,13 @@ class Machines(unittest.TestCase):
     def test_cpu_lists(self) -> None:
         got = self.machine(machine_text(cpus=TomlSource('[cpus]\nagents = "0-2,5,7-8"\n')))
         self.assertEqual((got.agent_cpus, got.job_bound), ({0, 1, 2, 5, 7, 8}, 6))
+
+    def test_a_rewrite_hook_is_read_as_its_words(self) -> None:
+        for text, want in (('["rtk", "hook", "claude"]', ("rtk", "hook", "claude")),
+                           ('["/bin/rewrite"]', ("/bin/rewrite",))):
+            with self.subTest(hook=text):
+                got = self.machine(machine_text(rewrite=TomlSource(f"[rewrite]\nhook = {text}\n")))
+                self.assertEqual(got.rewrite_hook, want)
 
     def test_a_home_record(self) -> None:
         folder = scratch(self)
@@ -584,7 +598,12 @@ class Refusals(unittest.TestCase):
                                 "python-files"))))
         self.refused(((machine_text(cpus=TomlSource("[cpus]\nagents = 3\n")),
                        Fragment("at `cpus.agents`: it must be a non-empty")),
-                      (machine_text(records=TomlSource("[records]\npaths = 3\n")), Fragment("at `records.paths`"))),
+                      (machine_text(records=TomlSource("[records]\npaths = 3\n")), Fragment("at `records.paths`")),
+                      *((machine_text(rewrite=TomlSource(f"[rewrite]\nhook = {hook}\n")),
+                         Fragment("at `rewrite.hook`: it must be a list of non-empty strings"))
+                        for hook in ('"rtk hook claude"', '["rtk", 3]', '["rtk", ""]', "3")),
+                      (machine_text(rewrite=TomlSource('[rewrite]\nhook = ["bin/rtk", "hook"]\n')),
+                       Fragment("at `rewrite.hook`: 'bin/rtk' is neither an absolute path nor a name found on PATH"))),
                      machine=True)
 
     def test_a_retired_key_is_no_key(self) -> None:
@@ -653,12 +672,20 @@ class Refusals(unittest.TestCase):
             with self.subTest(text=text):
                 self.assertIn(f"at `memory.call_max`: {text!r} is not a size",
                               self.machine(machine_text(memory=TomlSource(f'[memory]\ncall_max = "{text}"\n'))))
+        self.assertIn("at `memory.call_max`: it must be a non-empty string",
+                      self.machine(machine_text(memory=TomlSource('[memory]\ncall_max = ""\n'))))
         self.assertIn("at `memory.heavy_max`: it must be at least memory.call_max",
                       self.machine(machine_text(memory=TomlSource('[memory]\ncall_max = "8G"\nheavy_max = "4G"\n'))))
 
+    def test_an_empty_size_is_refused_by_the_size_reader_itself(self) -> None:
+        with self.assertRaises(KitFault) as caught:
+            size(Reading(Path("/m.toml")), TomlText(""), TomlKey("memory.call_max"))
+        self.assertIn("'' is not a size", caught.exception.reason)
+
     def test_a_missing_table(self) -> None:
         named = {TomlKey("cpus"): "agents", TomlKey("slice"): "name",
-                 TomlKey("memory"): "call_max, optionally heavy_max", TomlKey("records"): "paths"}
+                 TomlKey("memory"): "call_max, optionally heavy_max", TomlKey("records"): "paths",
+                 TomlKey("rewrite"): "hook"}
         for table, facts in named.items():
             with self.subTest(table=table):
                 self.assertIn(f'at `{table}`: the table is missing; it holds {facts}, or `absent = "<why>"` alone '
@@ -677,11 +704,16 @@ class Refusals(unittest.TestCase):
                       (machine_text(records=TomlSource("[records]\n")),
                        Fragment(f"at `records.paths`: it must be declared{said}")),
                       (machine_text(records=TomlSource("[records]\npaths = []\n")),
-                       Fragment(f"at `records.paths`: it must name a folder{said}"))), machine=True)
+                       Fragment(f"at `records.paths`: it must name a folder{said}")),
+                      (machine_text(rewrite=TomlSource("[rewrite]\n")),
+                       Fragment(f"at `rewrite.hook`: it must be declared{said}")),
+                      (machine_text(rewrite=TomlSource("[rewrite]\nhook = []\n")),
+                       Fragment(f"at `rewrite.hook`: it must name the hook's command line{said}"))), machine=True)
 
     def test_absent_forms(self) -> None:
         beside = {TomlKey("cpus"): 'agents = "0"', TomlKey("slice"): 'name = "a.slice"',
-                  TomlKey("memory"): 'call_max = "1G"', TomlKey("records"): 'paths = ["/r"]'}
+                  TomlKey("memory"): 'call_max = "1G"', TomlKey("records"): 'paths = ["/r"]',
+                  TomlKey("rewrite"): 'hook = ["rtk"]'}
         self.refused(tuple((machine_text(**{table: TomlSource(f'{absent(table)}{fact}\n')}),
                             Fragment(f"at `{table}.absent`: it stands alone, not beside {fact.split()[0]}"))
                            for table, fact in beside.items()), machine=True)
@@ -698,7 +730,8 @@ class Refusals(unittest.TestCase):
                  (TomlKey("slice"), '[slice]\nnme = "a.slice"\n', "slice.nme"),
                  (TomlKey("memory"), '[memory]\ncall = "1G"\n', "memory.call"),
                  (TomlKey("records"), '[records]\npath = ["/r"]\n', "records.path"),
-                 (TomlKey("slice"), '[slice]\nabsnt = "none"\n', "slice.absnt"))
+                 (TomlKey("slice"), '[slice]\nabsnt = "none"\n', "slice.absnt"),
+                 (TomlKey("rewrite"), '[rewrite]\nhooks = ["rtk"]\n', "rewrite.hooks"))
         self.refused(tuple((machine_text(**{table: TomlSource(text)}), Fragment(f"at `{key}`: no such key"))
                            for table, text, key in cases), machine=True)
 

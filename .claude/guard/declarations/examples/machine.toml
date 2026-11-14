@@ -20,3 +20,8 @@ absent = "today's kit caps no call, and the two tiers wait for values taken from
 paths = ["~/dev/logs"]
 # replaces: claude-call:62 (ROOT, where its call logs, views and conflicts are kept), which no search refusal of
 # today's kit holds
+
+[rewrite]
+hook = ["/home/nicolas/.local/bin/rtk", "hook", "claude"]
+# replaces: settings.json's PreToolUse entry `rtk hook claude` (matcher Bash), whose rewritten text is the one
+# claude-call runs
